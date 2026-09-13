@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 P1 新几何与大型证据遍历
+
+- reconstruction-01：259.105236秒/blocked，workflow5005d918-718f-49a3-b3eb-5ebccf9e0eee。
+  同workflow真实Codex解析/分割建议、SAM2/TRELLIS49.306176秒成功，新GLB SHA9a7bf1b6036780a330638963bfcbe7cdb11f6342ab2d9e2ddef383e13f412f28。
+- 新规范化geometry b5a54b0e3b16dbadff77c0640d1ae3378b5a299ec3aea8f01da3b682a00f1958不在运行前Registry，
+  登记版本b79dec72ab1432b4de91c1c5a72a945d9f89685938cd6b8180392331a60b3066；Genesis预览通过、有真实PNG/MP4。
+- 停因44,136,495字节preview receipt中的数值网格数组超过200k JSON节点预算；不是后端/许可失败。
+  artifact_closure按数值叶无需找ref跳过逐标量遍历，字节/引用/结构节点预算及邻接ref检查保留。
+- 公共接口大数组/缺邻接ref/字节上限反例先RED；真实原receipt纯读重验26引用/3.063秒通过，原父状态未改。
+- duck-01 50.985014秒/blocked_license后text-only回退缺图；cube-01仍因GLB扩展受阻。所有失败保留。
+
 ## 2026-09-13 P1 第二例与增量测试
 
 - web-02（固定076c801）144.246394秒/blocked，workflow b98d917a-945f-4ab0-82ba-e4ec647f86e2。

@@ -96,6 +96,23 @@ def test_excessive_json_work_is_bounded_even_without_asset_refs(tmp_path):
     from self_improving.harness.x2env.artifacts import artifact_closure
 
     store = Store(tmp_path / "store")
-    root = store.write_artifact(json.dumps([0] * 200001).encode(), "application/json")
+    root = store.write_artifact(json.dumps([{}] * 200001).encode(), "application/json")
     with pytest.raises(ValueError, match="node budget"):
+        artifact_closure(store, (root,))
+
+
+def test_numeric_mesh_arrays_use_byte_budget_and_do_not_hide_neighbor_refs(tmp_path):
+    from self_improving.harness.x2env.artifacts import artifact_closure
+
+    store = Store(tmp_path / "store")
+    mesh = store.write_artifact(b"actual mesh fixture", "application/octet-stream")
+    root = store.write_artifact(
+        json.dumps({"vertices": [[0.0, 1.0, 2.0]] * 100000, "source": mesh.model_dump()}).encode(),
+        "application/json",
+    )
+    assert set(artifact_closure(store, (root,))) == {root, mesh}
+    with pytest.raises(ValueError, match="byte budget"):
+        artifact_closure(store, (root,), max_bytes=root.size_bytes - 1)
+    (store.cas / mesh.sha256[:2] / mesh.sha256).unlink()
+    with pytest.raises(FileNotFoundError):
         artifact_closure(store, (root,))

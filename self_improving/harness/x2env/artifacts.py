@@ -41,13 +41,17 @@ def artifact_closure(
         visited = 0
         while nodes:
             item = nodes.pop()
+            # Numeric mesh/trajectory leaves cannot contain ArtifactRefs. Their size
+            # is already charged to max_bytes; avoid a Python traversal per scalar.
+            if isinstance(item, list) and all(type(v) in (int, float) for v in item):
+                continue
             visited += 1
             if visited > 200000:
                 raise ValueError("artifact JSON node budget exceeded")
             if isinstance(item, dict):
                 if keys <= item.keys():
                     pending.append(ArtifactRef.model_validate({k: item[k] for k in keys}))
-                nodes.extend(item.values())
+                nodes.extend(v for v in item.values() if isinstance(v, (dict, list)))
             elif isinstance(item, list):
-                nodes.extend(item)
+                nodes.extend(v for v in item if isinstance(v, (dict, list)))
     return tuple(seen)

@@ -1,5 +1,16 @@
 # 功能级整合台账
 
+## INT-CANONICAL-P1-RECONSTRUCTION-DEPLOYMENT
+
+- origin_owner：Gujie x2env窄重建接口；upstream_owner：Meta SAM2/DINO、Microsoft TRELLIS、NVIDIA FlexiCubes/Kaolin。
+- integration_owner：Bingsheng Harness workstream；recorded_git_authors：固定各源Git记录，不推断自然人映射。
+- source_refs：外部重建ed3b7e2882b2f1eec0ead916d0377776aff93f7f；SAM2 2b90b9f5、TRELLIS750ccb6e、DINO7764ea0f；完整refs在部署及生成provenance。
+- integration_method：现有ReconstructionAdapter调用固定clean窄接口，实体解释器/迁移后runtime pin、用户指定媒体派生许可。
+- verification：真实新geometry、规范化登记、Genesis预览通过；完整workflow因大JSON遍历预算受阻，未授E2E。
+- integration_delta：数值叶无ArtifactRef，遍历按字节预算约束；结构节点/引用数量门及逐引用SHA不变。
+- lifecycle：integrated；verification：runtime_pass（仅新几何/登记/预览子集）；完整E2E blocked。
+- evidence：runtime/harness/p1-evidence/reconstruction-01及reconstruction-new-versions.json；原始JSON/SHA完整保留。
+
 ## INT-CANONICAL-WEB-PREPARATION-AXIS — 格式事实进入模型输出契约
 
 - origin_owner：Yuxin asset_reuse provider；upstream_owner：Khronos glTF 格式及各下载资产作者。
