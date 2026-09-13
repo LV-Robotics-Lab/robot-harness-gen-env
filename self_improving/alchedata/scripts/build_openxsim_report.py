@@ -84,13 +84,9 @@ def read_json(relative_path: Path | str) -> dict:
     return json.loads((ROOT / relative_path).read_text(encoding="utf-8"))
 
 
-def status_badge(
-    status: str, label: str | None = None, style: str | None = None
-) -> str:
+def status_badge(status: str, label: str | None = None, style: str | None = None) -> str:
     style = style or (
-        "pass"
-        if status == "pass" or status.startswith(("pass_", "passed_"))
-        else "blocked"
+        "pass" if status == "pass" or status.startswith(("pass_", "passed_")) else "blocked"
     )
     text = label or status.replace("_", " ")
     return f'<span class="status {style}" title="{esc(status)}">{esc(text)}</span>'
@@ -173,9 +169,7 @@ def build_html(
         for probe in fallbacks
     )
 
-    runtime_rows = {
-        row["slug"]: row for row in agenticsim_isaac["current_runtime_rows"]
-    }
+    runtime_rows = {row["slug"]: row for row in agenticsim_isaac["current_runtime_rows"]}
     candidate_rows = []
     for slug, label in RUNTIME_PRESENTATION:
         row = runtime_rows[slug]
@@ -192,9 +186,7 @@ def build_html(
             )
         else:
             if not academic_use:
-                raise RuntimeError(
-                    f"Runtime pass is not admitted for academic use: {slug}"
-                )
+                raise RuntimeError(f"Runtime pass is not admitted for academic use: {slug}")
             screenshot_name = Path(row["artifacts"]["screenshot"]["path"]).name
             visual = (
                 '<img loading="lazy" '
@@ -208,9 +200,7 @@ def build_html(
             )
             card_class = ""
             badge_label = (
-                "academic use · patched"
-                if row["source_tree_modified"]
-                else "academic use"
+                "academic use · patched" if row["source_tree_modified"] else "academic use"
             )
             badge = status_badge(row["runtime_status"], badge_label)
             if strict_oss:
@@ -245,9 +235,7 @@ def build_html(
         ("current_status", "Status"),
     ]
     adapter_rows = "".join(
-        "<tr>"
-        + "".join(f"<td>{esc(adapter[key])}</td>" for key, _ in adapter_columns)
-        + "</tr>"
+        "<tr>" + "".join(f"<td>{esc(adapter[key])}</td>" for key, _ in adapter_columns) + "</tr>"
         for adapter in matrix["adapters"]
     )
     adapter_headers = "".join(f"<th>{esc(label)}</th>" for _, label in adapter_columns)
@@ -321,7 +309,7 @@ def build_html(
     <header class="head"><div><h1>PEARL Open X Sim Command Loop</h1><p class="subtitle"><span class="tag">[COMPUTED]</span><span class="tag">[CONFIDENCE: HIGH]</span>Strict evidence audit for command contracts, RoboTwin robot-action smokes, an Isaac task-semantic command bundle, AgenticSim intake, fallback gates, diagnosis, and ownership.</p></div><div class="verdict"><strong>Acceptance 8 / 8</strong><span>[COMPUTED] [CONFIDENCE: HIGH] Typed package and bounded second backend complete</span></div></header>
     <section class="metrics"><article class="metric"><strong>6</strong><span>Typed commands</span></article><article class="metric"><strong>3</strong><span>RoboTwin benchmark bundles</span></article><article class="metric"><strong>2</strong><span>Backends with executed command paths</span></article><article class="metric"><strong>5</strong><span>Isaac task-semantic commands</span></article></section>
     <section class="claim"><article><h3>What is complete</h3><p>Six command contracts, three scripted RoboTwin robot-action command-loop smokes, one five-command Isaac task-semantic bundle, a 745-repository Isaac source audit, RTX 5090 runtime baseline, and {esc(runtime_summary["repository_probe_count"])} exact-commit candidate probes: {esc(runtime_summary["academic_use_runtime_accepted_count"])} local noncommercial academic-use admissions, {esc(runtime_summary["strict_open_source_runtime_pass_count"])} strict open-source provenance closures, {esc(runtime_summary["academic_use_license_advisory_count"])} accepted rows with license advisories, and {esc(runtime_summary["runtime_blocked_count"])} runtime blocker.</p></article><article><h3>What is not proven</h3><p>Isaac robot embodiment or joint-action policy transfer, source-asset or material parity, learned-policy quality from scripted smokes, redistribution rights for advisory-marked third-party assets, WobbleGo asset recovery, broad Any Sim coverage, or video2sim-forge execution.</p></article></section>
-    <section class="block"><div class="section-head"><h2>Isaac Five-Command Task Bundle</h2><p class="note">Same normalized `place_on(container, plate)` semantics; backend-native execution with declared transfer losses.</p></div><div class="isaac-loop"><article class="isaac-loop-media"><video controls preload="metadata" poster="assets/isaac_command_loop/frames/frame_00023.png" src="assets/isaac_command_loop/isaac_place_on_rollout.mp4"></video><div class="isaac-loop-frames"><img src="assets/isaac_command_loop/frames/frame_00000.png" alt="Initial Isaac place-on frame"><img src="assets/isaac_command_loop/frames/frame_00023.png" alt="Final Isaac place-on frame"></div></article><article class="isaac-loop-facts"><h3>Target verifier passed</h3><dl><div><dt>Trace</dt><dd>{esc(isaac_collect['step_count'])} backend-native state/action steps</dd></div><div><dt>Video</dt><dd>{esc(isaac_collect['video_evidence']['unique_frame_sha256_count'])}/{esc(isaac_collect['video_evidence']['frame_count'])} unique decoded frames</dd></div><div><dt>Relation</dt><dd>horizontal error {esc(isaac_evaluate['metrics']['horizontal_center_distance_m'])} m</dd></div><div><dt>Support gap</dt><dd>{esc(isaac_evaluate['metrics']['source_bottom_to_target_top_abs_m'])} m</dd></div><div><dt>Bundle</dt><dd>{esc(isaac_command['manifest']['file_count'])} hashed files</dd></div></dl><h3>Declared losses</h3><ul>{transfer_loss_rows}</ul></article></div><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Command</th><th>Status</th><th>Boundary</th></tr></thead><tbody>{isaac_command_rows}</tbody></table></div></section>
+    <section class="block"><div class="section-head"><h2>Isaac Five-Command Task Bundle</h2><p class="note">Same normalized `place_on(container, plate)` semantics; backend-native execution with declared transfer losses.</p></div><div class="isaac-loop"><article class="isaac-loop-media"><video controls preload="metadata" poster="assets/isaac_command_loop/frames/frame_00023.png" src="assets/isaac_command_loop/isaac_place_on_rollout.mp4"></video><div class="isaac-loop-frames"><img src="assets/isaac_command_loop/frames/frame_00000.png" alt="Initial Isaac place-on frame"><img src="assets/isaac_command_loop/frames/frame_00023.png" alt="Final Isaac place-on frame"></div></article><article class="isaac-loop-facts"><h3>Target verifier passed</h3><dl><div><dt>Trace</dt><dd>{esc(isaac_collect["step_count"])} backend-native state/action steps</dd></div><div><dt>Video</dt><dd>{esc(isaac_collect["video_evidence"]["unique_frame_sha256_count"])}/{esc(isaac_collect["video_evidence"]["frame_count"])} unique decoded frames</dd></div><div><dt>Relation</dt><dd>horizontal error {esc(isaac_evaluate["metrics"]["horizontal_center_distance_m"])} m</dd></div><div><dt>Support gap</dt><dd>{esc(isaac_evaluate["metrics"]["source_bottom_to_target_top_abs_m"])} m</dd></div><div><dt>Bundle</dt><dd>{esc(isaac_command["manifest"]["file_count"])} hashed files</dd></div></dl><h3>Declared losses</h3><ul>{transfer_loss_rows}</ul></article></div><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Command</th><th>Status</th><th>Boundary</th></tr></thead><tbody>{isaac_command_rows}</tbody></table></div></section>
     <section class="block"><div class="section-head"><h2>AgenticSim Isaac Intake</h2><p class="note">Pinned source audit plus current RTX 5090 execution evidence.</p></div>
       <div class="isaac-metrics"><div><strong>{esc(catalog_summary["repository_count"])}</strong><span>Repositories normalized</span></div><div><strong>{esc(catalog_summary["verified_open_source_count"])}</strong><span>Detected OSS licenses</span></div><div><strong>{esc(catalog_summary["documented_current_isaac_environment_source_count"])}</strong><span>Current environment sources</span></div><div><strong>{esc(catalog_summary["static_open_environment_candidate_count"])}</strong><span>Static candidates</span></div><div><strong>{esc(runtime_summary["runtime_pass_count"])} / {esc(runtime_summary["repository_probe_count"])}</strong><span>Technical runtime passes</span></div><div><strong>{esc(runtime_summary["academic_use_runtime_accepted_count"])} / {esc(runtime_summary["runtime_pass_count"])}</strong><span>Academic-use admissions</span></div></div>
       <div class="isaac-baseline"><div><video controls preload="metadata" poster="assets/isaac_intake/baseline_poster.png" src="assets/isaac_intake/baseline_motion.mp4"></video><img src="assets/isaac_intake/baseline_contact_sheet.jpg" alt="Isaac Sim baseline contact sheet with intermediate frames"></div><article class="baseline-facts"><h3>Isaac Sim 5.1 Runtime Baseline</h3><dl><div><dt>GPU</dt><dd>{esc(baseline["gpu"])}</dd></div><div><dt>Gates</dt><dd>physics · RTX render · CUDA · video = pass</dd></div><div><dt>Video</dt><dd>{esc(video_evidence["frame_count"])} frames · {esc(video_evidence["unique_frame_sha256_count"])} unique · {esc(video_evidence["fps"])} fps · {esc(video_evidence["duration_seconds"])} s</dd></div><div><dt>Motion</dt><dd>{esc(video_evidence["pose_movement_transition_count"])} moving transitions · {esc(video_evidence["unique_position_count"])} unique positions</dd></div><div><dt>Source commit</dt><dd><code>{esc(agenticsim_isaac["source_commit"])}</code></dd></div></dl><p><span class="tag">[KNOWN]</span><span class="tag">[CONFIDENCE: HIGH]</span>This is continuous simulator-step capture, not an endpoint interpolation.</p></article></div>
@@ -379,9 +367,7 @@ def copy_evidence(
     canonical_sources = canonical_report / "assets" / "source_pages"
     if canonical_sources.is_dir():
         for source in canonical_sources.glob("*.png"):
-            copy_if_distinct(
-                source, output_dir / "assets" / "source_pages" / source.name
-            )
+            copy_if_distinct(source, output_dir / "assets" / "source_pages" / source.name)
     canonical_qa = canonical_report / "qa"
     if canonical_qa.is_dir():
         for source in canonical_qa.glob("*.png"):
@@ -397,9 +383,7 @@ def copy_evidence(
     }
     for source_relative, destination_name in source_mapping.items():
         shutil.copy2(agenticsim_root / source_relative, isaac_assets / destination_name)
-    shutil.copy2(
-        ROOT / AGENTICSIM_ISAAC_SNAPSHOT, isaac_assets / "agenticsim_snapshot.json"
-    )
+    shutil.copy2(ROOT / AGENTICSIM_ISAAC_SNAPSHOT, isaac_assets / "agenticsim_snapshot.json")
 
     runtime = json.loads(
         (agenticsim_root / "docs" / "awesome_isaac_runtime_evidence.json").read_text(
@@ -425,11 +409,7 @@ def copy_evidence(
     if legacy_raw.is_dir():
         shutil.rmtree(legacy_raw)
     candidate_source = (
-        agenticsim_root
-        / "artifacts"
-        / "awesome_isaac"
-        / "5090_runtime_baseline"
-        / "candidates"
+        agenticsim_root / "artifacts" / "awesome_isaac" / "5090_runtime_baseline" / "candidates"
     )
     if not candidate_source.is_dir():
         raise FileNotFoundError(candidate_source)
@@ -441,12 +421,7 @@ def copy_evidence(
     raw = assets / "raw"
     raw.mkdir(exist_ok=True)
     for fallback in fallbacks:
-        source = (
-            ROOT
-            / "artifacts"
-            / "generation_fallback"
-            / f"{fallback['fallback_id']}.json"
-        )
+        source = ROOT / "artifacts" / "generation_fallback" / f"{fallback['fallback_id']}.json"
         shutil.copy2(source, raw / source.name)
 
     frames = assets / "benchmark_frames"
@@ -459,15 +434,9 @@ def copy_evidence(
         for position in ("initial", "final"):
             source = ROOT / scene["camera_artifacts"][f"{position}_observer_camera"]
             shutil.copy2(source, frames / f"{task_name}_{position}.png")
+        shutil.copy2(ROOT / bundle["artifacts"]["observer_video"], videos / f"{task_name}.mp4")
         shutil.copy2(
-            ROOT / bundle["artifacts"]["observer_video"], videos / f"{task_name}.mp4"
-        )
-        shutil.copy2(
-            ROOT
-            / "artifacts"
-            / "openxsim_benchmarks"
-            / task_name
-            / "benchmark_manifest.json",
+            ROOT / "artifacts" / "openxsim_benchmarks" / task_name / "benchmark_manifest.json",
             raw / f"{task_name}_benchmark_manifest.json",
         )
         shutil.copy2(
@@ -501,17 +470,13 @@ def write_manifest(output_dir: Path) -> dict:
     return manifest
 
 
-def build_report(
-    output_dir: Path, agenticsim_root: Path = DEFAULT_AGENTICSIM_ROOT
-) -> dict:
+def build_report(output_dir: Path, agenticsim_root: Path = DEFAULT_AGENTICSIM_ROOT) -> dict:
     validate_openxsim_package(require_report=False)
     registry = read_json(COMMAND_REGISTRY)
     matrix = read_json(ADAPTER_MATRIX)
     audit = read_json(ACCEPTANCE_AUDIT)
     benchmark_index = read_json(BENCHMARK_MANIFEST)
-    benchmarks = [
-        read_json(Path(row["manifest"])) for row in benchmark_index["benchmarks"]
-    ]
+    benchmarks = [read_json(Path(row["manifest"])) for row in benchmark_index["benchmarks"]]
     by_name = {bundle["task_name"]: bundle for bundle in benchmarks}
     benchmarks = [by_name[name] for name in BENCHMARK_ORDER]
     fallbacks = [read_json(path) for path in FALLBACK_PROBES]
@@ -525,7 +490,13 @@ def build_report(
     }
     isaac_command["commands"] = [
         read_json(ISAAC_COMMAND_RUN / name)
-        for name in ("gen_env.json", "collect.json", "evaluate.json", "diagnose.json", "transfer.json")
+        for name in (
+            "gen_env.json",
+            "collect.json",
+            "evaluate.json",
+            "diagnose.json",
+            "transfer.json",
+        )
     ]
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -551,9 +522,7 @@ def build_report(
         "commands": len(registry["commands"]),
         "adapters": len(matrix["adapters"]),
         "benchmarks": len(benchmarks),
-        "isaac_runtime_passes": agenticsim_isaac["runtime_summary"][
-            "runtime_pass_count"
-        ],
+        "isaac_runtime_passes": agenticsim_isaac["runtime_summary"]["runtime_pass_count"],
     }
 
 
@@ -562,11 +531,7 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=ROOT / REPORT_ROOT)
     parser.add_argument("--agenticsim-root", type=Path, default=DEFAULT_AGENTICSIM_ROOT)
     args = parser.parse_args()
-    print(
-        json.dumps(
-            build_report(args.output, args.agenticsim_root), indent=2, sort_keys=True
-        )
-    )
+    print(json.dumps(build_report(args.output, args.agenticsim_root), indent=2, sort_keys=True))
     return 0
 
 

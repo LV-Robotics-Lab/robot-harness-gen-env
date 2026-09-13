@@ -62,12 +62,14 @@ def collection_summary(path: Path, report: dict[str, Any]) -> dict[str, Any]:
     passed = [
         episode
         for episode in report.get("episodes", [])
-        if episode.get("status") == "pass_generated_action_rollout" and episode.get("check_success") is True
+        if episode.get("status") == "pass_generated_action_rollout"
+        and episode.get("check_success") is True
     ]
     native_passed = [
         episode
         for episode in passed
-        if episode.get("native_synchronized_data", {}).get("status") == "pass_native_synchronized_recording"
+        if episode.get("native_synchronized_data", {}).get("status")
+        == "pass_native_synchronized_recording"
     ]
     return {
         "report": workspace_path(path),
@@ -76,7 +78,9 @@ def collection_summary(path: Path, report: dict[str, Any]) -> dict[str, Any]:
         "pass_count": len(passed),
         "native_synchronized_pass_count": len(native_passed),
         "passed_placement_ids": [episode.get("placement_id") for episode in passed],
-        "passed_pose_signatures": [episode.get("pose_signature") for episode in passed if episode.get("pose_signature")],
+        "passed_pose_signatures": [
+            episode.get("pose_signature") for episode in passed if episode.get("pose_signature")
+        ],
         "domain_randomization": report.get("domain_randomization"),
     }
 
@@ -167,7 +171,8 @@ def main() -> int:
     recovery_passed_ids = {
         str(episode.get("placement_id"))
         for episode in recovery_collection.get("episodes", [])
-        if episode.get("status") == "pass_generated_action_rollout" and episode.get("check_success") is True
+        if episode.get("status") == "pass_generated_action_rollout"
+        and episode.get("check_success") is True
     }
     training_vectors = [
         episode["pose_vector"]
@@ -177,7 +182,9 @@ def main() -> int:
         and episode.get("check_success") is True
         and episode.get("pose_vector")
     ]
-    final_eval_vectors = [entry["pose_vector"] for entry in final_manifest.get("splits", {}).get("eval", [])]
+    final_eval_vectors = [
+        entry["pose_vector"] for entry in final_manifest.get("splits", {}).get("eval", [])
+    ]
     eval_to_training_distances = [
         min(vector_distance(eval_vector, train_vector) for train_vector in training_vectors)
         for eval_vector in final_eval_vectors
@@ -189,7 +196,9 @@ def main() -> int:
         and final_eval.get("episode_count") == 4
         and final_eval.get("all_eval_placements_held_out") is True
     )
-    heldout_success_gate = final_infrastructure_pass and final_eval.get("success_count") == final_eval.get("episode_count")
+    heldout_success_gate = final_infrastructure_pass and final_eval.get(
+        "success_count"
+    ) == final_eval.get("episode_count")
     recovery_targeting_pass = bool(initial_failed_ids) and initial_failed_ids <= recovery_passed_ids
     extra_task_execution_pass = (
         extra_task.get("task_id") != "task_apple_plate"
@@ -227,13 +236,21 @@ def main() -> int:
         },
         "failure_to_data_iteration": {
             "mined_failed_placement_ids": sorted(initial_failed_ids),
-            "recovery_collection": collection_summary(paths["recovery_collection"], recovery_collection),
+            "recovery_collection": collection_summary(
+                paths["recovery_collection"], recovery_collection
+            ),
             "all_failed_placements_recovered_as_expert_data": recovery_targeting_pass,
-            "dataset": diversity_summary(paths["recovery_diversity"], reports["recovery_diversity"]),
+            "dataset": diversity_summary(
+                paths["recovery_diversity"], reports["recovery_diversity"]
+            ),
             "train": train_summary(paths["recovery_train"], reports["recovery_train"]),
-            "new_holdout_feasibility": collection_summary(paths["final_feasibility"], reports["final_feasibility"]),
+            "new_holdout_feasibility": collection_summary(
+                paths["final_feasibility"], reports["final_feasibility"]
+            ),
             "new_holdout_manifest": workspace_path(paths["final_manifest"]),
-            "new_holdout_minimum_pose_vector_distance_to_training_m": min(eval_to_training_distances),
+            "new_holdout_minimum_pose_vector_distance_to_training_m": min(
+                eval_to_training_distances
+            ),
             "new_holdout_pose_vector_distances_to_training_m": eval_to_training_distances,
             "new_heldout_evaluate": eval_summary(paths["final_eval"], final_eval),
             "promotion_decision": "reject_heldout_success_1_of_4",
@@ -287,7 +304,14 @@ def main() -> int:
             }
         )
     )
-    return 0 if dataset_gate and recovery_targeting_pass and final_infrastructure_pass and extra_task_execution_pass else 1
+    return (
+        0
+        if dataset_gate
+        and recovery_targeting_pass
+        and final_infrastructure_pass
+        and extra_task_execution_pass
+        else 1
+    )
 
 
 if __name__ == "__main__":

@@ -185,9 +185,15 @@ def main() -> int:
         write_json(out_dir / "smoke_report.json", report)
         raise
 
-    observer_camera = scene.add_camera("observer_camera", width=640, height=480, fovy=np.deg2rad(70), near=0.1, far=100)
-    observer_camera.entity.set_pose(camera_pose(sapien, [0.0, 0.34, 1.35], [0, -1, -1.05], [1, 0, 0]))
-    head_camera = scene.add_camera("head_camera", width=640, height=480, fovy=np.deg2rad(62), near=0.1, far=100)
+    observer_camera = scene.add_camera(
+        "observer_camera", width=640, height=480, fovy=np.deg2rad(70), near=0.1, far=100
+    )
+    observer_camera.entity.set_pose(
+        camera_pose(sapien, [0.0, 0.34, 1.35], [0, -1, -1.05], [1, 0, 0])
+    )
+    head_camera = scene.add_camera(
+        "head_camera", width=640, height=480, fovy=np.deg2rad(62), near=0.1, far=100
+    )
     head_camera.entity.set_pose(camera_pose(sapien, [0.0, -0.18, 1.55], [0, 0.2, -1], [1, 0, 0]))
 
     initial_poses = {name: pose_record(actor) for name, actor in loaded.items()}

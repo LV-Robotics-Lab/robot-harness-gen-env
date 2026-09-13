@@ -42,7 +42,10 @@ def validate_cross_sim_bundle() -> dict[str, Any]:
     contract_path = ROOT / "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json"
     bundle_root = ROOT / "runs/isaac_openxsim_place_container_plate_v1"
     contract = read_json(contract_path)
-    require(contract["status"] == "pass_normalized_cross_sim_task_contract", "Cross-sim task contract failed")
+    require(
+        contract["status"] == "pass_normalized_cross_sim_task_contract",
+        "Cross-sim task contract failed",
+    )
     manifest = read_json(bundle_root / "bundle_manifest.json")
     rows = manifest["files"]
     declared = {row["path"]: row for row in rows}
@@ -52,7 +55,10 @@ def validate_cross_sim_bundle() -> dict[str, Any]:
         if path.is_file() and path.name != "bundle_manifest.json"
     }
     require(manifest["status"] == "pass_isaac_command_bundle", "Isaac command bundle failed")
-    require(manifest["file_count"] == len(rows) == len(declared) == len(observed) == 34, "Isaac bundle count mismatch")
+    require(
+        manifest["file_count"] == len(rows) == len(declared) == len(observed) == 34,
+        "Isaac bundle count mismatch",
+    )
     require(set(declared) == set(observed), "Isaac bundle file set mismatch")
     for relative, path in observed.items():
         row = declared[relative]
@@ -70,16 +76,37 @@ def validate_cross_sim_bundle() -> dict[str, Any]:
     collect = read_json(bundle_root / "collect.json")
     evaluate = read_json(bundle_root / "evaluate.json")
     transfer = read_json(bundle_root / "transfer.json")
-    require(run_state["state"] == "completed" and run_state["commands"] == expected_commands, "Isaac commands mismatch")
-    require(run_state["task_success"] is True and run_state["same_task_transfer"] is True, "Isaac task or transfer failed")
-    require(collect["step_count"] == 120 and collect["learned_policy"] is False, "Isaac trace contract failed")
+    require(
+        run_state["state"] == "completed" and run_state["commands"] == expected_commands,
+        "Isaac commands mismatch",
+    )
+    require(
+        run_state["task_success"] is True and run_state["same_task_transfer"] is True,
+        "Isaac task or transfer failed",
+    )
+    require(
+        collect["step_count"] == 120 and collect["learned_policy"] is False,
+        "Isaac trace contract failed",
+    )
     video = collect["video_evidence"]
-    require(video["frame_count"] == video["unique_frame_sha256_count"] == 24, "Isaac video evidence failed")
+    require(
+        video["frame_count"] == video["unique_frame_sha256_count"] == 24,
+        "Isaac video evidence failed",
+    )
     require(video["endpoint_only"] is False, "Isaac video is endpoint-only")
-    require(evaluate["execution_complete"] is True and evaluate["task_success"] is True, "Isaac verifier failed")
+    require(
+        evaluate["execution_complete"] is True and evaluate["task_success"] is True,
+        "Isaac verifier failed",
+    )
     require(all(evaluate["metrics"]["checks"].values()), "Isaac verifier check failed")
-    require(transfer["same_normalized_task_contract"] is True, "Cross-sim task contract was not retained")
-    require(transfer["target_backend"]["target_verifier_success"] is True, "Transferred target verifier failed")
+    require(
+        transfer["same_normalized_task_contract"] is True,
+        "Cross-sim task contract was not retained",
+    )
+    require(
+        transfer["target_backend"]["target_verifier_success"] is True,
+        "Transferred target verifier failed",
+    )
     source_report = read_json(ROOT / contract["source_backend"]["evidence"])
     require(source_report["check_success"] is True, "RoboTwin source verifier failed")
     return {
@@ -114,11 +141,20 @@ def validate_material_bundle(report_path: Path) -> dict[str, Any]:
     sidecar = read_json(sidecar_path)
     imported = read_json(import_path)
     comparison = read_json(comparison_path)
-    require(sidecar["status"] == "pass_observation_material_extraction", "Sidecar extraction failed")
+    require(
+        sidecar["status"] == "pass_observation_material_extraction", "Sidecar extraction failed"
+    )
     require(sidecar["foreground_pixel_count"] >= 24, "Source material mask is too small")
-    require(imported["status"] == "pass_usd_preview_surface_binding", "Isaac material import failed")
-    require(imported["bound"] is True and imported["shader_id"] == "UsdPreviewSurface", "Native material is not bound")
-    require(comparison["status"] == "pass_material_roundtrip_comparison", "Material comparison failed")
+    require(
+        imported["status"] == "pass_usd_preview_surface_binding", "Isaac material import failed"
+    )
+    require(
+        imported["bound"] is True and imported["shader_id"] == "UsdPreviewSurface",
+        "Native material is not bound",
+    )
+    require(
+        comparison["status"] == "pass_material_roundtrip_comparison", "Material comparison failed"
+    )
     require(comparison["acceptance"]["finite_metrics"] is True, "Material metrics are not finite")
 
     manifest = read_json(bundle_root / "bundle_manifest.json")
@@ -128,8 +164,13 @@ def validate_material_bundle(report_path: Path) -> dict[str, Any]:
         for path in bundle_root.rglob("*")
         if path.is_file() and path.name != "bundle_manifest.json"
     }
-    require(manifest["status"] == "pass_material_roundtrip_bundle", "Material bundle manifest failed")
-    require(manifest["file_count"] == len(declared) == len(observed), "Material bundle file count mismatch")
+    require(
+        manifest["status"] == "pass_material_roundtrip_bundle", "Material bundle manifest failed"
+    )
+    require(
+        manifest["file_count"] == len(declared) == len(observed),
+        "Material bundle file count mismatch",
+    )
     require(set(declared) == set(observed), "Material bundle file set mismatch")
     for relative, path in observed.items():
         row = declared[relative]
@@ -161,13 +202,31 @@ def build_audit(
     material = validate_material_bundle(material_path)
 
     require(memory["status"] == "pass_matched_memory_ablation", "Memory ablation failed")
-    require(memory["experiment"]["only_declared_controller_difference"] is True, "Memory ablation is not matched")
-    require(memory["outcomes"]["both_arms_execution_complete"] is True, "Memory ablation did not execute")
-    require(correlation["status"] == "pass_predeclared_failure_score_correlation_reported", "Failure-score audit failed")
-    require(correlation["sample_count"] == correlation["unique_pose_signature_count"] == 12, "Failure-score sample gate failed")
+    require(
+        memory["experiment"]["only_declared_controller_difference"] is True,
+        "Memory ablation is not matched",
+    )
+    require(
+        memory["outcomes"]["both_arms_execution_complete"] is True,
+        "Memory ablation did not execute",
+    )
+    require(
+        correlation["status"] == "pass_predeclared_failure_score_correlation_reported",
+        "Failure-score audit failed",
+    )
+    require(
+        correlation["sample_count"] == correlation["unique_pose_signature_count"] == 12,
+        "Failure-score sample gate failed",
+    )
     require(correlation["all_samples_retained"] is True, "Failure-score samples were filtered")
-    require(promotion["status"] == "pass_bounded_pose_conditioned_policy_promotion", "Robust policy promotion failed")
-    require(all(gate["status"] == "pass" for gate in promotion["gates"].values()), "SceneAgent promotion gate failed")
+    require(
+        promotion["status"] == "pass_bounded_pose_conditioned_policy_promotion",
+        "Robust policy promotion failed",
+    )
+    require(
+        all(gate["status"] == "pass" for gate in promotion["gates"].values()),
+        "SceneAgent promotion gate failed",
+    )
 
     audit = {
         "schema_version": "alchedata.text2env_empirical_audit.v0",

@@ -25,8 +25,12 @@ def selected_entries(manifest: dict[str, Any]) -> list[tuple[str, dict[str, Any]
     train = manifest["splits"]["train"][:8]
     evaluation = manifest["splits"]["eval"][:4]
     if len(train) != 8 or len(evaluation) != 4:
-        raise ValueError("Source manifest must contain at least eight train and four eval placements")
-    return [("source_train", entry) for entry in train] + [("source_eval", entry) for entry in evaluation]
+        raise ValueError(
+            "Source manifest must contain at least eight train and four eval placements"
+        )
+    return [("source_train", entry) for entry in train] + [
+        ("source_eval", entry) for entry in evaluation
+    ]
 
 
 def main() -> int:
@@ -62,7 +66,9 @@ def main() -> int:
             source_placement = source_path.parent / source_placement
         source_placement = source_placement.resolve()
         placement_id = f"case_{index:03d}"
-        relative_placement = Path("..") / source_path.parent.name / source_placement.relative_to(source_path.parent)
+        relative_placement = (
+            Path("..") / source_path.parent.name / source_placement.relative_to(source_path.parent)
+        )
         case = {
             "case_id": placement_id,
             "source_split": source_split,

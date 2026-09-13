@@ -67,7 +67,11 @@ def main() -> int:
     }
     out_path = Path(args.out).expanduser().resolve()
     write_json(out_path, memory)
-    print(json.dumps({"status": memory["status"], "memory_id": memory["memory_id"], "out": str(out_path)}))
+    print(
+        json.dumps(
+            {"status": memory["status"], "memory_id": memory["memory_id"], "out": str(out_path)}
+        )
+    )
     return 0
 
 

@@ -84,7 +84,9 @@ def inspect_episode(episode: dict[str, Any]) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify ACT dataset placement and trajectory diversity.")
+    parser = argparse.ArgumentParser(
+        description="Verify ACT dataset placement and trajectory diversity."
+    )
     parser.add_argument("--conversion", required=True)
     parser.add_argument("--loader", required=True)
     parser.add_argument("--out", required=True)
@@ -135,8 +137,10 @@ def main() -> int:
         "action_trajectory_count_met": (
             observed["unique_action_trajectory_count"] >= args.min_action_trajectories
         ),
-        "qpos_trajectory_count_met": observed["unique_qpos_trajectory_count"] >= args.min_qpos_trajectories,
-        "image_trajectory_count_met": observed["unique_image_trajectory_count"] >= args.min_image_trajectories,
+        "qpos_trajectory_count_met": observed["unique_qpos_trajectory_count"]
+        >= args.min_qpos_trajectories,
+        "image_trajectory_count_met": observed["unique_image_trajectory_count"]
+        >= args.min_image_trajectories,
         "all_episodes_have_pose_signatures": len(pose_signatures) == len(episodes),
     }
     passed = all(gates.values())

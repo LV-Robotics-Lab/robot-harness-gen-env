@@ -30,7 +30,11 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 
 def file_record(path: Path) -> dict[str, Any]:
-    return {"path": str(path), "exists": path.exists(), "size_bytes": path.stat().st_size if path.exists() else 0}
+    return {
+        "path": str(path),
+        "exists": path.exists(),
+        "size_bytes": path.stat().st_size if path.exists() else 0,
+    }
 
 
 def main() -> int:
@@ -151,7 +155,9 @@ def main() -> int:
     if completed.returncode == 0 and files["policy_best"]["exists"]:
         status = "pass_act_train_smoke" if args.num_epochs == 1 else "pass_act_train_execution"
     else:
-        status = "blocked_act_train_smoke" if args.num_epochs == 1 else "blocked_act_train_execution"
+        status = (
+            "blocked_act_train_smoke" if args.num_epochs == 1 else "blocked_act_train_execution"
+        )
     report.update(
         {
             "status": status,
@@ -169,7 +175,12 @@ def main() -> int:
         }
     )
     write_json(report_path, report)
-    print(json.dumps({"status": status, "best_val_loss": best_val_loss, "report": str(report_path)}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"status": status, "best_val_loss": best_val_loss, "report": str(report_path)},
+            ensure_ascii=False,
+        )
+    )
     return 0 if status.startswith("pass_") else 1
 
 

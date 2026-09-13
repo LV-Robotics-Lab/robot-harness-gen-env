@@ -19,9 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 COMMAND_REGISTRY = Path("artifacts/openxsim/openxsim_command_registry.json")
 ADAPTER_MATRIX = Path("artifacts/openxsim/openxsim_adapter_matrix.json")
 ACCEPTANCE_AUDIT = Path("artifacts/openxsim/openxsim_acceptance_audit.json")
-AGENTICSIM_ISAAC_SNAPSHOT = Path(
-    "artifacts/openxsim/agenticsim_awesome_isaac_snapshot.json"
-)
+AGENTICSIM_ISAAC_SNAPSHOT = Path("artifacts/openxsim/agenticsim_awesome_isaac_snapshot.json")
 VIDEO_FRAME_UNIQUENESS = Path("artifacts/openxsim/openxsim_video_frame_uniqueness.json")
 COMMAND_SCHEMA = Path("schemas/openxsim_command_registry.schema.json")
 GEN_ENV_SCHEMA = Path("schemas/gen_env.schema.json")
@@ -33,7 +31,9 @@ FALLBACK_PROBES = (
 COMMAND_DOC = Path("docs/openxsim_command_spec.md")
 REPORT_ROOT = Path("reports/openxsim_command_loop")
 ISAAC_COMMAND_BUNDLE = Path("runs/isaac_openxsim_place_container_plate_v1")
-CROSS_SIM_TASK_CONTRACT = Path("artifacts/openxsim_cross_sim/place_container_plate_task_contract.json")
+CROSS_SIM_TASK_CONTRACT = Path(
+    "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json"
+)
 
 REQUIRED_COMMANDS = {
     "/gen-env",
@@ -130,15 +130,25 @@ def validate_manifest(report_root: Path) -> int:
 def validate_isaac_command_bundle() -> dict:
     bundle_root = ROOT / ISAAC_COMMAND_BUNDLE
     contract = read_json(CROSS_SIM_TASK_CONTRACT)
-    require(contract.get("status") == "pass_normalized_cross_sim_task_contract", "cross-sim task contract failed")
-    require(contract.get("task_id") == "openxsim_place_container_plate_v1", "cross-sim task id mismatch")
+    require(
+        contract.get("status") == "pass_normalized_cross_sim_task_contract",
+        "cross-sim task contract failed",
+    )
+    require(
+        contract.get("task_id") == "openxsim_place_container_plate_v1", "cross-sim task id mismatch"
+    )
 
     manifest_path = bundle_root / "bundle_manifest.json"
     require(manifest_path.is_file(), "Isaac command bundle manifest is missing")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    require(manifest.get("status") == "pass_isaac_command_bundle", "Isaac command bundle status mismatch")
+    require(
+        manifest.get("status") == "pass_isaac_command_bundle",
+        "Isaac command bundle status mismatch",
+    )
     rows = manifest.get("files", [])
-    require(manifest.get("file_count") == len(rows) == 34, "Isaac command bundle file count mismatch")
+    require(
+        manifest.get("file_count") == len(rows) == 34, "Isaac command bundle file count mismatch"
+    )
     declared = {row["path"]: row for row in rows}
     require(len(declared) == len(rows), "Isaac command bundle contains duplicate paths")
     observed = {
@@ -150,7 +160,10 @@ def validate_isaac_command_bundle() -> dict:
     for relative, row in declared.items():
         path = observed[relative]
         require(path.stat().st_size == row["bytes"], f"Isaac bundle size mismatch: {relative}")
-        require(hashlib.sha256(path.read_bytes()).hexdigest() == row["sha256"], f"Isaac bundle hash mismatch: {relative}")
+        require(
+            hashlib.sha256(path.read_bytes()).hexdigest() == row["sha256"],
+            f"Isaac bundle hash mismatch: {relative}",
+        )
 
     run_state = json.loads((bundle_root / "run_state.json").read_text(encoding="utf-8"))
     expected_commands = {
@@ -169,38 +182,69 @@ def validate_isaac_command_bundle() -> dict:
     require(gen_env.get("status") == expected_commands["/gen-env"], "Isaac /gen-env failed")
     require(all(gen_env.get("gates", {}).values()), "Isaac /gen-env gate failed")
     require((bundle_root / gen_env["scene_stage"]["path"]).is_file(), "Isaac USD stage is missing")
-    require(gen_env["task_contract"]["sha256"] == hashlib.sha256((ROOT / CROSS_SIM_TASK_CONTRACT).read_bytes()).hexdigest(), "Isaac task contract hash mismatch")
+    require(
+        gen_env["task_contract"]["sha256"]
+        == hashlib.sha256((ROOT / CROSS_SIM_TASK_CONTRACT).read_bytes()).hexdigest(),
+        "Isaac task contract hash mismatch",
+    )
 
     collect = json.loads((bundle_root / "collect.json").read_text(encoding="utf-8"))
     require(collect.get("status") == expected_commands["/collect"], "Isaac /collect failed")
-    require(collect.get("learned_policy") is False, "Isaac scripted collection overclaims learned policy")
+    require(
+        collect.get("learned_policy") is False,
+        "Isaac scripted collection overclaims learned policy",
+    )
     require(collect.get("step_count") == 120, "Isaac trace step count mismatch")
     video = collect.get("video_evidence", {})
     require(video.get("endpoint_only") is False, "Isaac command video is endpoint-only")
     require(video.get("frame_count") == 24, "Isaac command video frame count mismatch")
-    require(video.get("unique_frame_sha256_count") == 24, "Isaac command video frames are not unique")
+    require(
+        video.get("unique_frame_sha256_count") == 24, "Isaac command video frames are not unique"
+    )
     video_probe = probe_video(bundle_root / collect["video"]["path"])
     require(video_probe["frame_count"] == 24, "Isaac encoded video frame count mismatch")
     require(video_probe["duration_sec"] >= 2, "Isaac encoded video is shorter than two seconds")
 
     evaluate = json.loads((bundle_root / "evaluate.json").read_text(encoding="utf-8"))
     require(evaluate.get("status") == expected_commands["/evaluate"], "Isaac /evaluate failed")
-    require(evaluate.get("execution_complete") is True and evaluate.get("task_success") is True, "Isaac target task failed")
-    require(all(evaluate.get("metrics", {}).get("checks", {}).values()), "Isaac target verifier check failed")
-    require(evaluate.get("learned_policy") is False, "Isaac target evaluation overclaims learned policy")
+    require(
+        evaluate.get("execution_complete") is True and evaluate.get("task_success") is True,
+        "Isaac target task failed",
+    )
+    require(
+        all(evaluate.get("metrics", {}).get("checks", {}).values()),
+        "Isaac target verifier check failed",
+    )
+    require(
+        evaluate.get("learned_policy") is False, "Isaac target evaluation overclaims learned policy"
+    )
 
     diagnose = json.loads((bundle_root / "diagnose.json").read_text(encoding="utf-8"))
     require(diagnose.get("status") == expected_commands["/diagnose"], "Isaac /diagnose failed")
-    require(REQUIRED_DENSE_CATEGORIES == set(diagnose.get("categories", {})), "Isaac diagnosis category set mismatch")
+    require(
+        REQUIRED_DENSE_CATEGORIES == set(diagnose.get("categories", {})),
+        "Isaac diagnosis category set mismatch",
+    )
 
     transfer = json.loads((bundle_root / "transfer.json").read_text(encoding="utf-8"))
     require(transfer.get("status") == expected_commands["/transfer"], "Isaac /transfer failed")
-    require(transfer.get("same_normalized_task_contract") is True, "Isaac transfer does not bind one task contract")
-    require(transfer.get("target_backend", {}).get("target_verifier_success") is True, "Isaac transfer target verifier failed")
+    require(
+        transfer.get("same_normalized_task_contract") is True,
+        "Isaac transfer does not bind one task contract",
+    )
+    require(
+        transfer.get("target_backend", {}).get("target_verifier_success") is True,
+        "Isaac transfer target verifier failed",
+    )
     fidelities = {row["field"]: row["fidelity"] for row in transfer.get("mappings", [])}
-    require(fidelities.get("task relation") == "exact_relation", "Isaac task relation transfer mismatch")
+    require(
+        fidelities.get("task relation") == "exact_relation", "Isaac task relation transfer mismatch"
+    )
     for field in ("action interface", "materials", "robot embodiment"):
-        require(fidelities.get(field) == "not_transferred", f"Isaac transfer hides an unmapped surface: {field}")
+        require(
+            fidelities.get(field) == "not_transferred",
+            f"Isaac transfer hides an unmapped surface: {field}",
+        )
 
     source_report = read_json(Path(contract["source_backend"]["evidence"]))
     require(source_report.get("check_success") is True, "source RoboTwin verifier did not pass")
@@ -273,25 +317,19 @@ def validate_openxsim_package(*, require_report: bool = True) -> dict:
         "Isaac candidate block count mismatch",
     )
     require(
-        agenticsim_isaac["runtime_summary"]["strict_open_source_runtime_pass_count"]
-        == 6,
+        agenticsim_isaac["runtime_summary"]["strict_open_source_runtime_pass_count"] == 6,
         "Isaac strict open-source runtime closure count mismatch",
     )
     require(
-        agenticsim_isaac["runtime_summary"][
-            "runtime_pass_without_open_source_closure_count"
-        ]
-        == 5,
+        agenticsim_isaac["runtime_summary"]["runtime_pass_without_open_source_closure_count"] == 5,
         "Isaac strict open-source provenance gap count mismatch",
     )
     require(
-        agenticsim_isaac["usage_policy"]["policy_id"]
-        == "noncommercial_academic_local_use",
+        agenticsim_isaac["usage_policy"]["policy_id"] == "noncommercial_academic_local_use",
         "Isaac academic-use policy mismatch",
     )
     require(
-        agenticsim_isaac["runtime_summary"]["academic_use_runtime_accepted_count"]
-        == 11,
+        agenticsim_isaac["runtime_summary"]["academic_use_runtime_accepted_count"] == 11,
         "Isaac academic-use admission count mismatch",
     )
     require(
@@ -328,16 +366,12 @@ def validate_openxsim_package(*, require_report: bool = True) -> dict:
     for command in REQUIRED_COMMANDS:
         require(f"## {command}" in doc, f"command document missing section: {command}")
     require("Failure codes:" in doc, "command document has no failure-code sections")
-    for code in next(row for row in commands if row["command"] == "/diagnose")[
-        "failure_codes"
-    ]:
+    for code in next(row for row in commands if row["command"] == "/diagnose")["failure_codes"]:
         require(
             f"`{code}`" in doc,
             f"command document missing /diagnose failure code: {code}",
         )
-    for code in next(row for row in commands if row["command"] == "/transfer")[
-        "failure_codes"
-    ]:
+    for code in next(row for row in commands if row["command"] == "/transfer")["failure_codes"]:
         require(
             f"`{code}`" in doc,
             f"command document missing /transfer failure code: {code}",
@@ -471,8 +505,7 @@ def validate_openxsim_package(*, require_report: bool = True) -> dict:
         )
         require(
             all(
-                row["status"].startswith("blocked_")
-                for row in probe["import_gate_matrix"].values()
+                row["status"].startswith("blocked_") for row in probe["import_gate_matrix"].values()
             ),
             f"fallback probe hides an unexecuted gate: {probe_path}",
         )
@@ -483,8 +516,7 @@ def validate_openxsim_package(*, require_report: bool = True) -> dict:
         "Open X Sim benchmark count mismatch",
     )
     require(
-        {row["task_name"] for row in benchmark_manifest["benchmarks"]}
-        == REQUIRED_BENCHMARKS,
+        {row["task_name"] for row in benchmark_manifest["benchmarks"]} == REQUIRED_BENCHMARKS,
         "benchmark task set mismatch",
     )
     for row in benchmark_manifest["benchmarks"]:
@@ -547,12 +579,8 @@ def validate_openxsim_package(*, require_report: bool = True) -> dict:
         ):
             require_evidence(str(REPORT_ROOT / relative), "Open X Sim report")
         delivery = audit["delivery"]
-        benchmark_images = sorted(
-            (report_root / "assets" / "benchmark_frames").glob("*.png")
-        )
-        benchmark_videos = sorted(
-            (report_root / "assets" / "benchmark_videos").glob("*.mp4")
-        )
+        benchmark_images = sorted((report_root / "assets" / "benchmark_frames").glob("*.png"))
+        benchmark_videos = sorted((report_root / "assets" / "benchmark_videos").glob("*.mp4"))
         source_pages = sorted((report_root / "assets" / "source_pages").glob("*.png"))
         isaac_intake = report_root / "assets" / "isaac_intake"
         isaac_candidate_evidence = isaac_intake / "candidate_evidence"
@@ -614,9 +642,7 @@ def validate_openxsim_package(*, require_report: bool = True) -> dict:
             len(isaac_baseline_images) == delivery["isaac_baseline_image_count"],
             "Isaac baseline image count mismatch",
         )
-        require(
-            isaac_baseline_video.is_file(), "Isaac baseline report video is missing"
-        )
+        require(isaac_baseline_video.is_file(), "Isaac baseline report video is missing")
         isaac_video_probe = probe_video(isaac_baseline_video)
         require(
             isaac_video_probe["frame_count"] == 32,
@@ -643,12 +669,8 @@ def validate_openxsim_package(*, require_report: bool = True) -> dict:
         "benchmarks": benchmark_manifest["benchmark_count"],
         "dense_categories": len(REQUIRED_DENSE_CATEGORIES),
         "fallback_gate_rows": len(FALLBACK_PROBES) * len(REQUIRED_IMPORT_GATES),
-        "isaac_runtime_passes": agenticsim_isaac["runtime_summary"][
-            "runtime_pass_count"
-        ],
-        "isaac_runtime_blocked": agenticsim_isaac["runtime_summary"][
-            "runtime_blocked_count"
-        ],
+        "isaac_runtime_passes": agenticsim_isaac["runtime_summary"]["runtime_pass_count"],
+        "isaac_runtime_blocked": agenticsim_isaac["runtime_summary"]["runtime_blocked_count"],
         "isaac_academic_use_accepted": agenticsim_isaac["runtime_summary"][
             "academic_use_runtime_accepted_count"
         ],

@@ -45,7 +45,8 @@ def source_episode_passed(episode: dict[str, Any]) -> bool:
     return (
         str(episode.get("status", "")).startswith("pass_")
         and episode.get("check_success") is True
-        and episode.get("native_synchronized_data", {}).get("status") == "pass_native_synchronized_recording"
+        and episode.get("native_synchronized_data", {}).get("status")
+        == "pass_native_synchronized_recording"
     )
 
 
@@ -151,7 +152,9 @@ def convert_episode(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Convert native synchronized RoboTwin rollout data to ACT HDF5.")
+    parser = argparse.ArgumentParser(
+        description="Convert native synchronized RoboTwin rollout data to ACT HDF5."
+    )
     parser.add_argument("--collection", action="append", required=True)
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--camera-width", type=int, default=96)
@@ -199,19 +202,27 @@ def main() -> int:
             if converted["status"] == "pass_native_act_hdf5_episode":
                 next_episode += 1
 
-    pass_count = sum(1 for episode in report["episodes"] if episode["status"] == "pass_native_act_hdf5_episode")
-    skip_count = sum(1 for episode in report["episodes"] if episode["status"].startswith("skipped_"))
+    pass_count = sum(
+        1 for episode in report["episodes"] if episode["status"] == "pass_native_act_hdf5_episode"
+    )
+    skip_count = sum(
+        1 for episode in report["episodes"] if episode["status"].startswith("skipped_")
+    )
     fail_count = len(report["episodes"]) - pass_count - skip_count
     task_name = f"sim-native-generated_selection2env-demo_clean-{pass_count}"
     task_config = {
         "dataset_dir": str(out_dir / "data"),
         "num_episodes": pass_count,
-        "episode_len": max((episode.get("act_timestep_count", 0) for episode in report["episodes"]), default=0),
+        "episode_len": max(
+            (episode.get("act_timestep_count", 0) for episode in report["episodes"]), default=0
+        ),
         "camera_names": ["cam_high"],
     }
     report.update(
         {
-            "status": "pass_native_act_hdf5_adapter" if pass_count >= 2 and fail_count == 0 else "blocked_native_act_hdf5_adapter",
+            "status": "pass_native_act_hdf5_adapter"
+            if pass_count >= 2 and fail_count == 0
+            else "blocked_native_act_hdf5_adapter",
             "finished_at": datetime.now(timezone.utc).isoformat(),
             "pass_count": pass_count,
             "skip_count": skip_count,
@@ -224,7 +235,15 @@ def main() -> int:
     )
     write_json(out_dir / "SIM_TASK_CONFIGS.generated.json", {task_name: task_config})
     write_json(out_dir / "conversion_report.json", report)
-    print(json.dumps({"status": report["status"], "pass_count": pass_count, "report": str(out_dir / "conversion_report.json")}))
+    print(
+        json.dumps(
+            {
+                "status": report["status"],
+                "pass_count": pass_count,
+                "report": str(out_dir / "conversion_report.json"),
+            }
+        )
+    )
     return 0 if report["status"].startswith("pass_") else 1
 
 

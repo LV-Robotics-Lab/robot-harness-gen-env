@@ -45,12 +45,16 @@ class ScriptedVerifiedPlacementSplitTest(unittest.TestCase):
                             "placement_id": entry["placement_id"],
                             "placement_split": split,
                             "pose_signature": entry["pose_signature"],
-                            "status": "pass_generated_action_rollout" if success else "fail_generated_action_rollout",
+                            "status": "pass_generated_action_rollout"
+                            if success
+                            else "fail_generated_action_rollout",
                             "check_success": success,
                         }
                     )
                 report_path = root / f"{split}_report.json"
-                report_path.write_text(json.dumps({"placement_split": split, "episodes": episodes}), encoding="utf-8")
+                report_path.write_text(
+                    json.dumps({"placement_split": split, "episodes": episodes}), encoding="utf-8"
+                )
                 reports.append(report_path)
 
             verified = build_verified_split(
@@ -92,8 +96,12 @@ class ScriptedVerifiedPlacementSplitTest(unittest.TestCase):
             self.assertEqual(eval_only["splits"]["train"], [])
             self.assertEqual(eval_only["validation"]["train_count"], 0)
             self.assertEqual(eval_only["validation"]["eval_count"], 2)
-            self.assertIsNone(eval_only["validation"]["minimum_train_pairwise_pose_vector_distance_m"])
-            self.assertIsNone(eval_only["validation"]["minimum_eval_to_train_pose_vector_distance_m"])
+            self.assertIsNone(
+                eval_only["validation"]["minimum_train_pairwise_pose_vector_distance_m"]
+            )
+            self.assertIsNone(
+                eval_only["validation"]["minimum_eval_to_train_pose_vector_distance_m"]
+            )
 
 
 if __name__ == "__main__":

@@ -27,7 +27,9 @@ def load_placement_cases(
         if len(placement_ids) != len(set(placement_ids)):
             raise ValueError("Placement ID filter contains duplicates")
         entries_by_id = {str(entry.get("placement_id")): entry for entry in entries}
-        missing = [placement_id for placement_id in placement_ids if placement_id not in entries_by_id]
+        missing = [
+            placement_id for placement_id in placement_ids if placement_id not in entries_by_id
+        ]
         if missing:
             raise ValueError(f"Placement IDs are absent from split {split!r}: {missing}")
         entries = [entries_by_id[placement_id] for placement_id in placement_ids]
@@ -90,9 +92,14 @@ def passed_training_placement_signatures(report_paths: list[Path]) -> set[str]:
             continue
         report = read_json(report_path)
         for episode in report.get("episodes", []):
-            source_passed = str(episode.get("status", "")).startswith("pass_") and episode.get("check_success") is True
+            source_passed = (
+                str(episode.get("status", "")).startswith("pass_")
+                and episode.get("check_success") is True
+            )
             native = episode.get("native_synchronized_data", {})
-            native_passed = not native or native.get("status") == "pass_native_synchronized_recording"
+            native_passed = (
+                not native or native.get("status") == "pass_native_synchronized_recording"
+            )
             signature = episode.get("pose_signature")
             if source_passed and native_passed and signature:
                 signatures.add(str(signature))

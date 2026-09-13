@@ -30,7 +30,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
+    path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+    )
 
 
 def save_rgb(path: Path, rgb: np.ndarray) -> None:
@@ -121,7 +123,13 @@ def load_robotwin_args(robotwin_root: Path, task_config: str, *, save_path: Path
 def collect_named_entities(task: Any) -> dict[str, dict[str, Any]]:
     rows: dict[str, dict[str, Any]] = {}
     for attr_name, value in sorted(vars(task).items()):
-        if attr_name.startswith("_") or attr_name in {"scene", "engine", "renderer", "robot", "cameras"}:
+        if attr_name.startswith("_") or attr_name in {
+            "scene",
+            "engine",
+            "renderer",
+            "robot",
+            "cameras",
+        }:
             continue
         if hasattr(value, "get_pose"):
             rows[attr_name] = pose_record(value)

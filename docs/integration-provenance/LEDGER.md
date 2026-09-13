@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-ALCHEDATA-FORMAT — 保值格式化
+
+- origin_owner / upstream_owner：Alchedata固定来源原作者，沿用既有来源台账，不重新归属。
+- integration_owner：Bingsheng Harness workstream；source_ref：`77e7f9b` 中保留源码。
+- target_paths：self_improving/alchedata/scripts、tests；integration_method：Ruff格式化，60份AST完全等价。
+- verification：35 passed/3 skipped，尚余450条lint；runtime_verification：无新仿真或报告发布。
+- recorded_git_authors：来源历史与本提交元数据分开；不把格式化记为算法原创。
+
 ## INT-CANONICAL-C14-DEPLOYMENT-EDGES — 部署公开消费验证
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`36a889a`。

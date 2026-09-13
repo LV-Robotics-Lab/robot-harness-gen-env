@@ -27,7 +27,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
+    path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+    )
 
 
 def save_rgb(path: Path, rgb: np.ndarray) -> None:
@@ -107,7 +109,9 @@ def load_robotwin_args(robotwin_root: Path, task_config: str) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="RoboTwin /collect dry-run for selection2env placements.")
+    parser = argparse.ArgumentParser(
+        description="RoboTwin /collect dry-run for selection2env placements."
+    )
     parser.add_argument("--robotwin-root", required=True)
     parser.add_argument("--placement", required=True)
     parser.add_argument("--out-dir", required=True)
@@ -190,7 +194,9 @@ def main() -> int:
                         pose=sapien.Pose(xyz, qpos),
                         modelname=obj["asset_id"],
                         modelid=obj.get("model_id", 0),
-                        fix_root_link=defaults.get("fix_root_link", obj.get("physical", {}).get("is_static", False)),
+                        fix_root_link=defaults.get(
+                            "fix_root_link", obj.get("physical", {}).get("is_static", False)
+                        ),
                     )
                     if "articulation_qpos" in defaults:
                         actor.set_qpos(defaults["articulation_qpos"])
@@ -274,9 +280,15 @@ def main() -> int:
                 {
                     "episode_id": "episode_000",
                     "scene_info": str((episode_dir / "scene_info.json").relative_to(out_dir)),
-                    "object_states": str((episode_dir / "object_states.jsonl").relative_to(out_dir)),
-                    "observation_files": [str(Path(path).relative_to(out_dir)) for path in frame_paths],
-                    "observer_video": str((episode_dir / "observer_camera.mp4").relative_to(out_dir)),
+                    "object_states": str(
+                        (episode_dir / "object_states.jsonl").relative_to(out_dir)
+                    ),
+                    "observation_files": [
+                        str(Path(path).relative_to(out_dir)) for path in frame_paths
+                    ],
+                    "observer_video": str(
+                        (episode_dir / "observer_camera.mp4").relative_to(out_dir)
+                    ),
                     "video_capture": {
                         "frame_count": len(frame_arrays),
                         "fps": args.fps,
@@ -291,7 +303,11 @@ def main() -> int:
         }
         write_json(out_dir / "dataset_manifest.json", manifest)
 
-        last_observer = np.array(Image.open(frame_paths[-2])) if len(frame_paths) >= 2 else np.zeros((1, 1, 3), dtype=np.uint8)
+        last_observer = (
+            np.array(Image.open(frame_paths[-2]))
+            if len(frame_paths) >= 2
+            else np.zeros((1, 1, 3), dtype=np.uint8)
+        )
         report.update(
             {
                 "status": "pass_collect_dry_run",

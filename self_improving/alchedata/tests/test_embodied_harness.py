@@ -53,9 +53,19 @@ def test_bounded_causal_obligations_are_advanced_without_priority_overclaim() ->
     obligations = {row["claim"]: row["status"] for row in read_json(SPEC)["proof_obligations"]}
 
     assert obligations["implemented embodied harness artifact contract"] == "proven_bounded"
-    assert obligations["harness edits improve outcomes independently of policy changes"] == "proven_bounded"
-    assert obligations["Open X Sim supports task-semantic reuse across simulators"] == "proven_bounded"
-    assert obligations["failure memory can improve a controlled harness decision"] == "proven_bounded"
-    assert obligations["a learned policy can pass the bounded SceneAgent promotion contract"] == "proven_bounded"
+    assert (
+        obligations["harness edits improve outcomes independently of policy changes"]
+        == "proven_bounded"
+    )
+    assert (
+        obligations["Open X Sim supports task-semantic reuse across simulators"] == "proven_bounded"
+    )
+    assert (
+        obligations["failure memory can improve a controlled harness decision"] == "proven_bounded"
+    )
+    assert (
+        obligations["a learned policy can pass the bounded SceneAgent promotion contract"]
+        == "proven_bounded"
+    )
     assert obligations["real-robot harness evolution"] == "not_run"
     assert obligations["first real embodied harness system"] == "not_established"

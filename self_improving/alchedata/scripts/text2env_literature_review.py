@@ -85,7 +85,10 @@ def validate_review_package(*, require_report: bool = True) -> dict:
         "academic primary-source count does not match rows",
     )
     require(academic_count >= 8, "fewer than eight academic primary sources")
-    require(set(registry["required_scope_ids"]).issubset(source_ids), "required source scope is incomplete")
+    require(
+        set(registry["required_scope_ids"]).issubset(source_ids),
+        "required source scope is incomplete",
+    )
 
     categories = {category for source in sources for category in source["categories"]}
     require(REQUIRED_CATEGORIES == categories, "functional taxonomy coverage is incomplete")
@@ -95,31 +98,58 @@ def validate_review_package(*, require_report: bool = True) -> dict:
             require(any(links.values()), f"{source['source_id']}: no primary link")
         for link in links.values():
             if link is not None:
-                require(link.startswith("https://"), f"{source['source_id']}: non-HTTPS source link")
+                require(
+                    link.startswith("https://"), f"{source['source_id']}: non-HTTPS source link"
+                )
         code_status = source["open_status"]["code_status"]
         if code_status == "released":
             require(links["code"] is not None, f"{source['source_id']}: released code has no link")
         if code_status in {"coming_soon", "not_released", "dataset_only"}:
-            require(links["code"] is None, f"{source['source_id']}: code status contradicts code link")
-        require(source["reproducibility"]["evidence"], f"{source['source_id']}: missing reproducibility evidence")
-        require(source["interface_relation"]["required_gates"], f"{source['source_id']}: missing interface gates")
+            require(
+                links["code"] is None, f"{source['source_id']}: code status contradicts code link"
+            )
+        require(
+            source["reproducibility"]["evidence"],
+            f"{source['source_id']}: missing reproducibility evidence",
+        )
+        require(
+            source["interface_relation"]["required_gates"],
+            f"{source['source_id']}: missing interface gates",
+        )
 
     require(matrix["status"] == "pass_method_matrix_complete", "method matrix status mismatch")
-    require(set(matrix["capabilities"]) == REQUIRED_CAPABILITIES, "method matrix capability set mismatch")
+    require(
+        set(matrix["capabilities"]) == REQUIRED_CAPABILITIES,
+        "method matrix capability set mismatch",
+    )
     matrix_ids = [row["source_id"] for row in matrix["rows"]]
     require(matrix_ids == source_ids, "method matrix rows are not aligned with the source registry")
     allowed_levels = set(matrix["levels"])
     for row in matrix["rows"]:
-        require(set(row["scores"]) == REQUIRED_CAPABILITIES, f"{row['source_id']}: matrix columns incomplete")
-        require(set(row["scores"].values()).issubset(allowed_levels), f"{row['source_id']}: invalid matrix level")
+        require(
+            set(row["scores"]) == REQUIRED_CAPABILITIES,
+            f"{row['source_id']}: matrix columns incomplete",
+        )
+        require(
+            set(row["scores"].values()).issubset(allowed_levels),
+            f"{row['source_id']}: invalid matrix level",
+        )
 
-    require(audit["status"] == "pass_text2env_literature_review_acceptance", "acceptance status mismatch")
+    require(
+        audit["status"] == "pass_text2env_literature_review_acceptance",
+        "acceptance status mismatch",
+    )
     items = audit["items"]
     require(audit["acceptance_count"] == 7, "acceptance count must be seven")
     require([item["id"] for item in items] == list(range(1, 8)), "acceptance ids must be 1-7")
-    require(all(item["status"] == "pass" for item in items), "not all literature acceptance items pass")
+    require(
+        all(item["status"] == "pass" for item in items), "not all literature acceptance items pass"
+    )
     require(set(audit["taxonomy"]) == REQUIRED_CATEGORIES, "acceptance taxonomy is incomplete")
-    require(all(audit["shortlist"].get(tier) for tier in ("P0", "P1", "P2")), "P0/P1/P2 shortlist is incomplete")
+    require(
+        all(audit["shortlist"].get(tier) for tier in ("P0", "P1", "P2")),
+        "P0/P1/P2 shortlist is incomplete",
+    )
     require(
         set(audit["handoff"]["zheng_ye_produces"]["required_fields"]) == REQUIRED_HANDOFF_FIELDS,
         "Zheng Ye handoff field set mismatch",
@@ -136,7 +166,10 @@ def validate_review_package(*, require_report: bool = True) -> dict:
     experiment_statuses = {item["status"] for item in innovation["next_experiments"]}
     require("pass" in experiment_statuses, "innovation audit lacks a passing experiment")
     require("not_run" in experiment_statuses, "innovation audit hides unrun experiments")
-    require("executed_failed_promotion" in experiment_statuses, "innovation audit hides failed promotion")
+    require(
+        "executed_failed_promotion" in experiment_statuses,
+        "innovation audit hides failed promotion",
+    )
 
     doc = (ROOT / REVIEW_DOC).read_text(encoding="utf-8")
     for heading in (
@@ -161,7 +194,12 @@ def validate_review_package(*, require_report: bool = True) -> dict:
     screenshot_count = 0
     if require_report:
         report_root = ROOT / "reports" / "text2env_literature_review"
-        for relative_path in ("index.html", "text2env_literature_review.md", "assets/source_registry.json", "assets/method_matrix.json"):
+        for relative_path in (
+            "index.html",
+            "text2env_literature_review.md",
+            "assets/source_registry.json",
+            "assets/method_matrix.json",
+        ):
             path = report_root / relative_path
             require(path.exists() and path.stat().st_size > 0, f"report artifact missing: {path}")
         screenshots = sorted((report_root / "assets" / "source_pages").glob("*.png"))

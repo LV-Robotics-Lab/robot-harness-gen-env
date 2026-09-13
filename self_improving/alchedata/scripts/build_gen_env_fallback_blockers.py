@@ -75,7 +75,15 @@ def build_video2sim_probe() -> dict[str, Any]:
                     "status": "blocked_missing_forge_artifact",
                     "evidence": "No generated mesh, URDF, scene, pose, physics, or material artifact exists for this gate",
                 }
-                for gate in ("import", "scale", "collision", "support", "material", "render", "verifier")
+                for gate in (
+                    "import",
+                    "scale",
+                    "collision",
+                    "support",
+                    "material",
+                    "render",
+                    "verifier",
+                )
             },
             "blockers": [
                 {
@@ -192,7 +200,9 @@ def main() -> int:
         "schema_version": "alchedata.gen_env_fallback_summary.v0",
         "status": "blocked_fallback_inputs_missing",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "probes": [f"artifacts/generation_fallback/{probe['fallback_id']}.json" for probe in probes],
+        "probes": [
+            f"artifacts/generation_fallback/{probe['fallback_id']}.json" for probe in probes
+        ],
         "claim_boundary": "Records typed /gen-env fallback blockers for Open X Sim acceptance. It does not claim forge or material extraction execution.",
     }
     write_json(OUT_DIR / "fallback_blocker_summary.json", summary)

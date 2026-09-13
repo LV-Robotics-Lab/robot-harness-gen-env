@@ -11,8 +11,12 @@ def test_relation_metrics_require_support_alignment_and_low_speed() -> None:
         "source_speed_max_mps": 0.08,
     }
 
-    passed = relation_metrics([0.1, 0.0, 0.18], [0.1, 0.0, 0.04], [0.2, 0.2, 0.2], [0.65, 0.65, 0.08], 0.01, verifier)
-    failed = relation_metrics([0.4, 0.0, 0.18], [0.1, 0.0, 0.04], [0.2, 0.2, 0.2], [0.65, 0.65, 0.08], 0.01, verifier)
+    passed = relation_metrics(
+        [0.1, 0.0, 0.18], [0.1, 0.0, 0.04], [0.2, 0.2, 0.2], [0.65, 0.65, 0.08], 0.01, verifier
+    )
+    failed = relation_metrics(
+        [0.4, 0.0, 0.18], [0.1, 0.0, 0.04], [0.2, 0.2, 0.2], [0.65, 0.65, 0.08], 0.01, verifier
+    )
 
     assert passed["success"] is True
     assert all(passed["checks"].values())
@@ -23,8 +27,14 @@ def test_relation_metrics_require_support_alignment_and_low_speed() -> None:
 def test_transfer_record_declares_non_transferred_surfaces(tmp_path: Path) -> None:
     contract = {
         "task_id": "openxsim_place_container_plate_v1",
-        "source_backend": {"adapter": "RoboTwin/SAPIEN", "execution_type": "official_scripted_robot_expert"},
-        "target_backend": {"adapter": "Isaac Sim 5.1", "execution_type": "scripted_object_space_expert"},
+        "source_backend": {
+            "adapter": "RoboTwin/SAPIEN",
+            "execution_type": "official_scripted_robot_expert",
+        },
+        "target_backend": {
+            "adapter": "Isaac Sim 5.1",
+            "execution_type": "scripted_object_space_expert",
+        },
     }
     contract_path = tmp_path / "contract.json"
     source_path = tmp_path / "source.json"

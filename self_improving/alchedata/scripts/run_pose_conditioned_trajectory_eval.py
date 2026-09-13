@@ -84,11 +84,18 @@ def run_episode(
         }
         initial_poses = {name: pose_record(actor) for name, actor in task.placement_objects.items()}
         observation = task.get_obs()
-        save_rgb(episode_dir / "initial_head_camera.png", observation["observation"]["head_camera"]["rgb"])
+        save_rgb(
+            episode_dir / "initial_head_camera.png",
+            observation["observation"]["head_camera"]["rgb"],
+        )
         save_rgb(episode_dir / "initial_observer_camera.png", observation["third_view_rgb"])
-        frames.append(resize_rgb(observation["third_view_rgb"], args.camera_width, args.camera_height))
+        frames.append(
+            resize_rgb(observation["third_view_rgb"], args.camera_width, args.camera_height)
+        )
 
-        feature = runtime_feature(task.placement_objects, binding["source_id"], binding["target_id"])
+        feature = runtime_feature(
+            task.placement_objects, binding["source_id"], binding["target_id"]
+        )
         actions, prediction_record = policy.predict(
             feature,
             predictor=args.predictor,
@@ -97,7 +104,9 @@ def run_episode(
         if not prediction_record["finite"]:
             raise RuntimeError("Pose-conditioned policy produced non-finite actions")
         if len(actions) > args.max_steps:
-            raise RuntimeError(f"Predicted {len(actions)} actions but --max-steps is {args.max_steps}")
+            raise RuntimeError(
+                f"Predicted {len(actions)} actions but --max-steps is {args.max_steps}"
+            )
         events.append(
             {
                 "at": utc_now(),
@@ -113,7 +122,9 @@ def run_episode(
             executed_actions.append(action.tolist())
             success = bool(task.eval_success or task.check_success())
             observation = task.get_obs()
-            frames.append(resize_rgb(observation["third_view_rgb"], args.camera_width, args.camera_height))
+            frames.append(
+                resize_rgb(observation["third_view_rgb"], args.camera_width, args.camera_height)
+            )
             events.append(
                 {
                     "at": utc_now(),
@@ -138,14 +149,19 @@ def run_episode(
         )
     finally:
         if getattr(task, "placement_objects", None):
-            final_poses = {name: pose_record(actor) for name, actor in task.placement_objects.items()}
+            final_poses = {
+                name: pose_record(actor) for name, actor in task.placement_objects.items()
+            }
             try:
                 relation_metrics_snapshot = task.relation_metrics()
             except Exception:
                 relation_metrics_snapshot = None
             try:
                 observation = task.get_obs()
-                save_rgb(episode_dir / "final_head_camera.png", observation["observation"]["head_camera"]["rgb"])
+                save_rgb(
+                    episode_dir / "final_head_camera.png",
+                    observation["observation"]["head_camera"]["rgb"],
+                )
                 save_rgb(episode_dir / "final_observer_camera.png", observation["third_view_rgb"])
             except Exception:
                 pass
@@ -232,7 +248,9 @@ def main() -> int:
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--task-config", default="demo_clean")
     parser.add_argument("--seed", action="append", type=int, dest="seeds")
-    parser.add_argument("--predictor", choices=["affine", "rbf", "blend", "nearest"], default="affine")
+    parser.add_argument(
+        "--predictor", choices=["affine", "rbf", "blend", "nearest"], default="affine"
+    )
     parser.add_argument("--extrapolation-margin", type=float, default=0.35)
     parser.add_argument("--max-steps", type=int, default=220)
     parser.add_argument("--fps", type=int, default=8)
@@ -269,9 +287,7 @@ def main() -> int:
     binding = infer_task_binding(args.task_id, first_placement)
     training_signatures = set(policy.metadata["training_pose_signatures"])
     eval_signatures = {
-        str(case["pose_signature"])
-        for case in placement_cases
-        if case.get("pose_signature")
+        str(case["pose_signature"]) for case in placement_cases if case.get("pose_signature")
     }
     all_eval_placements_held_out = bool(
         eval_signatures
@@ -289,7 +305,9 @@ def main() -> int:
         "task_config": args.task_config,
         "argv": sys.argv,
         "placement": str(placement_path) if placement_path else None,
-        "placement_manifest": str(Path(args.placement_manifest).expanduser().resolve()) if args.placement_manifest else None,
+        "placement_manifest": str(Path(args.placement_manifest).expanduser().resolve())
+        if args.placement_manifest
+        else None,
         "placement_split": args.placement_split if args.placement_manifest else "fixed",
         "all_eval_placements_held_out": all_eval_placements_held_out,
         "eval_pose_signatures": sorted(eval_signatures),
@@ -333,7 +351,10 @@ def main() -> int:
         for index, placement_case in enumerate(placement_cases):
             placement = read_json(placement_case["placement_path"])
             episode_binding = infer_task_binding(args.task_id, placement)
-            episode_dir = out_dir / f"episode_{index:03d}_{placement_case['placement_id']}_seed_{placement_case['seed']}"
+            episode_dir = (
+                out_dir
+                / f"episode_{index:03d}_{placement_case['placement_id']}_seed_{placement_case['seed']}"
+            )
             episode, events = run_episode(
                 task_class,
                 placement,
@@ -355,9 +376,7 @@ def main() -> int:
     execution_count = sum(1 for episode in report["episodes"] if episode.get("execution_complete"))
     success_count = sum(1 for episode in report["episodes"] if episode.get("policy_success"))
     infrastructure_pass = (
-        episode_count > 0
-        and execution_count == episode_count
-        and "top_level_error" not in report
+        episode_count > 0 and execution_count == episode_count and "top_level_error" not in report
     )
     report.update(
         {

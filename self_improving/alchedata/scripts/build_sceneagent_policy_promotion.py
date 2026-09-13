@@ -57,23 +57,47 @@ def validated_videos(report: dict[str, Any]) -> list[dict[str, Any]]:
     return videos
 
 
-def validate_four_case_report(report_path: Path, randomized: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def validate_four_case_report(
+    report_path: Path, randomized: bool
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     report = read_json(report_path)
-    require(report["status"] == "pass_pose_conditioned_evaluate_execution", "Evaluation execution did not pass")
+    require(
+        report["status"] == "pass_pose_conditioned_evaluate_execution",
+        "Evaluation execution did not pass",
+    )
     require(report["episode_count"] == 4, "Expected exactly four evaluation episodes")
     require(report["execution_count"] == 4, "Expected four completed evaluation episodes")
     require(report["success_count"] == 4, "Expected four successful evaluation episodes")
     require(report["policy_success_rate"] == 1.0, "Expected 100% task success")
-    require(report["all_eval_placements_held_out"] is True, "Evaluation placements are not held out")
-    require(len(set(report["eval_pose_signatures"])) == 4, "Expected four unique evaluation signatures")
+    require(
+        report["all_eval_placements_held_out"] is True, "Evaluation placements are not held out"
+    )
+    require(
+        len(set(report["eval_pose_signatures"])) == 4, "Expected four unique evaluation signatures"
+    )
     require(report["model"]["predictor"] == "affine", "Unexpected predictor")
     contract = report["policy_contract"]
     require(contract["learned_from_demonstrations"] is True, "Policy is not marked learned")
-    require(contract["privileged_initial_object_pose"] is True, "Privileged observation boundary is missing")
-    require(contract["scripted_expert_called_at_evaluation"] is False, "Scripted expert was called during evaluation")
-    require(all(episode["held_out_placement"] for episode in report["episodes"]), "Episode holdout flag failed")
-    require(all(episode["policy_success"] for episode in report["episodes"]), "Episode task verifier failed")
-    require(all(episode["execution_complete"] for episode in report["episodes"]), "Episode infrastructure failed")
+    require(
+        contract["privileged_initial_object_pose"] is True,
+        "Privileged observation boundary is missing",
+    )
+    require(
+        contract["scripted_expert_called_at_evaluation"] is False,
+        "Scripted expert was called during evaluation",
+    )
+    require(
+        all(episode["held_out_placement"] for episode in report["episodes"]),
+        "Episode holdout flag failed",
+    )
+    require(
+        all(episode["policy_success"] for episode in report["episodes"]),
+        "Episode task verifier failed",
+    )
+    require(
+        all(episode["execution_complete"] for episode in report["episodes"]),
+        "Episode infrastructure failed",
+    )
     if randomized:
         domain = report["domain_randomization"]
         require(domain["random_background"] is True, "Background randomization is disabled")
@@ -82,28 +106,54 @@ def validate_four_case_report(report_path: Path, randomized: bool) -> tuple[dict
         require(domain["random_head_camera_dis"] > 0, "Camera randomization is disabled")
         for episode in report["episodes"]:
             realized = episode["realized_domain_randomization"]
-            require(realized["random_background_enabled"] is True, "Background randomization was not realized")
-            require(realized["random_light_enabled"] is True, "Light randomization was not realized")
-            require(realized["random_head_camera_dis_max_m"] > 0, "Camera randomization was not realized")
-            require(abs(realized["sampled_table_z_bias_m"]) > 0, "Sampled table-height bias is zero")
+            require(
+                realized["random_background_enabled"] is True,
+                "Background randomization was not realized",
+            )
+            require(
+                realized["random_light_enabled"] is True, "Light randomization was not realized"
+            )
+            require(
+                realized["random_head_camera_dis_max_m"] > 0,
+                "Camera randomization was not realized",
+            )
+            require(
+                abs(realized["sampled_table_z_bias_m"]) > 0, "Sampled table-height bias is zero"
+            )
     else:
-        require(not any(bool(value) for value in report["domain_randomization"].values()), "Control report is randomized")
+        require(
+            not any(bool(value) for value in report["domain_randomization"].values()),
+            "Control report is randomized",
+        )
     return report, validated_videos(report)
 
 
-def validate_second_task(report_path: Path, training_path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def validate_second_task(
+    report_path: Path, training_path: Path
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     report = read_json(report_path)
     training = read_json(training_path)
     require(report["task_id"] == "task_can_basket", "Second task is not can-to-basket")
-    require(report["status"] == "pass_pose_conditioned_evaluate_execution", "Second-task execution failed")
+    require(
+        report["status"] == "pass_pose_conditioned_evaluate_execution",
+        "Second-task execution failed",
+    )
     require(report["episode_count"] == 3, "Expected exactly three second-task episodes")
-    require(report["execution_count"] == 3 and report["success_count"] == 3, "Second task did not pass 3/3")
+    require(
+        report["execution_count"] == 3 and report["success_count"] == 3,
+        "Second task did not pass 3/3",
+    )
     require(report["policy_success_rate"] == 1.0, "Second-task success rate is not 100%")
     training_seeds = {int(row["seed"]) for row in training["training_episodes"]}
     eval_seeds = {int(row["seed"]) for row in report["episodes"]}
     require(len(eval_seeds) == 3, "Second-task evaluation seeds are not unique")
-    require(not (training_seeds & eval_seeds), "Second-task evaluation seeds overlap training seeds")
-    require(report["model"]["checkpoint_sha256"] == training["checkpoint_sha256"], "Second-task checkpoint mismatch")
+    require(
+        not (training_seeds & eval_seeds), "Second-task evaluation seeds overlap training seeds"
+    )
+    require(
+        report["model"]["checkpoint_sha256"] == training["checkpoint_sha256"],
+        "Second-task checkpoint mismatch",
+    )
     require(all(row["policy_success"] for row in report["episodes"]), "Second-task verifier failed")
     return report, validated_videos(report)
 
@@ -128,12 +178,30 @@ def build_promotion(
     diagnosis = read_json(diagnosis_path)
     asset_receipt = read_json(asset_receipt_path)
 
-    require(heldout["model"]["checkpoint_sha256"] == apple_training["checkpoint_sha256"], "Apple checkpoint mismatch")
-    require(randomized["model"]["checkpoint_sha256"] == apple_training["checkpoint_sha256"], "Randomized checkpoint mismatch")
-    require(heldout["eval_pose_signatures"] == randomized["eval_pose_signatures"], "Evaluation splits differ")
-    require(parent_act["episode_count"] == 4 and parent_act["success_count"] == 1, "Parent ACT result is not 1/4")
-    require(asset_receipt["status"] == "pass_official_robotwin_background_asset", "Background asset receipt failed")
-    require(asset_receipt["operational_subset"]["file_count"] >= 256, "Background asset subset is too small")
+    require(
+        heldout["model"]["checkpoint_sha256"] == apple_training["checkpoint_sha256"],
+        "Apple checkpoint mismatch",
+    )
+    require(
+        randomized["model"]["checkpoint_sha256"] == apple_training["checkpoint_sha256"],
+        "Randomized checkpoint mismatch",
+    )
+    require(
+        heldout["eval_pose_signatures"] == randomized["eval_pose_signatures"],
+        "Evaluation splits differ",
+    )
+    require(
+        parent_act["episode_count"] == 4 and parent_act["success_count"] == 1,
+        "Parent ACT result is not 1/4",
+    )
+    require(
+        asset_receipt["status"] == "pass_official_robotwin_background_asset",
+        "Background asset receipt failed",
+    )
+    require(
+        asset_receipt["operational_subset"]["file_count"] >= 256,
+        "Background asset subset is too small",
+    )
 
     record = {
         "schema_version": "alchedata.sceneagent_policy_promotion.v0",
@@ -190,7 +258,9 @@ def build_promotion(
                 "task_id": second_task["task_id"],
                 "success_count": second_task["success_count"],
                 "episode_count": second_task["episode_count"],
-                "training_seeds": sorted(int(row["seed"]) for row in second_training["training_episodes"]),
+                "training_seeds": sorted(
+                    int(row["seed"]) for row in second_training["training_episodes"]
+                ),
                 "heldout_eval_seeds": sorted(int(row["seed"]) for row in second_task["episodes"]),
                 "checkpoint_sha256": second_training["checkpoint_sha256"],
                 "report": str(second_task_path.relative_to(ROOT)),
@@ -229,16 +299,19 @@ def main() -> int:
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
     record = build_promotion(
-        *(resolve_evidence_path(value) for value in (
-            args.heldout,
-            args.randomized,
-            args.apple_training,
-            args.second_task,
-            args.second_training,
-            args.parent_act,
-            args.diagnosis,
-            args.asset_receipt,
-        )),
+        *(
+            resolve_evidence_path(value)
+            for value in (
+                args.heldout,
+                args.randomized,
+                args.apple_training,
+                args.second_task,
+                args.second_training,
+                args.parent_act,
+                args.diagnosis,
+                args.asset_receipt,
+            )
+        ),
         Path(args.out).expanduser().resolve(),
     )
     print(json.dumps({"status": record["status"], "decision": record["decision"], "out": args.out}))

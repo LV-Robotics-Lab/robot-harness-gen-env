@@ -50,7 +50,9 @@ def portable_evidence_path(value: str | Path) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify two executable task specs over one placement.")
+    parser = argparse.ArgumentParser(
+        description="Verify two executable task specs over one placement."
+    )
     parser.add_argument("--primary-task", required=True)
     parser.add_argument("--alternate-task", required=True)
     parser.add_argument("--primary-rollout", required=True)
@@ -86,14 +88,17 @@ def main() -> int:
             ),
         }
         images = {
-            name: portable_evidence_path(value)
-            for name, value in report.get("images", {}).items()
+            name: portable_evidence_path(value) for name, value in report.get("images", {}).items()
         }
         rollout_rows.append(
             {
                 "label": label,
                 "task_id": program["task_id"],
-                "task_program": str(primary_path.relative_to(ROOT) if label == "primary" else alternate_path.relative_to(ROOT)),
+                "task_program": str(
+                    primary_path.relative_to(ROOT)
+                    if label == "primary"
+                    else alternate_path.relative_to(ROOT)
+                ),
                 "rollout_report": str(report_path.relative_to(ROOT)),
                 "checks": checks,
                 "status": "pass" if all(checks.values()) else "fail",

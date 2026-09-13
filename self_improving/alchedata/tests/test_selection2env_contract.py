@@ -4,7 +4,10 @@ import hashlib
 import json
 from pathlib import Path
 
-from scripts.selection2env_contract import validate_scene_task_pair, validate_task_program_references
+from scripts.selection2env_contract import (
+    validate_scene_task_pair,
+    validate_task_program_references,
+)
 
 
 def write_json(path: Path, value: dict) -> None:

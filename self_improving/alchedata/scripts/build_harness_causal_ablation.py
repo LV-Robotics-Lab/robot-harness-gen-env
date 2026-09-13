@@ -62,7 +62,9 @@ def matched_protocol(report: dict[str, Any]) -> dict[str, Any]:
 def validate_report(report: dict[str, Any], label: str) -> None:
     if report.get("status") != "pass_generated_act_evaluate_execution":
         raise AssertionError(f"{label} did not complete evaluation infrastructure")
-    if report.get("execution_count") != report.get("episode_count") or not report.get("episode_count"):
+    if report.get("execution_count") != report.get("episode_count") or not report.get(
+        "episode_count"
+    ):
         raise AssertionError(f"{label} did not execute every declared episode")
     model = report.get("model", {})
     if not model.get("checkpoint_sha256") or not model.get("dataset_stats_sha256"):
@@ -92,7 +94,9 @@ def build_ablation(
         if baseline_protocol[key] != candidate_protocol[key]
     }
     if mismatches:
-        raise AssertionError(f"Matched protocol differs outside the harness intervention: {mismatches}")
+        raise AssertionError(
+            f"Matched protocol differs outside the harness intervention: {mismatches}"
+        )
 
     baseline_color = baseline.get("camera_adapter", {}).get("runtime_color_adapter")
     candidate_color = candidate.get("camera_adapter", {}).get("runtime_color_adapter")
@@ -108,8 +112,12 @@ def build_ablation(
     no_observed_safety_regression = (
         baseline.get("execution_count") == baseline.get("episode_count")
         and candidate.get("execution_count") == candidate.get("episode_count")
-        and all(episode.get("infrastructure_error") is None for episode in baseline.get("episodes", []))
-        and all(episode.get("infrastructure_error") is None for episode in candidate.get("episodes", []))
+        and all(
+            episode.get("infrastructure_error") is None for episode in baseline.get("episodes", [])
+        )
+        and all(
+            episode.get("infrastructure_error") is None for episode in candidate.get("episodes", [])
+        )
     )
     promotion_pass = (
         candidate_success == episode_count
@@ -159,7 +167,9 @@ def build_ablation(
             "decision": decision,
             "parent_harness_id": f"runtime_rgb_{baseline_adapter}_v0",
             "candidate_harness_id": f"runtime_rgb_{candidate_adapter}_v1",
-            "promoted_harness_id": f"runtime_rgb_{candidate_adapter}_v1" if promotion_pass else None,
+            "promoted_harness_id": f"runtime_rgb_{candidate_adapter}_v1"
+            if promotion_pass
+            else None,
             "rollback_harness_id": f"runtime_rgb_{baseline_adapter}_v0",
             "gates": {
                 "matched_fixed_checkpoint_protocol": True,
@@ -192,7 +202,15 @@ def main() -> int:
     output = args.out.expanduser().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"status": report["status"], "decision": report["promotion"]["decision"], "out": str(output)}))
+    print(
+        json.dumps(
+            {
+                "status": report["status"],
+                "decision": report["promotion"]["decision"],
+                "out": str(output),
+            }
+        )
+    )
     return 0
 
 

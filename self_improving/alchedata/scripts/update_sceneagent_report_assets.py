@@ -22,9 +22,15 @@ EVIDENCE_PATHS = (
     Path("runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4"),
 )
 CONTINUOUS_VIDEOS = {
-    Path("reports/openxsim_command_loop/assets/benchmark_videos/open_laptop.mp4"): "open_laptop.mp4",
-    Path("reports/openxsim_command_loop/assets/benchmark_videos/place_mouse_pad.mp4"): "place_mouse_pad.mp4",
-    Path("reports/openxsim_command_loop/assets/benchmark_videos/place_container_plate.mp4"): "place_container_plate.mp4",
+    Path(
+        "reports/openxsim_command_loop/assets/benchmark_videos/open_laptop.mp4"
+    ): "open_laptop.mp4",
+    Path(
+        "reports/openxsim_command_loop/assets/benchmark_videos/place_mouse_pad.mp4"
+    ): "place_mouse_pad.mp4",
+    Path(
+        "reports/openxsim_command_loop/assets/benchmark_videos/place_container_plate.mp4"
+    ): "place_container_plate.mp4",
 }
 
 

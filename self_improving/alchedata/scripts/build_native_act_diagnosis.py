@@ -113,7 +113,8 @@ def color_repair_evidence(collection: dict[str, Any]) -> dict[str, Any]:
     episode = next(
         item
         for item in collection.get("episodes", [])
-        if item.get("native_synchronized_data", {}).get("status") == "pass_native_synchronized_recording"
+        if item.get("native_synchronized_data", {}).get("status")
+        == "pass_native_synchronized_recording"
     )
     native_path = resolve_path(episode["native_synchronized_data"]["hdf5"])
     reference_path = resolve_path(episode["images"]["initial_head_camera"])
@@ -157,7 +158,9 @@ def evaluation_summary(path: Path, expert_actions: np.ndarray) -> dict[str, Any]
                 "nearest_expert_index_at_start": int(nearest[0]) if len(nearest) else None,
                 "nearest_expert_index_at_end": int(nearest[-1]) if len(nearest) else None,
                 "nearest_expert_index_max": int(nearest.max()) if len(nearest) else None,
-                "unique_nearest_expert_indices": int(len(np.unique(nearest))) if len(nearest) else 0,
+                "unique_nearest_expert_indices": int(len(np.unique(nearest)))
+                if len(nearest)
+                else 0,
             }
         )
     return {
@@ -192,16 +195,35 @@ def train_summary(path: Path) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build native synchronized ACT closed-loop diagnosis.")
-    parser.add_argument("--collection", default="runs/generated_collect_apple_plate_native_sync/collection_report.json")
+    parser = argparse.ArgumentParser(
+        description="Build native synchronized ACT closed-loop diagnosis."
+    )
+    parser.add_argument(
+        "--collection",
+        default="runs/generated_collect_apple_plate_native_sync/collection_report.json",
+    )
     parser.add_argument("--conversion", default="runs/act_hdf5_native_sync/conversion_report.json")
     parser.add_argument("--loader", default="runs/act_hdf5_native_sync/load_data_report.json")
     parser.add_argument("--replay", default="runs/act_action_replay_native_sync/replay_report.json")
-    parser.add_argument("--chunk20-train", default="runs/act_train_native_sync_rgb_chunk20_1200e/train_smoke_report.json")
-    parser.add_argument("--chunk20-eval", default="runs/act_eval_native_sync_rgb_chunk20_1200e_best/evaluate_report.json")
-    parser.add_argument("--chunk161-train", default="runs/act_train_native_sync_rgb_chunk161_1200e/train_smoke_report.json")
-    parser.add_argument("--chunk161-eval", default="runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json")
-    parser.add_argument("--out", default="artifacts/diagnosis/native_act_closed_loop_diagnosis.json")
+    parser.add_argument(
+        "--chunk20-train",
+        default="runs/act_train_native_sync_rgb_chunk20_1200e/train_smoke_report.json",
+    )
+    parser.add_argument(
+        "--chunk20-eval",
+        default="runs/act_eval_native_sync_rgb_chunk20_1200e_best/evaluate_report.json",
+    )
+    parser.add_argument(
+        "--chunk161-train",
+        default="runs/act_train_native_sync_rgb_chunk161_1200e/train_smoke_report.json",
+    )
+    parser.add_argument(
+        "--chunk161-eval",
+        default="runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json",
+    )
+    parser.add_argument(
+        "--out", default="artifacts/diagnosis/native_act_closed_loop_diagnosis.json"
+    )
     args = parser.parse_args()
 
     paths = {name: resolve_path(value) for name, value in vars(args).items() if name != "out"}
@@ -214,7 +236,8 @@ def main() -> int:
     chunk161_eval = evaluation_summary(paths["chunk161_eval"], expert_actions)
 
     native_pass_count = sum(
-        episode.get("native_synchronized_data", {}).get("status") == "pass_native_synchronized_recording"
+        episode.get("native_synchronized_data", {}).get("status")
+        == "pass_native_synchronized_recording"
         for episode in collection.get("episodes", [])
     )
     source_task_success_count = sum(

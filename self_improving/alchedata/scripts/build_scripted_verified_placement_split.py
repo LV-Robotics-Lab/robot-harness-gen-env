@@ -35,7 +35,10 @@ def select_diverse(entries: list[dict[str, Any]], count: int) -> list[dict[str, 
         best = max(
             enumerate(remaining),
             key=lambda item: (
-                min(vector_distance(item[1]["pose_vector"], chosen["pose_vector"]) for chosen in selected),
+                min(
+                    vector_distance(item[1]["pose_vector"], chosen["pose_vector"])
+                    for chosen in selected
+                ),
                 -item[0],
             ),
         )
@@ -73,7 +76,9 @@ def build_verified_split(
             candidate_entry = candidate_entries.get(key)
             if candidate_entry is None:
                 raise ValueError(f"Collection episode {key} is absent from candidate manifest")
-            signature_matches = episode.get("pose_signature") == candidate_entry.get("pose_signature")
+            signature_matches = episode.get("pose_signature") == candidate_entry.get(
+                "pose_signature"
+            )
             success = (
                 episode.get("status") == "pass_generated_action_rollout"
                 and episode.get("check_success") is True
@@ -96,11 +101,19 @@ def build_verified_split(
 
     selected = {
         "train": select_diverse(
-            [entry for entry in candidate["splits"]["train"] if entry["placement_id"] in passed["train"]],
+            [
+                entry
+                for entry in candidate["splits"]["train"]
+                if entry["placement_id"] in passed["train"]
+            ],
             train_count,
         ),
         "eval": select_diverse(
-            [entry for entry in candidate["splits"]["eval"] if entry["placement_id"] in passed["eval"]],
+            [
+                entry
+                for entry in candidate["splits"]["eval"]
+                if entry["placement_id"] in passed["eval"]
+            ],
             eval_count,
         ),
     }
@@ -141,7 +154,9 @@ def build_verified_split(
         "sampling": candidate.get("sampling"),
         "splits": output_splits,
         "scripted_verification": {
-            "collection_reports": [str(path.expanduser().resolve()) for path in collection_report_paths],
+            "collection_reports": [
+                str(path.expanduser().resolve()) for path in collection_report_paths
+            ],
             "candidate_train_pass_count": len(passed["train"]),
             "candidate_eval_pass_count": len(passed["eval"]),
             "observations": observed,
@@ -207,9 +222,15 @@ def main() -> int:
                 "status": manifest["status"],
                 "train_count": manifest["validation"]["train_count"],
                 "eval_count": manifest["validation"]["eval_count"],
-                "candidate_train_pass_count": manifest["scripted_verification"]["candidate_train_pass_count"],
-                "candidate_eval_pass_count": manifest["scripted_verification"]["candidate_eval_pass_count"],
-                "manifest": str(Path(args.out_dir).expanduser().resolve() / "placement_manifest.json"),
+                "candidate_train_pass_count": manifest["scripted_verification"][
+                    "candidate_train_pass_count"
+                ],
+                "candidate_eval_pass_count": manifest["scripted_verification"][
+                    "candidate_eval_pass_count"
+                ],
+                "manifest": str(
+                    Path(args.out_dir).expanduser().resolve() / "placement_manifest.json"
+                ),
             }
         )
     )

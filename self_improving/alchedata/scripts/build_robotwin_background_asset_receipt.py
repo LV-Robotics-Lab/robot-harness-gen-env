@@ -23,7 +23,9 @@ def build_receipt(archive: Path, seen_dir: Path, out_path: Path, subset_count: i
     archive_size = archive.stat().st_size
     archive_sha256 = sha256_file(archive)
     if archive_size != EXPECTED_ARCHIVE_SIZE:
-        raise ValueError(f"Archive size mismatch: expected {EXPECTED_ARCHIVE_SIZE}, found {archive_size}")
+        raise ValueError(
+            f"Archive size mismatch: expected {EXPECTED_ARCHIVE_SIZE}, found {archive_size}"
+        )
     if archive_sha256 != EXPECTED_ARCHIVE_SHA256:
         raise ValueError(f"Archive SHA-256 mismatch: {archive_sha256}")
 
@@ -33,8 +35,7 @@ def build_receipt(archive: Path, seen_dir: Path, out_path: Path, subset_count: i
         raise FileNotFoundError(f"Operational background subset is incomplete: {missing[:5]}")
     extracted_size = sum(path.stat().st_size for path in expected_files)
     subset_digest_payload = "".join(
-        f"{path.name}\t{path.stat().st_size}\t{sha256_file(path)}\n"
-        for path in expected_files
+        f"{path.name}\t{path.stat().st_size}\t{sha256_file(path)}\n" for path in expected_files
     ).encode("utf-8")
     import hashlib
 
@@ -81,8 +82,14 @@ def main() -> int:
     parser.add_argument("--out", required=True)
     parser.add_argument("--subset-count", type=int, default=256)
     args = parser.parse_args()
-    receipt = build_receipt(Path(args.archive), Path(args.seen_dir), Path(args.out), args.subset_count)
-    print(json.dumps({"status": receipt["status"], **receipt["archive"], **receipt["operational_subset"]}))
+    receipt = build_receipt(
+        Path(args.archive), Path(args.seen_dir), Path(args.out), args.subset_count
+    )
+    print(
+        json.dumps(
+            {"status": receipt["status"], **receipt["archive"], **receipt["operational_subset"]}
+        )
+    )
     return 0
 
 

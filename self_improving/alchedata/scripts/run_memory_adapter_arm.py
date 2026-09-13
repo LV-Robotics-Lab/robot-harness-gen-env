@@ -165,7 +165,10 @@ def main() -> int:
         command.extend(["--seed", str(seed)])
     stdout_path = out_dir / "evaluator_stdout.log"
     stderr_path = out_dir / "evaluator_stderr.log"
-    with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open("w", encoding="utf-8") as stderr:
+    with (
+        stdout_path.open("w", encoding="utf-8") as stdout,
+        stderr_path.open("w", encoding="utf-8") as stderr,
+    ):
         result = subprocess.run(command, cwd=ROOT, stdout=stdout, stderr=stderr, check=False)
 
     report_path = evaluator_dir / "evaluate_report.json"

@@ -23,7 +23,9 @@ REPORTS = {
 
 def local_link_targets(page: Page, report: Path) -> list[Path]:
     targets = []
-    for href in page.locator("a[href]").evaluate_all("nodes => nodes.map(node => node.getAttribute('href'))"):
+    for href in page.locator("a[href]").evaluate_all(
+        "nodes => nodes.map(node => node.getAttribute('href'))"
+    ):
         if not href or href.startswith(("#", "http://", "https://", "mailto:")):
             continue
         parsed = urlparse(href)
@@ -40,14 +42,21 @@ def inspect_page(page: Page, report: Path) -> dict[str, object]:
     images = page.locator("img").evaluate_all(
         "nodes => nodes.map(node => ({src: node.getAttribute('src'), width: node.naturalWidth, height: node.naturalHeight, complete: node.complete}))"
     )
-    broken_images = [row for row in images if not row["complete"] or row["width"] <= 0 or row["height"] <= 0]
+    broken_images = [
+        row for row in images if not row["complete"] or row["width"] <= 0 or row["height"] <= 0
+    ]
     videos = page.locator("video").evaluate_all(
         "nodes => nodes.map(node => { const rect = node.getBoundingClientRect(); return ({src: node.currentSrc || node.getAttribute('src') || node.querySelector('source')?.getAttribute('src'), poster: node.poster, readyState: node.readyState, duration: node.duration, width: node.videoWidth, height: node.videoHeight, renderedWidth: rect.width, renderedHeight: rect.height, error: node.error && node.error.message}); })"
     )
     broken_videos = [
         row
         for row in videos
-        if row["readyState"] < 1 or not row["duration"] or row["duration"] <= 0 or row["width"] <= 0 or row["height"] <= 0 or row["error"]
+        if row["readyState"] < 1
+        or not row["duration"]
+        or row["duration"] <= 0
+        or row["width"] <= 0
+        or row["height"] <= 0
+        or row["error"]
     ]
     overflow = page.evaluate(
         "() => ({scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth})"
@@ -83,10 +92,17 @@ def qa_report(browser, report_id: str, report: Path) -> dict[str, object]:
         ("mobile", {"width": 390, "height": 844}),
     ):
         page = browser.new_page(viewport=viewport)
-        page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
+        page.on(
+            "console",
+            lambda message: (
+                console_errors.append(message.text) if message.type == "error" else None
+            ),
+        )
         page.on("pageerror", lambda error: page_errors.append(str(error)))
         page.goto(index.resolve().as_uri(), wait_until="load")
-        page.locator("img").evaluate_all("nodes => nodes.forEach(node => { node.loading = 'eager'; })")
+        page.locator("img").evaluate_all(
+            "nodes => nodes.forEach(node => { node.loading = 'eager'; })"
+        )
         page.evaluate(
             "async () => { await Promise.all([...document.images].map(image => image.complete ? Promise.resolve() : new Promise(resolve => { image.addEventListener('load', resolve, {once:true}); image.addEventListener('error', resolve, {once:true}); }))); }"
         )
@@ -96,7 +112,9 @@ def qa_report(browser, report_id: str, report: Path) -> dict[str, object]:
             page.locator(".benchmarks").screenshot(path=str(qa_dir / "desktop-benchmarks.png"))
             page.locator(".fallbacks").screenshot(path=str(qa_dir / "desktop-fallbacks.png"))
         if report_id == "harness" and viewport_id == "desktop":
-            page.locator(".result-videos").screenshot(path=str(qa_dir / "desktop-bounded-evidence-videos.png"))
+            page.locator(".result-videos").screenshot(
+                path=str(qa_dir / "desktop-bounded-evidence-videos.png")
+            )
         page.evaluate(
             "() => { document.querySelectorAll('video[poster]').forEach(video => { const rect = video.getBoundingClientRect(); const image = document.createElement('img'); image.src = video.poster; image.alt = video.getAttribute('aria-label') || 'Video poster used for static QA screenshot'; image.style.display = 'block'; image.style.width = `${rect.width}px`; image.style.maxWidth = '100%'; image.style.height = `${rect.height}px`; image.style.objectFit = 'cover'; image.style.background = '#111'; video.replaceWith(image); }); }"
         )
@@ -141,7 +159,11 @@ def main() -> int:
                 results[report_id] = qa_report(browser, report_id, report)
         finally:
             browser.close()
-    print(json.dumps({"status": "pass_all_report_browser_qa", "reports": results}, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {"status": "pass_all_report_browser_qa", "reports": results}, indent=2, sort_keys=True
+        )
+    )
     return 0
 
 

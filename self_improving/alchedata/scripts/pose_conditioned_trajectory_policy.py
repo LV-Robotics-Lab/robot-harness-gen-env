@@ -98,14 +98,20 @@ def phase_slices(actions: np.ndarray, gripper_index: int) -> list[slice]:
         )
     first, second = transitions[:2]
     if not (0 < first < second < len(actions)):
-        raise ValueError(f"Invalid phase boundaries {(first, second)} for trajectory length {len(actions)}")
+        raise ValueError(
+            f"Invalid phase boundaries {(first, second)} for trajectory length {len(actions)}"
+        )
     return [slice(0, first), slice(first, second), slice(second, len(actions))]
 
 
-def infer_phase_lengths(trajectories: Iterable[np.ndarray], gripper_index: int) -> tuple[int, int, int]:
+def infer_phase_lengths(
+    trajectories: Iterable[np.ndarray], gripper_index: int
+) -> tuple[int, int, int]:
     observed = []
     for actions in trajectories:
-        observed.append([phase.stop - phase.start for phase in phase_slices(actions, gripper_index)])
+        observed.append(
+            [phase.stop - phase.start for phase in phase_slices(actions, gripper_index)]
+        )
     lengths = np.rint(np.median(np.asarray(observed, dtype=np.float64), axis=0)).astype(int)
     lengths = np.maximum(lengths, 2)
     return tuple(int(value) for value in lengths)
@@ -134,7 +140,10 @@ def canonicalize_trajectory(
 ) -> np.ndarray:
     phases = phase_slices(actions, gripper_index)
     canonical = np.concatenate(
-        [resample_rows(actions[phase], length) for phase, length in zip(phases, phase_lengths, strict=True)],
+        [
+            resample_rows(actions[phase], length)
+            for phase, length in zip(phases, phase_lengths, strict=True)
+        ],
         axis=0,
     )
     for index in GRIPPER_INDICES:
@@ -236,12 +245,13 @@ def leave_one_out_scores(
         affine_errors.append(float(np.mean((affine_prediction - targets[held_out]) ** 2)))
         for sigma in sigma_candidates:
             weights = fit_rbf(features[mask], targets[mask], sigma, ridge)
-            prediction = rbf_kernel(features[held_out : held_out + 1], features[mask], sigma) @ weights
+            prediction = (
+                rbf_kernel(features[held_out : held_out + 1], features[mask], sigma) @ weights
+            )
             rbf_errors[sigma].append(float(np.mean((prediction[0] - targets[held_out]) ** 2)))
 
     rbf_rows = [
-        {"sigma": sigma, "mse": float(np.mean(errors))}
-        for sigma, errors in rbf_errors.items()
+        {"sigma": sigma, "mse": float(np.mean(errors))} for sigma, errors in rbf_errors.items()
     ]
     selected = min(rbf_rows, key=lambda row: (row["mse"], row["sigma"]))
     return {
@@ -274,7 +284,10 @@ def train_checkpoint(
     signatures = sorted(grouped)
     features = np.stack([demonstrations[grouped[signature][0]].feature for signature in signatures])
     trajectories = np.stack(
-        [np.mean([canonical[index] for index in grouped[signature]], axis=0) for signature in signatures]
+        [
+            np.mean([canonical[index] for index in grouped[signature]], axis=0)
+            for signature in signatures
+        ]
     )
     target_shape = trajectories.shape[1:]
     targets = trajectories.reshape(len(trajectories), -1)
@@ -400,7 +413,9 @@ class PoseConditionedTrajectoryPolicy:
             "nearest_training_index": nearest_index,
             "nearest_training_feature_xy_m": self.train_features[nearest_index].tolist(),
             "nearest_training_distance_normalized": float(distances[nearest_index]),
-            "rbf_max_similarity": float(np.max(rbf_kernel(normalized, self.train_features_normalized, sigma))),
+            "rbf_max_similarity": float(
+                np.max(rbf_kernel(normalized, self.train_features_normalized, sigma))
+            ),
             "action_count": len(actions),
             "action_dim": actions.shape[1],
             "finite": bool(np.isfinite(actions).all()),

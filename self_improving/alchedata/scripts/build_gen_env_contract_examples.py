@@ -93,7 +93,9 @@ def build_selection_route() -> dict[str, Any]:
 
 
 def build_forge_route() -> dict[str, Any]:
-    blocker = read_json(ROOT / "artifacts" / "generation_fallback" / "blocked_drawer_mug_video2sim_forge.json")
+    blocker = read_json(
+        ROOT / "artifacts" / "generation_fallback" / "blocked_drawer_mug_video2sim_forge.json"
+    )
     record = common(blocker["inputs"]["source_task"], "forge_fallback", "blocked_forge_fallback")
     record["inputs"].update(
         {
@@ -116,7 +118,9 @@ def build_forge_route() -> dict[str, Any]:
                     "physics_metadata": None,
                     "provenance": {
                         "blocker_artifact": "artifacts/generation_fallback/blocked_drawer_mug_video2sim_forge.json",
-                        "blocked_selection2env_artifact": blocker["inputs"]["blocked_selection2env_artifact"],
+                        "blocked_selection2env_artifact": blocker["inputs"][
+                            "blocked_selection2env_artifact"
+                        ],
                     },
                     "import_gate": {
                         "status": "not_run",
@@ -124,7 +128,11 @@ def build_forge_route() -> dict[str, Any]:
                     },
                 },
                 "handoff": {
-                    "collect_outputs": ["sapien_import_smoke_report", "scene_json", "object_state_trace"],
+                    "collect_outputs": [
+                        "sapien_import_smoke_report",
+                        "scene_json",
+                        "object_state_trace",
+                    ],
                     "train_reads": ["accepted_rollout_dataset_manifest"],
                     "evaluate_reads": ["verifier gate outputs", "failure diagnosis"],
                 },
@@ -137,8 +145,14 @@ def build_forge_route() -> dict[str, Any]:
 
 
 def build_material_route() -> dict[str, Any]:
-    blocker = read_json(ROOT / "artifacts" / "generation_fallback" / "blocked_neumatex_material_sidecar.json")
-    record = common("extract a relightable material sidecar for a generated or imported asset", "material_sidecar", "blocked_material_sidecar")
+    blocker = read_json(
+        ROOT / "artifacts" / "generation_fallback" / "blocked_neumatex_material_sidecar.json"
+    )
+    record = common(
+        "extract a relightable material sidecar for a generated or imported asset",
+        "material_sidecar",
+        "blocked_material_sidecar",
+    )
     record["inputs"].update(
         {
             "multi_view_images": blocker["inputs"].get("multi_view_images", []),

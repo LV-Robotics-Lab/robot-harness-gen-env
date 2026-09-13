@@ -41,9 +41,14 @@ def load_act_utils(robotwin_root: Path):
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run RoboTwin ACT HDF5 loader smoke.")
     parser.add_argument("--robotwin-root", default=str(ROOT / "external" / "RoboTwin"))
-    parser.add_argument("--config", default=str(ROOT / "runs" / "act_hdf5_generated_smoke" / "SIM_TASK_CONFIGS.generated.json"))
+    parser.add_argument(
+        "--config",
+        default=str(ROOT / "runs" / "act_hdf5_generated_smoke" / "SIM_TASK_CONFIGS.generated.json"),
+    )
     parser.add_argument("--task-name")
-    parser.add_argument("--out", default=str(ROOT / "runs" / "act_hdf5_generated_smoke" / "load_data_report.json"))
+    parser.add_argument(
+        "--out", default=str(ROOT / "runs" / "act_hdf5_generated_smoke" / "load_data_report.json")
+    )
     args = parser.parse_args()
 
     config_path = Path(args.config).expanduser().resolve()
@@ -67,8 +72,12 @@ def main() -> int:
         task_name = args.task_name or next(iter(config))
         task_config = config[task_name]
         utils = load_act_utils(robotwin_root)
-        norm_stats, max_action_len = utils.get_norm_stats(task_config["dataset_dir"], task_config["num_episodes"])
-        dataset = utils.EpisodicDataset([0], task_config["dataset_dir"], task_config["camera_names"], norm_stats, max_action_len)
+        norm_stats, max_action_len = utils.get_norm_stats(
+            task_config["dataset_dir"], task_config["num_episodes"]
+        )
+        dataset = utils.EpisodicDataset(
+            [0], task_config["dataset_dir"], task_config["camera_names"], norm_stats, max_action_len
+        )
         image_data, qpos_data, action_data, is_pad = dataset[0]
         report.update(
             {
@@ -85,7 +94,11 @@ def main() -> int:
                     "action": list(action_data.shape),
                     "is_pad": list(is_pad.shape),
                 },
-                "norm_stats_shapes": {key: list(value.shape) for key, value in norm_stats.items() if hasattr(value, "shape")},
+                "norm_stats_shapes": {
+                    key: list(value.shape)
+                    for key, value in norm_stats.items()
+                    if hasattr(value, "shape")
+                },
             }
         )
     except Exception as exc:  # noqa: BLE001

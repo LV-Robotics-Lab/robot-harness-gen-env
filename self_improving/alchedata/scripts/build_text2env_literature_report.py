@@ -85,7 +85,11 @@ def candidate_links(project: dict) -> str:
         for key, label in labels.items()
         if (url := project["public_sources"].get(key))
     ]
-    return " · ".join(links) if links else '<span class="muted">No public primary source identified</span>'
+    return (
+        " · ".join(links)
+        if links
+        else '<span class="muted">No public primary source identified</span>'
+    )
 
 
 def status_badge(status: str) -> str:
@@ -99,10 +103,10 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
     acceptance_rows = "".join(
         f"""
         <tr>
-          <td class="number">{item['id']:02d}</td>
-          <td>{esc(item['requirement'])}</td>
-          <td>{status_badge(item['status'])}</td>
-          <td><code>{esc(item['evidence'][0])}</code></td>
+          <td class="number">{item["id"]:02d}</td>
+          <td>{esc(item["requirement"])}</td>
+          <td>{status_badge(item["status"])}</td>
+          <td><code>{esc(item["evidence"][0])}</code></td>
         </tr>"""
         for item in audit["items"]
     )
@@ -115,9 +119,9 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
     gallery_cards = "".join(
         f"""
         <figure class="source-shot">
-          <img src="assets/source_pages/{esc(filename)}" alt="{esc(source_by_id[source_id]['name'])} official source page screenshot">
+          <img src="assets/source_pages/{esc(filename)}" alt="{esc(source_by_id[source_id]["name"])} official source page screenshot">
           <figcaption>
-            <strong>{esc(source_by_id[source_id]['name'])}</strong>
+            <strong>{esc(source_by_id[source_id]["name"])}</strong>
             <span>Captured 2026-07-14 · primary URL rechecked 2026-07-15</span>
           </figcaption>
         </figure>"""
@@ -128,20 +132,20 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
     candidate_rows = "".join(
         f"""
         <tr>
-          <td><strong>{esc(project['name'])}</strong><br><span class="muted">{esc(project['resume_relation'])}</span></td>
+          <td><strong>{esc(project["name"])}</strong><br><span class="muted">{esc(project["resume_relation"])}</span></td>
           <td>{candidate_links(project)}</td>
-          <td><code>{esc(project['relevance_bucket'])}</code></td>
-          <td>{esc(project['verified_scope'])}</td>
-          <td><strong>{esc(project['disposition'].replace('_', ' '))}</strong><br><span class="muted">{esc(project['boundary'])}</span></td>
+          <td><code>{esc(project["relevance_bucket"])}</code></td>
+          <td>{esc(project["verified_scope"])}</td>
+          <td><strong>{esc(project["disposition"].replace("_", " "))}</strong><br><span class="muted">{esc(project["boundary"])}</span></td>
         </tr>"""
         for project in candidate["projects"]
     )
     candidate_gallery_cards = "".join(
         f"""
         <figure class="source-shot">
-          <img src="assets/source_pages/{esc(filename)}" alt="{esc(candidate_by_id[project_id]['name'])} official source page screenshot">
+          <img src="assets/source_pages/{esc(filename)}" alt="{esc(candidate_by_id[project_id]["name"])} official source page screenshot">
           <figcaption>
-            <strong>{esc(candidate_by_id[project_id]['name'])}</strong>
+            <strong>{esc(candidate_by_id[project_id]["name"])}</strong>
             <span>Captured 2026-07-14 · primary URL rechecked 2026-07-15</span>
           </figcaption>
         </figure>"""
@@ -152,23 +156,25 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
         f"""
         <details class="source-row">
           <summary>
-            <span><strong>{esc(source['name'])}</strong><small>{source['year']} · {esc(source['source_kind'].replace('_', ' '))}</small></span>
-            <span class="tier {esc(source['interface_relation']['adoption_tier'].lower())}">{esc(source['interface_relation']['adoption_tier'])}</span>
+            <span><strong>{esc(source["name"])}</strong><small>{source["year"]} · {esc(source["source_kind"].replace("_", " "))}</small></span>
+            <span class="tier {esc(source["interface_relation"]["adoption_tier"].lower())}">{esc(source["interface_relation"]["adoption_tier"])}</span>
           </summary>
           <div class="source-body">
             <div><span class="label">Primary links</span><p>{source_links(source)}</p></div>
-            <div><span class="label">Input → output</span><p>{esc(source['input'])}<br><strong>→</strong> {esc(source['output'])}</p></div>
-            <div><span class="label">Environment / assets</span><p>{esc(source['environment_assets'])}</p></div>
-            <div><span class="label">Open status</span><p>{esc(source['open_status']['code_status'])} · {esc(source['open_status']['license'])}</p></div>
-            <div><span class="label">Reproducibility</span><p><strong>{esc(source['reproducibility']['level'])}</strong><br>{esc(source['reproducibility']['evidence'][0])}</p></div>
-            <div><span class="label">RoboTwin / AgenticSim</span><p>{esc(source['interface_relation']['robotwin'])}<br>{esc(source['interface_relation']['agenticsim'])}</p></div>
-            <div class="wide"><span class="label">Required gates</span><p>{' · '.join(esc(gate) for gate in source['interface_relation']['required_gates'])}</p></div>
+            <div><span class="label">Input → output</span><p>{esc(source["input"])}<br><strong>→</strong> {esc(source["output"])}</p></div>
+            <div><span class="label">Environment / assets</span><p>{esc(source["environment_assets"])}</p></div>
+            <div><span class="label">Open status</span><p>{esc(source["open_status"]["code_status"])} · {esc(source["open_status"]["license"])}</p></div>
+            <div><span class="label">Reproducibility</span><p><strong>{esc(source["reproducibility"]["level"])}</strong><br>{esc(source["reproducibility"]["evidence"][0])}</p></div>
+            <div><span class="label">RoboTwin / AgenticSim</span><p>{esc(source["interface_relation"]["robotwin"])}<br>{esc(source["interface_relation"]["agenticsim"])}</p></div>
+            <div class="wide"><span class="label">Required gates</span><p>{" · ".join(esc(gate) for gate in source["interface_relation"]["required_gates"])}</p></div>
           </div>
         </details>"""
         for source in registry["sources"]
     )
 
-    capability_headers = "".join(f"<th>{esc(CAPABILITY_LABELS[name])}</th>" for name in matrix["capabilities"])
+    capability_headers = "".join(
+        f"<th>{esc(CAPABILITY_LABELS[name])}</th>" for name in matrix["capabilities"]
+    )
     matrix_rows = "".join(
         "<tr>"
         f"<td><strong>{esc(source_by_id[row['source_id']]['name'])}</strong></td>"
@@ -184,20 +190,27 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
         f"""
         <section class="tier-column">
           <h3>{tier}</h3>
-          {''.join(
-              f'<article><strong>{esc(item["decision"])}</strong><span class="disposition">{esc(item["current_status"].replace("_", " "))}</span><p>{esc(item["evidence"])}</p></article>'
-              for item in audit['shortlist'][tier]
-          )}
+          {
+            "".join(
+                f'<article><strong>{esc(item["decision"])}</strong><span class="disposition">{esc(item["current_status"].replace("_", " "))}</span><p>{esc(item["evidence"])}</p></article>'
+                for item in audit["shortlist"][tier]
+            )
+        }
         </section>"""
         for tier in ("P0", "P1", "P2")
     )
 
-    handoff_fields = "".join(f"<code>{esc(field)}</code>" for field in audit["handoff"]["zheng_ye_produces"]["required_fields"])
+    handoff_fields = "".join(
+        f"<code>{esc(field)}</code>"
+        for field in audit["handoff"]["zheng_ye_produces"]["required_fields"]
+    )
     handoff_rows = "".join(
         f"<tr><td><code>{esc(command)}</code></td><td>{' · '.join(esc(value) for value in values)}</td></tr>"
         for command, values in audit["handoff"]["gaochen_consumes"].items()
     )
-    blocker_rows = "".join(f"<li>{esc(blocker)}</li>" for blocker in audit["handoff"]["open_blockers"])
+    blocker_rows = "".join(
+        f"<li>{esc(blocker)}</li>" for blocker in audit["handoff"]["open_blockers"]
+    )
 
     innovation = audit["innovation_after_aspire_enpire"]
     innovation_dimensions = "".join(
@@ -222,25 +235,25 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
         for title, result, boundary, link in (
             (
                 "Task-semantic cross-sim",
-                f'{cross_sim["command_count"]} commands · {cross_sim["trace_steps"]} trace steps · {cross_sim["unique_video_frames"]}/{cross_sim["video_frames"]} unique frames',
+                f"{cross_sim['command_count']} commands · {cross_sim['trace_steps']} trace steps · {cross_sim['unique_video_frames']}/{cross_sim['video_frames']} unique frames",
                 "RoboTwin task semantics are mapped into an Isaac primitive-proxy scene; robot embodiment and learned policy are not transferred.",
                 "assets/empirics/text2env_empirical_audit_v1.json",
             ),
             (
                 "Matched memory ablation",
-                f'{memory["no_memory_success_count"]}/3 no-memory → {memory["memory_success_count"]}/3 memory',
+                f"{memory['no_memory_success_count']}/3 no-memory → {memory['memory_success_count']}/3 memory",
                 "Checkpoint, placement, seeds, actions, and evaluator are fixed; memory changes only the runtime color-adapter selection.",
                 "assets/empirics/memory_ablation_rgb_adapter_v1.json",
             ),
             (
                 "Material sidecar roundtrip",
-                f'RGB MAE {material["rgb_mae"]:.5f} · CIE76 ΔE {material["cie76_delta_e"]:.4f}',
-                f'{material["source_foreground_pixels"]} source and {material["rendered_foreground_pixels"]} rendered foreground pixels; this is not intrinsic BRDF recovery.',
+                f"RGB MAE {material['rgb_mae']:.5f} · CIE76 ΔE {material['cie76_delta_e']:.4f}",
+                f"{material['source_foreground_pixels']} source and {material['rendered_foreground_pixels']} rendered foreground pixels; this is not intrinsic BRDF recovery.",
                 "assets/empirics/material_roundtrip/roundtrip_report.json",
             ),
             (
                 "Failure-score correlation",
-                f'n={correlation["sample_count"]} · r={correlation["metrics"]["point_biserial_pearson_r"]:.4f} · exact p={correlation["metrics"]["exact_two_sided_label_permutation_p"]:.4f}',
+                f"n={correlation['sample_count']} · r={correlation['metrics']['point_biserial_pearson_r']:.4f} · exact p={correlation['metrics']['exact_two_sided_label_permutation_p']:.4f}",
                 "The predeclared score did not predict more failures; the null/negative result is retained.",
                 "assets/empirics/failure_score_correlation_v1.json",
             ),
@@ -306,9 +319,9 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
       <div class="verdict"><strong>Acceptance 7 / 7</strong><span>[COMPUTED] [CONFIDENCE: HIGH] Evidence package complete</span></div>
     </header>
     <div class="metrics">
-      <div class="metric"><strong>{registry['source_count']}</strong><span>Audited source rows</span></div>
-      <div class="metric"><strong>{registry['academic_primary_source_count']}</strong><span>Academic primary sources</span></div>
-      <div class="metric"><strong>{len(matrix['capabilities'])}</strong><span>Required capability columns</span></div>
+      <div class="metric"><strong>{registry["source_count"]}</strong><span>Audited source rows</span></div>
+      <div class="metric"><strong>{registry["academic_primary_source_count"]}</strong><span>Academic primary sources</span></div>
+      <div class="metric"><strong>{len(matrix["capabilities"])}</strong><span>Required capability columns</span></div>
       <div class="metric"><strong>{len(SOURCE_SCREENSHOTS) + len(CANDIDATE_APPENDIX_SCREENSHOTS)}</strong><span>Bundled official-page snapshots</span></div>
     </div>
     <div class="boundary">
@@ -324,7 +337,7 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
     <section class="block"><div class="section-head"><h2>Method Matrix</h2><p class="note">Ordinal review judgment: H direct, M partial, L adjacent, - none.</p></div><div class="table-wrap"><table class="matrix"><thead><tr><th>Source</th>{capability_headers}</tr></thead><tbody>{matrix_rows}</tbody></table></div></section>
     <section class="block"><div class="section-head"><h2>P0 / P1 / P2 Decision</h2><p class="note">Original weekly decision, re-audited against current execution state.</p></div><div class="shortlist">{shortlist_columns}</div></section>
     <section class="block"><div class="section-head"><h2>Zheng Ye → Gaochen Handoff</h2><p class="note">Typed producer and consumer contracts.</p></div><div class="handoff"><article class="panel"><h3>/gen-env producer fields</h3><div class="field-list">{handoff_fields}</div><h3 style="margin-top:18px">Open blockers</h3><ul>{blocker_rows}</ul></article><article class="panel"><h3>Gaochen command inputs</h3><div class="table-wrap"><table><thead><tr><th>Command</th><th>Fields and artifacts</th></tr></thead><tbody>{handoff_rows}</tbody></table></div></article></div></section>
-    <section class="block"><div class="section-head"><h2>After ASPIRE and ENPIRE</h2><p class="note">Differentiation is a testable hypothesis, not a priority claim.</p></div><div class="panel"><p><strong>ASPIRE overlap:</strong> {esc(innovation['overlap']['ASPIRE'])}</p><p><strong>ENPIRE overlap:</strong> {esc(innovation['overlap']['ENPIRE'])}</p><div class="dimensions">{innovation_dimensions}</div><p><span class="tag">[INFERRED]</span><span class="tag">[CONFIDENCE: HIGH]</span>{esc(innovation['claim_boundary'])}</p></div></section>
+    <section class="block"><div class="section-head"><h2>After ASPIRE and ENPIRE</h2><p class="note">Differentiation is a testable hypothesis, not a priority claim.</p></div><div class="panel"><p><strong>ASPIRE overlap:</strong> {esc(innovation["overlap"]["ASPIRE"])}</p><p><strong>ENPIRE overlap:</strong> {esc(innovation["overlap"]["ENPIRE"])}</p><div class="dimensions">{innovation_dimensions}</div><p><span class="tag">[INFERRED]</span><span class="tag">[CONFIDENCE: HIGH]</span>{esc(innovation["claim_boundary"])}</p></div></section>
     <section class="block"><div class="section-head"><h2>Executed Empirical Follow-Through</h2><p class="note">All five gates bind to local machine-readable evidence; positive results remain scoped.</p></div><div class="empirical-grid">{empirical_rows}</div><video class="cross-video" controls preload="metadata" poster="assets/empirics/isaac_command_loop/frames/frame_00023.png" src="assets/empirics/isaac_command_loop/isaac_place_on_rollout.mp4"></video><div class="roundtrip"><figure><img src="assets/empirics/material_roundtrip/source_crop.png" alt="RoboTwin source observation crop"><figcaption>Source observation crop</figcaption></figure><figure><img src="assets/empirics/material_roundtrip/isaac_material_render.png" alt="Isaac native material render"><figcaption>Isaac `UsdPreviewSurface` render</figcaption></figure><figure><img src="assets/empirics/material_roundtrip/isaac_render_foreground.png" alt="Segmented Isaac render foreground"><figcaption>Rendered comparison foreground</figcaption></figure></div></section>
     <section class="block"><div class="section-head"><h2>Next Experiments</h2><p class="note">Missing evidence remains visible.</p></div><div class="table-wrap"><table><thead><tr><th>Experiment</th><th>Status</th><th>Evidence</th></tr></thead><tbody>{experiment_rows}</tbody></table></div></section>
     <section class="block"><div class="section-head"><h2>Evidence Files</h2><p class="note">Raw machine-readable package, visual QA, and Markdown report.</p></div><div class="evidence-links"><a href="assets/source_registry.json">Source registry JSON</a><a href="assets/method_matrix.json">Method matrix JSON</a><a href="assets/candidate_project_intake.json">Candidate project intake JSON</a><a href="assets/acceptance_audit.json">Acceptance audit JSON</a><a href="assets/empirics/text2env_empirical_audit_v1.json">Empirical gate audit</a><a href="assets/empirics/memory_ablation_rgb_adapter_v1.json">Memory ablation</a><a href="assets/empirics/failure_score_correlation_v1.json">Failure-score result</a><a href="assets/empirics/pose_conditioned_policy_promotion_v1.json">Policy promotion</a><a href="assets/empirics/isaac_command_loop/bundle_manifest.json">Isaac command bundle</a><a href="assets/source_page_capture.json">Source capture manifest</a><a href="assets/source_pages_contact_sheet.png">Source contact sheet</a><a href="assets/browser_qa.txt">Browser QA log</a><a href="qa/desktop-viewport.png">Desktop QA screenshot</a><a href="qa/mobile-viewport.png">Mobile QA screenshot</a><a href="report_manifest.json">Bundle manifest</a><a href="text2env_literature_review.md">Markdown report</a></div></section>
@@ -340,11 +353,13 @@ def write_manifest(output_dir: Path) -> dict:
     for path in sorted(output_dir.rglob("*")):
         if not path.is_file() or path.name == "report_manifest.json":
             continue
-        rows.append({
-            "path": path.relative_to(output_dir).as_posix(),
-            "bytes": path.stat().st_size,
-            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        })
+        rows.append(
+            {
+                "path": path.relative_to(output_dir).as_posix(),
+                "bytes": path.stat().st_size,
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+        )
     manifest = {
         "schema_version": "pearl.text2env_literature_report_manifest.v1",
         "status": "pass_report_bundle",
@@ -352,7 +367,9 @@ def write_manifest(output_dir: Path) -> dict:
         "file_count": len(rows),
         "files": rows,
     }
-    (output_dir / "report_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "report_manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
     return manifest
 
 
@@ -376,12 +393,23 @@ def build_report(output_dir: Path) -> dict:
         shutil.rmtree(empirical_assets)
     empirical_assets.mkdir()
     shutil.copy2(ROOT / EMPIRICAL_AUDIT, empirical_assets / "text2env_empirical_audit_v1.json")
-    shutil.copy2(ROOT / "artifacts/text2env_empirics/memory_ablation_rgb_adapter_v1.json", empirical_assets / "memory_ablation_rgb_adapter_v1.json")
-    shutil.copy2(ROOT / "artifacts/text2env_empirics/failure_score_correlation_v1.json", empirical_assets / "failure_score_correlation_v1.json")
-    shutil.copy2(ROOT / "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json", empirical_assets / "pose_conditioned_policy_promotion_v1.json")
+    shutil.copy2(
+        ROOT / "artifacts/text2env_empirics/memory_ablation_rgb_adapter_v1.json",
+        empirical_assets / "memory_ablation_rgb_adapter_v1.json",
+    )
+    shutil.copy2(
+        ROOT / "artifacts/text2env_empirics/failure_score_correlation_v1.json",
+        empirical_assets / "failure_score_correlation_v1.json",
+    )
+    shutil.copy2(
+        ROOT / "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json",
+        empirical_assets / "pose_conditioned_policy_promotion_v1.json",
+    )
     shutil.copytree(ROOT / MATERIAL_RUN, empirical_assets / "material_roundtrip")
     shutil.copytree(ROOT / ISAAC_COMMAND_RUN, empirical_assets / "isaac_command_loop")
-    (output_dir / "index.html").write_text(build_html(registry, matrix, audit, empirical, candidate), encoding="utf-8")
+    (output_dir / "index.html").write_text(
+        build_html(registry, matrix, audit, empirical, candidate), encoding="utf-8"
+    )
 
     manifest = write_manifest(output_dir)
     return {

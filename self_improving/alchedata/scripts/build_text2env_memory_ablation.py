@@ -31,15 +31,26 @@ def main() -> int:
     memory = read_json(memory_path)
 
     require(no["status"] == yes["status"] == "completed", "Both controller arms must complete")
-    require(no["mode"] == "no-memory" and yes["mode"] == "read-memory", "Controller modes are wrong")
+    require(
+        no["mode"] == "no-memory" and yes["mode"] == "read-memory", "Controller modes are wrong"
+    )
     require(no["fixed_protocol"] == yes["fixed_protocol"], "Fixed protocols differ")
-    require(no["default_adapter"] == yes["default_adapter"] == "swap_red_blue", "Default adapters differ")
+    require(
+        no["default_adapter"] == yes["default_adapter"] == "swap_red_blue",
+        "Default adapters differ",
+    )
     require(no["selected_adapter"] == "swap_red_blue", "No-memory arm did not use the default")
     require(yes["selected_adapter"] == "identity", "Memory arm did not select the recommendation")
     require(yes["selection"]["memory_sha256"] == sha256_file(memory_path), "Memory hash mismatch")
-    require(memory["source_failure"]["controller_sha256"] == sha256_file(no_path), "Memory source hash mismatch")
+    require(
+        memory["source_failure"]["controller_sha256"] == sha256_file(no_path),
+        "Memory source hash mismatch",
+    )
     require(no["execution_count"] == yes["execution_count"] == 3, "Both arms must execute 3/3")
-    require(no["success_count"] == 0 and yes["success_count"] == 3, "Expected observed 0/3 versus 3/3 outcome")
+    require(
+        no["success_count"] == 0 and yes["success_count"] == 3,
+        "Expected observed 0/3 versus 3/3 outcome",
+    )
 
     result = {
         "schema_version": "alchedata.text2env_memory_ablation.v0",
