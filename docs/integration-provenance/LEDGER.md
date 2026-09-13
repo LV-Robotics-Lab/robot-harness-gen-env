@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-MEDIA-AUTHORIZATION — 用户媒体发布许可
+
+- origin_owner：用户提供原媒体；署名`x2env1.0`，不推断自然人；integration_owner：Bingsheng Harness workstream。
+- source_ref：qualification-matrix-v1.json固定媒体SHA，详见DECISIONS 2026-09-13用户授权条目。
+- integration_method：用户在本任务明确同意原媒体及派生重建CC-BY-4.0发布，并单独确认署名。
+- upstream_owner / recorded_git_authors：重建代码、模型及集成Git作者仍各自保留，不由媒体署名替代。
+- verification：用户授权已记录；runtime_verification：无新重建或发布成功，资格门不变。
+
 ## INT-CANONICAL-C07-DEPLOYMENT-ATTACKS — 重建输入和资源门
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：FFmpeg/Gujie原接口来源不变。
