@@ -2,6 +2,8 @@
 
 ## INT-CANONICAL-C11-DYNAMIC-PACKAGE — 包内实测面核验
 
+- follow-up：v2导出README明确独立审核Python与Shapely等外部依赖，38项package测试通过；未安装runtime。
+
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness 1c0a07d及增量spec。
 - target_paths：compile/package/package_loader及公开测试；integration_method：v2 proof CAS闭包、复制本项目
   既有消费者源码及冻结断言，包独立命名空间；不复制第三方vendor或仿真runtime。

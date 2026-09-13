@@ -231,7 +231,15 @@ def build_package(
             b"Run: python package_loader.py --runtime /absolute/runtime_roots.json "
             b"--output /absolute/NEW --profile baseline --deny-root /absolute/OLD\n"
             b"Development review package; no qualification, robot policy or data collection "
-            b"capability.\n",
+            b"capability.\n"
+            + (
+                b"Package verification Python >=3.11 requires pydantic>=2.9,<3, numpy, scipy, "
+                b"trimesh, shapely==2.1.2. See runtime.json; these libraries are external.\n"
+                b"Genesis execution uses the separate declared runtime; package verification "
+                b"is not a physical validation or a successful copy-run.\n"
+                if scene.schema_version == "x2env.runtime_scene.v2"
+                else b""
+            ),
         )
         manifest = {
             "schema_version": "x2env.development_package.v1",

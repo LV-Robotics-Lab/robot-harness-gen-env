@@ -2,6 +2,9 @@
 
 ## 2026-09-13 动态支撑证据持久化与包内独立核验
 
+- 后续补导出README的v2审核依赖说明：原说明缺Shapely先RED，现与runtime.json一致；
+  38项package测试通过/1.78s、Ruff通过。v1说明不变，不声称安装依赖或真实copy-run。
+
 - public compile删除原build目录后读取support_artifacts先RED（KeyError），现仅v2 receipt持久化
   全部support成员的CAS refs；纯布局求解仍只读，v1 receipt不加字段。
 - build_package动态闭包不完整先RED，现消费准确refs/hash/size并复制本项目最小核验源码与冻结断言。

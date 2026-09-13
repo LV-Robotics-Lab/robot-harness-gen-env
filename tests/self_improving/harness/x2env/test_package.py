@@ -67,6 +67,7 @@ def test_dynamic_package_copies_proofs_and_independent_consumer(tmp_path, attack
     shutil.move(str(tmp_path / "state"), str(tmp_path / "unavailable-state"))
     assert verify_package(copied) == manifest
     assert (copied / "support/box.surface.json").is_file()
+    assert b"shapely==2.1.2" in (copied / "README.txt").read_bytes()
     if attack:
         scene = json.loads((copied / "scene.json").read_bytes())
         if attack == "known_pose":
