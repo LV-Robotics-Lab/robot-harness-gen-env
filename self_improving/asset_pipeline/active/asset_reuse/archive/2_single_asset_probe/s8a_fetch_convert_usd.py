@@ -60,7 +60,7 @@ for key in tex_keys:
 print(f"fetched: 025_mug.usd + {len(tex_keys)} textures")
 (src_dir / "SOURCE_MANIFEST.json").write_text(json.dumps(manifest, indent=2))
 
-from isaacsim import SimulationApp
+from isaacsim import SimulationApp  # noqa: E402 - Finish source fetch before importing Isaac.
 
 app = SimulationApp({"headless": True})
 try:

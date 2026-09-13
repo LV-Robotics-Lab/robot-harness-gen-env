@@ -8,7 +8,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import json
 
 from agenticsim.openxsim.assets import AssetCandidate  # noqa: E402
-
 from lib.a1_providers import RoboTwinLocalProvider, Tier, tiered_search  # noqa: E402
 
 

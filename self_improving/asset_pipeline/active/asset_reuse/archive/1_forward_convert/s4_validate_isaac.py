@@ -17,7 +17,7 @@ parser.add_argument("--out", required=True)
 args = parser.parse_args()
 out = Path(args.out)
 
-from isaacsim import SimulationApp
+from isaacsim import SimulationApp  # noqa: E402 - Validate CLI before importing Isaac.
 
 app = SimulationApp({"headless": True})
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Batch external import, phase 1 (isaac-smoke env).
 
-Reads an external-asset manifest JSON (historical batch record: archive/external_manifest.json), mirrors each group's server directory
+Reads an external-asset manifest JSON (historical batch record: \
+archive/external_manifest.json), mirrors each group's server directory
 (all keys under the prefix except .thumbs; provenance-hashed), reads each
 source USD's upAxis, converts every item to GLB in one SimulationApp session.
 Writes staging_manifest.json for phase 2. Judged by content: PASS/FAIL lines
@@ -82,7 +83,7 @@ def mirror_group(group):
 
 mirrors = {g["name"]: mirror_group(g) for g in manifest["groups"]}
 
-from isaacsim import SimulationApp
+from isaacsim import SimulationApp  # noqa: E402 - Finish source mirroring before importing Isaac.
 
 app = SimulationApp({"headless": True})
 results = []

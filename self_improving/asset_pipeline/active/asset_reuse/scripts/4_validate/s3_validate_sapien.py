@@ -56,7 +56,7 @@ def save_shot(scene, path, eye, target):
     from PIL import Image
 
     Image.fromarray(img).save(path)
-    nonwhite = int((img.std(axis=2) > 1).sum() + (img.mean() < 250) * 1)
+    _nonwhite = int((img.std(axis=2) > 1).sum() + (img.mean() < 250) * 1)
     return img.mean() > 1 and img.std() > 1
 
 
@@ -80,8 +80,10 @@ def validate_bottle(bundle):
         if r["backend"] == "sapien"
     }
     scale = bundle["physical"]["scale"]
-    height_m = (bundle["physical"].get("mesh_bbox_m") or bundle["physical"]["extents_m"])[1]  # mesh Y -> world Z
-    z0 = 0.005  # origin at mesh bottom; near-ground spawn tests standing stability, not drop survival
+    # mesh Y -> world Z
+    height_m = (bundle["physical"].get("mesh_bbox_m") or bundle["physical"]["extents_m"])[1]
+    # Origin at mesh bottom; near-ground spawn tests standing stability, not drop survival.
+    z0 = 0.005
 
     b = scene.create_actor_builder()
     b.add_multiple_convex_collisions_from_file(filename=reps["collision"], scale=scale)

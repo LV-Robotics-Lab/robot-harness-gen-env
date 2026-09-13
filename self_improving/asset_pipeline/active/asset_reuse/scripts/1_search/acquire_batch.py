@@ -19,10 +19,9 @@ from pathlib import Path as _P
 
 _sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "ledger"))
 import gen_fragment as gen_fragment_mod  # noqa: E402
-
 from lib import a1_providers as a1  # noqa: E402
-from lib import ledger  # noqa: E402
 from lib import a2_selection as a2  # noqa: E402
+from lib import ledger  # noqa: E402
 from runtime_config import ASSET_CATALOG, ISAAC_PYTHON, SAPIEN_PYTHON  # noqa: E402
 
 PY_SAP = SAPIEN_PYTHON
@@ -334,8 +333,8 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "tiers_consulted": [],
             "provider_errors": [],
         }
-        from lib import a3_webfetch as a3w
         from agenticsim.openxsim.assets import AssetCandidate
+        from lib import a3_webfetch as a3w
 
         asset, model = a2.allocate_asset(
             category, paths["library"], paths["manifest"], profile="sapien_only"

@@ -10,7 +10,6 @@ app = SimulationApp({"headless": True})
 code = 1
 try:
     import torch  # noqa: F401  (isaac ships its own torch; cuda check below)
-
     from isaacsim.core.utils.extensions import enable_extension
 
     ok_conv = enable_extension("omni.kit.asset_converter")

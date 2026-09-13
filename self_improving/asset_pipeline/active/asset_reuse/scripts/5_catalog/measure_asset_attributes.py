@@ -167,7 +167,10 @@ def main():
         except Exception:  # noqa: BLE001
             done = {}
     todo = [t for t in todo if str(t[1]) not in done.get(t[0], {})]
-    print(f"待测: {len(todo)} 个可用模型（已完成 {sum(len(v) for v in done.values())}）", flush=True)
+    print(
+        f"待测: {len(todo)} 个可用模型（已完成 {sum(len(v) for v in done.values())}）",
+        flush=True,
+    )
 
     dump = Path(a.dump_dir) if a.dump_dir else None
     if dump:

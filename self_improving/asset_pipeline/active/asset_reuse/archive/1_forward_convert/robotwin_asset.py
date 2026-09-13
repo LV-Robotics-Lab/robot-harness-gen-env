@@ -130,7 +130,10 @@ def cabinet_bundle() -> dict:
         "physical": {
             "mass_kg": UNKNOWN_MASS,
             "scale_assumed": [1.0, 1.0, 1.0],
-            "note": "PartNet-Mobility units are normalized; metric sizing policy TBD (structured unknown)",
+            "note": (
+                "PartNet-Mobility units are normalized; "
+                "metric sizing policy TBD (structured unknown)"
+            ),
         },
         "articulation": {
             "joint_count_total": len(joints),

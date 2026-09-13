@@ -23,7 +23,7 @@ adir = Path(args.assets_dir)
 out = Path(args.out)
 out.mkdir(parents=True, exist_ok=True)
 
-from isaacsim import SimulationApp
+from isaacsim import SimulationApp  # noqa: E402 - Validate CLI/output before importing Isaac.
 
 app = SimulationApp({"headless": True})
 code = 1
@@ -123,7 +123,8 @@ try:
             up = float(j.GetUpperLimitAttr().Get() or 0.0)
             joints.append((p, lo, up))
     print(
-        f"prismatic joints: {[(str(p.GetPath()).rsplit('/', 1)[-1], lo, up) for p, lo, up in joints]}"
+        "prismatic joints: "
+        f"{[(str(p.GetPath()).rsplit('/', 1)[-1], lo, up) for p, lo, up in joints]}"
     )
     drives = []
     for p, lo, up in joints:

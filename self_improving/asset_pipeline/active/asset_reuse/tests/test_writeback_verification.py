@@ -11,7 +11,6 @@ SCRIPT = ROOT / "scripts" / "ledger" / "writeback_verification.py"
 sys.path.insert(0, str(ROOT))
 
 from lib import ledger, ledger_writes  # noqa: E402
-
 from tests.test_ledger import make_valid  # noqa: E402
 from tests.trusted_fixtures import qualified_runtime_capability  # noqa: E402
 

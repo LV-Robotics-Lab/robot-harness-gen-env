@@ -3,7 +3,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from agenticsim.openxsim.assets import AssetCandidate
-
 from lib import a3_webfetch as a3
 
 

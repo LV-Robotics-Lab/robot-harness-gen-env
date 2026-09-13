@@ -82,6 +82,8 @@ def main():
     import sapien.core as sapien
     from envs.utils import create_actor
 
+    # Preserve the simulator helper's import order before optional YAML parsing.
+    # isort: split
     import yaml
 
     ov_path = DEV / "data/scene_gen_ext/asset_overrides_ext.yml"
@@ -164,7 +166,11 @@ def main():
             # campaign replaced a runtime-valid upright with a lying pose.
             # Measurements must face the consuming runtime, not a tougher one.
             half0 = float(_hi[2] - lo[2]) / 2
-            spawn0 = 0.001 - float(lo[2]) if zp_hint == "origin_on_table" else half0 + 0.001 - (float(lo[2]) + half0)
+            spawn0 = (
+                0.001 - float(lo[2])
+                if zp_hint == "origin_on_table"
+                else half0 + 0.001 - (float(lo[2]) + half0)
+            )
             act.set_pose(sapien.Pose([0, 0, float(act.get_pose().p[2]) + spawn0], q0))
         else:
             act.set_pose(sapien.Pose([0, 0, -float(lo[2]) + 0.005], q0))
@@ -328,7 +334,8 @@ def main():
         result.setdefault(aid, {})[str(mid)] = row
         flag = "OK " if row.get("verdict") == "ok" else "-- "
         print(
-            f"{flag}{aid}/m{mid}: {row.get('verdict')} zp={row.get('z_policy')} h={row.get('origin_height_m')}",
+            f"{flag}{aid}/m{mid}: {row.get('verdict')} "
+            f"zp={row.get('z_policy')} h={row.get('origin_height_m')}",
             flush=True,
         )
         try:
@@ -344,7 +351,10 @@ def main():
 
     out = {
         "schema": "envgen.native_origin_calibration.v1",
-        "method": "sapien drop + velocity-converged settle (<=2000 steps), multi start-orientation retry, reverify at derived pose (create_actor convex=True)",
+        "method": (
+            "sapien drop + velocity-converged settle (<=2000 steps), "
+            "multi start-orientation retry, reverify at derived pose (create_actor convex=True)"
+        ),
         "measured_at": date.today().isoformat(),
         "accepted": n_ok,
         "models": result,

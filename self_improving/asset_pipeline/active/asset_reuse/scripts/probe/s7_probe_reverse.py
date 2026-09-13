@@ -13,9 +13,8 @@ Writes probe_report.json into --out. Judged by content, not exit code.
 import argparse
 import asyncio
 import json
-from pathlib import Path
-
 import sys
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from runtime_config import ASSET_PIPELINE_ROOT  # noqa: E402
@@ -36,7 +35,7 @@ args = parser.parse_args()
 out = Path(args.out)
 out.mkdir(parents=True, exist_ok=True)
 
-from isaacsim import SimulationApp
+from isaacsim import SimulationApp  # noqa: E402 - Validate CLI/output before importing Isaac.
 
 app = SimulationApp({"headless": True})
 

@@ -13,7 +13,6 @@ sys.path.insert(0, str(REPO / "asset_reuse/scripts/ledger"))
 sys.path.insert(0, str(REPO / "asset_reuse"))
 import gen_fragment  # noqa: E402
 from lib import ledger, ledger_writes  # noqa: E402
-
 from tests.test_ledger import make_valid  # noqa: E402
 from tests.trusted_fixtures import qualified_runtime_capability  # noqa: E402
 

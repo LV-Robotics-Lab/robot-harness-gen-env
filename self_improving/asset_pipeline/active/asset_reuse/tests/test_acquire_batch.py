@@ -1,15 +1,14 @@
 import json
+import sys
 from pathlib import Path
 
 from agenticsim.openxsim.assets import AssetCandidate
 
-import sys
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "1_search"))
 import acquire_batch as ab
-from lib.a1_providers import Tier
 from lib import a2_selection as a2
 from lib import a3_webfetch as a3w
+from lib.a1_providers import Tier
 
 FIX = Path(__file__).parent / "fixtures" / "mini_catalog.json"
 
@@ -115,7 +114,10 @@ def test_import_with_fallback_on_failed_materialize(tmp_path):
     tiers = [
         Tier(0, FakeProvider("t0", [])),
         Tier(
-            1, FakeProvider("t1", [cand("a/pitcher_first.usd", 2.0), cand("a/pitcher_second.usd", 1.0)])
+            1,
+            FakeProvider(
+                "t1", [cand("a/pitcher_first.usd", 2.0), cand("a/pitcher_second.usd", 1.0)]
+            ),
         ),
     ]
     rec = ab.process_entry(
@@ -215,7 +217,9 @@ def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypa
         Tier(0, FakeProvider("t0", [])),
         Tier(
             1,
-            FakeProvider("t1", [gh_cand("lantern_first.glb", 2.0), gh_cand("lantern_second.glb", 1.0)]),
+            FakeProvider(
+                "t1", [gh_cand("lantern_first.glb", 2.0), gh_cand("lantern_second.glb", 1.0)]
+            ),
         ),
     ]
     rec = ab.process_entry(

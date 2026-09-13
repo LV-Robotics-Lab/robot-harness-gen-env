@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C13 Yuxin 来源 lint 切片
+
+- asset_reuse/web完整范围44条lint清零；除已独立提交的ledger兼容修复，24文件AST完全等价，
+  5文件仅import布局、1文件unused名称改为_nonwhite并保原计算与判据。
+  8个具体延后导入用逐行说明保原parse/fetch/render→Isaac/PIL顺序，不加文件/目录宽忽略。
+- 主线程915 passed/2 skipped/32.85s、Ruff全范围通过；两skip为缺SAPIEN，未执行真实GPU。
+  此次不等于全仓lint通过，Alchedata等范围仍有明确余债。
+
 ## 2026-09-13 C06 台账直接执行兼容修复
 
 - 固定d5补本地Git源码后，第六组72.585秒失败：保留root1010 passed/1 skipped，stage5 72 passed，

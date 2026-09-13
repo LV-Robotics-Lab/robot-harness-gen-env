@@ -6,7 +6,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from agenticsim.openxsim.assets import AssetCandidate  # noqa: E402
-
 from lib import a6_verify as a6  # noqa: E402
 
 

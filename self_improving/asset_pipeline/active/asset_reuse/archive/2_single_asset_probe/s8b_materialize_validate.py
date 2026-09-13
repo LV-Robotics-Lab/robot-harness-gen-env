@@ -157,7 +157,7 @@ except AttributeError:
 sc.update_render()
 cam.take_picture()
 img = (np.clip(cam.get_picture("Color"), 0, 1) * 255).astype(np.uint8)[:, :, :3]
-from PIL import Image
+from PIL import Image  # noqa: E402 - Keep optional encoder import after producing render pixels.
 
 Image.fromarray(img).save(out / "sapien_mug.png")
 

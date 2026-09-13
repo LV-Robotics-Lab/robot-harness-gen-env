@@ -74,7 +74,9 @@ def test_shard_fetches_are_cached(tmp_path):
     p, calls = make_provider(tmp_path)
     p.search("hammer")
     n = len([c for c in calls if c.endswith(".json.gz")])
-    p2 = ObjaverseLvisProvider(tmp_path / "objaverse", fetch=lambda u: (_ for _ in ()).throw(AssertionError(u)))
+    p2 = ObjaverseLvisProvider(
+        tmp_path / "objaverse", fetch=lambda u: (_ for _ in ()).throw(AssertionError(u))
+    )
     out = p2.search("hammer")  # 磁盘缓存命中，零网络
     assert out and n == 1
 

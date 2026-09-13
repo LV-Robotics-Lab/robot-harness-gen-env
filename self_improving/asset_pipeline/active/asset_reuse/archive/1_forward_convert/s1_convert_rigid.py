@@ -19,7 +19,7 @@ parser.add_argument("--bundle", required=True)
 parser.add_argument("--out-dir", required=True)
 args = parser.parse_args()
 
-from isaacsim import SimulationApp
+from isaacsim import SimulationApp  # noqa: E402 - Validate CLI before importing Isaac.
 
 app = SimulationApp({"headless": True})
 
@@ -78,7 +78,10 @@ try:
         rng = cache.ComputeWorldBound(dp).ComputeAlignedRange()
         return [float(v) for v in (rng.GetMax() - rng.GetMin())]
 
-    target_m = [float(v) for v in (bundle["physical"].get("mesh_bbox_m") or bundle["physical"]["extents_m"])]
+    target_m = [
+        float(v)
+        for v in (bundle["physical"].get("mesh_bbox_m") or bundle["physical"]["extents_m"])
+    ]
     measured = measured_size(vis_usd)
     factor = target_m[1] / measured[1]  # height axis (Y in raw mesh frame)
     x_ratio = (target_m[0] / measured[0]) / factor if measured[0] else 1.0

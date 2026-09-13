@@ -13,7 +13,6 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "ledger" / "migrate_v3.py"
 sys.path.insert(0, str(ROOT))
 from lib import ledger, ledger_writes  # noqa: E402
-
 from tests.trusted_fixtures import qualified_runtime_capability  # noqa: E402
 
 

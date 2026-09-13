@@ -8,9 +8,10 @@ import re
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 from pathlib import Path
 
-from agenticsim.openxsim.assets import AssetCandidate
+from agenticsim.openxsim.assets import AssetCandidate, AssetScout
 
 BUCKET = "https://omniverse-content-production.s3-us-west-2.amazonaws.com"
 
@@ -330,11 +331,6 @@ class RoboTwinLocalProvider:
             )
         self.last_stats = {"scanned": scanned, "token_miss": token_miss}
         return sorted(out, key=lambda c: (-c.score, c.candidate_id))[:limit]
-
-
-from dataclasses import dataclass
-
-from agenticsim.openxsim.assets import AssetScout
 
 
 @dataclass

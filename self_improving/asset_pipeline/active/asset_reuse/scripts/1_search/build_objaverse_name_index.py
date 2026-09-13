@@ -19,11 +19,10 @@ import argparse
 import gzip
 import json
 import re
+import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-
-import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from runtime_config import OBJAVERSE_DATA_ROOT  # noqa: E402

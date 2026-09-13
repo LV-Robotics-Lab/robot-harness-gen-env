@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-YUXIN-LINT — 来源保值维护
+
+- origin_owner：Yuxin资产复用来源；upstream_owner：既有Isaac/SAPIEN/Objaverse来源不变。
+- integration_owner：Bingsheng Harness workstream；source_ref：`36a889a` 本切片基线。
+- target_paths：active/asset_reuse；active/web纳入验证但无改动。
+- integration_method：24文件AST等价、5仅import、1保计算改unused名称；ledger行为已独立提交。
+- verification：root915 passed/2 skipped、两目录Ruff通过；runtime_verification：SAPIEN缺失，无真实仿真。
+- recorded_git_authors：原来源与维护提交分开，不转移算法或资产归属。
+
 ## INT-CANONICAL-C06-LEDGER-DIRECT — 保留台账直接执行
 
 - origin_owner：Yuxin资产复用来源；integration_owner：Bingsheng Harness workstream。

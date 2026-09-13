@@ -17,7 +17,7 @@ parser.add_argument("--bundle", required=True)
 parser.add_argument("--out-dir", required=True)
 args = parser.parse_args()
 
-from isaacsim import SimulationApp
+from isaacsim import SimulationApp  # noqa: E402 - Validate CLI before importing Isaac.
 
 app = SimulationApp({"headless": True})
 

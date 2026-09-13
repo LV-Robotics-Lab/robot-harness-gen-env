@@ -19,7 +19,6 @@ USD_CONTENT_902 = b'#usda 1.0\ndef Xform "Asset902" {}\n'
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib import ledger, ledger_writes  # noqa: E402
-
 from tests.trusted_fixtures import qualified_runtime_capability  # noqa: E402
 
 

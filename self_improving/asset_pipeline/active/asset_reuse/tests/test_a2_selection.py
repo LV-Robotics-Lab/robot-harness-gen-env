@@ -1,7 +1,6 @@
 import json
 
 from agenticsim.openxsim.assets import AssetCandidate
-
 from lib import a2_selection as a2
 
 
