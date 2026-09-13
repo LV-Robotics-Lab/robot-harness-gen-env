@@ -1,5 +1,23 @@
 # 进度与结果
 
+## 2026-09-13 S01 fixed f35ea18：真实 model_timeout，未进入资产阶段
+
+- 源码 `f35ea18dd51902edb52f7d791ae6de75511de1f8`，独立工作树始终clean；冻结S01文本/seed11/
+  local-only 未改。workflow `7bacd39a-23c9-4fe7-97b2-7d78ac1cc16b`，failed/model_timeout、revision2、
+  owner=null。outer600.772921s，CLI600.612432s，interpret600.420182s，ingest0.003398s。
+- 注册前真实发现原下载报告还引用Box，初次prepare失败原样保留；补原Box1664B后13refs完整闭包
+  登记父版本 `ea87765c82ee9a3501bc4db7e344cd22d4c8e7965d93bcbb0b43a6bff1043240`。
+  原父材质、原normalized及来源bytes未改；不是本workflow检索或颜色修复成功。
+- 首次纯文本1931B提示到594s仅两事件101B、stderr0；准确owner CPU累计208+79 ticks、
+  futex等待。内部600秒上限SIGINT后reaped，外层无信号、无重试。无SceneIR、资产解析、
+  Genesis、图片/视频或环境包；结构化失败包11成员/13,451B闭包通过。
+- 证据根 `/home/jingxiang/bingsheng/canonical-s01-local-20260913.E1CsX6/`：
+  audit-summary.json SHA `ffe47b7c9d561d57d483a765ec53545a840e483b627be93e4bf4af90d9455cfa`；
+  run-summary.json SHA `86ec013097469cd881a24450a297b7b5daf56cce68b28dfc9a86ebbae0fc2938`；
+  failure manifest SHA `e9e71849407e31441c4428a1d843db77b3421e185b8545cace8e6ac8c3c2c56a`。
+- 图片不是本次失败必要条件；仍不能区分服务端/客户端/长推理原因。继续受管后端有界诊断与
+  代码收敛，禁止原样重试或把此记录计入矩阵成功；尚未满足push门。
+
 ## 2026-09-13 C03 模型结果不能用矛盾状态冒充完成
 
 - 公开 strict contract 增补空 proposal、completed 缺提案/带错误、failed 带提案/缺错误、
