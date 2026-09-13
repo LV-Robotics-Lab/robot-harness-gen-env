@@ -33,6 +33,30 @@ geom.init_faces + geom.vert_start。每geom保留局部顶点/三角索引及ent
 固定Genesis支持一个link的多个collision；已声明runtime存在CoACD，但尚未验证其native执行。
 分解必须有有界seed/参数/预算并重核支撑域；返回mesh不等于保真或仿真通过。
 
+## 碰撞新版本的最小纵切
+
+公开`decompose_collision(parent_version, *, registry, store, backend, policy, approval,
+output_root, timeout)`只处理已登记单link静态几何的碰撞表示；不放入颜色patch，不建立第二workflow。
+controller approval绑定parent、明确policy和approved；模型不能自己授予执行权限。
+输入从parent的visual GLB及URDF/node完整变换读取，不能从已填凹的旧collision凸包再分解。
+首片只接受闭合有限正体积三角网格；没有合格输入就返回结构化失败，不能根据plate类别补几何。
+
+- 外部backend是明确部署的CoACD CPU子进程；固定解释器、库版本/二进制身份、seed和全部参数。
+  preprocess_mode=off；不启用extrude/decimate/PCA，不改源visual、质量/摩擦/惯量与许可。
+- 新collision/part-N.obj必须有限、合法索引、闭合、正体积且凸；预算和块数/三角数均有界。
+  块写新目录、URDF单link引用全部块；旧collision不作为新版本必要成员，旧parent字节不改。
+- timeout只中断准确owner进程组，先SIGINT留日志、再有界收尾；错误/取消/部分输出有结构化记录。
+  backend返回候选不授面域或物理通过，禁止固定成功回执或从fixture替身授真实能力。
+- 新版本记录parent_version、来源/原许可、approval、原visual及新碰撞hash、参数/进程/候选校验。
+  惯量仍是原supplied convex-hull近似，准确记录，不偷偷改成新几何实测；必要时后续独立修订。
+- 登记只是不可变候选；随后由measure_support_surfaces测新visual/collision共同域，派生proof不回写版本。
+  没有共同有效面或分解填洞仍失败，保留新候选和原因；只有真实load/双dt/profile消费后才授适用能力。
+- AssetPreviewRenderer改为核实际URDF引用闭包：根asset.urdf/physics.json、受控visual GLB及
+  collision OBJ相对成员；拒绝多余/缺失/逃逸/外部材质，不再以恰好四文件限制多凸块。
+
+本纵切只授权组件实现与小型真实CPU分解验证，后续controller资产修复路由须另片接入并记录预算。
+旧默认normalize_mesh整体凸包行为不变；没有新资格、真实重建或矩阵通过主张。
+
 ## 坐标、图与动态物理
 
 - 保留SceneIR前景几何中心、结构上表面中心、normalized URDF XY中心/Z底面约定。

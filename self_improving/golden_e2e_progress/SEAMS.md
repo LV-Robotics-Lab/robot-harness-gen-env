@@ -53,6 +53,11 @@ classify_design_unknowns保留原unknown行与标记；规则有内容时原unkn
 
 ## 冻结验收seam
 
+C09碰撞新版本纵切增加`decompose_collision(parent_version, *, registry, store, backend, policy,
+approval, output_root, timeout)`，仅新不可变候选，不授物理能力；外部CPU分解使用显式backend seam。
+测试真实Registry/CAS、完整visual变换、父字节不变、审批绑定、错误块拒绝、失败日志及有界超时；
+AssetPreviewRenderer.render另片验证多collision闭包。细则见增量契约，不以类型门删除冒充动态支撑。
+
 C08/C09首个纯几何纵切增加明确公共seam：
 `measure_support_surfaces(version_sha256, *, registry, store)`及
 `evaluate_support_footprint(surface, *, source_geometry_parts, source_pose, target_pose)`。
