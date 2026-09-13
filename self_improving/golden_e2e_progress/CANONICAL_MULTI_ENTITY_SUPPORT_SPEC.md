@@ -80,6 +80,24 @@ read_asset_geometry_from_members读取完整变换几何/bounds/visual中心，�
 Registry wrapper只inspect再传入；包内消费者读取已核验相对成员，不构造假Registry/依赖原CAS。
 此片先接编译/可加载包与独立几何核验，动态physical消费者另片接；不能只因v2可解析就授物理通过。
 
+## 动态支撑的模型补全纵切
+
+保留scene_grounding.v2的直接结构支撑路径及历史重算。实际动态目标使用明确
+scene_grounding.v3/ generated_layout_context.v3与controller的design_authorization.v3；仍属同一ground操作。
+模型只返回`MeasuredLayoutValues.choices`：每项entity_id、path、有限value；path仅允许结构
+dimensions[0]/dimensions[1]、pose.position[0]/pose.position[1]、pose.yaw_degrees。
+允许集合来自真实缺失且basis=simulation_design_choice的规则；必须恰好覆盖一次，不能提交已知轴、
+资产尺寸、frame、关系或Z。范围继续原显式GeneratedLayoutPolicy，不改变成功阈值。
+
+`build_measured_candidate`按原proposal/资产绑定/规则及选择构造候选SceneIR，仅补允许XY/yaw/结构尺寸
+与已有deployment/asset固定值；Z未知保留。候选写当前ground操作的CAS后，调用与compile共享的
+`resolve_measured_layout(scene_ref,assets,*,registry,store,policy,seed)`纯求解器，推唯一可行面和真实底面Z。
+solver不写文件/CAS、不登记、不执行compile；没有可行面或歧义保留失败，不让模型猜Z或覆盖已知Z。
+GroundingResult只在独立重验后推进父state；完成门从原authorization/proposal/真实choices/context与候选ref
+重建同一结果。新receipt不追认历史v2，不复制第二套workflow或几何求解器。
+
+首片没有模型选面；多面歧义明确阻断。该合同仍未授任何真实动态案例、视觉或physical资格。
+
 ## 坐标、图与动态物理
 
 - 保留SceneIR前景几何中心、结构上表面中心、normalized URDF XY中心/Z底面约定。

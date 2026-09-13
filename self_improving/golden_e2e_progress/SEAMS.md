@@ -53,6 +53,10 @@ classify_design_unknowns保留原unknown行与标记；规则有内容时原unkn
 
 ## 冻结验收seam
 
+动态grounding继续公开ground_scene/Harness/completion seam；新增纯`build_measured_candidate`
+按原规则检查MeasuredLayoutValues.choices，禁止模型提交Z/已知轴/非授权值，供producer与独立consumer复用。
+纯resolve_measured_layout与compile共享求解，不在模型回合里偷偷执行第二compile。
+
 动态包纯几何seam为`measure_support_surfaces_from_members(asset_record,read_member)`和
 `read_asset_geometry_from_members(asset_record,read_member)`；Registry与包共享同一测量逻辑，
 不mock内部测量或制造Registry。测试成员篡改/完整变换/源底面，v1字节不变及v2歧义/图/选面拒绝。
