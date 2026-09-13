@@ -15,7 +15,6 @@ from .backends import CompileResult
 from .importers import import_compile_manifest
 from .ir import EnvironmentPackage
 
-
 PASS = "pass"
 FAIL = "fail"
 NOT_EVALUATED = "not_evaluated"
@@ -45,7 +44,10 @@ class ConformanceReport:
     def write_json(self, path: str | Path) -> Path:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(self.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        path.write_text(
+            json.dumps(self.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         return path
 
 
@@ -94,7 +96,9 @@ def _artifact_check(result: CompileResult) -> ConformanceCheck:
             if verifier.get("type") != "conjunction" or not verifier.get("conditions"):
                 raise ValueError("RoboTwin success verifier is not bound")
     except Exception as exc:
-        return ConformanceCheck("L0", "asset_import", FAIL, f"compiled artifact validation failed: {exc}")
+        return ConformanceCheck(
+            "L0", "asset_import", FAIL, f"compiled artifact validation failed: {exc}"
+        )
     return ConformanceCheck(
         "L0",
         "asset_import",
@@ -125,7 +129,9 @@ def _structural_check(
     for object_id in set(source_objects) & set(target_objects):
         lhs = source_objects[object_id]
         rhs = target_objects[object_id]
-        error = math.sqrt(sum((lhs.pose.position[index] - rhs.pose.position[index]) ** 2 for index in range(3)))
+        error = math.sqrt(
+            sum((lhs.pose.position[index] - rhs.pose.position[index]) ** 2 for index in range(3))
+        )
         max_pose_error = max(max_pose_error, error)
         if error > pose_tolerance_m:
             failures.append(f"{object_id} pose error {error:.6g}m exceeds tolerance")
@@ -139,7 +145,9 @@ def _structural_check(
         "L1",
         "scene_structure",
         FAIL if failures else PASS,
-        "; ".join(failures) if failures else "units, axes, objects, assets, regions, and nominal poses agree",
+        "; ".join(failures)
+        if failures
+        else "units, axes, objects, assets, regions, and nominal poses agree",
         {"max_pose_error_m": max_pose_error, "pose_tolerance_m": pose_tolerance_m},
     )
 
@@ -157,10 +165,15 @@ def _runtime_semantics_check(
             "L2",
             "task_semantics",
             NOT_EVALUATED,
-            "task contracts match statically, but both source and target runtime evidence are required",
+            (
+                "task contracts match statically, but both source and target ru"
+                "ntime evidence are required"
+            ),
         )
     expected_hash = hashlib.sha256(
-        json.dumps(source.task.semantic_contract(), sort_keys=True, separators=(",", ":")).encode("utf-8")
+        json.dumps(source.task.semantic_contract(), sort_keys=True, separators=(",", ":")).encode(
+            "utf-8"
+        )
     ).hexdigest()
     binding_failures = [
         f"{side}.{field}"
@@ -261,7 +274,9 @@ def _trajectory_check(
             if len(lhs) < 3 or len(rhs) < 3:
                 missing_objects.add(object_id)
                 continue
-            error = math.sqrt(sum((float(lhs[index]) - float(rhs[index])) ** 2 for index in range(3)))
+            error = math.sqrt(
+                sum((float(lhs[index]) - float(rhs[index])) ** 2 for index in range(3))
+            )
             max_error = max(max_error, error)
         if set(source_step.get("contacts") or []) != set(target_step.get("contacts") or []):
             contact_mismatches += 1
@@ -276,7 +291,9 @@ def _trajectory_check(
         "L3",
         "trajectory_replay",
         FAIL if failures else PASS,
-        "; ".join(failures) if failures else "trajectory state and contact traces agree within tolerance",
+        "; ".join(failures)
+        if failures
+        else "trajectory state and contact traces agree within tolerance",
         {
             "steps": len(source_trajectory),
             "max_state_error_m": max_error,
@@ -308,9 +325,16 @@ def _policy_check(
             "policy_behavior",
             FAIL,
             "policy evaluation has too few episodes",
-            {"minimum_episodes": minimum_episodes, "source": source_episodes, "target": target_episodes},
+            {
+                "minimum_episodes": minimum_episodes,
+                "source": source_episodes,
+                "target": target_episodes,
+            },
         )
-    difference = abs(float(source_policy.get("success_rate", 0.0)) - float(target_policy.get("success_rate", 0.0)))
+    difference = abs(
+        float(source_policy.get("success_rate", 0.0))
+        - float(target_policy.get("success_rate", 0.0))
+    )
     return ConformanceCheck(
         "L4",
         "policy_behavior",
@@ -338,7 +362,11 @@ def evaluate_conformance(
 ) -> ConformanceReport:
     """Evaluate every level without promoting missing evidence to a pass."""
 
-    result = target_compile if isinstance(target_compile, CompileResult) else CompileResult.read(target_compile)
+    result = (
+        target_compile
+        if isinstance(target_compile, CompileResult)
+        else CompileResult.read(target_compile)
+    )
     target_package = import_compile_manifest(result.manifest_path)
     checks = (
         _artifact_check(result),

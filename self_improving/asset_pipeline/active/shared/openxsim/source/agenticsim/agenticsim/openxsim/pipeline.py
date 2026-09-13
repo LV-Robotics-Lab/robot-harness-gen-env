@@ -75,7 +75,13 @@ class OpenXSimPipeline:
         *,
         asset_id: str,
         candidate_index: int = 0,
-        target_formats: Iterable[str] = ("usda", "mjcf", "urdf", "sapien_manifest", "metasim_object"),
+        target_formats: Iterable[str] = (
+            "usda",
+            "mjcf",
+            "urdf",
+            "sapien_manifest",
+            "metasim_object",
+        ),
         smoke_backends: Iterable[str] = (),
     ) -> tuple[AssetCandidate, AssetBundle]:
         run_dir = self.output_root / "assets" / asset_id
@@ -89,7 +95,9 @@ class OpenXSimPipeline:
                         "query": query,
                         "status": "no_candidates",
                         "provider_errors": scout.last_errors,
-                        "recovery": "Retry with a saved search_evidence.json via CatalogSearchProvider.",
+                        "recovery": (
+                            "Retry with a saved search_evidence.json via CatalogSearchProvider."
+                        ),
                     },
                     ensure_ascii=False,
                     indent=2,
@@ -98,9 +106,13 @@ class OpenXSimPipeline:
                 + "\n",
                 encoding="utf-8",
             )
-            raise RuntimeError(f"no asset candidate found for query {query!r}; provider errors={scout.last_errors}")
+            raise RuntimeError(
+                f"no asset candidate found for query {query!r}; provider errors={scout.last_errors}"
+            )
         if not 0 <= candidate_index < len(candidates):
-            raise IndexError(f"candidate_index {candidate_index} outside {len(candidates)} search results")
+            raise IndexError(
+                f"candidate_index {candidate_index} outside {len(candidates)} search results"
+            )
         candidate = candidates[candidate_index]
         downloaded = download_candidate(candidate, run_dir / "cache")
         bundle = compile_downloaded_asset(
@@ -110,7 +122,8 @@ class OpenXSimPipeline:
             target_formats=target_formats,
         )
         (run_dir / "asset_bundle.json").write_text(
-            json.dumps(asdict(bundle), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            json.dumps(asdict(bundle), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
         )
         (run_dir / "search_evidence.json").write_text(
             json.dumps(
@@ -207,7 +220,8 @@ class OpenXSimPipeline:
             report = evaluate_conformance(
                 package,
                 result,
-                source_backend=source_backend or str(package.source.get("backend") or "environment_package"),
+                source_backend=source_backend
+                or str(package.source.get("backend") or "environment_package"),
             )
             report.write_json(run_dir / "conformance" / f"{backend}.json")
             reports[backend] = report
@@ -232,5 +246,6 @@ class OpenXSimPipeline:
             "compile_results": {backend: result.to_dict() for backend, result in results.items()},
         }
         (run_dir / "workflow_manifest.json").write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
         )

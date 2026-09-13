@@ -14,7 +14,6 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-
 SCHEMA_VERSION = "text2env.tabletop.v0"
 
 COLOR_RGB: dict[str, list[float]] = {
@@ -234,7 +233,9 @@ def _asset_object(
     }
 
 
-def _zone(region_id: str, color: str, center: list[float], kind: str = "target_zone") -> dict[str, Any]:
+def _zone(
+    region_id: str, color: str, center: list[float], kind: str = "target_zone"
+) -> dict[str, Any]:
     rgba = COLOR_RGB.get(color, [0.8, 0.8, 0.8]) + [0.45]
     return {
         "id": region_id,
@@ -451,12 +452,21 @@ def _asset_to_basket(
     ]
     if not basket_recovery:
         spec["success"].append(
-            {"type": "grippers_open", "required": True, "comment": "The robot should release the object."}
+            {
+                "type": "grippers_open",
+                "required": True,
+                "comment": "The robot should release the object.",
+            }
         )
-    spec["validation_constraints"].extend(["assets_exist_in_robotwin", "target_object_functional_point_bound"])
+    spec["validation_constraints"].extend(
+        ["assets_exist_in_robotwin", "target_object_functional_point_bound"]
+    )
     spec["language"] = {
         "full_description": instruction,
-        "schema": "{A} is the manipulated object, {B} is the basket, {a} is the arm used to move the object.",
+        "schema": (
+            "{A} is the manipulated object, {B} is the basket, {a} is the a"
+            "rm used to move the object."
+        ),
         "preference": "Short imperative instructions.",
         "placeholders": {
             "{A}": f"{modelname}/base{model_id}",
@@ -551,14 +561,28 @@ def _block_to_zone(
         )
         spec["validation_constraints"].append("assets_exist_in_robotwin")
     spec["success"].append(
-        {"type": "grippers_open", "required": True, "comment": "The robot should release the object."}
+        {
+            "type": "grippers_open",
+            "required": True,
+            "comment": "The robot should release the object.",
+        }
     )
 
     article = "the"
     target_label = target_region.replace("_", " ")
     spec["language"] = {
         "full_description": instruction,
-        "schema": f"{{A}} is {article} {block_color} block, {{B}} is {article} {target_label}, {{a}} is the arm used to move the block.",
+        "schema": (
+            "{A} is "
+            f"{article}"
+            " "
+            f"{block_color}"
+            " block, {B} is "
+            f"{article}"
+            " "
+            f"{target_label}"
+            ", {a} is the arm used to move the block."
+        ),
         "preference": "Short imperative instructions.",
         "placeholders": {
             "{A}": f"{block_color} block",
@@ -620,8 +644,18 @@ def _drawer_draft(instruction: str, repo_root: Path | None) -> PlacementResult:
     ]
     spec["arm_policy"]["object"] = "cup"
     spec["plan"] = [
-        {"op": "grasp", "object": "cup", "arm": "$main_arm", "pre_grasp_dis": 0.09, "grasp_dis": 0.0},
-        {"op": "wait", "duration_steps": 20, "comment": "Drawer articulation needs a task-specific open-drawer primitive."},
+        {
+            "op": "grasp",
+            "object": "cup",
+            "arm": "$main_arm",
+            "pre_grasp_dis": 0.09,
+            "grasp_dis": 0.0,
+        },
+        {
+            "op": "wait",
+            "duration_steps": 20,
+            "comment": "Drawer articulation needs a task-specific open-drawer primitive.",
+        },
     ]
     spec["success"] = [
         {
@@ -640,12 +674,19 @@ def _drawer_draft(instruction: str, repo_root: Path | None) -> PlacementResult:
         "seen_templates": ["Put {A} in {B}.", "Use {a} to move {A} into {B}."],
         "unseen_templates": ["Place {A} inside {B}.", "Move {A} into {B}."],
     }
-    spec["notes"] = "Existing assets are selected, but this remains draft until an articulation-aware drawer placement primitive is bound."
+    spec["notes"] = (
+        "Existing assets are selected, but this remains draft until an "
+        "articulation-aware drawer placement primitive is bound."
+    )
     checks = [
         _with_object_id(resolve_robotwin_asset(cup_model, repo_root), "cup"),
         _with_object_id(resolve_robotwin_asset(drawer_model, repo_root), "drawer"),
     ]
-    return _finalize(spec, checks, extra_blockers=["articulated drawer placement is not scaffold-ready in Text2Env v0"])
+    return _finalize(
+        spec,
+        checks,
+        extra_blockers=["articulated drawer placement is not scaffold-ready in Text2Env v0"],
+    )
 
 
 def _extract_color_before(noun: str, text: str) -> str | None:
@@ -662,7 +703,9 @@ def plan_from_instruction(instruction: str, repo_root: str | Path | None = None)
 
     root = Path(repo_root) if repo_root else None
     has_basket_target = _contains_any(text, ("basket",))
-    if has_basket_target and _contains_any(text, ("bottle", "cola bottle", "coke bottle", "water bottle")):
+    if has_basket_target and _contains_any(
+        text, ("bottle", "cola bottle", "coke bottle", "water bottle")
+    ):
         modelname, model_id = ASSET_ALIASES["cola bottle"]
         return _asset_to_basket(
             instruction,
@@ -674,7 +717,9 @@ def plan_from_instruction(instruction: str, repo_root: str | Path | None = None)
             qpos=[0.707, 0.707, 0, 0],
             repo_root=root,
         )
-    if has_basket_target and _contains_any(text, ("can", "cola can", "coke can", "soda can", "cola", "coke", "soda")):
+    if has_basket_target and _contains_any(
+        text, ("can", "cola can", "coke can", "soda can", "cola", "coke", "soda")
+    ):
         modelname, model_id = ASSET_ALIASES["cola can"]
         return _asset_to_basket(
             instruction,
@@ -710,7 +755,9 @@ def plan_from_instruction(instruction: str, repo_root: str | Path | None = None)
         target_color=target_color,
         source_region=source_region,
         repo_root=root,
-        distractor_bowl=("bowl" in text and ("without moving" in text or "keep" in text or "avoid" in text)),
+        distractor_bowl=(
+            "bowl" in text and ("without moving" in text or "keep" in text or "avoid" in text)
+        ),
     )
 
 
@@ -749,7 +796,9 @@ def write_placement_outputs(
     out_path.mkdir(parents=True, exist_ok=True)
     spec_path = out_path / "final_text2env.json"
     manifest_path = out_path / "placement_manifest.json"
-    spec_path.write_text(json.dumps(result.spec, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    spec_path.write_text(
+        json.dumps(result.spec, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     manifest = {
         **result.manifest,
         "outputs": {
@@ -757,14 +806,24 @@ def write_placement_outputs(
             "placement_manifest": str(manifest_path),
         },
     }
-    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    manifest_path.write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     return PlacementResult(spec=result.spec, manifest=manifest)
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Generate placement-only Text2Env JSON from a task instruction")
-    parser.add_argument("--instruction", required=True, help="Natural-language placement instruction")
-    parser.add_argument("--out-dir", required=True, help="Output directory for final_text2env.json and placement_manifest.json")
+    parser = argparse.ArgumentParser(
+        description="Generate placement-only Text2Env JSON from a task instruction"
+    )
+    parser.add_argument(
+        "--instruction", required=True, help="Natural-language placement instruction"
+    )
+    parser.add_argument(
+        "--out-dir",
+        required=True,
+        help="Output directory for final_text2env.json and placement_manifest.json",
+    )
     parser.add_argument("--repo-root", help="AgenticSim repository root for existing asset checks")
     return parser
 

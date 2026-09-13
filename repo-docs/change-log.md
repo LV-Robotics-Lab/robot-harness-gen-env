@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- OpenXSim上游源保值lint维护，67项回归通过；全根检查暴露额外wrapper/tests问题，保留并继续修复。
+
 - reader docs真实解析门接第五组：开发检查52文档/243本地链接/12归档/5公共HTTP通过；旧私网部署声明改明确历史。
 
 - Stage5/AgenticSim保留层288条lint清零，83项测试通过、2项外部bundle缺失跳过；算法/报告值不变。

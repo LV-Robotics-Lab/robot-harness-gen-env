@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C13 OpenXSim 原实现保值维护
+
+- 15份来源Python完成审计、12份bytes变化；11份AST完全相同，4仅imports，非import AST
+  15/15一致。未使用Callable/EnvSpec/SceneObject无保留重导出消费者；原模块导入仍保留。
+- 原source范围181条lint清零；主线程原OpenXSim+Yuxin迁移回归67 passed/3.59s。
+  来源、算法、字符串和物理阈值不变，无新仿真。
+- 扩大到实际openxsim根的最终lint又发现wrapper/tests 38条（原审计未完整处理），另行修复，
+  不缩小门的范围或称整个OpenXSim根已全绿。
+
 ## 2026-09-13 C14 实际 reader docs 门与隔离 CI 依赖
 
 - 新checker使用markdown-it-py 4.2.0解析真实inline/reference/escaped/HTML链接与标题锚点，

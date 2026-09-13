@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-OPENXSIM-SOURCE-LINT — 上游实现保值维护
+
+- origin_owner / upstream_owner：OpenXSim/AgenticSim原来源作者；integration_owner：Bingsheng Harness workstream。
+- source_ref：`001cdb3` 保留源；target_paths：active/shared/openxsim/source/agenticsim的12份变化Python。
+- integration_method：保值格式/字面量拆分、已核消费者的unused imports清理；15份非import AST相同。
+- verification：root67项、source Ruff通过；wrapper/tests剩余另记，不谎称全根已通过。
+- runtime_verification：无新物理运行；recorded_git_authors：原归属与维护提交分开保留。
+
 ## INT-CANONICAL-C14-READER-GATE — 可执行读者文档验证
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：markdown-it-py MIT原作者。

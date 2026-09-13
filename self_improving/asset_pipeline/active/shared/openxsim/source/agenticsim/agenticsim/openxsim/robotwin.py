@@ -9,7 +9,6 @@ from typing import Any
 
 from .ir import AssetBundle, EnvironmentPackage, SceneObject
 
-
 ROBOTWIN_SCALE_DEFAULTS: dict[str, list[float]] = {
     "002_bowl": [0.08, 0.08, 0.08],
     "021_cup": [0.08, 0.08, 0.08],
@@ -82,7 +81,9 @@ def _read_json(path: str | Path) -> tuple[Path, dict[str, Any]]:
     try:
         payload = json.loads(resolved.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise RoboTwinRuntimeEvidenceError(f"could not read JSON evidence {resolved}: {exc}") from exc
+        raise RoboTwinRuntimeEvidenceError(
+            f"could not read JSON evidence {resolved}: {exc}"
+        ) from exc
     if not isinstance(payload, dict):
         raise RoboTwinRuntimeEvidenceError(f"JSON evidence must be an object: {resolved}")
     return resolved, payload
@@ -140,7 +141,9 @@ def runtime_evidence_from_rollout(
 
     verifier = dict(task_program.get("verifier") or {})
     conditions = verifier.get("conditions")
-    if verifier.get("type") != "conjunction" or conditions != [dict(item) for item in package.task.success]:
+    if verifier.get("type") != "conjunction" or conditions != [
+        dict(item) for item in package.task.success
+    ]:
         failures.append("task-program verifier is not an exact TaskSpec success-condition binding")
 
     placement_value = task_program.get("placement_spec")
@@ -168,8 +171,14 @@ def runtime_evidence_from_rollout(
     frame_count = int(video_capture.get("frame_count") or 0)
     if video_capture.get("endpoint_only") is not False or frame_count < minimum_video_frames:
         failures.append(
-            f"continuous video requirement failed: endpoint_only={video_capture.get('endpoint_only')} "
-            f"frames={frame_count} minimum={minimum_video_frames}"
+            (
+                "continuous video requirement failed: endpoint_only="
+                f"{video_capture.get('endpoint_only')}"
+                " frames="
+                f"{frame_count}"
+                " minimum="
+                f"{minimum_video_frames}"
+            )
         )
     try:
         video_path = _evidence_path(report_path, report.get("observer_video"))
@@ -186,7 +195,9 @@ def runtime_evidence_from_rollout(
         report.get("status") == "pass_generated_action_rollout"
         and report.get("plan_success") is True
         and step_ok
-        and int(report.get("left_joint_path_len") or 0) + int(report.get("right_joint_path_len") or 0) > 0
+        and int(report.get("left_joint_path_len") or 0)
+        + int(report.get("right_joint_path_len") or 0)
+        > 0
     )
     success_bound = report.get("check_success") is True and semantic.get("all_passed") is True
     if not reset_ok:
@@ -254,12 +265,16 @@ def build_placement(package: EnvironmentPackage) -> dict[str, Any]:
         representation = _robotwin_representation(asset)
         if representation is None:
             raise RoboTwinExportError(f"{obj.instance_id} has no robotwin_model representation")
-        modelname = str(representation.metadata.get("modelname") or asset.source.get("modelname") or "")
+        modelname = str(
+            representation.metadata.get("modelname") or asset.source.get("modelname") or ""
+        )
         if not modelname:
             raise RoboTwinExportError(f"{obj.instance_id} robotwin_model has no modelname")
         resolved = Path(representation.uri).is_dir()
         if not resolved and not representation.uri.startswith("robotwin://"):
-            raise RoboTwinExportError(f"{obj.instance_id} RoboTwin asset path is missing: {representation.uri}")
+            raise RoboTwinExportError(
+                f"{obj.instance_id} RoboTwin asset path is missing: {representation.uri}"
+            )
         objects.append(
             {
                 "id": obj.instance_id,
@@ -330,7 +345,10 @@ def build_placement(package: EnvironmentPackage) -> dict[str, Any]:
         },
         "objects": objects,
         "constraints": list(package.task.reset.get("constraints") or []),
-        "downstream_task_hints": [_binding(package)["template"], "generated_selection2env_play_once"],
+        "downstream_task_hints": [
+            _binding(package)["template"],
+            "generated_selection2env_play_once",
+        ],
     }
 
 
@@ -341,12 +359,16 @@ def write_robotwin_bundle(package: EnvironmentPackage, output_dir: str | Path) -
     output.mkdir(parents=True, exist_ok=True)
     placement_path = output / "placement.json"
     placement = build_placement(package)
-    placement_path.write_text(json.dumps(placement, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    placement_path.write_text(
+        json.dumps(placement, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     placement_sha = hashlib.sha256(placement_path.read_bytes()).hexdigest()
     binding = _binding(package)
     verifier: dict[str, Any] = {
         "source_object_id": binding["source_object_id"],
-        "relation": {"place_in": "in", "place_on": "on", "place_in_region": "in_region"}[binding["template"]],
+        "relation": {"place_in": "in", "place_on": "on", "place_in_region": "in_region"}[
+            binding["template"]
+        ],
     }
     if binding.get("target_object_id"):
         verifier["target_object_id"] = binding["target_object_id"]
@@ -371,6 +393,7 @@ def write_robotwin_bundle(package: EnvironmentPackage, output_dir: str | Path) -
     }
     task_program_path = output / "task_program.json"
     task_program_path.write_text(
-        json.dumps(task_program, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(task_program, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
     )
     return placement_path, task_program_path
