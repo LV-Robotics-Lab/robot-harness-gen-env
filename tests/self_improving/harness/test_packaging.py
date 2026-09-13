@@ -18,6 +18,8 @@ SCENE_GEN_PACKAGE = Path("scene_gen")
 SCENE_GEN_RESOURCE_MEMBERS = ("AGENTS.md", "envs/AGENTS.md")
 LEDGER_PACKAGE = Path("self_improving/asset_pipeline/active/asset_reuse/lib")
 LEDGER_MEMBERS = ("__init__.py", "README.md", "conventions.py", "ledger.py")
+FROZEN_ASSERTIONS = Path("self_improving/golden_e2e_progress/physics-assertions-v1.json")
+CANONICAL_SCHEMAS = Path("self_improving/harness/x2env/json_schemas")
 AGENTICSIM_SOURCE = Path("self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim")
 QUALIFICATION_PACKAGES = (
     Path("self_improving/harness/qualified_skills/text2env.compile/1.0.0"),
@@ -54,6 +56,9 @@ def _copy_build_fixture(destination: Path) -> Path:
         shutil.copy2(REPO_ROOT / relative_path, source / relative_path)
     for relative_path in (
         Path("self_improving/__init__.py"),
+        FROZEN_ASSERTIONS,
+        *(p.relative_to(REPO_ROOT) for p in (REPO_ROOT / CANONICAL_SCHEMAS).glob("*.json")),
+        CANONICAL_SCHEMAS / "api-fields.md",
         QUALIFIED_REPLAY_CLI,
         Path("self_improving/registry.py"),
         Path("self_improving/harness/__init__.py"),

@@ -33,6 +33,7 @@ dev = ["pytest>=8.3,<9", "pytest-cov>=6,<8", "ruff>=0.9,<1"]
 platform = [
   "jsonschema>=4.23,<5",
   "numpy>=1.26,<3",
+  "scipy>=1.17,<2",
   "trimesh>=4.5,<5",
 ]
 
@@ -60,7 +61,11 @@ scene_gen = ["AGENTS.md", "asset_overrides.yml", "envs/AGENTS.md", "prompts/*.md
   "native/*.c",
   "qualified_skills/**/*.json",
 ]
-self_improving = ["asset_pipeline/active/asset_reuse/lib/README.md"]
+self_improving = [
+  "asset_pipeline/active/asset_reuse/lib/README.md",
+  "golden_e2e_progress/physics-assertions-v1.json",
+]
+"self_improving.harness.x2env" = ["json_schemas/*.json", "json_schemas/api-fields.md"]
 
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]

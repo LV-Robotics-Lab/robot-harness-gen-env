@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C14-INSTALLED-RESOURCES — 同一 wheel 的公共资源
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：SciPy 原作者。
+- source_ref：canonical `700904e`；冻结物理断言与 schema 均保持原字节。
+- target_paths：pyproject.toml、test_packaging.py、test_provider_installation.py。
+- integration_method：原资源进入包数据、声明实际依赖，不创建备用合同或第二 CLI。
+- verification：隔离安装10项通过；runtime_verification：安装后 Genesis 尚未执行。
+- recorded_git_authors：原文件和本提交元数据，不据路径推断身份。
+
+
 ## INT-CANONICAL-C11-COLOR-VISUAL-AUDIT — 子版本视觉身份连续性
 
 - origin_owner：Yuxin 原 a6 视觉消费逻辑；integration_owner：Bingsheng Harness workstream。

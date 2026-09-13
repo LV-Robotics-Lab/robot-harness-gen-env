@@ -2,14 +2,18 @@
 
 import json
 import shutil
+import subprocess
 import sys
 import zipfile
+from email.parser import BytesParser
 from pathlib import Path
 
 import pytest
 
 from tests.self_improving.harness.test_packaging import (
     AGENTICSIM_SOURCE,
+    CANONICAL_SCHEMAS,
+    FROZEN_ASSERTIONS,
     LEDGER_PACKAGE,
     REPO_ROOT,
     _copy_build_fixture,
@@ -107,6 +111,109 @@ assert tuple(sys.path) == before
 assert callable(agenticsim.bootstrap_vendored_isaaclab)
 """
     _run([str(python), "-I", "-c", probe], cwd=root)
+
+
+def test_wheel_declares_scipy_for_the_canonical_platform(installed_provider):
+    _, _, wheel = installed_provider
+    with zipfile.ZipFile(wheel) as archive:
+        name = next(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
+        requirements = BytesParser().parsebytes(archive.read(name)).get_all("Requires-Dist")
+    assert any(line.startswith("scipy") and 'extra == "platform"' in line for line in requirements)
+
+
+def test_installed_canonical_schema_snapshots_and_loader_templates_are_original(installed_provider):
+    root, python, wheel = installed_provider
+    with zipfile.ZipFile(wheel) as archive:
+        for path in (REPO_ROOT / CANONICAL_SCHEMAS).iterdir():
+            member = path.relative_to(REPO_ROOT).as_posix()
+            assert member in archive.namelist()
+            assert archive.read(member) == path.read_bytes()
+        for name in ("genesis_child.py", "package_loader.py"):
+            path = Path("self_improving/harness/x2env") / name
+            assert archive.read(path.as_posix()) == (REPO_ROOT / path).read_bytes()
+    probe = """
+import importlib.resources, json
+resource = importlib.resources.files('self_improving.harness.x2env')
+schema = json.loads(resource.joinpath('json_schemas/X2EnvRequest.json').read_bytes())
+assert schema['title'] == 'X2EnvRequest'
+assert resource.joinpath('genesis_child.py').is_file()
+assert resource.joinpath('package_loader.py').is_file()
+"""
+    _run([str(python), "-I", "-B", "-c", probe], cwd=root)
+
+
+def test_installed_physics_uses_exact_frozen_resource_without_repository_fallback(
+    installed_provider,
+):
+    root, python, wheel = installed_provider
+    with zipfile.ZipFile(wheel) as archive:
+        assert FROZEN_ASSERTIONS.as_posix() in archive.namelist()
+        assert (
+            archive.read(FROZEN_ASSERTIONS.as_posix())
+            == (REPO_ROOT / FROZEN_ASSERTIONS).read_bytes()
+        )
+    probe = """
+import hashlib, importlib.resources
+from self_improving.harness.x2env.assessment import ASSERTIONS_SHA256, evaluate_physics
+from self_improving.harness.x2env.genesis_runtime import RuntimeEntity, RuntimeScene
+data = importlib.resources.files('self_improving').joinpath(
+    'golden_e2e_progress/physics-assertions-v1.json').read_bytes()
+assert hashlib.sha256(data).hexdigest() == ASSERTIONS_SHA256
+scene = RuntimeScene(seed=0, scene_ir_sha256='a' * 64, entities=(RuntimeEntity(
+    id='table', category='table', kind='structural_box', position_m=(0.0, 0.0, 0.0),
+    orientation_wxyz=(1.0, 0.0, 0.0, 0.0), size_m=(1.0, 1.0, 0.1), friction=0.5),))
+result = evaluate_physics(scene, [], [], {})
+assert result['error_code'] == 'unsupported_physical_profile', result
+assert result['simulator_execution_proven'] is False
+"""
+    _run([str(python), "-I", "-B", "-c", probe], cwd=root)
+
+
+def test_installed_cli_and_three_skills_keep_no_backend_submission_explicitly_blocked(
+    installed_provider,
+):
+    root, python, _ = installed_provider
+    cli = [str(python), "-I", "-B", str(python.with_name("x2env"))]
+    help_result = _run([*cli, "--help"], cwd=root)
+    assert "{submit,status,resume,package}" in help_result.stdout
+    probe = """
+from pathlib import Path
+from self_improving.harness.x2env.harness import Harness
+harness = Harness(Path.cwd() / 'describe-only-state')
+descriptors = harness.describe_capabilities()
+assert tuple(d.name for d in descriptors) == ('x2env.compile', 'x2env.replay', 'x2env.validate')
+assert all(d.version == '1.0.0' and len(d.schema_sha256) == 64 for d in descriptors)
+"""
+    _run([str(python), "-I", "-B", "-c", probe], cwd=root)
+    deployment = root / "no-backend-deployment.json"
+    deployment.write_text(json.dumps({"state_dir": str(root / "cli-state")}))
+    with pytest.raises(subprocess.CalledProcessError) as stopped:
+        _run(
+            [
+                *cli,
+                "--deployment",
+                str(deployment),
+                "submit",
+                "--text",
+                "one box on a table",
+                "--seed",
+                "23",
+                "--source",
+                "local",
+                "--idempotency-key",
+                "no-model-install-check",
+                "--output",
+                str(root / "cli-delivery"),
+            ],
+            cwd=root,
+        )
+    assert stopped.value.returncode == 2, stopped.value.stdout
+    body = json.loads(stopped.value.stdout)
+    assert body["status"] == "blocked"
+    assert body["snapshot"]["required_resources"] == ["managed_codex_backend"]
+    assert body["snapshot"]["scene_ir"] is None
+    assert body["snapshot"]["compiled_scene"] is None
+    assert body["snapshot"]["resolved_assets"] is None
 
 
 def test_installed_canonical_catalog_runs_original_local_search_without_pythonpath(

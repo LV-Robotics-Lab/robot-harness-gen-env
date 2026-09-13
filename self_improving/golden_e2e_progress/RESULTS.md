@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C14 安装后的 canonical 资源闭包
+
+- platform 显式声明 scipy；同一 wheel 携带原冻结 physics-assertions-v1.json、canonical schema
+  及字段说明。没有修改冻结文件字节或把缺资源改成 fallback。
+- 隔离离线 wheel 安装测试从安装目录消费物理资源、schema、CLI help 和三个 Skills；
+  无模型 submit 明确 blocked，未产生场景/资产。主线程10 passed/4.39s。
+- 此处不证明安装后的 Genesis preview/replay；源码身份与运行目录拒读边界单独实施。
+
+
 ## 2026-09-13 C11 颜色子版本视觉调用的历史审计
 
 - 新子版本的视觉结果绑定原审批模型及可执行文件摘要，逐次核进程、schema、实际新图片、

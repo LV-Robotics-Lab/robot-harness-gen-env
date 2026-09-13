@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- C14 wheel 补齐 scipy、冻结物理断言与 public schema，10项安装测试通过；installed preview 身份与拒读边界另行验证。
+
 - C11 颜色 child 视觉调用历史审计已补，主线程93项通过；固定源码后启动 S01，不把组件通过算成真实闭环。
 
 - C13 旧 Workbench compile 的 app/static 实际消费者已退役；45 项 demo/import 测试通过，下一步裁剪旧资格深模块与schema/CI，不重签旧资格。
