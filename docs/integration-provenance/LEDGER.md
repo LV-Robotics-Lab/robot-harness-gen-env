@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C14-DEPLOYMENT-EDGES — 部署公开消费验证
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`36a889a`。
+- target_paths：test_deployment_edges.py、六组分类；integration_method：公共装配与workflow消费真实本地颜色修订。
+- verification：35项通过；runtime_verification：模型/Genesis外部替身，不授真实物理能力。
+- recorded_git_authors：原模块与本提交元数据；upstream_owner：原Yuxin视觉实现归属不变。
+- 同期固定d5前五组及root通过，group6前置失败、merge拒绝；真实S01 max超时详见RESULTS，均未发布。
+
 ## INT-CANONICAL-C14-INSTALLED-ANCESTOR — 安装源不借无关Git身份
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`3f76bd8` 初版来源身份。

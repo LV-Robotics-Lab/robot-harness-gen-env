@@ -27,7 +27,8 @@ GROUPS = {
     "reconstruction_resolver resolver search_advisory source_router web_resolver yuxin_adapter "
     "yuxin_package_migration",
     "4": "assessment compile genesis_runtime observation replay",
-    "5": "cli completion completion_local_color delivery deployment failure_bundle import_boundary "
+    "5": "cli completion completion_local_color delivery deployment deployment_edges "
+    "failure_bundle import_boundary "
     "package publisher source_identity",
 }
 # External native/provider execution only; orchestration and normalization stay core.

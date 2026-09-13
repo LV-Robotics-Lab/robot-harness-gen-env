@@ -81,7 +81,30 @@ Canonical C13 已从 active tree 撤下历史 `run_compile_acceptance.py` 与离
 | `tests/fixtures/prompt_matrix.json` | 11 例中英 prompt × 3 seed，含 1 例预期 solver 拒绝。 | `infeasible_apple_plate_back_region`（`expect: reject`、`expected_failure_stage: solver`） | 被 `run_prompt_matrix.py` 与 `test_prompt_matrix.py` 用 |
 | `tests/demo/` | Flask API 测试，无真实 GPU；见下小节。 |—| 改 `demo/app.py` 先跑；`pytest -q tests/demo` |
 
-## `self_improving/harness/`
+## `self_improving/harness/x2env/`（当前收敛路径）
+
+当前接口与边界详见 [canonical x2env](modules/canonical-x2env.md)；下表是实际代码入口，
+组件测试不等于冻结矩阵或真实物理资格通过。
+
+| 代码 | 职责 | 验证入口 |
+| --- | --- | --- |
+| `cli.py`、`deployment.py`、`harness.py` | 唯一用户入口、可信部署、单工作流生命周期与内部操作 | `test_cli.py`、`test_deployment.py`、`test_harness_lifecycle.py` |
+| `contracts.py`、`input.py`、`codex.py`、`design_plan.py`、`grounding.py` | 多模态输入、共享SceneIR、受管理建议与有界设计补全 | contracts/input/codex/grounding 测试；真实失败见进度RESULTS |
+| `store.py`、`artifacts.py`、`capabilities.py`、`skill_execution.py` | SQLite/CAS、三个公开Skills的唯一注册与执行绑定 | Store/Registry/Skill公开边界测试 |
+| `source_router.py`、`resolver.py`、`web_resolver.py`、`reconstruction_resolver.py` | 固定来源顺序、真实本地/联网/重建适配 | 各resolver与原provider边界测试 |
+| `assets.py`、`asset_revision.py`、`local_color_execution.py` | 不可变资产版本、受控颜色修复与历史视觉调用审计 | Registry/revision/local-color测试；真实闭环尚待验 |
+| `compile.py`、`replay.py`、`genesis_runtime.py`、`genesis_child.py` | 场景编译、真实Genesis子进程与双profile回放 | compile/replay/runtime/assessment测试 |
+| `observation.py`、`diagnosis.py`、`revision.py`、`completion.py` | 新鲜观测、建议/物理诊断、预算、最终证据闭包 | observation/diagnosis/revision/completion攻击测试 |
+| `package.py`、`package_loader.py`、`delivery.py`、`publisher.py` | 包内入口、复制运行、用户产物与受控发布 | package/delivery/publisher测试；三次资格copy-run尚待验 |
+
+`self_improving/harness/` 下仍保留稳定工具依赖的 runtime_assets/capability/events、CAS、event
+journal、资产staging/repair与Python类型；这些不是另一个canonical controller。
+
+## 旧 Harness 图（固定历史，不是当前调用入口）
+
+下表保留旧切片的设计与验证索引。旧执行/资格图、独立Store、媒体sandbox及snapshot adapter
+已在收敛中退役，可分别从 `f35ea18`、`8da345a`、`e2f909c` 恢复；其中仍被消费的Python类型和
+稳定底层保留。旧文件名与计数只属于所标历史，不应据此重建第二套执行流程。
 
 | 重要代码 | 功能 | 关键符号 | 验证 |
 | --- | --- | --- | --- |

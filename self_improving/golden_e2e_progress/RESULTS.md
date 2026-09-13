@@ -1,5 +1,30 @@
 # 进度与结果
 
+## 2026-09-13 C14 部署公开接口与首次固定六组结果
+
+- 新增10项 build_harness→submit/resume 测试，真实Store、不可变颜色child及两次预览调用；
+  仅外部模型/运行时执行使用明确替身。检查两次预览的拒读根、运行环境和来源身份传递，
+  错Git pin零运行时执行，配置路径/大小/许可证引用错误进入workflow结果。
+- 新文件未分类先触发3项CI分类RED，纳入group5后主线程35 passed/2.75s。
+  deployment聚焦24项，220/239语句、38/48分支；不是完整覆盖或真实Genesis结果。
+- 固定 d5f52d5 的真实组1–5分别通过（1.688/27.618/17.088/7.520/107.367秒），
+  独立root通过（190.014秒）；group6因两个外部固定源码未初始化在0.060秒失败，未进入pytest，
+  merge正确拒绝。原证据 `/var/tmp/x2env-ci-qx9or3lh/` 保留，不改成通过。
+  仅从已有本地Git对象补两个固定源码checkout后，另起新证据运行group6；无下载或递归runtime。
+
+## 2026-09-13 S01 explicit max：真实超时，不是已修复
+
+- 固定 `624d493c4c38663430d0e4d96dec41ef160bd04d`、冻结S01/seed11/local-only，
+  workflow `ea5bb7b7-3818-40ac-9742-441515baccb7` failed/model_timeout、revision2、owner=null。
+  ingest0.003154秒，interpret600.169445秒，CLI600.359601秒，outer600.528606秒。
+- 仅两条开始事件101B、stderr为空；无SceneIR/资产修订/Genesis/新媒体/环境包。
+  内部SIGINT回收成功，外层未发信号，未重试。显式max没有解决这次业务调用的超时，根因未定。
+- 证据根 `/home/jingxiang/bingsheng/canonical-s01-max-20260913.EJHm5o/`；audit-summary.json
+  SHA `394c4b1a632a0164d3d9ccf052bd39221eb6c8e1b735e3a6f095f2773ee08705`；
+  failure manifest `92ef705c71a5d51b3267718a2baafff1a8d3236a070ab85fdcabb5de224b2787`。
+  11成员/13647B核验，源码、原父资产保持不变。首轮只读audit误要求旧prepare失败文件，
+  修为可选后重新审计；未改workflow或模型结果。
+
 ## 2026-09-13 C14 修复 wheel-in-checkout 的身份误判
 
 - 真实隔离wheel放在有效Git祖先下先RED：旧auto记录仅含unrelated.txt的Git HEAD，未记录

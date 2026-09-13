@@ -4,6 +4,11 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- 固定六组1–5与独立root通过；group6源码初始化前置失败、merge拒绝，补本地固定源码后另根验证中。
+- S01 explicit max再次600秒超时，原失败证据完整保留；继续受限模型诊断，不原样重跑或手填proposal。
+- 部署公开接口35项复核通过，新test归group5；deployment仍缺19语句/10分支，core100%门未达到。
+- 全active lint诊断保留，Yuxin范围独占修复中；文档历史链接及最终lint/docslink门继续补齐。
+
 - wheel-in-checkout来源误判已由真实攻击修复，26项复核通过；固定d5f52d5六组CI进行中，其结果仍绑定旧固定源码不回填。
 
 - 六组/root/merge独立限时CI已接，自身11项通过；固定HEAD后跑真实各组，补全active lint和docslink pending门。
