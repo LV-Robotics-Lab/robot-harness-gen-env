@@ -1446,11 +1446,12 @@ def _audit_generated_content(
         not isinstance(ref, dict) for ref in receipt["evidence"]
     ):
         raise ValueError("completion_grounding_evidence_invalid")
-    records = [
-        read(ArtifactRef.model_validate(ref))
+    record_refs = [
+        (ArtifactRef.model_validate(ref), read(ArtifactRef.model_validate(ref)))
         for ref in receipt["evidence"]
         if ref.get("media_type") == "application/json"
     ]
+    records = [record for _, record in record_refs]
     contexts = [
         r
         for r in records
@@ -1472,6 +1473,7 @@ def _audit_generated_content(
     }
     if contexts != [expected_context]:
         raise ValueError("completion_grounding_design_context_mismatch")
+    context_ref = next(ref for ref, record in record_refs if record is contexts[0])
     from .schema_export import structured_output_schema
 
     names = {
@@ -1553,8 +1555,7 @@ def _audit_generated_content(
         or invocation.get("server_effective_effort_verified") is not False
         or not _execution_shas([process, terminal])
         or read(transport_refs["proposal.schema.json"]) != structured_output_schema(values_model)
-        or json.dumps(expected_context).encode()
-        not in store.read_artifact(transport_refs["prompt.txt"])
+        or store.read_artifact(context_ref) not in store.read_artifact(transport_refs["prompt.txt"])
     ):
         raise ValueError("completion_grounding_transport_context_mismatch")
     events = [

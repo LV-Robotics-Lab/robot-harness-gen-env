@@ -22,10 +22,13 @@ class DesignPlan(Model):
 
 def canonical_design_field(scene, field):
     """Resolve exact original entity IDs or in-bounds indices; never mutate input."""
+    if field.startswith("scene.entities."):
+        return field
     for index, entity in enumerate(scene.entities):
         prefix = f"scene.entities[{index}]."
         if field.startswith(prefix):
             return "scene.entities." + entity.id + "." + field[len(prefix) :]
+    for entity in scene.entities:
         if field.startswith(entity.id + "."):
             return "scene.entities." + field
     return field

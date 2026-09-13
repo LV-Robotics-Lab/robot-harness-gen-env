@@ -64,6 +64,27 @@ def policy():
     )
 
 
+def test_entity_named_scene_does_not_capture_full_or_indexed_paths(tmp_path):
+    from self_improving.harness.x2env.design_plan import canonical_design_field
+
+    original = intent(tmp_path).scene
+    value = original.model_dump(mode="json")
+    value["entities"][0]["id"] = "scene"
+    for entity in value["entities"]:
+        if entity["pose"]["frame"] == "support":
+            entity["pose"]["frame"] = "scene"
+    for relation in value["relations"]:
+        for side in ("source", "target"):
+            if relation[side] == "support":
+                relation[side] = "scene"
+    scene = type(original).model_validate_json(json.dumps(value))
+    assert (
+        canonical_design_field(scene, "scene.entities.object.pose") == "scene.entities.object.pose"
+    )
+    assert canonical_design_field(scene, "scene.entities[1].pose") == "scene.entities.object.pose"
+    assert canonical_design_field(scene, "scene.pose") == "scene.entities.scene.pose"
+
+
 @pytest.mark.parametrize("bare_id", [False, True])
 def test_original_scene_index_paths_resolve_without_rewriting_unknowns(tmp_path, bare_id):
     from self_improving.harness.x2env.compile import StructuralPolicy

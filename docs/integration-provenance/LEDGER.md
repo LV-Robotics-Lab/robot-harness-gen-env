@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-COMPLETION-CONTEXT-BYTES — 语义和原始传输分别核验
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：e755421。
+- integration_method：先独立重算设计上下文，再以对应CAS原字节核真实模型prompt，避免receipt JSON
+  键序改变误拒；模型/来源/schema/argv门保留。原ID字段解析补规范路径优先级，避免名为scene的实体捕获。
+- verification：公开completion反例先RED后GREEN；三个保留真实失败只读grounding诊断通过而父状态未改。
+  设计邻组98项通过；完整完成门测试结果见RESULTS。runtime_verification：新完整E2E待运行。
+- upstream_owner：模型、Genesis、资产各自归属不变，无第三方源码复制；recorded_git_authors见提交元数据。
+
+
 ## INT-CANONICAL-DESIGN-ID-PATH — 实际模型未知字段定位
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：da78d40的字段分类器。

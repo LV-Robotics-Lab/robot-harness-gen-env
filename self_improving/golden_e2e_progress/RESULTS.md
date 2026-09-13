@@ -1,5 +1,20 @@
 # 进度与结果
 
+## 2026-09-13 三例完成门 JSON 顺序误拒与通用字段冲突修复
+
+- e755421 新 S02/S03/S04 分别257.521/311.348/408.129076s，真实视觉、物理与validate均通过，
+  但最终打包均失败`completion_grounding_transport_context_mismatch`，不能计完整成功。
+  原根分别`/var/tmp/canonical-matrix-v2-structural-color-20260913.m9BENq/{S02,S03}`和
+  `/var/tmp/canonical-matrix-v2-s04-r2.ggdcMm/S04`，原失败状态、部分产物及日志保持。
+- 精确原因：receipt排序过media_selection内ArtifactRef键，而完成门重序列化expected context再匹配
+  原prompt。语义独立核验已通过，却误把键序差异当成传输篡改。先RED后改为核已验证context的
+  原CAS字节是否确实进入prompt；不降低语义、模型、媒体或执行身份检查。三个原失败只读
+  grounding诊断现通过，父failed完全未变，非新E2E或恢复。
+- 精确原ID字段映射补`scene`实体名冲突攻击；完整字段/序号优先于裸ID，不吞其他实体路径。
+  先RED后98项设计/ground/workflow回归通过5.61s。完成门原回归114通过；9个v3测试因主线程
+  漏显式Shapely路径失败，按已声明隔离依赖补环境后9项全部通过1.97s；不修改或安装sealed runtime。
+
+
 ## 2026-09-13 正常缺失参数不再因字段路径形式误判澄清
 
 - da78d40新S02在`/var/tmp/canonical-matrix-v2-simple-corrected-20260913.g9UHKB/S02`

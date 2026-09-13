@@ -93,6 +93,39 @@ def test_independent_external_producer_can_complete_with_bound_v2_evidence(tmp_p
     assert result.status == "materialized", result
 
 
+def test_verified_context_bytes_keep_json_key_order_without_reconstructing_prompt(tmp_path):
+    from self_improving.harness.x2env.contracts import ArtifactRef
+
+    def mutate(store, receipt, authorization, put):
+        for ref in receipt["evidence"]:
+            if ref["media_type"] != "application/json":
+                continue
+            raw = store.read_artifact(ArtifactRef.model_validate(ref))
+            value = json.loads(raw)
+            if isinstance(value, dict) and value.get("schema_version") == (
+                "x2env.generated_layout_context.v2"
+            ):
+                context_ref, context_raw, context = ref, raw, value
+                break
+        reordered = json.dumps(context, sort_keys=True).encode()
+        replacement = store.write_artifact(reordered, "application/json").model_dump()
+        old_prompt = receipt["transport"]["prompt.txt"]
+        prompt = store.read_artifact(ArtifactRef.model_validate(old_prompt))
+        assert context_raw in prompt
+        new_prompt = store.write_artifact(
+            prompt.replace(context_raw, reordered), "text/plain"
+        ).model_dump()
+        receipt["transport"]["prompt.txt"] = new_prompt
+        receipt["evidence"] = [
+            replacement if ref == context_ref else new_prompt if ref == old_prompt else ref
+            for ref in receipt["evidence"]
+        ]
+
+    store, snapshot = replay_external_producer(tmp_path, mutate)
+    result = materialize_completion(snapshot, store, tmp_path / "delivery")
+    assert result.status == "materialized", result
+
+
 @pytest.mark.parametrize("hostile", [False, True])
 def test_fixed_router_transport_allowlist_does_not_accept_arbitrary_overrides(tmp_path, hostile):
     from self_improving.harness.x2env.contracts import ArtifactRef
