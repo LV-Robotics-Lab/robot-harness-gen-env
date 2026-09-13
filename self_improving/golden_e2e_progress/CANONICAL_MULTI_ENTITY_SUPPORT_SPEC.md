@@ -81,6 +81,17 @@ completion按版本从已提交输入重建规则并重验；不能仅以出现�
 
 ## TDD与真实验收
 
+首片纯几何模块为`measured_support.py`，公开`measure_support_surfaces`返回全部有证据的水平候选面，
+不以类别/最高点代选；面证据作为version派生记录，避免写回自身版本产生循环。
+读取URDF/node完整变换后分别并合朝上共面三角片、扣上方遮挡投影，再取visual/collision共同面；
+Polygon/MultiPolygon保留所有interior rings，不使用buffer(0)/make_valid填洞或修补无效输入。
+`evaluate_support_footprint`对源全部三角投影并集F和目标当帧域D检查`D.covers(F)`以及
+`distance(F, D.boundary)>=0.02m`；不是仅顶点、凸包或minimum_clearance。
+本片是authored几何证明，后续仍需实际loaded parts重算一致才能授物理能力。
+二维布尔运算依赖Shapely2.1.2，独立固定安装，不改变sealed Genesis环境；官方接口依据为
+[Polygon](https://shapely.readthedocs.io/en/2.1.2/reference/shapely.Polygon.html)与
+[用户手册](https://shapely.readthedocs.io/en/2.1.2/manual.html)。
+
 既有公开compile_scene、ground_scene/Harness、evaluate_physics/assess_scene、verify_package和
 materialize_completion作为测试seam。先写错误接受的RED，再最小实现。
 攻击至少包括：同顶点异面、错误geom索引、凸包填洞/错层、源跨孔、动态图初始位姿误用、错接触对、

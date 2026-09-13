@@ -53,6 +53,14 @@ classify_design_unknowns保留原unknown行与标记；规则有内容时原unkn
 
 ## 冻结验收seam
 
+C08/C09首个纯几何纵切增加明确公共seam：
+`measure_support_surfaces(version_sha256, *, registry, store)`及
+`evaluate_support_footprint(surface, *, source_geometry_parts, source_pose, target_pose)`。
+前者只产不可变资产authored几何派生证据，不称actual loaded；后者按当帧target逆姿态检完整三角投影，
+保留孔洞，要求完整覆盖且到全部域边界距离不少于冻结0.02m。首片不开放runtime关系门。
+测试含四角均合法但内部跨洞、错层/错版本、完整边/内域越界与target移动；实际加载拓扑绑定另片完成。
+Shapely2.1.2在独立目录固定安装/记录wheel与GEOS身份，不改sealed运行环境；无效面不静默修复。
+
 C08/C09多实体支撑增量按[增量契约](CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)在既有compile/
 ground/Harness/assessment/package公开seam执行TDD；固定Genesis实际拓扑先验证，不能只删类型门。
 
