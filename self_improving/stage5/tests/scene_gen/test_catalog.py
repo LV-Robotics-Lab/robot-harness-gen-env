@@ -45,8 +45,12 @@ assets:
         encoding="utf-8",
     )
 
-    first, first_missing = scan_robotwin_assets(root, overrides_path=overrides, source_commit="abc123")
-    second, second_missing = scan_robotwin_assets(root, overrides_path=overrides, source_commit="abc123")
+    first, first_missing = scan_robotwin_assets(
+        root, overrides_path=overrides, source_commit="abc123"
+    )
+    second, second_missing = scan_robotwin_assets(
+        root, overrides_path=overrides, source_commit="abc123"
+    )
 
     assert first.digest() == second.digest()
     assert first_missing == second_missing
@@ -85,7 +89,12 @@ def test_catalog_requires_collision_dimensions_and_stable_pose(tmp_path: Path) -
     catalog, report = scan_robotwin_assets(root)
     entry = catalog.entries[0]
     assert entry.available is False
-    assert set(entry.availability_reasons) >= {"collision_mesh", "dimensions_m", "scale", "stable_pose"}
+    assert set(entry.availability_reasons) >= {
+        "collision_mesh",
+        "dimensions_m",
+        "scale",
+        "stable_pose",
+    }
     assert report["entries"][0]["asset_id"] == "001_bottle"
 
 
@@ -96,8 +105,10 @@ def test_catalog_scans_nested_articulated_models_and_joint_limits(tmp_path: Path
     (model / "mobility.urdf").write_text(
         """<robot name="cabinet">
   <link name="base"/><link name="drawer_a"/><link name="drawer_b"/>
-  <joint name="drawer_1" type="prismatic"><parent link="base"/><child link="drawer_a"/><limit lower="0" upper="0.66" effort="1" velocity="1"/></joint>
-  <joint name="drawer_2" type="prismatic"><parent link="base"/><child link="drawer_b"/><limit lower="0" upper="0.50" effort="1" velocity="1"/></joint>
+  <joint name="drawer_1" type="prismatic"><parent link="base"/>\
+<child link="drawer_a"/><limit lower="0" upper="0.66" effort="1" velocity="1"/></joint>
+  <joint name="drawer_2" type="prismatic"><parent link="base"/>\
+<child link="drawer_b"/><limit lower="0" upper="0.50" effort="1" velocity="1"/></joint>
 </robot>""",
         encoding="utf-8",
     )

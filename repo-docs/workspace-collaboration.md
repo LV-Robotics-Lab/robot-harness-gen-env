@@ -40,3 +40,35 @@ HYX 原 `huyuxinn/env-gen-dev` 的完整 Git 历史已作为 merge parent 接入
 5. 移除个人 worktree 前先确认分支已推送且工作树干净，再使用 `git worktree remove`；不能把删除目录当作已备份。
 
 Git 分支可以从组织远端恢复；ignored 数据、公共 runtime 和本地 checkpoint 不能因此自动恢复。`storage_uri: null` 或只有 manifest/hash 时，仍然只代表本地审计证据。
+
+## 2026-09-13 Bingsheng 本地归档
+
+当前布局已按后续授权再次收敛：根目录只显示主仓库、`runtime/`、`archive/`、
+`worktrees/`、原有 `R4R-Simulation-Group/` 和导航 README，隐藏工具目录保留。
+当前操作入口为 `/home/jingxiang/bingsheng/runtime/harness/USAGE.md`；Genesis 运行依赖
+迁至 `runtime/genesis` 与 `runtime/genesis-native`，私密配置在 `runtime/private`。
+14 项迁移及 259 个链接撤除（含 worktrees 下链接）逐项核验，202 个原 refs 保持不变。
+用户已批准旧绝对地址不再直接可读；按
+`/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/path-map.json` 的 moves 或
+retired_links 查找旧地址，再把剩余相对路径接到新根下。完整记录见同目录 README。
+历史已哈希报告保留原文；当前配置和用户命令更新为实体新路径。
+迁移后真实 Genesis `load_step_smoke` 通过：25 步、60.35 秒、新图片与连续视频，
+拒读六个源码/原资产/CAS 根；完整物理 profile 和模型重跑未执行。
+
+以下为第一阶段历史记录，其中原路径和兼容链接描述已被上述后续授权替代。
+
+用户在 matrix v2 普通 push 完成后另行批准整理目录。本次没有修改 Harness 功能或再次推送。
+集中入口为 `/home/jingxiang/bingsheng/archive/2026-09-13-workspace/README.md`；
+完整前后清单、逐项处理及核验在其 `audit/` 内，主仓库和可用入口保持原路径。
+
+143 个证据目录、27 个散落文件和两份保护备份归档；86 个旧工作树先保存完整文件快照和 Git ref，
+再用不带 force 的 Git remove 退役。原 116 个 refs 均保留，68 个未合入当前主分支的 HEAD 仍可恢复，
+四个 dirty 工作树未动。不要把解除工作树登记误认为代码已合并或磁盘数据已删除。
+
+根目录实体目录由 163 减为 19，但保留 173 个历史兼容链接；它们用于打开旧报告的绝对路径。
+退役源码快照不再含有效 `.git` 入口，需要继续开发时应从保留 ref 建立新的工作树。
+严格拒绝符号链接的历史部署不能直接从兼容链接运行，须先恢复实体路径再核验；
+当前入口的固定源码、密钥、runtime、deny roots 和原始示例媒体没有改成链接。
+
+整理后核验通过：258 个归档链接、140 个绑定 SHA 的证据文件、原媒体与入口说明、deployment、
+源码身份和 CLI help。未重跑模型/仿真或全测试，也不把同磁盘 hardlink 快照称为独立备份。

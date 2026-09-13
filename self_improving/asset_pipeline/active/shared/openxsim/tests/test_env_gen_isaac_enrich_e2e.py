@@ -17,7 +17,6 @@ import re
 import sys
 from pathlib import Path
 
-
 HERE = Path(__file__).resolve()
 OX = HERE.parents[1]  # shared/openxsim
 DEV = HERE.parents[3]  # env-gen-dev
@@ -61,9 +60,7 @@ def test_enrich_unblocks_isaac_compile(tmp_path):
 
 def test_enrich_leaves_unmatched_assets_untouched(tmp_path):
     pkg = import_env_gen(FIX)
-    enriched = enrich_isaac_usd(
-        pkg, {("nonexistent", 0): str(_stub_usd(tmp_path / "x.usd"))}
-    )
+    enriched = enrich_isaac_usd(pkg, {("nonexistent", 0): str(_stub_usd(tmp_path / "x.usd"))})
     assert enriched.assets[0].representation_for("isaacsim", ("usd",)) is None
 
 

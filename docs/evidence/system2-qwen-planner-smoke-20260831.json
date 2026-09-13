@@ -1,0 +1,81 @@
+{
+  "attempts": [
+    {
+      "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "ordinal": 1,
+      "outcome": "response_invalid",
+      "receipt_sha256": "120a64d79f7f22f4496e56576c98ebad09ac53610733b0120502eecb494db2bf",
+      "usage": {"input_tokens": 1065, "output_tokens": 512, "peak_vram_bytes": 7647612928, "wall_time_ms": 9400}
+    },
+    {
+      "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "ordinal": 2,
+      "outcome": "response_invalid",
+      "receipt_sha256": "ff92d7e10abd82cbf1a52ab640ce0b4421ab73905c5b6ab45b8fc33b9aefbfb8",
+      "usage": {"input_tokens": 1131, "output_tokens": 51, "peak_vram_bytes": 7655857664, "wall_time_ms": 2994}
+    },
+    {
+      "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "ordinal": 3,
+      "outcome": "structural_success_but_untyped_empty_parameters",
+      "receipt_sha256": "360f252f60d027133fb6fd9fd7df18b991275038930e7e0c4d6161de0e7145d3",
+      "usage": {"input_tokens": 2138, "output_tokens": 201, "peak_vram_bytes": 7778679808, "wall_time_ms": 5068}
+    },
+    {
+      "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "ordinal": 4,
+      "outcome": "response_invalid",
+      "receipt_sha256": "69b19af7439722d8c8d9145d0f38a7ed7dc4db85e756d03421441e0fb1946944",
+      "usage": {"input_tokens": 2957, "output_tokens": 203, "peak_vram_bytes": 7880784384, "wall_time_ms": 5208}
+    },
+    {
+      "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "ordinal": 5,
+      "outcome": "response_invalid",
+      "receipt_sha256": "3e73daf280a388f28c9da086041b77c28094fce9b782e3e5cc8baed4bab66542",
+      "usage": {"input_tokens": 3007, "output_tokens": 570, "peak_vram_bytes": 7888357376, "wall_time_ms": 10259}
+    },
+    {
+      "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+      "ordinal": 6,
+      "outcome": "response_invalid",
+      "receipt_sha256": "0e2a6871e61f0276c16e668494593f81de97e3aa835e0f20755db5b7278b0a9f",
+      "usage": {"input_tokens": 3037, "output_tokens": 426, "peak_vram_bytes": 17208486400, "wall_time_ms": 9741}
+    },
+    {
+      "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+      "ordinal": 7,
+      "outcome": "response_invalid",
+      "receipt_sha256": "eaeaec90874b7d96f74f4c0a5d4d4ab157f86c812799737becc263593771bb77",
+      "usage": {"input_tokens": 3077, "output_tokens": 205, "peak_vram_bytes": 17219332608, "wall_time_ms": 6772}
+    },
+    {
+      "decision_sha256": "179d1c168ece453476ab0a0838ee157261d4f9ed778e9854a6de12fc81a126d3",
+      "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+      "ordinal": 8,
+      "outcome": "typed_planner_decision_succeeded",
+      "receipt_sha256": "f53114f0a16e38549468e4909fa0573f1799557a4dd1534a3f1f1856083d318d",
+      "usage": {"input_tokens": 2674, "output_tokens": 435, "peak_vram_bytes": 17133165568, "wall_time_ms": 9744}
+    },
+    {
+      "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "ordinal": 9,
+      "outcome": "response_invalid",
+      "receipt_sha256": "7410ee2b27ff6d7ad9275dd68d8f72f24e8ff5e29f1f29b0a889a0eaa62ce96f",
+      "usage": {"input_tokens": 2686, "output_tokens": 89, "peak_vram_bytes": 7844784640, "wall_time_ms": 3535}
+    },
+    {
+      "decision_sha256": "d4e30bb4f8128fc8cb8d831af57d96c9d3ac7c347faeb2db456db1bafe65a11e",
+      "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+      "ordinal": 10,
+      "outcome": "typed_planner_decision_succeeded",
+      "receipt_sha256": "2ce863f2e73cd337c2d016c0f7b85da98501a8f863f25ed0b2fd0ea0311fcd9e",
+      "usage": {"input_tokens": 2678, "output_tokens": 437, "peak_vram_bytes": 17133966336, "wall_time_ms": 9801}
+    }
+  ],
+  "final_claim": "typed_planner_decision_succeeded_without_skill_execution",
+  "final_context_sha256": "753199b405e036a4c71ef1ae2ec615a37463cb05ee185f4575c3c371dc4edbdf",
+  "final_provider_identity_sha256": "d5e95a9f8abe0e113a26751739fc0936ecb4dd0417a98718e112e8c924d33d3b",
+  "final_world_state_sha256": "eed5e28092e225e0d49dac6f7f3063a1dfa87c5c619501fbae5f391f5c6d7e90",
+  "schema_version": "harness.system2_qwen_planner_smoke.v1"
+}

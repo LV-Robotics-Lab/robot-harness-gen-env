@@ -15,7 +15,6 @@ from typing import Any
 import h5py
 import imageio.v2 as imageio
 import numpy as np
-
 from run_generated_act_eval_smoke import (
     build_task_class,
     pose_record,
@@ -30,12 +29,13 @@ from run_generated_selection2env_rollout_probe import (
     write_json,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Replay ACT HDF5 actions in a generated RoboTwin task.")
+    parser = argparse.ArgumentParser(
+        description="Replay ACT HDF5 actions in a generated RoboTwin task."
+    )
     parser.add_argument("--robotwin-root", required=True)
     parser.add_argument("--placement", required=True)
     parser.add_argument("--task-id", default="task_apple_plate")
@@ -43,7 +43,9 @@ def main() -> int:
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--task-config", default="demo_clean")
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--max-steps", type=int, default=0, help="Zero replays the full action sequence.")
+    parser.add_argument(
+        "--max-steps", type=int, default=0, help="Zero replays the full action sequence."
+    )
     parser.add_argument("--fps", type=int, default=12)
     parser.add_argument("--camera-width", type=int, default=160)
     parser.add_argument("--camera-height", type=int, default=120)
@@ -63,7 +65,9 @@ def main() -> int:
         actions = np.asarray(source["action"], dtype=np.float32)
         alignment = str(source.attrs.get("temporal_alignment", ""))
     if source_qpos.ndim != 2 or actions.shape != source_qpos.shape or actions.shape[1] != 14:
-        raise ValueError(f"Expected equal [T,14] qpos/action arrays, got {source_qpos.shape} and {actions.shape}")
+        raise ValueError(
+            f"Expected equal [T,14] qpos/action arrays, got {source_qpos.shape} and {actions.shape}"
+        )
     action_limit = len(actions) if args.max_steps <= 0 else min(args.max_steps, len(actions))
 
     report_path = out_dir / "replay_report.json"
@@ -81,8 +85,9 @@ def main() -> int:
         "scheduled_action_count": int(action_limit),
         "task_binding": binding,
         "claim_boundary": (
-            "This probe replays converted expert qpos actions from a fresh deterministic task reset. "
-            "Task success supports action ordering and semantics; it does not test learned-policy inference."
+            "This probe replays converted expert qpos actions from a fresh "
+            "deterministic task reset. Task success supports action orderin"
+            "g and semantics; it does not test learned-policy inference."
         ),
     }
     write_json(report_path, report)
@@ -103,7 +108,9 @@ def main() -> int:
 
         task_class = build_task_class(Base_Task, sapien, create_actor, create_sapien_urdf_obj)
         task = task_class(placement, binding)
-        rt_args = load_robotwin_args(robotwin_root, args.task_config, save_path=out_dir / "episode_000")
+        rt_args = load_robotwin_args(
+            robotwin_root, args.task_config, save_path=out_dir / "episode_000"
+        )
         rt_args["task_name"] = f"generated_selection2env_{args.task_id}"
         rt_args["data_type"]["third_view"] = True
 
@@ -128,7 +135,9 @@ def main() -> int:
             if index % max(args.video_stride, 1) == 0 or index + 1 == action_limit:
                 post_observation = task.get_obs()
                 frames.append(
-                    resize_rgb(post_observation["third_view_rgb"], args.camera_width, args.camera_height)
+                    resize_rgb(
+                        post_observation["third_view_rgb"], args.camera_width, args.camera_height
+                    )
                 )
 
         final_observation = task.get_obs()
@@ -174,7 +183,9 @@ def main() -> int:
     )
     report.update(
         {
-            "status": "pass_act_action_replay_execution" if execution_complete else "blocked_act_action_replay_execution",
+            "status": "pass_act_action_replay_execution"
+            if execution_complete
+            else "blocked_act_action_replay_execution",
             "finished_at": utc_now(),
             "execution_complete": execution_complete,
             "executed_action_count": len(executed_actions),

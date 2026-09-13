@@ -1,0 +1,189 @@
+{
+  "schema_version": "harness.system2_replay_snapshot_assessment_evidence.v1",
+  "recorded_on": "2026-09-02",
+  "baseline_commit": "135fc56566e6bedac350c1ff3b19ee5c38e0545e",
+  "scope": "system2_replay_local_snapshot_assessment_recording",
+  "status": "local_typed_fixture_contract_verified_deployed_replay_not_run",
+  "public_interface": "self_improving.system2_replay_snapshot_assessment.System2ReplaySnapshotAssessmentRecorder.record",
+  "files": [
+    {
+      "bytes": 7846,
+      "lines": 209,
+      "path": "self_improving/system2_replay_snapshot_assessment.py",
+      "sha256": "c4de1998fc7d7ceb6d57f69ae6d31d69ba9e6a80b5c44f8a6e6e555a5576761b"
+    },
+    {
+      "bytes": 26108,
+      "lines": 719,
+      "path": "tests/self_improving/test_system2_replay_snapshot_assessment.py",
+      "sha256": "82fae41d170e546cf0a4f39bcdc9b5144f77ab0795a8d3547988e7d53b27d16c"
+    }
+  ],
+  "contract": {
+    "constructor_input": "scratch_parent: Path",
+    "method_input": "System2ReplayEvidenceAcquisitionResult",
+    "method_accepts_acquisition_only": true,
+    "output": "System2ReplaySnapshotAssessmentResult",
+    "output_fields": [
+      "assessment",
+      "snapshot_validation"
+    ],
+    "snapshot_validator": {
+      "implementation": "self_improving.system2_replay_snapshot_validation.System2ReplaySnapshotValidator",
+      "constructed_internally": true,
+      "called_with_same_acquisition": true,
+      "caller_supplied_validation_result": false,
+      "adapter_or_verifier_injection_surface": false,
+      "policy_changed_by_recorder": false
+    },
+    "assessment_artifact": {
+      "name": "system2_replay_snapshot_assessment",
+      "schema_version": "harness.system2_replay_snapshot_assessment.v1",
+      "scope": "local_cas_snapshot_recomputation",
+      "media_type": "application/json",
+      "canonical_cas_uri_required": true,
+      "written_to_acquisition_local_cas": true,
+      "canonical_json_bytes": true,
+      "exact_bytes_read_back": true,
+      "strict_typed_readback": true,
+      "path_free_payload": true
+    },
+    "assessment_payload_fields": [
+      "schema_version",
+      "scope",
+      "replay_run_id",
+      "replay_invocation_digest",
+      "replay_skill_ref",
+      "max_attempts",
+      "replay_started_at",
+      "replay_ended_at",
+      "replay_input",
+      "dependencies",
+      "runtime_evidence",
+      "runtime_asset_snapshot_manifest",
+      "validation_report",
+      "validation_status",
+      "fail_count",
+      "not_run_count"
+    ],
+    "bindings_recorded": {
+      "replay_run_and_invocation_identity": true,
+      "full_text2env_replay_input": true,
+      "dependencies_sorted_by_name": true,
+      "dependency_count_in_factory_owned_shape": 5,
+      "replay_skill_ref": "text2env.replay@1.0.0",
+      "max_attempts": 2,
+      "runtime_evidence_ref": true,
+      "runtime_asset_snapshot_manifest_ref": true,
+      "snapshot_validation_report_ref_and_summary": true
+    },
+    "excluded_payload_concepts": [
+      "source_kind",
+      "world_state",
+      "state_delta",
+      "receipt",
+      "decision",
+      "publishable"
+    ]
+  },
+  "validation_semantics": {
+    "pass_is_normal_recorded_result": true,
+    "fail_is_normal_recorded_result": true,
+    "incomplete_is_normal_recorded_result": true,
+    "pass_and_fail_use_unmodified_committed_snapshot_adapter_path": true,
+    "incomplete_uses_committed_adapter_with_controlled_raw_validator_not_run_branch": true,
+    "assessment_is_not_a_validation_policy_owner": true
+  },
+  "failure_semantics": {
+    "fixed_reasons": [
+      "snapshot_validation_failed",
+      "assessment_publish_failed",
+      "assessment_verification_failed"
+    ],
+    "unsuccessful_replay_maps_to_snapshot_validation_failed": true,
+    "assessment_cas_write_failure_maps_to_assessment_publish_failed": true,
+    "assessment_readback_or_ref_mismatch_maps_to_assessment_verification_failed": true,
+    "scratch_is_empty_after_success_or_tested_failure": true
+  },
+  "determinism": {
+    "content_addressed": true,
+    "same_acquisition_produces_same_assessment_ref": true,
+    "same_acquisition_produces_same_assessment_bytes": true,
+    "same_acquisition_produces_same_snapshot_validation_result": true
+  },
+  "test_fixture": {
+    "kind": "local_typed_semantic_cas_fixture",
+    "same_local_cas_used_for_snapshot_report_and_assessment": true,
+    "real_deployed_dynamic_replay_run": false,
+    "simulator_started_by_this_test_slice": false,
+    "new_physical_measurement_performed": false
+  },
+  "tdd": {
+    "initial_red": "ModuleNotFoundError on the public module import",
+    "ordinary_red_green_categories": [
+      "public acquisition-only record seam and two-field result",
+      "snapshot recomputation failure mapping without assessment write",
+      "assessment CAS publish failure mapping",
+      "assessment ref, readback, exact-byte, and strict-model verification",
+      "canonical same-CAS assessment payload and forbidden-concept absence",
+      "content-addressed idempotency",
+      "PASS, FAIL, and INCOMPLETE normal recording semantics"
+    ]
+  },
+  "verification": {
+    "targeted": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_snapshot_assessment.py --cov=self_improving.system2_replay_snapshot_assessment --cov-branch --cov-report=term-missing --cov-fail-under=100",
+      "failed": 0,
+      "passed": 10
+    },
+    "coverage": {
+      "branches": 4,
+      "branch_percent": 100,
+      "module": "self_improving/system2_replay_snapshot_assessment.py",
+      "statements": 77,
+      "statement_percent": 100
+    },
+    "adjacent_six_file_regression": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_snapshot_assessment.py tests/self_improving/test_system2_replay_snapshot_validation.py tests/self_improving/test_system2_replay_evidence_acquisition.py tests/self_improving/test_system2_replay_input_promotion.py tests/self_improving/test_system2_replay_handoff.py tests/self_improving/test_validate_v2_snapshot.py",
+      "failed": 0,
+      "passed": 300
+    },
+    "ruff": {
+      "command": "ruff check self_improving/system2_replay_snapshot_assessment.py tests/self_improving/test_system2_replay_snapshot_assessment.py",
+      "status": "pass"
+    },
+    "format": {
+      "command": "ruff format --check self_improving/system2_replay_snapshot_assessment.py tests/self_improving/test_system2_replay_snapshot_assessment.py",
+      "status": "pass"
+    },
+    "diff_check": {
+      "commands": [
+        "git diff --no-index --check /dev/null self_improving/system2_replay_snapshot_assessment.py",
+        "git diff --no-index --check /dev/null tests/self_improving/test_system2_replay_snapshot_assessment.py"
+      ],
+      "expected_exit_code": 1,
+      "status": "pass",
+      "whitespace_diagnostics": 0
+    }
+  },
+  "qualification_relationship": {
+    "fixed_case_qualifies_factory_wiring": true,
+    "fixed_case_qualifies_dynamic_input": false,
+    "fixed_case_qualifies_dynamic_acquisition": false,
+    "fixed_case_qualifies_dynamic_report": false,
+    "fixed_case_qualifies_dynamic_outcome": false
+  },
+  "claim_boundary": {
+    "local_cas_snapshot_recomputation_record_only": true,
+    "fresh_observation_emitted": false,
+    "world_fact_evidence_emitted": false,
+    "physical_success_claimed": false,
+    "complete_validate_v2_executed": false,
+    "trusted_or_portable_receipt_emitted": false,
+    "validation_decision_emitted": false,
+    "publishable_claimed": false,
+    "portable_authority_claimed": false,
+    "system2_world_state_transitioned": false,
+    "deployed_replay_claimed": false
+  }
+}

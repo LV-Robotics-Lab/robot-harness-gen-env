@@ -10,7 +10,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -62,7 +61,9 @@ def matched_protocol(report: dict[str, Any]) -> dict[str, Any]:
 def validate_report(report: dict[str, Any], label: str) -> None:
     if report.get("status") != "pass_generated_act_evaluate_execution":
         raise AssertionError(f"{label} did not complete evaluation infrastructure")
-    if report.get("execution_count") != report.get("episode_count") or not report.get("episode_count"):
+    if report.get("execution_count") != report.get("episode_count") or not report.get(
+        "episode_count"
+    ):
         raise AssertionError(f"{label} did not execute every declared episode")
     model = report.get("model", {})
     if not model.get("checkpoint_sha256") or not model.get("dataset_stats_sha256"):
@@ -92,7 +93,9 @@ def build_ablation(
         if baseline_protocol[key] != candidate_protocol[key]
     }
     if mismatches:
-        raise AssertionError(f"Matched protocol differs outside the harness intervention: {mismatches}")
+        raise AssertionError(
+            f"Matched protocol differs outside the harness intervention: {mismatches}"
+        )
 
     baseline_color = baseline.get("camera_adapter", {}).get("runtime_color_adapter")
     candidate_color = candidate.get("camera_adapter", {}).get("runtime_color_adapter")
@@ -108,8 +111,12 @@ def build_ablation(
     no_observed_safety_regression = (
         baseline.get("execution_count") == baseline.get("episode_count")
         and candidate.get("execution_count") == candidate.get("episode_count")
-        and all(episode.get("infrastructure_error") is None for episode in baseline.get("episodes", []))
-        and all(episode.get("infrastructure_error") is None for episode in candidate.get("episodes", []))
+        and all(
+            episode.get("infrastructure_error") is None for episode in baseline.get("episodes", [])
+        )
+        and all(
+            episode.get("infrastructure_error") is None for episode in candidate.get("episodes", [])
+        )
     )
     promotion_pass = (
         candidate_success == episode_count
@@ -119,12 +126,18 @@ def build_ablation(
     decision = "accept" if promotion_pass else "reject"
     return {
         "schema_version": "alchedata.harness_causal_ablation.v0",
-        "status": f"pass_matched_harness_ablation_candidate_{'promoted' if promotion_pass else 'rejected'}",
+        "status": (
+            "pass_matched_harness_ablation_candidate_"
+            f"{('promoted' if promotion_pass else 'rejected')}"
+        ),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "claim_class": "COMPUTED",
         "confidence": "HIGH",
         "experiment": {
-            "hypothesis": "Correcting the runtime RGB adapter improves task success without changing the learned policy or task protocol.",
+            "hypothesis": (
+                "Correcting the runtime RGB adapter improves task success witho"
+                "ut changing the learned policy or task protocol."
+            ),
             "fixed_variables": baseline_protocol,
             "intervention": {
                 "harness_surface": "observations.runtime_color_adapter",
@@ -159,7 +172,9 @@ def build_ablation(
             "decision": decision,
             "parent_harness_id": f"runtime_rgb_{baseline_adapter}_v0",
             "candidate_harness_id": f"runtime_rgb_{candidate_adapter}_v1",
-            "promoted_harness_id": f"runtime_rgb_{candidate_adapter}_v1" if promotion_pass else None,
+            "promoted_harness_id": f"runtime_rgb_{candidate_adapter}_v1"
+            if promotion_pass
+            else None,
             "rollback_harness_id": f"runtime_rgb_{baseline_adapter}_v0",
             "gates": {
                 "matched_fixed_checkpoint_protocol": True,
@@ -169,11 +184,23 @@ def build_ablation(
             },
         },
         "causal_result": (
-            "Within this fixed-placement, fixed-checkpoint, three-seed protocol, the corrected RGB harness adapter caused the measured success increase."
+            (
+                "Within this fixed-placement, fixed-checkpoint, three-seed prot"
+                "ocol, the corrected RGB harness adapter caused the measured su"
+                "ccess increase."
+            )
             if promotion_pass
-            else "The matched experiment completed, but the corrected RGB harness adapter did not meet the predeclared promotion threshold."
+            else (
+                "The matched experiment completed, but the corrected RGB harnes"
+                "s adapter did not meet the predeclared promotion threshold."
+            )
         ),
-        "claim_boundary": "This ablation attributes the measured difference within the matched fixed-scene protocol. It does not establish placement robustness, cross-task generalization, domain-randomized robustness, or real-robot benefit.",
+        "claim_boundary": (
+            "This ablation attributes the measured difference within the ma"
+            "tched fixed-scene protocol. It does not establish placement ro"
+            "bustness, cross-task generalization, domain-randomized robustn"
+            "ess, or real-robot benefit."
+        ),
     }
 
 
@@ -192,7 +219,15 @@ def main() -> int:
     output = args.out.expanduser().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"status": report["status"], "decision": report["promotion"]["decision"], "out": str(output)}))
+    print(
+        json.dumps(
+            {
+                "status": report["status"],
+                "decision": report["promotion"]["decision"],
+                "out": str(output),
+            }
+        )
+    )
     return 0
 
 

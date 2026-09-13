@@ -13,7 +13,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_NAME = "report_manifest.json"
 BUNDLES = {
@@ -126,7 +125,9 @@ def sync_bundle(source: Path, destination: Path) -> dict[str, Any]:
     source_manifest = json.loads((source / MANIFEST_NAME).read_text(encoding="utf-8"))
     source_result = verify_bundle(source, source_manifest)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    staging_root = Path(tempfile.mkdtemp(prefix=f".{destination.name}.stage-", dir=destination.parent))
+    staging_root = Path(
+        tempfile.mkdtemp(prefix=f".{destination.name}.stage-", dir=destination.parent)
+    )
     staging = staging_root / destination.name
     backup = destination.parent / f".{destination.name}.backup-{uuid.uuid4().hex}"
     moved_old_destination = False

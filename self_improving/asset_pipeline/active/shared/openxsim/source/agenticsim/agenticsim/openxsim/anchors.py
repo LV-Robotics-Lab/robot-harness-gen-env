@@ -9,9 +9,9 @@ import shutil
 import subprocess
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, Callable, Mapping, Protocol
+from typing import Any, Mapping, Protocol
 
-from .ir import AnchorSpec, EnvironmentPackage, EnvSpec, Pose, SceneObject
+from .ir import AnchorSpec, EnvironmentPackage, Pose, SceneObject
 
 
 class AnchorExtractionError(RuntimeError):
@@ -86,7 +86,12 @@ class ColorLayoutAnchorProvider:
                         {
                             "frame_index": frame_index,
                             "center": [sum(xs) / len(xs) / width, sum(ys) / len(ys) / height],
-                            "bbox": [min(xs) / width, min(ys) / height, max(xs) / width, max(ys) / height],
+                            "bbox": [
+                                min(xs) / width,
+                                min(ys) / height,
+                                max(xs) / width,
+                                max(ys) / height,
+                            ],
                             "pixel_fraction": fraction,
                         }
                     )
@@ -135,7 +140,11 @@ class ColorLayoutAnchorProvider:
         for index, (left_id, left_center) in enumerate(first_centres):
             for right_id, right_center in first_centres[index + 1 :]:
                 if abs(left_center[0] - right_center[0]) >= 0.05:
-                    subject, target = (left_id, right_id) if left_center[0] < right_center[0] else (right_id, left_id)
+                    subject, target = (
+                        (left_id, right_id)
+                        if left_center[0] < right_center[0]
+                        else (right_id, left_id)
+                    )
                     spatial_constraints.append(
                         {"type": "left_of", "subject": subject, "object": target, "confidence": 0.7}
                     )
@@ -243,7 +252,9 @@ def _video_evidence(
 
     frame_interval = 1.0 / fps if fps > 0.0 else 0.04
     last_decodable_time = max(duration - frame_interval, 0.0)
-    sample_times = [last_decodable_time * index / (sample_count - 1) for index in range(sample_count)]
+    sample_times = [
+        last_decodable_time * index / (sample_count - 1) for index in range(sample_count)
+    ]
     sample_paths: list[Path] = []
     for index, seconds in enumerate(sample_times):
         output = evidence_dir / f"frame_{index:03d}.png"
@@ -263,9 +274,13 @@ def _video_evidence(
         try:
             subprocess.run(command, check=True, capture_output=True)
         except (OSError, subprocess.CalledProcessError) as exc:
-            raise AnchorExtractionError(f"video frame extraction failed at {seconds:.3f}s: {exc}") from exc
+            raise AnchorExtractionError(
+                f"video frame extraction failed at {seconds:.3f}s: {exc}"
+            ) from exc
         if not output.is_file() or output.stat().st_size == 0:
-            raise AnchorExtractionError(f"video frame extraction produced no file at {seconds:.3f}s")
+            raise AnchorExtractionError(
+                f"video frame extraction produced no file at {seconds:.3f}s"
+            )
         sample_paths.append(output)
 
     return (
@@ -305,7 +320,9 @@ def extract_anchor(
     evidence_dir.mkdir(parents=True, exist_ok=True)
 
     mime = mimetypes.guess_type(path.name)[0] or ""
-    media_type = "video" if mime.startswith("video/") else "image" if mime.startswith("image/") else ""
+    media_type = (
+        "video" if mime.startswith("video/") else "image" if mime.startswith("image/") else ""
+    )
     if not media_type:
         if path.suffix.lower() in {".mp4", ".mov", ".avi", ".mkv", ".webm"}:
             media_type = "video"
@@ -342,7 +359,9 @@ def extract_anchor(
     confidence = float(semantic.get("confidence", 0.35 if semantic else 0.15))
     uncertainty = list(semantic.get("uncertainty") or [])
     if media_type == "image":
-        uncertainty.extend(["occluded_geometry_unknown", "absolute_scale_unknown", "depth_ambiguous"])
+        uncertainty.extend(
+            ["occluded_geometry_unknown", "absolute_scale_unknown", "depth_ambiguous"]
+        )
     else:
         uncertainty.extend(["absolute_scale_unknown", "unobserved_geometry_unknown"])
     if not semantic.get("object_constraints"):
@@ -358,7 +377,9 @@ def extract_anchor(
         object_constraints=tuple(dict(item) for item in semantic.get("object_constraints", [])),
         spatial_constraints=tuple(dict(item) for item in semantic.get("spatial_constraints", [])),
         camera_constraints=tuple(dict(item) for item in semantic.get("camera_constraints", [])),
-        appearance_constraints=tuple(dict(item) for item in semantic.get("appearance_constraints", [])),
+        appearance_constraints=tuple(
+            dict(item) for item in semantic.get("appearance_constraints", [])
+        ),
         motion_constraints=tuple(dict(item) for item in semantic.get("motion_constraints", [])),
         evidence=evidence,
         uncertainty=tuple(dict.fromkeys(str(value) for value in uncertainty)),
@@ -420,7 +441,11 @@ def fuse_anchor(package: EnvironmentPackage, anchor: AnchorSpec) -> EnvironmentP
         package,
         env=env,
         anchors=package.anchors + (anchor,),
-        source={**package.source, "mode": "anchor_to_env", "anchor_count": len(package.anchors) + 1},
+        source={
+            **package.source,
+            "mode": "anchor_to_env",
+            "anchor_count": len(package.anchors) + 1,
+        },
     )
     fused.validate()
     return fused

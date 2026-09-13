@@ -1,0 +1,110 @@
+{
+  "schema_version": "robot_harness.validate_v2_snapshot_recompute_evidence.v1",
+  "recorded_date": "2026-09-02",
+  "status": "pass",
+  "purpose": "Record deterministic validation-report recomputation from package, runtime-evidence, and runtime-asset-snapshot bytes in independent local CAS clones.",
+  "claim_boundary": "This is a robotwin.scene_validation.v1 report recomputation result. It is not text2env.validate@2 output, a validation decision, publishability, run provenance, qualification, or replay-to-validate promotion.",
+  "implementation": {
+    "module": "self_improving.validate_v2_snapshot",
+    "adapter": "ValidateV2SnapshotAdapter",
+    "report_schema_version": "robotwin.scene_validation.v1",
+    "repository_cli_available": false,
+    "resolved_scene_binding": "Direct SceneSpec-to-ResolvedSceneSpec semantic projection; the original solver is not rerun.",
+    "module_bytes": 44912,
+    "module_sha256": "e7ef0c5cccb77e761f135be5632e8f726f9936496daf43ecbcd4eb08158c514e",
+    "contract_test_bytes": 67263,
+    "contract_test_sha256": "d8a74013bf0d8eda858ce6f0b468a8f843b70efdaaf24fb70a8bb643f8190f48",
+    "contract_test_count": 100,
+    "statement_count": 434,
+    "branch_count": 162,
+    "statement_and_branch_coverage_percent": 100
+  },
+  "source_run": {
+    "run_id": "0000f972-15e7-4ada-aec6-707e8973acde",
+    "runtime_evidence_sha256": "1c74e310fff651ef7ca562f8e57b66fdf6f4e2c7a0e14abc8d2c878435351f1f",
+    "runtime_asset_snapshot_sha256": "43df37804b8e8c6dcb807f2f803e0d591dee18b7d5bbb8863b476f12144b43d4",
+    "observed_runtime_counts": {
+      "base_simulation_step_count": 900,
+      "contact_window_steps": 120,
+      "video_frame_count": 120,
+      "unique_video_frame_count": 100
+    }
+  },
+  "recomputation": {
+    "independent_cas_clone_count": 2,
+    "independent_scratch_root_count": 2,
+    "result_count": 2,
+    "validation_status": "pass",
+    "validation_fail_count": 0,
+    "validation_not_run_count": 0,
+    "report": {
+      "bytes": 8788,
+      "sha256": "7a34a21d3e7ee6b0e6babd98d08986aae510ca70e42c584e1db55936ffb03ef6",
+      "canonical_json": true,
+      "byte_identical_across_results": true,
+      "contains_private_locator": false,
+      "contains_absolute_locator": false,
+      "contains_scratch_locator": false,
+      "contains_decision": false,
+      "contains_publishable": false,
+      "contains_validation_decision_receipt": false
+    },
+    "scratch_roots_empty_after_return": true
+  },
+  "storage_observation": {
+    "production_cas_object_count_before": 79,
+    "production_cas_object_count_after": 79,
+    "production_cas_modified": false,
+    "cas_clone_object_count_before_each": 79,
+    "cas_clone_object_count_after_each": 80,
+    "new_object_in_each_clone": "recomputed validation report"
+  },
+  "local_file_access_observation": {
+    "trace_scope": "the first recomputation process after its CAS clone was prepared; the second clone was used for independent byte-determinism comparison",
+    "original_asset_file_open_count": 0,
+    "original_source_path_metadata_stat_count": 6,
+    "production_cas_access_count": 0,
+    "production_location_write_count": 0,
+    "sqlite_access_mode": "read_only",
+    "zero_original_locator_lookup_claimed": false,
+    "caveat": "The legacy source-file check in scene_gen.validator still issued one metadata-only stat probe for each of six original source paths; no original asset file was then opened."
+  },
+  "historical_report_post_comparison": {
+    "historical_report_sha256": "01e85c898631343c46df50ecb2fb26dd0b4e9c2e424424553004f19b2ef09d75",
+    "used_as_recomputation_input": false,
+    "shared_check_count": 37,
+    "shared_check_status_match_count": 37,
+    "shared_check_evidence_exact_match_count": 33,
+    "added_pass_checks": [
+      "package_manifest",
+      "snapshot_validation_binding"
+    ]
+  },
+  "runtime_contract_boundary": {
+    "runtime_config_receipt_present": false,
+    "requested_video_contract_proven": false,
+    "interpretation": "The recorded counts are observations bound in runtime evidence, not proof of the operator-requested RuntimeConfig."
+  },
+  "reproduction": {
+    "repository_contract_test": "PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider tests/self_improving/test_validate_v2_snapshot.py",
+    "repository_coverage_gate": "./script/run_self_improving_tests.sh",
+    "deployment_method": "Prepare two independent clones of the same source CAS, construct the same typed SnapshotValidationRequest in an operator-owned driver, and invoke ValidateV2SnapshotAdapter once per clone with independent empty scratch parents."
+  },
+  "documentation": {
+    "markdown_path": "docs/evidence/validate-v2-snapshot-recompute-20260902.md"
+  },
+  "claims": {
+    "cas_snapshot_report_recompute": true,
+    "deterministic_report_bytes": true,
+    "original_asset_bytes_opened": false,
+    "zero_original_locator_lookup": false,
+    "deterministic_grounding_or_compile_provenance": false,
+    "text2env_validate_v2_output": false,
+    "validation_decision": false,
+    "publishable": false,
+    "run_provenance": false,
+    "qualification": false,
+    "replay_to_validate_promotion": false,
+    "requested_video_contract_proven": false
+  }
+}

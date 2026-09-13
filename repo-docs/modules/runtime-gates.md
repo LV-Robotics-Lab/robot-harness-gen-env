@@ -8,7 +8,8 @@
 
 ## 回放怎么采、采什么
 
-`script/run_scene_runtime.py` 的轨迹：
+`script/run_scene_runtime.py` 的主 settle 轨迹如下；通过 Harness worker 运行时，precheck 另在
+`simulation.started` 真实回调之后执行，并计入 `total_physics_step_count` 和 checkpoint 序列：
 
 ```text
 total_steps = max(settle_steps, video_frames)            # 默认 max(900, 120)
@@ -26,11 +27,106 @@ for index in range(total_steps):
                 unexpected_contact_hits[name] += 1
 ```
 
-`run_scene_runtime.py` 的独立 CLI 当前默认 `--contact-window-steps 60`；README、prompt matrix 和本指南跟踪的已验证命令都显式传入 120，因此那些证据采的是终末 120 步。`--precheck-steps 0` 默认：不预步进。`check_stable` 仅跑 precheck_steps（即 0），不参与判 acceptance——这一步有意为之，避免把不稳初态躲到「正式记录」之前，那样记录的「释放帧」其实已经是稳态之后的假释放。
+`run_scene_runtime.py` 的独立 CLI 当前默认 `--contact-window-steps 60`；README、prompt matrix 和本指南跟踪的已验证命令都显式传入 120，因此那些证据采的是终末 120 步。`--precheck-steps 0` 默认：不预步进。`check_stable` 固定以 0 步执行；显式 precheck 由 worker 在 `scene.loaded`、`simulation.started` 之后逐步推进，所以前端能看到它，也不会把已发生的物理步藏在“正式记录”之前。`simulation_step_count` 仍表示主 settle（含 adaptive extra），`total_physics_step_count = precheck_steps + simulation_step_count`。
+
+测试或嵌入式调用方会在同一 Python 进程里调用公开 `main()`。这个入口只在执行期间临时借用
+RoboTwin 工作目录和导入路径，并在正常返回或异常退出时恢复调用者原有的 `cwd` 与 `sys.path`；
+生产 Harness 仍以独立 worker 进程运行。该恢复边界不把进程全局 `chdir` 变成线程安全能力，因此不要
+在同一进程并发执行多个 runtime worker。
 
 `head_camera_arrays(task)` 拿 head rgb + 分割标签；`world_camera1`/`world_camera2` 拿两个世界视角；最终还写 `preview_head.png`、`preview_segmentation.png`、`preview_world_left.png`、`preview_world_right.png`、`observer_start.png`、`observer_mid.png`、`observer_end.png`、`observer_runtime.mp4`。每段 mp4 的 `unique_video_frame_count` 用 `hashlib.sha256(frame.tobytes())` 去重。
 
 为什么 900 步：仓库根 `README.md` 给了具体证据——apple-in-basket 在 300 步时仍在动，900 步是为该 asset pair 测下来的「真的稳了」阈值。这不是通用物理参数，是实测值。
+
+## Harness 怎样证明它跑的是哪一份资产
+
+Harness replay 不再把 catalog 中的绝对路径直接当成不可变输入。`RuntimeAssetStore` 先核对
+resolved scene 与 catalog digest，再把选中资产的完整目录树（包括空目录）、每个文件摘要和
+catalog loader roots 写进 canonical manifest 并存入 CAS。它还解析 URDF、OBJ、MTL、glTF、GLB 与
+COLLADA 的外部引用；绝对路径、网络 URI、越出资产树或缺失的 mesh/material/texture/buffer 会在
+仿真前拒绝，无法证明依赖闭包的 opaque 格式也不会被当作可信输入。
+
+worker 只读取 attempt-local 的只读重物化树：第一条事件前验证一次，关闭仿真后再验证一次。
+URDF 使用 catalog 精确选中的 model root，不再把 `model_id` 交给 RoboTwin 按目录顺序猜。
+CAS 自身的 shard 目录会用操作期持有的 directory fd 完成读取、安装和同步；校验后瞬时换成 symlink
+也不能把对象写到声明根之外，超大或等长损坏的既有对象在复用前 fail closed。
+运行中资产漂移使用独立失败类型 `runtime_asset_drift`；它不是可重试的普通物理失败。capability
+文档同时绑定 snapshot 协议、实现源码、解释器/依赖、RoboTwin/task/embodiment 和 GPU 环境；
+stdout/stderr 只作诊断，阶段状态只认专用 FD 的严格事件。
+
+这仍不等于发布成功：2-step smoke 可以证明“真实加载、步进、回调、收证据”接线成功，却会因
+settle horizon 不足而在 validation 失败。正式发布仍须 900 settle / 120 video 等既定门禁全过。
+
+## Harness 怎样证明媒体不是伪扩展名
+
+worker 声明 `video_frame_count` 或把任意 bytes 命名为 `.mp4` 都不是 consumer 证据。Harness 先把
+allowlisted 输出作为不受信任的 octet-stream 保存；`ReplayMediaVerifier` 再把父进程持有的 regular
+file descriptor 交给最小静态 FFmpeg，完整解码 PNG/MP4，复核帧数、帧率、尺寸、sample aspect
+ratio 与解码后互异帧。只有这些事实与 runtime contract 一致时，handler 才把制品晋升为
+`image/png` / `video/mp4`。worker 报告的 source unique 与编码后 decoded unique 分开保留，不能
+强行相等；但 120 帧视频仍须至少 30 个解码后互异帧。
+
+decoder 运行在显式 delegated cgroup 的 per-run job 中，并由 native launcher 施加 Landlock、
+seccomp、`no_new_privs`、rlimit 及 memory/swap/pids/CPU/wall/output 上限。媒体只走 held FD，decoder
+没有媒体 pathname；缺 delegated root、tool identity 漂移或 sandbox setup 失败都按 dependency
+fail closed，不退回宿主 Pillow/动态 FFmpeg。资格化工具链使用最小静态 FFmpeg 7.0.2；identity
+绑定 launcher/source、FFmpeg bytes、policy、kernel/ABI 与精确命令。真实历史录像观测为
+120 frames / 114 decoded unique / 12 fps / 320×240。framemd5 只能证明 `8bit-420`，指南不把它
+夸大成具体 yuv420p layout。完整尝试链、摘要、资源峰值和攻击结果见
+[`docs/evidence/replay-media-verifier-qualification-20260831.md`](../../docs/evidence/replay-media-verifier-qualification-20260831.md)。
+
+媒体工具资格本身仍只证明 consumer 边界。当前 checked-in `text2env.replay@1.0.0` 另有正式的
+900 settle / 120 video 固定案例资格：direct 与 Registry candidate 各执行一次，8 项资格检查全过，
+并把 63 个精确 artifact refs 闭合在部署侧 CAS；精确摘要见
+[`docs/evidence/replay-production-qualification-20260902.md`](../../docs/evidence/replay-production-qualification-20260902.md)。
+它仍不替代独立 validate 与 promotion evidence，不能由 replay 成功推出 `publishable=true`。
+
+## 历史固定资格回放（入口已退役）
+
+Canonical C13 已撤下 `script/run_qualified_replay.py` 和安装映射
+`robot-harness-run-qualified-replay`。新平台请求使用 `x2env`；以下仅解释固定 Git 历史中的旧行为，
+不是当前启动配方。仍被历史消费者使用的深实现 `self_improving.qualified_replay_cli` 及其攻击测试保留。
+原命令只接受
+一次精确拼写的 `--settings`；设置文件只给部署侧
+CAS、资产根、解释器、capability、媒体工具、delegated cgroup、全新 state root 与 timeout，不能
+覆盖 Skill、版本、资格 bundle、源码根、runner 或 replay input。执行输入只从已验证资格中固定的
+kernel Invocation 重建，因此这是一个 operator-only 固定案例入口，不是通用 replay 命令。
+
+原 console entry 不让普通 wheel 变成 fresh-machine deployment：历史运行要求
+既有资格所绑定的外部 CAS、资产、工具、runtime runner 和 delegated cgroup 均在原部署中可用。
+
+设置以同一 FD 做最多 64 KiB 的稳定读取；state leaf 由 `mkdirat` 线性化竞争，并持有父目录与目录
+FD，在 application 交接前及终态摘要前复核路径身份。state claim 成功后的后续失败会把该 root
+作为 one-shot failure evidence 保留，CLI 自身不做路径删除。这个 claim 是 cooperative launcher 的检测/占用 guard，
+不是 pathname lease：既有 `ReplayApplication` 仍按路径访问和回滚，交接后主动进行的同 UID rename
+不在该接口的防护主张内。
+
+只有 returned state、两次持久化 RunState/Invocation 读取和完整 EventPage 全部对账，并且 `succeeded`
+分支的类型化 output 或 `blocked` / `failed` 分支的 null output + 类型化 blocker 通过后，stdout 才输出
+一行 locator-free 摘要。终态 `succeeded` / `blocked` / `failed` 分别返回 0 / 10 / 20；
+输入、配置、信任或资格错误返回 78，持久化、终态漂移或内部错误返回 74。该摘要不是 validate
+decision、portable receipt 或 publishability 证明。
+
+2026-09-02 的真实入口验收先用漂移的 allowlisted `PATH` 摘要触发 durable exit 10，再在恢复资格
+环境后以新 state root 完成 900 步 / 120 帧 / 100 互异帧，19 个事件、43 个 artifacts，validation
+为 pass 且 fail/not-run 均为 0；摘要和边界见
+[`docs/evidence/replay-fixed-qualified-cli-20260902.md`](../../docs/evidence/replay-fixed-qualified-cli-20260902.md)。
+
+## CAS snapshot 怎样重新计算 validation report
+
+`self_improving.validate_v2_snapshot.ValidateV2SnapshotAdapter` 从一个本地 CAS 读取精确的
+EnvironmentPackage、runtime evidence 和 runtime asset snapshot，临时重物化只读资产后重新调用
+validator，并把 canonical、path-free 的 `robotwin.scene_validation.v1` 报告写回同一 CAS。两个独立
+CAS 副本和 scratch root 的真实复算得到相同的 8,788-byte 报告、`pass` 与 0 fail / 0 not-run；原始
+资产文件没有被打开，但 legacy validator 仍对六个原始 source path 做 metadata-only 查询，所以这里不主张
+zero lookup。精确输入、报告摘要、访问边界与复核模板见
+[`docs/evidence/validate-v2-snapshot-recompute-20260902.md`](../../docs/evidence/validate-v2-snapshot-recompute-20260902.md)。
+
+这个 adapter 只是 report recomputer，不是 `text2env.validate@2` handler/output，也不生成 decision、
+publishability、run provenance、qualification 或 promotion。输入没有独立 RuntimeConfig receipt，因此
+报告中的 900/120/120/100 只能证明 runtime evidence 的观测，不能证明 requested-video contract。
+它直接核对 SceneSpec 与已提交 ResolvedSceneSpec 的稳定语义字段，不重新执行 solver；因此也不证明
+grounding、solver 执行或 compile provenance。
 
 ## contact 怎么分类
 
@@ -52,12 +148,21 @@ for index in range(total_steps):
 
 `scene_gen/validator.py:validate_resolved_scene` 接 `runtime_evidence` 关键字，转换为 bug-by-bug checks。状态机：fail（任一 check fail）> incomplete（有 not_run）> pass（全 pass）。
 
+在读取任何物理结果前，validator 先做两条 producer-declared identity equality check：证据中的 `scene_id` 必须等于
+`ResolvedSceneSpec.scene_id`，`resolved_scene_sha256` 必须等于当前 resolved scene 的 canonical
+digest。缺字段或未改写的错值都会 fail。它不对整份 evidence、视频、命令或环境签名；producer
+若搬运另一次回放的物理字段并重写这两项声明，validator 仍无法识别。因此这是输入声明一致性门，
+不是不可伪造的 run provenance，也不替代下面的物理门控。Replay handler 已在 consumer 侧重验
+package/catalog/runtime-assets、运行事件、evidence 配置/时间线与完整媒体身份，并把五项 Invocation
+依赖写入 path-free receipt；随后固定 qualification 与新的 900/120 handler 真跑也已完成。独立
+validate/promotion 仍缺，所以这条链仍不能被写成已晋升或 `publishable` 的跨 run provenance。
+
 每物体的门控按 `is_static` 分两种模式：
 
 | Check | 静态物体（`is_static=True`）| 动态物体（`is_static=False`）|
 | --- | --- | --- |
 | translation_drift | ≤ 20 mm | not_applicable |
-| rotation_drift | ≤ 5° | not_applicable |
+| rotation_drift | ≤ 3° | not_applicable |
 | resolved_translation_error | ≤ 20 mm | not_applicable |
 | resolved_rotation_error | ≤ 5° | not_applicable |
 | support_contact | 走 `fixed_static_pose` 模式：`is_static ∧ on_table ∧ support_mode=fixed_static_pose ∧ not_dropped`，否则须 physical_support | 须 `support_contact ∧ target == support_target ∧ contact_fraction ≥ 0.8` |
@@ -79,6 +184,7 @@ for index in range(total_steps):
 | 攻击用例 | 它锁什么 |
 | --- | --- |
 | `test_runtime_validator_rejects_static_contact_free_nested_support` | 静态物体被钉在 nested support 但不实际接触目标，曾经 allowed 的假阳性——现拒 |
+| `test_runtime_validator_requires_each_object_visibility_and_physics` 的四个 identity mutation | 缺失/错误 `scene_id` 或 resolved digest 的运行时证据不能借壳通过 |
 | `test_runtime_validator_rejects_intermittent_nested_contact` | 嵌套源只在终末窗口一部分帧碰 target fraction 仍 ≥ 0.8 → 拒 |
 | `test_runtime_validator_rejects_nested_source_contacting_table` | 嵌套源接触桌子（应是接触 nested target）→ 拒 |
 | `test_static_validator_rejects_edge_placement_even_inside_outer_plate_bounds` | source 中心在 plate 外缘内但 `support_footprint_margin` < 8 mm → 静态就拒 |

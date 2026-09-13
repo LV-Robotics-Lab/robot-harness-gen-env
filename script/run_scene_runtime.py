@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import hmac
 import json
 import math
 import os
+import re
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Sequence
 
 import imageio.v2 as imageio
 import numpy as np
@@ -27,6 +29,105 @@ from scene_gen.support_geometry import (
     support_surface_shape,
 )
 from scene_gen.validator import validate_resolved_scene
+from self_improving.harness.runtime_assets import (
+    RuntimeAssetSnapshotError,
+    RuntimeAssetWorkerError,
+    verify_runtime_asset_snapshot,
+)
+from self_improving.harness.runtime_capability import (
+    RUNTIME_ARTIFACT_PATHS,
+    RUNTIME_EVIDENCE_ARTIFACT_PATHS,
+    RUNTIME_EVIDENCE_SCHEMA,
+    RUNTIME_MEDIA_ARTIFACT_PATHS,
+    canonical_capability_bytes,
+    describe_runtime_capability,
+    runtime_capability_sha256,
+)
+from self_improving.harness.runtime_events import (
+    RUNTIME_EVENT_SCHEMA,
+    RuntimeEventCodec,
+    RuntimeEventEmitter,
+    RuntimeEventKind,
+)
+
+
+def describe_runtime_capabilities(
+    *,
+    robotwin_root: Path,
+    task_config: str,
+) -> dict[str, Any]:
+    return describe_runtime_capability(
+        robotwin_root=robotwin_root,
+        task_config=task_config,
+        runner_path=Path(__file__).resolve(),
+    )
+
+
+def _write_canonical_json(path: Path, value: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(canonical_capability_bytes(value))
+
+
+def _runtime_event_emitter(
+    *,
+    event_fd: int | None,
+    event_protocol: str,
+) -> RuntimeEventEmitter | None:
+    if event_protocol != RUNTIME_EVENT_SCHEMA:
+        raise ValueError(f"unsupported runtime event protocol {event_protocol!r}")
+    if event_fd is None:
+        return None
+    try:
+        os.fstat(event_fd)
+    except OSError as error:
+        raise ValueError("runtime event file descriptor is not open") from error
+    return RuntimeEventEmitter(
+        fd=event_fd,
+        codec=RuntimeEventCodec(allowed_artifact_paths=RUNTIME_ARTIFACT_PATHS),
+    )
+
+
+def _emit_runtime_event(
+    emitter: RuntimeEventEmitter | None,
+    *,
+    kind: RuntimeEventKind,
+    completed_steps: int | None = None,
+    artifact_paths: Sequence[str] = (),
+) -> None:
+    if emitter is not None:
+        emitter.emit(
+            kind=kind,
+            completed_steps=completed_steps,
+            artifact_paths=artifact_paths,
+        )
+
+
+def _prepare_output_root(root: Path) -> None:
+    if root.is_symlink():
+        raise RuntimeError("runtime output root must not be a symlink")
+    if root.exists():
+        if not root.is_dir() or any(root.iterdir()):
+            raise RuntimeError("runtime output root must be an empty directory")
+        return
+    root.mkdir(parents=True)
+
+
+def _require_exact_artifacts(root: Path, paths: Sequence[str]) -> None:
+    expected = set(paths)
+    actual: set[str] = set()
+    for artifact in root.iterdir():
+        if artifact.is_symlink() or not artifact.is_file() or artifact.stat().st_size < 1:
+            raise RuntimeError("runtime output root contains a non-regular artifact")
+        actual.add(artifact.name)
+    if actual != expected:
+        raise RuntimeError(
+            f"runtime output artifacts do not match the allowlist: {sorted(actual ^ expected)!r}"
+        )
+
+
+def _close_runtime_task(task: Any | None) -> None:
+    if task is not None:
+        task.close_env(clear_cache=True)
 
 
 def write_json(path: Path, value: Any) -> None:
@@ -37,6 +138,39 @@ def write_json(path: Path, value: Any) -> None:
 def save_rgb(path: Path, value: np.ndarray) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(value.astype(np.uint8)).save(path)
+
+
+def synchronize_video_timeline(
+    frames: list[np.ndarray],
+    sample_step_indices: tuple[int, ...],
+    *,
+    base_simulation_step_count: int,
+    settle_extra_steps: int,
+    capture_final_frame: Callable[[], np.ndarray],
+) -> tuple[list[np.ndarray], tuple[int, ...]]:
+    """Bind the final video slot to the actual adaptive-settle endpoint."""
+
+    if settle_extra_steps <= 0 or not frames:
+        return frames, sample_step_indices
+    synchronized_frames = [*frames]
+    synchronized_frames[-1] = np.asarray(capture_final_frame()).copy()
+    actual_final_step = base_simulation_step_count + settle_extra_steps - 1
+    return synchronized_frames, (*sample_step_indices[:-1], actual_final_step)
+
+
+def runtime_timeline_evidence(
+    *,
+    base_simulation_step_count: int,
+    settle_extra_steps: int,
+    video_sample_step_indices: tuple[int, ...],
+) -> dict[str, Any]:
+    """Return the step-count fields that bind evidence to its real timeline."""
+
+    return {
+        "base_simulation_step_count": base_simulation_step_count,
+        "simulation_step_count": base_simulation_step_count + settle_extra_steps,
+        "video_sample_step_indices": list(video_sample_step_indices),
+    }
 
 
 def _robotwin_task_config_path(
@@ -173,14 +307,12 @@ def runtime_inside_contained(
         and abs(local_y) + source_footprint.half_y <= interior_depth / 2.0 + tolerance_m
     )
     source_bottom = object_bottom_z(item, source_position)
-    target_bottom = (
-        object_bottom_z(target, target_position)
-        + (target.interior_floor_z_offset_m or 0.0)
+    target_bottom = object_bottom_z(target, target_position) + (
+        target.interior_floor_z_offset_m or 0.0
     )
     vertical = (
         source_bottom >= target_bottom - tolerance_m
-        and source_bottom + item.dimensions_m[2]
-        <= target_bottom + interior_height + tolerance_m
+        and source_bottom + item.dimensions_m[2] <= target_bottom + interior_height + tolerance_m
     )
     return horizontal and vertical
 
@@ -370,9 +502,7 @@ def summarize_contacts(
     penetration_by_object = {name: 0 for name in generated_names}
     support_by_object = {name: False for name in generated_names}
     observed_support_targets: dict[str, str | None] = {name: None for name in generated_names}
-    unexpected_targets_by_object: dict[str, set[str]] = {
-        name: set() for name in generated_names
-    }
+    unexpected_targets_by_object: dict[str, set[str]] = {name: set() for name in generated_names}
     robot_collision_pairs: set[tuple[str, str]] = set()
     for contact in contacts:
         first, second = contact_pair(contact)
@@ -449,55 +579,196 @@ def segmentation_preview(labels: np.ndarray) -> np.ndarray:
     return np.stack([red, green, blue], axis=-1).astype(np.uint8)
 
 
-def main() -> int:
+def _nonnegative_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("must be an integer") from error
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be a nonnegative integer")
+    return parsed
+
+
+def _positive_int(value: str) -> int:
+    parsed = _nonnegative_int(value)
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
+def _task_config_name(value: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", value) or ".." in value:
+        raise argparse.ArgumentTypeError("must be a canonical RoboTwin task config name")
+    return value
+
+
+def _sha256_argument(value: str) -> str:
+    if re.fullmatch(r"[0-9a-f]{64}", value) is None:
+        raise argparse.ArgumentTypeError("must be a lowercase 64-character SHA-256")
+    return value
+
+
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    base_task_class: type[Any] | None = None,
+) -> int:
+    original_cwd = Path.cwd()
+    original_sys_path = sys.path.copy()
+    try:
+        return _main(argv, base_task_class=base_task_class)
+    finally:
+        sys.path[:] = original_sys_path
+        os.chdir(original_cwd)
+
+
+def _main(
+    argv: Sequence[str] | None = None,
+    *,
+    base_task_class: type[Any] | None = None,
+) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--robotwin-root", required=True)
-    parser.add_argument("--resolved-scene", required=True)
+    parser.add_argument("--resolved-scene")
     parser.add_argument("--asset-catalog")
-    parser.add_argument("--out-dir", required=True)
-    parser.add_argument("--task-config", default="demo_clean")
-    parser.add_argument("--settle-steps", type=int, default=900)
+    parser.add_argument("--out-dir")
+    parser.add_argument("--task-config", type=_task_config_name, default="demo_clean")
+    parser.add_argument("--describe-capabilities")
+    parser.add_argument("--settle-steps", type=_positive_int, default=900)
     parser.add_argument(
         "--settle-converge-max",
-        type=int,
+        type=_nonnegative_int,
         default=0,
         help="extra steps the settle phase may take, in blocks, while any "
         "object still reads as moving. 0 (default) keeps the fixed horizon "
         "and reproduces previous runs exactly.",
     )
-    parser.add_argument("--precheck-steps", type=int, default=0)
-    parser.add_argument("--video-frames", type=int, default=120)
-    parser.add_argument("--fps", type=int, default=12)
-    parser.add_argument("--min-visible-pixels", type=int, default=64)
-    parser.add_argument("--contact-window-steps", type=int, default=60)
-    args = parser.parse_args()
+    parser.add_argument("--precheck-steps", type=_nonnegative_int, default=0)
+    parser.add_argument("--video-frames", type=_nonnegative_int, default=120)
+    parser.add_argument("--fps", type=_positive_int, default=12)
+    parser.add_argument("--min-visible-pixels", type=_nonnegative_int, default=64)
+    parser.add_argument("--contact-window-steps", type=_positive_int, default=60)
+    parser.add_argument("--checkpoint-steps", type=_positive_int, default=120)
+    parser.add_argument("--event-fd", type=int)
+    parser.add_argument("--expected-capability-sha256", type=_sha256_argument)
+    parser.add_argument("--runtime-asset-root")
+    parser.add_argument("--runtime-asset-manifest")
+    parser.add_argument(
+        "--expected-runtime-asset-snapshot-sha256",
+        type=_sha256_argument,
+    )
+    parser.add_argument(
+        "--event-protocol",
+        choices=(RUNTIME_EVENT_SCHEMA,),
+        default=RUNTIME_EVENT_SCHEMA,
+    )
+    parser.add_argument(
+        "--evidence-only",
+        action="store_true",
+        help="return success after complete evidence acquisition even when validation gates fail",
+    )
+    args = parser.parse_args(argv)
 
     robotwin_root = Path(args.robotwin_root).expanduser().resolve()
+    if args.describe_capabilities:
+        capability = describe_runtime_capabilities(
+            robotwin_root=robotwin_root,
+            task_config=args.task_config,
+        )
+        _write_canonical_json(
+            Path(args.describe_capabilities).expanduser().resolve(),
+            capability,
+        )
+        return 0
+    if args.event_fd is not None and args.expected_capability_sha256 is None:
+        parser.error("--expected-capability-sha256 is required with --event-fd")
+    runtime_asset_values = (
+        args.runtime_asset_root,
+        args.runtime_asset_manifest,
+        args.expected_runtime_asset_snapshot_sha256,
+    )
+    if any(value is not None for value in runtime_asset_values) and not all(
+        value is not None for value in runtime_asset_values
+    ):
+        parser.error("runtime asset root, manifest, and expected digest must be provided together")
+    if args.event_fd is not None and not all(value is not None for value in runtime_asset_values):
+        parser.error("a complete runtime asset snapshot is required with --event-fd")
+    if args.expected_capability_sha256 is not None:
+        current_capability = describe_runtime_capabilities(
+            robotwin_root=robotwin_root,
+            task_config=args.task_config,
+        )
+        current_capability_sha256 = runtime_capability_sha256(current_capability)
+        if not hmac.compare_digest(
+            current_capability_sha256,
+            args.expected_capability_sha256,
+        ):
+            raise RuntimeError("runtime capability digest does not match the described worker")
+    if not args.resolved_scene:
+        parser.error("--resolved-scene is required unless --describe-capabilities is used")
+    if not args.out_dir:
+        parser.error("--out-dir is required unless --describe-capabilities is used")
     resolved_path = Path(args.resolved_scene).expanduser().resolve()
     catalog_path = Path(args.asset_catalog).expanduser().resolve() if args.asset_catalog else None
-    out_dir = Path(args.out_dir).expanduser().resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
+    # Preserve the final path component so `_prepare_output_root` can reject a
+    # symlink instead of silently following it to a different output tree.
+    out_dir = Path(args.out_dir).expanduser().absolute()
+    _prepare_output_root(out_dir)
     resolved = ResolvedSceneSpec.model_validate_json(resolved_path.read_text(encoding="utf-8"))
+    catalog = None
+    if catalog_path:
+        from scene_gen.catalog import load_catalog
+
+        catalog = load_catalog(catalog_path)
+    verified_runtime_assets = None
+    if all(value is not None for value in runtime_asset_values):
+        assert args.runtime_asset_root is not None
+        assert args.runtime_asset_manifest is not None
+        assert args.expected_runtime_asset_snapshot_sha256 is not None
+        try:
+            verified_runtime_assets = verify_runtime_asset_snapshot(
+                root=Path(args.runtime_asset_root).expanduser().absolute(),
+                manifest_path=Path(args.runtime_asset_manifest).expanduser().absolute(),
+                expected_sha256=args.expected_runtime_asset_snapshot_sha256,
+                resolved=resolved,
+                catalog=catalog,
+            )
+        except RuntimeAssetSnapshotError as error:
+            raise RuntimeAssetWorkerError("preflight", error) from error
+    event_emitter = _runtime_event_emitter(
+        event_fd=args.event_fd,
+        event_protocol=args.event_protocol,
+    )
 
     os.chdir(robotwin_root)
     sys.path.insert(0, str(robotwin_root))
-    from envs._base_task import Base_Task
+    if base_task_class is None:
+        from envs._base_task import Base_Task
+    else:
+        Base_Task = base_task_class
 
     class GeneratedSceneRuntime(Base_Task):
         def __init__(self, scene: ResolvedSceneSpec):
             super().__init__()
             self.resolved_scene = scene
+            self.runtime_asset_roots = (
+                verified_runtime_assets.object_roots
+                if verified_runtime_assets is not None
+                else None
+            )
             self.generated_objects: dict[str, Any] = {}
 
         def setup_demo(self, **kwargs: Any) -> None:
             super()._init_task_env_(**kwargs)
 
         def load_actors(self) -> None:
-            self.generated_objects = load_resolved_scene(self, self.resolved_scene)
+            self.generated_objects = load_resolved_scene(
+                self,
+                self.resolved_scene,
+                asset_roots=self.runtime_asset_roots,
+            )
 
         def check_stable(self):
-            for _ in range(max(0, args.precheck_steps)):
-                self.scene.step()
             return True, []
 
         def play_once(self):
@@ -506,18 +777,44 @@ def main() -> int:
         def check_success(self):
             raise NotImplementedError("environment generation does not define task success")
 
-    task = GeneratedSceneRuntime(resolved)
     report: dict[str, Any] = {
-        "schema_version": "robotwin.scene_runtime_evidence.v2",
+        "schema_version": RUNTIME_EVIDENCE_SCHEMA,
         "scene_id": resolved.scene_id,
         "resolved_scene_sha256": resolved.digest(),
         "seed": resolved.seed,
         "status": "started",
     }
+    if verified_runtime_assets is not None:
+        report["runtime_asset_snapshot_sha256"] = verified_runtime_assets.manifest_sha256
+    task: GeneratedSceneRuntime | None = None
+    runtime_error: BaseException | None = None
     try:
         runtime_args = load_robotwin_args(robotwin_root, args.task_config)
         runtime_args["save_path"] = str(out_dir)
+        _emit_runtime_event(
+            event_emitter,
+            kind=RuntimeEventKind.PREFLIGHT_COMPLETED,
+        )
+        task = GeneratedSceneRuntime(resolved)
         task.setup_demo(now_ep_num=0, seed=resolved.seed, **runtime_args)
+        _emit_runtime_event(
+            event_emitter,
+            kind=RuntimeEventKind.SCENE_LOADED,
+        )
+        completed_steps = 0
+        _emit_runtime_event(
+            event_emitter,
+            kind=RuntimeEventKind.SIMULATION_STARTED,
+        )
+        for _ in range(args.precheck_steps):
+            task.scene.step()
+            completed_steps += 1
+            if completed_steps % args.checkpoint_steps == 0:
+                _emit_runtime_event(
+                    event_emitter,
+                    kind=RuntimeEventKind.SIMULATION_CHECKPOINT,
+                    completed_steps=completed_steps,
+                )
         generated_names = set(task.generated_objects)
         expected_support_targets = {
             item.object_id: item.support_target for item in resolved.objects
@@ -545,6 +842,13 @@ def main() -> int:
         support_contact_samples = 0
         for index in range(total_steps):
             task.scene.step()
+            completed_steps += 1
+            if completed_steps % args.checkpoint_steps == 0:
+                _emit_runtime_event(
+                    event_emitter,
+                    kind=RuntimeEventKind.SIMULATION_CHECKPOINT,
+                    completed_steps=completed_steps,
+                )
             if index == max(0, total_steps - 30):
                 prior_window = {
                     name: {
@@ -571,6 +875,7 @@ def main() -> int:
                     if targets:
                         unexpected_contact_hits[name] += 1
                         unexpected_contact_targets[name].update(targets)
+
         def _snapshot():
             return {
                 name: {
@@ -585,9 +890,7 @@ def main() -> int:
             for name in task.generated_objects:
                 a, b = window[name], now[name]
                 trans = float(
-                    np.linalg.norm(
-                        np.asarray(b["position_m"]) - np.asarray(a["position_m"])
-                    )
+                    np.linalg.norm(np.asarray(b["position_m"]) - np.asarray(a["position_m"]))
                 )
                 rot = quaternion_angle_deg(b["orientation_wxyz"], a["orientation_wxyz"])
                 if trans > 0.001 or rot > 0.5:
@@ -623,6 +926,13 @@ def main() -> int:
                 support_contact_samples = 0
                 for extra_index in range(step_count):
                     task.scene.step()
+                    completed_steps += 1
+                    if completed_steps % args.checkpoint_steps == 0:
+                        _emit_runtime_event(
+                            event_emitter,
+                            kind=RuntimeEventKind.SIMULATION_CHECKPOINT,
+                            completed_steps=completed_steps,
+                        )
                     if extra_index == max(0, step_count - 30):
                         prior_window = _snapshot()
                     if extra_index >= step_count - contact_window_steps:
@@ -642,6 +952,23 @@ def main() -> int:
                 settle_extra_steps += step_count
                 final = _snapshot()
 
+        _emit_runtime_event(
+            event_emitter,
+            kind=RuntimeEventKind.SIMULATION_COMPLETED,
+            completed_steps=completed_steps,
+        )
+
+        def _capture_final_observer_frame() -> np.ndarray:
+            task.scene.update_render()
+            return task.cameras.get_observer_rgb()
+
+        frames, video_steps = synchronize_video_timeline(
+            frames,
+            video_steps,
+            base_simulation_step_count=total_steps,
+            settle_extra_steps=settle_extra_steps,
+            capture_final_frame=_capture_final_observer_frame,
+        )
         head_rgb, actor_labels = head_camera_arrays(task)
         save_rgb(out_dir / "preview_head.png", head_rgb)
         save_rgb(out_dir / "preview_segmentation.png", segmentation_preview(actor_labels))
@@ -659,6 +986,22 @@ def main() -> int:
                 fps=args.fps,
                 output_params=["-movflags", "+faststart"],
             )
+        media_artifact_paths = (
+            RUNTIME_MEDIA_ARTIFACT_PATHS
+            if frames
+            else (
+                "preview_head.png",
+                "preview_segmentation.png",
+                "preview_world_left.png",
+                "preview_world_right.png",
+            )
+        )
+        _require_exact_artifacts(out_dir, media_artifact_paths)
+        _emit_runtime_event(
+            event_emitter,
+            kind=RuntimeEventKind.MEDIA_COMPLETED,
+            artifact_paths=media_artifact_paths,
+        )
         unique_video_frame_count = len(
             {hashlib.sha256(frame.tobytes()).digest() for frame in frames}
         )
@@ -669,35 +1012,35 @@ def main() -> int:
 
         objects: dict[str, Any] = {}
         by_id = {item.object_id: item for item in resolved.objects}
-        final_positions = {
-            name: value["position_m"] for name, value in final.items()
-        }
+        final_positions = {name: value["position_m"] for name, value in final.items()}
         for name, actor in task.generated_objects.items():
             before = initial[name]
             after = final[name]
             late = (prior_window or initial)[name]
             identifiers = entity_ids(actor)
-            visible_pixels = int(np.count_nonzero(np.isin(actor_labels, identifiers))) if identifiers else 0
+            visible_pixels = (
+                int(np.count_nonzero(np.isin(actor_labels, identifiers))) if identifiers else 0
+            )
             late_translation = float(
                 np.linalg.norm(np.asarray(after["position_m"]) - np.asarray(late["position_m"]))
             )
-            late_rotation = quaternion_angle_deg(after["orientation_wxyz"], late["orientation_wxyz"])
+            late_rotation = quaternion_angle_deg(
+                after["orientation_wxyz"], late["orientation_wxyz"]
+            )
             dropped = after["position_m"][2] < resolved.workspace.table_height_m - 0.03
             contact_fraction = support_contact_hits[name] / max(1, support_contact_samples)
-            unexpected_contact_fraction = (
-                unexpected_contact_hits[name] / max(1, support_contact_samples)
+            unexpected_contact_fraction = unexpected_contact_hits[name] / max(
+                1, support_contact_samples
             )
             raw_support_contact = (
-                final_contacts["support_by_object"][name]
-                or support_contact_hits[name] > 0
+                final_contacts["support_by_object"][name] or support_contact_hits[name] > 0
             )
             observed_support_target = final_contacts["observed_support_targets"][name]
             if observed_support_target is None and support_contact_hits[name] > 0:
                 observed_support_target = expected_support_targets[name]
             support_mode = (
                 "fixed_static_pose"
-                if by_id[name].is_static
-                and by_id[name].support_relation == RelationType.ON_TABLE
+                if by_id[name].is_static and by_id[name].support_relation == RelationType.ON_TABLE
                 else f"{by_id[name].support_relation.value}_contact"
                 if raw_support_contact
                 else "none"
@@ -724,14 +1067,11 @@ def main() -> int:
                 else None
             )
             loader_translation_offset = (
-                np.asarray(before["position_m"])
-                - np.asarray(by_id[name].pose.position_m)
+                np.asarray(before["position_m"]) - np.asarray(by_id[name].pose.position_m)
                 if by_id[name].load_type == "urdf"
                 else np.zeros(3, dtype=float)
             )
-            logical_final_position = (
-                np.asarray(after["position_m"]) - loader_translation_offset
-            )
+            logical_final_position = np.asarray(after["position_m"]) - loader_translation_offset
             objects[name] = {
                 "asset_id": by_id[name].asset_id,
                 "entity_id": identifiers[0] if len(identifiers) == 1 else None,
@@ -739,14 +1079,15 @@ def main() -> int:
                 "initial_pose": before,
                 "final_pose": after,
                 "translation_drift_m": float(
-                    np.linalg.norm(np.asarray(after["position_m"]) - np.asarray(before["position_m"]))
-                ),
-                "rotation_drift_deg": quaternion_angle_deg(after["orientation_wxyz"], before["orientation_wxyz"]),
-                "resolved_translation_error_m": float(
                     np.linalg.norm(
-                        logical_final_position
-                        - np.asarray(by_id[name].pose.position_m)
+                        np.asarray(after["position_m"]) - np.asarray(before["position_m"])
                     )
+                ),
+                "rotation_drift_deg": quaternion_angle_deg(
+                    after["orientation_wxyz"], before["orientation_wxyz"]
+                ),
+                "resolved_translation_error_m": float(
+                    np.linalg.norm(logical_final_position - np.asarray(by_id[name].pose.position_m))
                 ),
                 "loader_translation_offset_m": loader_translation_offset.tolist(),
                 "resolved_rotation_error_deg": quaternion_angle_deg(
@@ -785,32 +1126,31 @@ def main() -> int:
                 "initial_contact_records": initial_contacts["records"],
                 "final_contact_records": final_contacts["records"],
                 "images": {
-                    "head": str(out_dir / "preview_head.png"),
-                    "world_left": str(out_dir / "preview_world_left.png"),
-                    "world_right": str(out_dir / "preview_world_right.png"),
-                    "segmentation": str(out_dir / "preview_segmentation.png"),
-                    "observer_start": str(out_dir / "observer_start.png") if frames else None,
-                    "observer_mid": str(out_dir / "observer_mid.png") if frames else None,
-                    "observer_end": str(out_dir / "observer_end.png") if frames else None,
+                    "head": "preview_head.png",
+                    "world_left": "preview_world_left.png",
+                    "world_right": "preview_world_right.png",
+                    "segmentation": "preview_segmentation.png",
+                    "observer_start": "observer_start.png" if frames else None,
+                    "observer_mid": "observer_mid.png" if frames else None,
+                    "observer_end": "observer_end.png" if frames else None,
                 },
-                "video": str(out_dir / "observer_runtime.mp4") if frames else None,
+                "video": "observer_runtime.mp4" if frames else None,
                 "video_frame_count": len(frames),
                 "unique_video_frame_count": unique_video_frame_count,
                 "fps": args.fps,
-                "simulation_step_count": total_steps,
-                "video_sample_step_indices": list(video_steps),
+                **runtime_timeline_evidence(
+                    base_simulation_step_count=total_steps,
+                    settle_extra_steps=settle_extra_steps,
+                    video_sample_step_indices=video_steps,
+                ),
                 "precheck_steps": args.precheck_steps,
+                "total_physics_step_count": completed_steps,
                 "contact_window_steps": contact_window_steps,
                 "settle_extra_steps": settle_extra_steps,
                 "settle_converge_max": args.settle_converge_max,
             }
         )
         write_json(out_dir / "runtime_evidence.json", report)
-        catalog = None
-        if catalog_path:
-            from scene_gen.catalog import load_catalog
-
-            catalog = load_catalog(catalog_path)
         validation = validate_resolved_scene(
             resolved,
             catalog=catalog,
@@ -819,22 +1159,83 @@ def main() -> int:
             min_visible_pixels=args.min_visible_pixels,
         )
         write_json(out_dir / "runtime_validation_report.json", validation)
+        _require_exact_artifacts(
+            out_dir,
+            (*media_artifact_paths, *RUNTIME_EVIDENCE_ARTIFACT_PATHS),
+        )
+        _emit_runtime_event(
+            event_emitter,
+            kind=RuntimeEventKind.EVIDENCE_COMPLETED,
+            artifact_paths=RUNTIME_EVIDENCE_ARTIFACT_PATHS,
+        )
         print(
             f"{validation['status'].upper()} scene={resolved.scene_id} "
             f"fail={validation['fail_count']} video_frames={len(frames)}"
         )
-        return 0 if validation["status"] == "pass" else 2
-    except Exception as error:
+        exit_code = 0 if args.evidence_only or validation["status"] == "pass" else 2
+    except BaseException as error:
         report.update({"status": "fail", "error": repr(error)})
-        write_json(out_dir / "runtime_evidence.json", report)
-        print(f"FAIL {out_dir / 'runtime_evidence.json'}")
-        raise
-    finally:
         try:
-            task.close_env(clear_cache=True)
-        except Exception:
-            pass
+            write_json(out_dir / "runtime_evidence.json", report)
+            print(f"FAIL {out_dir / 'runtime_evidence.json'}")
+        except BaseException as reporting_error:
+            reporting_error.add_note(f"original runtime failure: {error!r}")
+            runtime_error = reporting_error
+        else:
+            runtime_error = error
+
+    close_error: BaseException | None = None
+    try:
+        _close_runtime_task(task)
+    except BaseException as error:
+        close_error = error
+
+    snapshot_error: BaseException | None = None
+    if verified_runtime_assets is not None:
+        assert args.runtime_asset_root is not None
+        assert args.runtime_asset_manifest is not None
+        assert args.expected_runtime_asset_snapshot_sha256 is not None
+        try:
+            verify_runtime_asset_snapshot(
+                root=Path(args.runtime_asset_root).expanduser().absolute(),
+                manifest_path=Path(args.runtime_asset_manifest).expanduser().absolute(),
+                expected_sha256=args.expected_runtime_asset_snapshot_sha256,
+                resolved=resolved,
+                catalog=catalog,
+            )
+        except BaseException as error:
+            snapshot_error = error
+
+    # Trust-boundary failures dominate execution failures. A simulator crash
+    # must not hide the fact that the loader tree changed while it was in use.
+    if snapshot_error is not None:
+        effective_snapshot_error = (
+            RuntimeAssetWorkerError("postflight", snapshot_error)
+            if isinstance(snapshot_error, RuntimeAssetSnapshotError)
+            else snapshot_error
+        )
+        if close_error is not None:
+            effective_snapshot_error.add_note(f"runtime close also failed: {close_error!r}")
+        if runtime_error is not None:
+            raise effective_snapshot_error from runtime_error
+        if close_error is not None:
+            raise effective_snapshot_error from close_error
+        raise effective_snapshot_error
+    if runtime_error is not None:
+        if close_error is not None:
+            raise runtime_error from close_error
+        raise runtime_error
+    if close_error is not None:
+        raise close_error
+    _emit_runtime_event(
+        event_emitter,
+        kind=RuntimeEventKind.WORKER_COMPLETED,
+    )
+    return exit_code
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except RuntimeAssetWorkerError as error:
+        raise SystemExit(error.exit_code) from None

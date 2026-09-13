@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import numpy as np
-
 from scripts.pose_conditioned_trajectory_policy import (
     Demonstration,
     PoseConditionedTrajectoryPolicy,

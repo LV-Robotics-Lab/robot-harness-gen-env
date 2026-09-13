@@ -8,8 +8,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
+        group: ["1", "2", "3", "4", "5", "6", "root"]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -19,4 +21,56 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - run: python -m pip install -e '.[dev,demo,platform]'
-      - run: script/run_self_improving_tests.sh
+      - name: Allocate isolated evidence directory
+        run: echo "CI_EVIDENCE=$(mktemp -d /var/tmp/x2env-ci.XXXXXX)" >> "$GITHUB_ENV"
+      - run: script/run_self_improving_tests.sh "${{ matrix.group }}" --output "$CI_EVIDENCE"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence-${{ matrix.python-version }}-${{ matrix.group }}
+          path: |
+            ${{ env.CI_EVIDENCE }}/pending-gates.json
+            ${{ env.CI_EVIDENCE }}/*/log.txt
+            ${{ env.CI_EVIDENCE }}/*/result.json
+            ${{ env.CI_EVIDENCE }}/*/junit-*.xml
+            ${{ env.CI_EVIDENCE }}/*/reader-docs.json
+            ${{ env.CI_EVIDENCE }}/*/ruff.json
+            ${{ env.CI_EVIDENCE }}/*/.coverage.*
+          include-hidden-files: true
+          if-no-files-found: error
+
+  coverage:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e '.[dev,demo,platform]'
+      - name: Allocate isolated evidence directory
+        run: echo "CI_EVIDENCE=$(mktemp -d /var/tmp/x2env-coverage.XXXXXX)" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: evidence-${{ matrix.python-version }}-*
+          path: ${{ env.CI_EVIDENCE }}
+          merge-multiple: true
+      - run: script/run_self_improving_tests.sh merge --output "$CI_EVIDENCE"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: |
+            ${{ env.CI_EVIDENCE }}/coverage.json
+            ${{ env.CI_EVIDENCE }}/coverage.xml
+            ${{ env.CI_EVIDENCE }}/coverage-gate.json
+            ${{ env.CI_EVIDENCE }}/pending-gates.json
+            ${{ env.CI_EVIDENCE }}/.coverage.combined
+            ${{ env.CI_EVIDENCE }}/merge/log.txt
+            ${{ env.CI_EVIDENCE }}/merge/result.json
+          include-hidden-files: true

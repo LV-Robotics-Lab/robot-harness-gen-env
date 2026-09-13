@@ -71,7 +71,7 @@ python script/run_scene_runtime.py \
 
 ## Step 8: 运行时门控把物理证据转成 pass / fail
 
-回放完，`scene_gen/validator.py:validate_resolved_scene` 把 `runtime_evidence.json` 翻译成一组 checks。固定物体（`is_static=True`）按精确终态门控：translation drift ≤ 20 mm、rotation drift ≤ 5°、resolved translation error ≤ 20 mm、resolved rotation error ≤ 5°。动态物体（`is_static=False`）按最终接触与关系门控：support target 接触 fraction ≥ 0.8、对未声明 support target 的接触 fraction 必须为 0、不穿透、不仍在动、不掉落、首视角可见像素 ≥ 64。`on_top_of` 还要 runtime support margin 满足 target 的 `support_margin_m`；`inside` 要 `runtime_inside_containment=True`。视频最少 3 帧、互异帧 ≥ `min(120, 30)`。articulation qpos 误差 ≤ 0.02。
+回放完，`scene_gen/validator.py:validate_resolved_scene` 把 `runtime_evidence.json` 翻译成一组 checks。它先核对证据自声明的 `scene_id` 与 `resolved_scene_sha256` 是否等于当前 resolved scene；缺失或未改写的错值直接 fail。这不签名整份 evidence/媒体，也防不了 producer 搬运物理字段后重写两项声明。固定物体（`is_static=True`）再按精确终态门控：translation drift ≤ 20 mm、rotation drift ≤ 3°、resolved translation error ≤ 20 mm、resolved rotation error ≤ 5°。动态物体（`is_static=False`）按最终接触与关系门控：support target 接触 fraction ≥ 0.8、对未声明 support target 的接触 fraction 必须为 0、不穿透、不仍在动、不掉落、首视角可见像素 ≥ 64。`on_top_of` 还要 runtime support margin 满足 target 的 `support_margin_m`；`inside` 要 `runtime_inside_containment=True`。视频最少 3 帧、互异帧 ≥ `min(120, 30)`。articulation qpos 误差 ≤ 0.02。
 
 关键设计是「静态 + `on_table`」可以走 `fixed_static_pose` 分支（接触对他们不是必须的，因为它们就钉在桌上）；但「静态 + nested」不可——`test_runtime_validator_rejects_static_contact_free_nested_support` 就是攻击这条误报模式：曾经允许静态物体摆上 nested support 而不接触、只看 AABB，导致静态堆叠被假阳性放过，现在被拒绝。同样被攻击测试锁住的还有「只在某几帧接触 nested target」（intermittent contact）和「nested source 又碰到了桌子」。门控的完整阈值与失败模式在 [运行时门控](../modules/runtime-gates.md)。
 

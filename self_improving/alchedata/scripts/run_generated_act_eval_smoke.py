@@ -19,8 +19,17 @@ from typing import Any
 import imageio.v2 as imageio
 import numpy as np
 import torch
+from harness_observation_adapter import (
+    RUNTIME_COLOR_ADAPTERS,
+    apply_runtime_color_adapter,
+    color_adapter_reason,
+)
 from PIL import Image
-
+from placement_manifest_utils import (
+    fixed_placement_cases,
+    load_placement_cases,
+    passed_training_placement_signatures,
+)
 from run_generated_selection2env_rollout_probe import (
     apply_domain_randomization,
     infer_task_binding,
@@ -30,20 +39,11 @@ from run_generated_selection2env_rollout_probe import (
     requested_domain_randomization,
     write_json,
 )
-from placement_manifest_utils import (
-    fixed_placement_cases,
-    load_placement_cases,
-    passed_training_placement_signatures,
-)
-from harness_observation_adapter import (
-    RUNTIME_COLOR_ADAPTERS,
-    apply_runtime_color_adapter,
-    color_adapter_reason,
-)
-
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_PLACEMENT = ROOT / "runs" / "probe_static_apple_plate_action_repair" / "final_placement.json"
+DEFAULT_PLACEMENT = (
+    ROOT / "runs" / "probe_static_apple_plate_action_repair" / "final_placement.json"
+)
 DEFAULT_CHECKPOINT_DIR = ROOT / "runs" / "act_train_smoke_generated" / "act_ckpt"
 DEFAULT_OUT_DIR = ROOT / "runs" / "act_eval_smoke_generated"
 TRAIN_COLLECTION_REPORTS = (
@@ -74,12 +74,17 @@ def sha256_file(path: Path) -> str:
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
+    path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+    )
 
 
 def pose_record(actor: Any) -> dict[str, list[float]]:
     pose = actor.get_pose()
-    return {"p": np.asarray(pose.p, dtype=float).tolist(), "q": np.asarray(pose.q, dtype=float).tolist()}
+    return {
+        "p": np.asarray(pose.p, dtype=float).tolist(),
+        "q": np.asarray(pose.q, dtype=float).tolist(),
+    }
 
 
 def save_rgb(path: Path, rgb: np.ndarray) -> None:
@@ -88,7 +93,9 @@ def save_rgb(path: Path, rgb: np.ndarray) -> None:
 
 
 def resize_rgb(rgb: np.ndarray, width: int, height: int) -> np.ndarray:
-    return np.asarray(Image.fromarray(np.asarray(rgb, dtype=np.uint8)).resize((width, height)), dtype=np.uint8)
+    return np.asarray(
+        Image.fromarray(np.asarray(rgb, dtype=np.uint8)).resize((width, height)), dtype=np.uint8
+    )
 
 
 def source_training_seeds(report_paths: list[Path]) -> set[int]:
@@ -98,9 +105,14 @@ def source_training_seeds(report_paths: list[Path]) -> set[int]:
             continue
         report = read_json(report_path)
         for episode in report.get("episodes", []):
-            source_passed = str(episode.get("status", "")).startswith("pass_") and episode.get("check_success") is True
+            source_passed = (
+                str(episode.get("status", "")).startswith("pass_")
+                and episode.get("check_success") is True
+            )
             native = episode.get("native_synchronized_data", {})
-            native_passed = not native or native.get("status") == "pass_native_synchronized_recording"
+            native_passed = (
+                not native or native.get("status") == "pass_native_synchronized_recording"
+            )
             if source_passed and native_passed and isinstance(episode.get("seed"), int):
                 seeds.add(episode["seed"])
     return seeds
@@ -114,7 +126,9 @@ def quaternion_angle_deg(first: list[float], second: list[float]) -> float:
     return float(np.degrees(2.0 * np.arccos(np.clip(abs(float(np.dot(q1, q2))), 0.0, 1.0))))
 
 
-def build_task_class(base_task: type, sapien: Any, create_actor: Any, create_sapien_urdf_obj: Any) -> type:
+def build_task_class(
+    base_task: type, sapien: Any, create_actor: Any, create_sapien_urdf_obj: Any
+) -> type:
     class GeneratedSelection2EnvEvalTask(base_task):
         def __init__(self, placement: dict[str, Any], binding: dict[str, str]):
             super().__init__()
@@ -145,7 +159,9 @@ def build_task_class(base_task: type, sapien: Any, create_actor: Any, create_sap
                         pose=sapien.Pose(xyz, qpos),
                         modelname=obj["asset_id"],
                         modelid=obj.get("model_id", 0),
-                        fix_root_link=defaults.get("fix_root_link", obj.get("physical", {}).get("is_static", False)),
+                        fix_root_link=defaults.get(
+                            "fix_root_link", obj.get("physical", {}).get("is_static", False)
+                        ),
                     )
                     if actor is not None and "articulation_qpos" in defaults:
                         actor.set_qpos(defaults["articulation_qpos"])
@@ -193,11 +209,15 @@ def build_task_class(base_task: type, sapien: Any, create_actor: Any, create_sap
             if not metrics["left_gripper_open"] or not metrics["right_gripper_open"]:
                 return False
             if self.task_binding["template"] == "place_in":
-                return bool(metrics["xy_distance_m"] < 0.13 and metrics["source_minus_target_z_m"] > 0.0)
+                return bool(
+                    metrics["xy_distance_m"] < 0.13 and metrics["source_minus_target_z_m"] > 0.0
+                )
             target_radius = 0.08
             try:
                 target_spec = self.object_specs[self.task_binding["target_id"]]
-                extents = np.asarray(target_spec["asset_metadata"]["approx_scaled_extents_m"], dtype=float)
+                extents = np.asarray(
+                    target_spec["asset_metadata"]["approx_scaled_extents_m"], dtype=float
+                )
                 target_radius = float(max(extents[0], extents[1]) / 2.0)
             except Exception:
                 pass
@@ -236,7 +256,9 @@ def model_config(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
-def load_policy(args: argparse.Namespace, checkpoint_dir: Path) -> tuple[Any, dict[str, Any], dict[str, Any]]:
+def load_policy(
+    args: argparse.Namespace, checkpoint_dir: Path
+) -> tuple[Any, dict[str, Any], dict[str, Any]]:
     from policy.ACT.act_policy import ACTPolicy
 
     config = model_config(args)
@@ -331,17 +353,26 @@ def diagnose_episode(
             "status": "infrastructure_error",
             "required_categories_checked": list(REQUIRED_DIAGNOSIS_CATEGORIES),
             "categories": categories,
-            "infrastructure_error": infrastructure_error or "Required object poses were not captured.",
+            "infrastructure_error": infrastructure_error
+            or "Required object poses were not captured.",
         }
     source_delta = float(
-        np.linalg.norm(np.asarray(final_poses[source_id]["p"]) - np.asarray(initial_poses[source_id]["p"]))
+        np.linalg.norm(
+            np.asarray(final_poses[source_id]["p"]) - np.asarray(initial_poses[source_id]["p"])
+        )
     )
     target_delta = float(
-        np.linalg.norm(np.asarray(final_poses[target_id]["p"]) - np.asarray(initial_poses[target_id]["p"]))
+        np.linalg.norm(
+            np.asarray(final_poses[target_id]["p"]) - np.asarray(initial_poses[target_id]["p"])
+        )
     )
-    target_rotation_deg = quaternion_angle_deg(initial_poses[target_id]["q"], final_poses[target_id]["q"])
+    target_rotation_deg = quaternion_angle_deg(
+        initial_poses[target_id]["q"], final_poses[target_id]["q"]
+    )
     action_array = np.asarray(actions, dtype=float) if actions else np.zeros((0, 14), dtype=float)
-    max_action_delta = float(np.max(np.abs(np.diff(action_array, axis=0)))) if len(action_array) > 1 else 0.0
+    max_action_delta = (
+        float(np.max(np.abs(np.diff(action_array, axis=0)))) if len(action_array) > 1 else 0.0
+    )
     gripper_toggles = 0
     if len(action_array) > 1:
         for index in (6, 13):
@@ -354,8 +385,13 @@ def diagnose_episode(
             "evidence": {"source_displacement_m": source_delta},
         },
         "object_knocked_over": {
-            "status": "observed" if target_delta > 0.03 or target_rotation_deg > 20.0 else "not_observed",
-            "evidence": {"target_displacement_m": target_delta, "target_rotation_deg": target_rotation_deg},
+            "status": "observed"
+            if target_delta > 0.03 or target_rotation_deg > 20.0
+            else "not_observed",
+            "evidence": {
+                "target_displacement_m": target_delta,
+                "target_rotation_deg": target_rotation_deg,
+            },
         },
         "arm_jitter": {
             "status": "observed" if max_action_delta > 1.0 else "not_observed",
@@ -371,7 +407,10 @@ def diagnose_episode(
         },
         "visual_material_mismatch": {
             "status": "not_measured",
-            "evidence": "No calibrated material reference or material-sidecar render gate is available for this task.",
+            "evidence": (
+                "No calibrated material reference or material-sidecar render ga"
+                "te is available for this task."
+            ),
         },
         "target_relation_not_satisfied": {
             "status": "not_observed" if success else "observed",
@@ -379,7 +418,9 @@ def diagnose_episode(
         },
     }
     return {
-        "status": "infrastructure_error" if infrastructure_error else ("no_failure_observed" if success else "policy_failure_observed"),
+        "status": "infrastructure_error"
+        if infrastructure_error
+        else ("no_failure_observed" if success else "policy_failure_observed"),
         "required_categories_checked": list(REQUIRED_DIAGNOSIS_CATEGORIES),
         "categories": categories,
         "infrastructure_error": infrastructure_error,
@@ -445,7 +486,9 @@ def run_episode(
                 policy,
                 stats,
                 qpos,
-                policy_camera_rgb(observation, args.runtime_camera_source, args.runtime_color_adapter),
+                policy_camera_rgb(
+                    observation, args.runtime_camera_source, args.runtime_color_adapter
+                ),
                 args,
             )
             if not inference["finite"]:
@@ -476,7 +519,11 @@ def run_episode(
                 actions.append(action.tolist())
                 success = bool(task.eval_success or task.check_success())
                 post_observation = task.get_obs()
-                frames.append(resize_rgb(post_observation["third_view_rgb"], args.camera_width, args.camera_height))
+                frames.append(
+                    resize_rgb(
+                        post_observation["third_view_rgb"], args.camera_width, args.camera_height
+                    )
+                )
                 events.append(
                     {
                         "at": utc_now(),
@@ -505,15 +552,22 @@ def run_episode(
         )
     finally:
         if getattr(task, "placement_objects", None):
-            final_poses = {name: pose_record(actor) for name, actor in task.placement_objects.items()}
+            final_poses = {
+                name: pose_record(actor) for name, actor in task.placement_objects.items()
+            }
             try:
                 relation_metrics_snapshot = task.relation_metrics()
             except Exception:
                 relation_metrics_snapshot = None
             try:
                 final_observation = task.get_obs()
-                save_rgb(episode_dir / "final_head_camera.png", final_observation["observation"]["head_camera"]["rgb"])
-                save_rgb(episode_dir / "final_observer_camera.png", final_observation["third_view_rgb"])
+                save_rgb(
+                    episode_dir / "final_head_camera.png",
+                    final_observation["observation"]["head_camera"]["rgb"],
+                )
+                save_rgb(
+                    episode_dir / "final_observer_camera.png", final_observation["third_view_rgb"]
+                )
             except Exception:
                 pass
         try:
@@ -536,7 +590,9 @@ def run_episode(
     video_path = episode_dir / "observer_policy_rollout.mp4"
     if frames:
         imageio.mimsave(video_path, frames, fps=args.fps, macro_block_size=1)
-    diagnosis = diagnose_episode(initial_poses, final_poses, binding, actions, success, infrastructure_error)
+    diagnosis = diagnose_episode(
+        initial_poses, final_poses, binding, actions, success, infrastructure_error
+    )
     diagnosis_path = episode_dir / "failure_diagnosis.json"
     write_json(diagnosis_path, diagnosis)
     episode_report = {
@@ -554,7 +610,13 @@ def run_episode(
             placement_case.get("pose_signature")
             and placement_case["pose_signature"] not in training_placement_signatures
         ),
-        "status": "completed_policy_success" if success else ("completed_policy_failure" if infrastructure_error is None else "blocked_infrastructure_error"),
+        "status": "completed_policy_success"
+        if success
+        else (
+            "completed_policy_failure"
+            if infrastructure_error is None
+            else "blocked_infrastructure_error"
+        ),
         "execution_complete": infrastructure_error is None,
         "policy_success": success,
         "policy_step_count": len(actions),
@@ -579,7 +641,9 @@ def run_episode(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Bounded learned-ACT /evaluate runner for generated selection2env tasks.")
+    parser = argparse.ArgumentParser(
+        description="Bounded learned-ACT /evaluate runner for generated selection2env tasks."
+    )
     parser.add_argument("--robotwin-root", default=str(ROOT / "external" / "RoboTwin"))
     parser.add_argument("--placement", default=str(DEFAULT_PLACEMENT))
     parser.add_argument("--placement-manifest")
@@ -609,8 +673,14 @@ def main() -> int:
         default=20,
         help="Number of predicted actions to execute before replanning in chunk-prefix mode.",
     )
-    parser.add_argument("--runtime-camera-source", choices=["observer_camera", "head_camera"], default="observer_camera")
-    parser.add_argument("--runtime-color-adapter", choices=RUNTIME_COLOR_ADAPTERS, default="identity")
+    parser.add_argument(
+        "--runtime-camera-source",
+        choices=["observer_camera", "head_camera"],
+        default="observer_camera",
+    )
+    parser.add_argument(
+        "--runtime-color-adapter", choices=RUNTIME_COLOR_ADAPTERS, default="identity"
+    )
     parser.add_argument("--training-collection-report", action="append")
     parser.add_argument("--random-background", action="store_true")
     parser.add_argument("--cluttered-table", action="store_true")
@@ -628,7 +698,7 @@ def main() -> int:
     checkpoint_dir = Path(args.checkpoint_dir).expanduser().resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     if args.placement_manifest:
-        placement_manifest, placement_cases = load_placement_cases(
+        _placement_manifest, placement_cases = load_placement_cases(
             Path(args.placement_manifest),
             args.placement_split,
             args.seeds,
@@ -638,7 +708,7 @@ def main() -> int:
         args.seeds = args.seeds or [4]
         placement_path = Path(args.placement).expanduser().resolve()
         placement_cases = fixed_placement_cases(placement_path, args.seeds)
-        placement_manifest = None
+        _placement_manifest = None
     args.seeds = [case["seed"] for case in placement_cases]
     first_placement = read_json(placement_cases[0]["placement_path"])
     binding = infer_task_binding(args.task_id, first_placement)
@@ -650,9 +720,7 @@ def main() -> int:
     training_seeds = source_training_seeds(training_report_paths)
     training_placement_signatures = passed_training_placement_signatures(training_report_paths)
     eval_signatures = {
-        str(case["pose_signature"])
-        for case in placement_cases
-        if case.get("pose_signature")
+        str(case["pose_signature"]) for case in placement_cases if case.get("pose_signature")
     }
     all_eval_placements_held_out = bool(
         eval_signatures
@@ -673,9 +741,13 @@ def main() -> int:
         "held_out_seeds": [case["seed"] for case in placement_cases],
         "source_training_seeds": sorted(training_seeds),
         "source_training_collection_reports": [str(path) for path in training_report_paths],
-        "all_eval_seeds_held_out": all(case["seed"] not in training_seeds for case in placement_cases),
+        "all_eval_seeds_held_out": all(
+            case["seed"] not in training_seeds for case in placement_cases
+        ),
         "placement": str(placement_path) if placement_path else None,
-        "placement_manifest": str(Path(args.placement_manifest).expanduser().resolve()) if args.placement_manifest else None,
+        "placement_manifest": str(Path(args.placement_manifest).expanduser().resolve())
+        if args.placement_manifest
+        else None,
         "placement_split": args.placement_split if args.placement_manifest else "fixed",
         "eval_placements": [
             {
@@ -702,7 +774,10 @@ def main() -> int:
             "source_reason": (
                 "The native synchronized converter maps RoboTwin head_camera RGB to cam_high."
                 if args.runtime_camera_source == "head_camera"
-                else "The sparse generated ACT smoke converter stores observer frames under cam_high."
+                else (
+                    "The sparse generated ACT smoke converter stores observer frame"
+                    "s under cam_high."
+                )
             ),
             "runtime_color_adapter": args.runtime_color_adapter,
             "color_reason": color_adapter_reason(args.runtime_color_adapter),
@@ -717,24 +792,38 @@ def main() -> int:
             "action_selection": (
                 f"execute_full_{args.chunk_size}_action_chunk_before_replan"
                 if args.action_execution == "full-chunk"
-                else f"execute_first_{args.execution_horizon}_of_{args.chunk_size}_actions_before_replan"
+                else (
+                    "execute_first_"
+                    f"{args.execution_horizon}"
+                    "_of_"
+                    f"{args.chunk_size}"
+                    "_actions_before_replan"
+                )
                 if args.action_execution == "chunk-prefix"
                 else f"receding_horizon_first_action_from_each_{args.chunk_size}_action_chunk"
             ),
             "seed_boundary": (
                 f"Seeds are held out from {len(training_seeds)} source collection seeds. "
                 + (
-                    f"The {len(placement_cases)} explicit evaluation placements are signature-disjoint from passed training placements."
+                    (
+                        "The "
+                        f"{len(placement_cases)}"
+                        " explicit evaluation placements are signature-disjoint from pa"
+                        "ssed training placements."
+                    )
                     if all_eval_placements_held_out
                     else "Placement holdout is not established by signature."
                 )
             ),
         },
         "claim_boundary": (
-            f"This is a bounded learned-policy evaluation: it loads {args.checkpoint_name}, performs ACT inference from the "
-            "generated task observation, sends predicted qpos actions through RoboTwin take_action, and records the "
-            "success verifier. Infrastructure completion is separate from policy task success and does not establish "
-            "robust policy quality."
+            "This is a bounded learned-policy evaluation: it loads "
+            f"{args.checkpoint_name}"
+            ", performs ACT inference from the generated task observation, "
+            "sends predicted qpos actions through RoboTwin take_action, and"
+            " records the success verifier. Infrastructure completion is se"
+            "parate from policy task success and does not establish robust "
+            "policy quality."
         ),
         "episodes": [],
     }
@@ -756,7 +845,10 @@ def main() -> int:
             seed = placement_case["seed"]
             placement = read_json(placement_case["placement_path"])
             episode_binding = infer_task_binding(args.task_id, placement)
-            episode_dir = out_dir / f"episode_{episode_index:03d}_{placement_case['placement_id']}_seed_{seed}"
+            episode_dir = (
+                out_dir
+                / f"episode_{episode_index:03d}_{placement_case['placement_id']}_seed_{seed}"
+            )
             episode, events = run_episode(
                 task_class,
                 placement,
@@ -781,10 +873,14 @@ def main() -> int:
     execution_count = sum(1 for episode in report["episodes"] if episode.get("execution_complete"))
     success_count = sum(1 for episode in report["episodes"] if episode.get("policy_success"))
     episode_count = len(placement_cases)
-    infrastructure_pass = execution_count == episode_count and episode_count > 0 and "top_level_error" not in report
+    infrastructure_pass = (
+        execution_count == episode_count and episode_count > 0 and "top_level_error" not in report
+    )
     report.update(
         {
-            "status": "pass_generated_act_evaluate_execution" if infrastructure_pass else "blocked_generated_act_evaluate_execution",
+            "status": "pass_generated_act_evaluate_execution"
+            if infrastructure_pass
+            else "blocked_generated_act_evaluate_execution",
             "finished_at": utc_now(),
             "episode_count": episode_count,
             "execution_count": execution_count,
@@ -793,11 +889,21 @@ def main() -> int:
             "policy_success_rate": success_count / episode_count if episode_count else 0.0,
             "policy_result": "task_success_observed" if success_count else "zero_task_success",
             "next_data_requirement": (
-                "Held-out placement success was observed; add visual/physics domain randomization and another task before promotion."
+                (
+                    "Held-out placement success was observed; add visual/physics do"
+                    "main randomization and another task before promotion."
+                )
                 if success_count == episode_count and all_eval_placements_held_out
-                else "Task success was observed; expand placement and domain randomization before making a robustness claim."
+                else (
+                    "Task success was observed; expand placement and domain randomi"
+                    "zation before making a robustness claim."
+                )
                 if success_count
-                else "Inspect full-chunk action traces and failure media, then add synchronized demonstrations or tune training before rerunning held-out seeds."
+                else (
+                    "Inspect full-chunk action traces and failure media, then add s"
+                    "ynchronized demonstrations or tune training before rerunning h"
+                    "eld-out seeds."
+                )
             ),
         }
     )

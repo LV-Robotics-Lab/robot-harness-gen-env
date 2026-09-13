@@ -1,0 +1,99 @@
+{
+  "schema_version": "harness.production_generated_asset_portability_evidence.v1",
+  "recorded_date": "2026-09-01",
+  "status": "implemented",
+  "red": [
+    "published provenance retained absolute staging paths",
+    "provenance accepted an extra unbound file identity",
+    "provenance file identity accepted an extra unbound locator field",
+    "source payload changed after the input gate but before the private staging snapshot",
+    "reuse accepted a ledger-consistent installed provenance containing absolute staging locators",
+    "provenance accepted an extra unbound top-level locator",
+    "private staging provenance changed after rewrite without a final reload",
+    "private staging accepted an unexpected file after the input gate",
+    "derived compatibility accepted an extra unbound locator",
+    "requested_material accepted a nested object containing an absolute staging locator",
+    "a derived semantic string list accepted an absolute staging locator",
+    "derived semantic_name accepted an absolute staging locator"
+  ],
+  "admission_contract": {
+    "public_seams": [
+      "compile_scene with GeneratedAssetAdmitter",
+      "GeneratedAssetAdmitter.admit"
+    ],
+    "private_test_injection": "manifest monkeypatches inject deterministic post-gate drift; ledger helper only prepares a self-consistent legacy reuse input",
+    "copy_verified_before_rewrite": true,
+    "rewrite_occurs_in_private_staging": true,
+    "staging_manifest_recomputed_after_rewrite": true,
+    "staging_tree_is_exact": true,
+    "staged_provenance_reloaded_after_rewrite": true,
+    "normalized_provenance_rechecked_against_staged_payloads": true,
+    "provenance_top_level_fields_are_exact": true,
+    "provenance_values_are_strictly_typed": true,
+    "derived_semantic_strings_are_locator_free": true,
+    "derived_compatibility_fields_and_values_are_exact": true,
+    "published_path_basis": "asset-relative POSIX",
+    "exact_file_identity_keys": [
+      "collision",
+      "material",
+      "metadata",
+      "visual"
+    ],
+    "exact_file_identity_fields": [
+      "path",
+      "sha256"
+    ]
+  },
+  "production_asset": {
+    "asset_id": "900_gen_hexagonal_pedestal_5695f4e5",
+    "first_disposition": "admitted",
+    "second_disposition": "reused",
+    "ledger_sha256": "fe52c79a5107aa83fb6750ba56a71b48dc3a2b8a78b96bf1c8f6532c35b41ae2",
+    "generation_provenance_sha256": "47055f5969416dd06b5d19020ccb35d8892a5568821e0255886f599fda718116",
+    "ledger_file_records": 3,
+    "ledger_violations": 0,
+    "generation_qc_current": true,
+    "physical_qualification": "pending_settle",
+    "files": {
+      "collision/textured0.obj": "73628bac5120cd41520410d7e6404aa04fd377a126c18af1a75361c7775704c9",
+      "generation_provenance.json": "47055f5969416dd06b5d19020ccb35d8892a5568821e0255886f599fda718116",
+      "ledger.json": "fe52c79a5107aa83fb6750ba56a71b48dc3a2b8a78b96bf1c8f6532c35b41ae2",
+      "model_data0.json": "b2cbc51850dae042e07041fade5c0f13a5cdfecf723f74f0a7d4b4968b54f643",
+      "visual/material.mtl": "b2f39d95affbd58fa63ad649dd579a22737de7dab61ec40cabe60562a4321f61",
+      "visual/textured0.obj": "a3517e0da28a2e44bb33981c0f91f3b92d2e4bee3a20a1d3a1d041d6d6176495"
+    }
+  },
+  "compile_qualification": {
+    "old_bundle_rejected": "implementation_file_mismatch: self_improving/harness/assets.py",
+    "implementation_sha256": "07501791e56e555e3b70c6a93dfd2e24ba00945fc3a27395e09b4faf17cb5e2d",
+    "report_sha256": "eb3282cb671a134574b7ae1a565573b86a03e4fe9dd13310b52e930da5b8fdb9",
+    "documents": {
+      "manifest.json": {
+        "bytes": 1944,
+        "sha256": "893586fbfe8f03647d9e7a54f88b17d9a7350753d62ad802d42f57cd2215a1bb"
+      },
+      "qualification.json": {
+        "bytes": 294,
+        "sha256": "41d3ff989cc0c78e50666d4079f3b3c552f199afc6e1e00e5299b6378e82118e"
+      },
+      "report.json": {
+        "bytes": 6990,
+        "sha256": "eb3282cb671a134574b7ae1a565573b86a03e4fe9dd13310b52e930da5b8fdb9"
+      }
+    },
+    "named_checks": 7,
+    "all_checks_passed": true,
+    "production_loader_passed": true,
+    "static_validation": "incomplete"
+  },
+  "verification": {
+    "focused_result": "223 passed",
+    "replay_qualification_regression": "240 passed",
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "py_compile": "passed",
+    "diff_check": "passed"
+  },
+  "host_paths_present": false,
+  "claim_boundary": "The committed sample is portable, ledger-complete, generation-QC current, and deterministically reusable. It remains pending_settle and does not claim physical, replay, or publishable status."
+}

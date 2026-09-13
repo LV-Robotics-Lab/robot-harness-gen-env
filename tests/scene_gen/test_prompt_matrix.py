@@ -11,9 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_prompt_matrix_parses_deterministically_for_every_declared_seed() -> None:
     matrix = json.loads(
-        (ROOT / "tests" / "fixtures" / "prompt_matrix.json").read_text(
-            encoding="utf-8"
-        )
+        (ROOT / "tests" / "fixtures" / "prompt_matrix.json").read_text(encoding="utf-8")
     )
     digests: set[str] = set()
     for case in matrix["cases"]:

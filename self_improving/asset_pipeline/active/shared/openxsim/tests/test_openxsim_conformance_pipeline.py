@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import shutil
 import subprocess
 import sys
@@ -33,7 +33,11 @@ def runtime_evidence(package, offset: float = 0.0, *, contact: str = "red_block:
         "observation_keys": ["contact", "object_pose", "robot_joint_position"],
         "trajectory": [
             {"step": 0, "objects": {"red_block": [-0.2 + offset, 0.0, 0.766]}, "contacts": []},
-            {"step": 1, "objects": {"red_block": [0.05 + offset, -0.1, 0.766]}, "contacts": [contact]},
+            {
+                "step": 1,
+                "objects": {"red_block": [0.05 + offset, -0.1, 0.766]},
+                "contacts": [contact],
+            },
         ],
     }
 
@@ -43,7 +47,13 @@ def test_static_conformance_stops_at_l1_without_runtime_evidence(tmp_path: Path)
     result = compile_package(package, tmp_path / "compiled", ("mujoco",), strict=True)["mujoco"]
     report = evaluate_conformance(package, result, source_backend="sapien")
 
-    assert [check.status for check in report.checks] == [PASS, PASS, NOT_EVALUATED, NOT_EVALUATED, NOT_EVALUATED]
+    assert [check.status for check in report.checks] == [
+        PASS,
+        PASS,
+        NOT_EVALUATED,
+        NOT_EVALUATED,
+        NOT_EVALUATED,
+    ]
     assert report.highest_consecutive_level == "L1"
 
 
@@ -142,7 +152,9 @@ def test_native_mjcf_without_embedded_task_is_marked_unbound(tmp_path: Path) -> 
 
 def test_openxsim_transfer_imports_existing_mjcf_and_compiles_three_targets(tmp_path: Path) -> None:
     source_package = make_package(tmp_path)
-    source_result = compile_package(source_package, tmp_path / "source", ("mujoco",), strict=True)["mujoco"]
+    source_result = compile_package(source_package, tmp_path / "source", ("mujoco",), strict=True)[
+        "mujoco"
+    ]
     pipeline = OpenXSimPipeline(tmp_path / "runs")
     imported, results, reports = pipeline.transfer(
         source_result.artifact_path,
@@ -158,9 +170,13 @@ def test_openxsim_transfer_imports_existing_mjcf_and_compiles_three_targets(tmp_
     assert all(report.checks[2].status == NOT_EVALUATED for report in reports.values())
 
 
-def test_openxsim_transfer_imports_native_sapien_scene_and_compiles_three_targets(tmp_path: Path) -> None:
+def test_openxsim_transfer_imports_native_sapien_scene_and_compiles_three_targets(
+    tmp_path: Path,
+) -> None:
     source_package = make_package(tmp_path)
-    source_result = compile_package(source_package, tmp_path / "source", ("sapien",), strict=True)["sapien"]
+    source_result = compile_package(source_package, tmp_path / "source", ("sapien",), strict=True)[
+        "sapien"
+    ]
     native = tmp_path / "native_sapien/scene.json"
     native.parent.mkdir()
     shutil.copy2(source_result.artifact_path, native)

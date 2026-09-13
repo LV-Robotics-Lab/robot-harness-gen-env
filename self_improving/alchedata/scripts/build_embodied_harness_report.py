@@ -10,21 +10,36 @@ import json
 import shutil
 from pathlib import Path
 
-from embodied_harness import AUDIT, CAUSAL_ABLATION, DOC, REPORT_ROOT, ROOT, SPEC, validate_embodied_harness_package
+from embodied_harness import (
+    AUDIT,
+    CAUSAL_ABLATION,
+    DOC,
+    REPORT_ROOT,
+    ROOT,
+    SPEC,
+    validate_embodied_harness_package,
+)
 
-
-DASHBOARD_HARNESS_ASSET = Path("/Users/boris/workspace/BorisGuo6.github.io/dashboard/assets/self-improving-embodied-harness-loop-20260707.png")
+DASHBOARD_HARNESS_ASSET = Path(
+    (
+        "/Users/boris/workspace/BorisGuo6.github.io/dashboard/assets/se"
+        "lf-improving-embodied-harness-loop-20260707.png"
+    )
+)
 IMAGE_SOURCES = {
     "embodied_harness_loop.png": DASHBOARD_HARNESS_ASSET,
     "aspire.png": ROOT / "reports/text2env_literature_review/assets/source_pages/aspire.png",
     "enpire.png": ROOT / "reports/text2env_literature_review/assets/source_pages/enpire.png",
-    "robotwin_2.png": ROOT / "reports/text2env_literature_review/assets/source_pages/robotwin_2.png",
+    "robotwin_2.png": ROOT
+    / "reports/text2env_literature_review/assets/source_pages/robotwin_2.png",
     "openxsim_benchmarks.png": ROOT / "reports/openxsim_command_loop/qa/desktop-benchmarks.png",
     "openxsim_fallbacks.png": ROOT / "reports/openxsim_command_loop/qa/desktop-fallbacks.png",
 }
 MEMORY_ABLATION = Path("artifacts/text2env_empirics/memory_ablation_rgb_adapter_v1.json")
 EMPIRICAL_AUDIT = Path("artifacts/text2env_empirics/text2env_empirical_audit_v1.json")
-POLICY_PROMOTION = Path("artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json")
+POLICY_PROMOTION = Path(
+    "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json"
+)
 ISAAC_COMMAND_RUN = Path("runs/isaac_openxsim_place_container_plate_v1")
 
 
@@ -41,35 +56,94 @@ def badge(status: str) -> str:
     return f'<span class="status {style}">{esc(status.replace("_", " "))}</span>'
 
 
-def build_html(spec: dict, audit: dict, causal: dict, memory: dict, empirical: dict, policy: dict) -> str:
+def build_html(
+    spec: dict, audit: dict, causal: dict, memory: dict, empirical: dict, policy: dict
+) -> str:
     claim = spec["paper_claim"]
     acceptance_rows = "".join(
-        f'<tr><td class="number">{item["id"]:02d}</td><td>{esc(item["requirement"])}</td><td>{badge(item["status"])}</td><td><code>{esc(item["evidence"][0])}</code></td></tr>'
+        (
+            '<tr><td class="number">'
+            f"{item['id']:02d}"
+            "</td><td>"
+            f"{esc(item['requirement'])}"
+            "</td><td>"
+            f"{badge(item['status'])}"
+            "</td><td><code>"
+            f"{esc(item['evidence'][0])}"
+            "</code></td></tr>"
+        )
         for item in audit["items"]
     )
     thesis = "".join(f"<p>{esc(paragraph)}</p>" for paragraph in claim["thesis"])
     loop_rows = "".join(
-        f"""
-        <article class="loop-step">
-          <span class="step-number">{row['order']:02d}</span>
-          <div><h3>{esc(row['sketch_term'])}</h3><p>{esc(row['pearl_term'])}</p><small>{esc(row['gate'])}</small></div>
-        </article>"""
+        (
+            '\n        <article class="loop-step">\n          <span class="st'
+            'ep-number">'
+            f"{row['order']:02d}"
+            "</span>\n          <div><h3>"
+            f"{esc(row['sketch_term'])}"
+            "</h3><p>"
+            f"{esc(row['pearl_term'])}"
+            "</p><small>"
+            f"{esc(row['gate'])}"
+            "</small></div>\n        </article>"
+        )
         for row in spec["loop_steps"]
     )
     surface_rows = "".join(
-        f"<tr><td><strong>{esc(row['surface'].replace('_', ' '))}</strong></td><td>{esc(row['contract'])}</td><td>{' · '.join(esc(value) for value in row['artifacts'])}</td></tr>"
+        (
+            "<tr><td><strong>"
+            f"{esc(row['surface'].replace('_', ' '))}"
+            "</strong></td><td>"
+            f"{esc(row['contract'])}"
+            "</td><td>"
+            f"{' · '.join((esc(value) for value in row['artifacts']))}"
+            "</td></tr>"
+        )
         for row in spec["embodied_surfaces"]
     )
     novelty_rows = "".join(
-        f"<tr><td><strong>{esc(row['comparison'])}</strong></td><td>{esc(row['overlap'])}</td><td>{esc(row['pearl_hypothesis'])}</td><td>{esc(row['implemented_evidence'])}</td><td>{esc(row['missing_evidence'])}</td></tr>"
+        (
+            "<tr><td><strong>"
+            f"{esc(row['comparison'])}"
+            "</strong></td><td>"
+            f"{esc(row['overlap'])}"
+            "</td><td>"
+            f"{esc(row['pearl_hypothesis'])}"
+            "</td><td>"
+            f"{esc(row['implemented_evidence'])}"
+            "</td><td>"
+            f"{esc(row['missing_evidence'])}"
+            "</td></tr>"
+        )
         for row in spec["novelty_table"]
     )
     route_rows = "".join(
-        f"<tr><td><code>{esc(row['command'])}</code></td><td>{' · '.join(esc(value.replace('_', ' ')) for value in row['harness_surfaces'])}</td><td>{' · '.join(esc(value) for value in row['required_fields'])}</td><td>{esc(row['promotion_gate'])}</td><td><code>{esc(row['evidence'])}</code></td></tr>"
+        (
+            "<tr><td><code>"
+            f"{esc(row['command'])}"
+            "</code></td><td>"
+            f"{' · '.join((esc(value.replace('_', ' ')) for value in row['harness_surfaces']))}"
+            "</td><td>"
+            f"{' · '.join((esc(value) for value in row['required_fields']))}"
+            "</td><td>"
+            f"{esc(row['promotion_gate'])}"
+            "</td><td><code>"
+            f"{esc(row['evidence'])}"
+            "</code></td></tr>"
+        )
         for row in spec["command_routing"]
     )
     proof_rows = "".join(
-        f"<tr><td>{esc(row['claim'])}</td><td>{badge(row['status'])}</td><td>{esc(row['required_next_evidence'])}</td></tr>"
+        (
+            "<tr><td>"
+            f"{esc(row['claim'])}"
+            "</td><td>"
+            f"{badge(row['status'])}"
+            "</td><td>"
+            f"{esc(row['required_next_evidence'])}"
+            "</td></tr>"
+        )
         for row in spec["proof_obligations"]
     )
     figure_brief = "".join(f"<li>{esc(value)}</li>" for value in spec["figure"]["brief"])
@@ -78,29 +152,72 @@ def build_html(spec: dict, audit: dict, causal: dict, memory: dict, empirical: d
     cross_sim = empirical["gates"]["same_task_cross_sim_execution"]
     policy_gates = policy["gates"]
     evidence_cards = "".join(
-        f'<article class="result-card"><header><h3>{esc(title)}</h3><span class="status pass">proven bounded</span></header><strong>{esc(result)}</strong><p>{esc(boundary)}</p><a href="{esc(link)}">Machine evidence</a></article>'
+        (
+            '<article class="result-card"><header><h3>'
+            f"{esc(title)}"
+            '</h3><span class="status pass">proven bounded</span></header><'
+            "strong>"
+            f"{esc(result)}"
+            "</strong><p>"
+            f"{esc(boundary)}"
+            '</p><a href="'
+            f"{esc(link)}"
+            '">Machine evidence</a></article>'
+        )
         for title, result, boundary, link in (
             (
                 "Fixed-checkpoint harness edit",
-                f'{causal_outcomes["baseline_success_count"]}/3 baseline -> {causal_outcomes["candidate_success_count"]}/3 candidate',
-                "Only observations.runtime_color_adapter changes; checkpoint, dataset stats, seeds, placement, actions, and verifier are fixed.",
+                (
+                    f"{causal_outcomes['baseline_success_count']}"
+                    "/3 baseline -> "
+                    f"{causal_outcomes['candidate_success_count']}"
+                    "/3 candidate"
+                ),
+                (
+                    "Only observations.runtime_color_adapter changes; checkpoint, d"
+                    "ataset stats, seeds, placement, actions, and verifier are fixe"
+                    "d."
+                ),
                 "assets/evidence/fixed_checkpoint_rgb_ablation_v1.json",
             ),
             (
                 "Memory-mediated correction",
-                f'{memory_gate["no_memory_success_count"]}/3 no-memory -> {memory_gate["memory_success_count"]}/3 memory',
-                "Versioned failure memory selects the accepted identity adapter under the same fixed evaluation protocol.",
+                (
+                    f"{memory_gate['no_memory_success_count']}"
+                    "/3 no-memory -> "
+                    f"{memory_gate['memory_success_count']}"
+                    "/3 memory"
+                ),
+                (
+                    "Versioned failure memory selects the accepted identity adapter"
+                    " under the same fixed evaluation protocol."
+                ),
                 "assets/evidence/memory_ablation_rgb_adapter_v1.json",
             ),
             (
                 "Second-simulator command parity",
-                f'{cross_sim["command_count"]} commands · {cross_sim["trace_steps"]} steps · target verifier pass',
-                "Task semantics transfer through primitive proxies; robot embodiment, policy, source assets, and materials do not.",
+                (
+                    f"{cross_sim['command_count']}"
+                    " commands · "
+                    f"{cross_sim['trace_steps']}"
+                    " steps · target verifier pass"
+                ),
+                (
+                    "Task semantics transfer through primitive proxies; robot embod"
+                    "iment, policy, source assets, and materials do not."
+                ),
                 "assets/evidence/text2env_empirical_audit_v1.json",
             ),
             (
                 "Bounded learned-policy promotion",
-                f'{policy_gates["heldout_varied_placement"]["success_count"]}/4 held-out · {policy_gates["declared_domain_randomization"]["success_count"]}/4 randomized · {policy_gates["cross_task_learned_policy"]["success_count"]}/3 second task',
+                (
+                    f"{policy_gates['heldout_varied_placement']['success_count']}"
+                    "/4 held-out · "
+                    f"{policy_gates['declared_domain_randomization']['success_count']}"
+                    "/4 randomized · "
+                    f"{policy_gates['cross_task_learned_policy']['success_count']}"
+                    "/3 second task"
+                ),
                 policy["claim_boundary"],
                 "assets/evidence/pose_conditioned_policy_promotion_v1.json",
             ),
@@ -138,24 +255,24 @@ def build_html(spec: dict, audit: dict, causal: dict, memory: dict, empirical: d
   <main>
     <header class="head"><div><h1>PEARL as an Embodied Harness System</h1><p class="subtitle"><span class="tag">[INFERRED]</span><span class="tag">[CONFIDENCE: HIGH]</span>Scoped paper framing backed by controlled harness, memory, second-simulator, and learned-policy evidence.</p></div><div class="verdict"><strong>Acceptance 6 / 6</strong><span>[COMPUTED] [CONFIDENCE: HIGH] Framing plus four bounded evidence classes</span></div></header>
     <section class="metrics"><article class="metric"><strong>9</strong><span>Versioned loop steps</span></article><article class="metric"><strong>11</strong><span>Embodied harness surfaces</span></article><article class="metric"><strong>5</strong><span>Required comparisons</span></article><article class="metric"><strong>5</strong><span>Routed commands</span></article></section>
-    <section class="claim-grid"><article class="claim-box"><h3>Working paper claim</h3><p><strong>Scoped:</strong> {esc(claim['working_claim'])}</p></article><article class="claim-box blocked"><h3>Priority claim</h3><p><strong>Not established:</strong> {esc(claim['prohibited_public_claim'])}</p></article></section>
+    <section class="claim-grid"><article class="claim-box"><h3>Working paper claim</h3><p><strong>Scoped:</strong> {esc(claim["working_claim"])}</p></article><article class="claim-box blocked"><h3>Priority claim</h3><p><strong>Not established:</strong> {esc(claim["prohibited_public_claim"])}</p></article></section>
     <section class="block"><div class="section-head"><h2>Acceptance Audit</h2><p class="note">Six paper-framing requirements mapped to artifacts.</p></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Requirement</th><th>Status</th><th>Primary evidence</th></tr></thead><tbody>{acceptance_rows}</tbody></table></div></section>
-    <section class="block"><div class="section-head"><h2>One-Page Thesis</h2><p class="note">Precise system claim with causal attribution control.</p></div><article class="thesis">{thesis}<p class="attribution"><strong>Attribution rule:</strong> {esc(claim['attribution_control'])}</p></article></section>
+    <section class="block"><div class="section-head"><h2>One-Page Thesis</h2><p class="note">Precise system claim with causal attribution control.</p></div><article class="thesis">{thesis}<p class="attribution"><strong>Attribution rule:</strong> {esc(claim["attribution_control"])}</p></article></section>
     <section class="block"><div class="section-head"><h2>Bounded System Evidence</h2><p class="note">Positive results are scoped; negative and unrun obligations remain visible below.</p></div><div class="result-grid">{evidence_cards}</div><div class="result-videos"><figure><video controls preload="metadata" poster="assets/evidence/isaac_task_semantic_transfer_poster.png" src="assets/evidence/isaac_task_semantic_transfer.mp4"></video><figcaption>Isaac task-semantic `/collect` and verifier trajectory · 24/24 unique frames</figcaption></figure><figure><video controls preload="metadata" poster="assets/evidence/policy_heldout_poster.png" src="assets/evidence/policy_heldout.mp4"></video><figcaption>Apple/plate signature-disjoint held-out placement · 143 frames</figcaption></figure><figure><video controls preload="metadata" poster="assets/evidence/policy_randomized_poster.png" src="assets/evidence/policy_randomized.mp4"></video><figcaption>Apple/plate randomized background, light, camera, and table height · 143 frames</figcaption></figure><figure><video controls preload="metadata" poster="assets/evidence/policy_cross_task_poster.png" src="assets/evidence/policy_cross_task.mp4"></video><figcaption>Can/basket fixed-placement seed holdout · 144 frames</figcaption></figure></div></section>
-    <section class="block"><div class="section-head"><h2>Architecture Figure</h2><p class="note">Original harness sketch bundled locally.</p></div><div class="figure-panel"><figure><img src="assets/embodied_harness_loop.png" alt="Embodied harness loop from current harness through weakness mining, proposal validation, and updated harness"><figcaption>{esc(spec['figure']['caption'])}</figcaption></figure><aside class="brief"><h3>Diagram brief</h3><ul>{figure_brief}</ul></aside></div></section>
+    <section class="block"><div class="section-head"><h2>Architecture Figure</h2><p class="note">Original harness sketch bundled locally.</p></div><div class="figure-panel"><figure><img src="assets/embodied_harness_loop.png" alt="Embodied harness loop from current harness through weakness mining, proposal validation, and updated harness"><figcaption>{esc(spec["figure"]["caption"])}</figcaption></figure><aside class="brief"><h3>Diagram brief</h3><ul>{figure_brief}</ul></aside></div></section>
     <section class="block"><div class="section-head"><h2>Loop Mapping</h2><p class="note">h_t to h_(t+1), with an explicit gate at every transition.</p></div><div class="loop">{loop_rows}</div></section>
     <section class="block"><div class="section-head"><h2>Embodied Harness Surfaces</h2><p class="note">Physical experiment state that must be versioned.</p></div><div class="table-wrap"><table><thead><tr><th>Surface</th><th>Required contract</th><th>Example artifacts</th></tr></thead><tbody>{surface_rows}</tbody></table></div></section>
     <section class="block"><div class="section-head"><h2>Comparison And Missing Evidence</h2><p class="note">Differentiation stays a testable hypothesis.</p></div><div class="table-wrap"><table><thead><tr><th>Comparison</th><th>Overlap</th><th>PEARL hypothesis</th><th>Implemented</th><th>Missing</th></tr></thead><tbody>{novelty_rows}</tbody></table></div></section>
     <section class="block"><div class="section-head"><h2>Bundled Evidence</h2><p class="note">Primary-source snapshots and current implementation proof surfaces.</p></div><div class="gallery"><figure class="shot"><img src="assets/aspire.png" alt="ASPIRE official project page"><figcaption><strong>ASPIRE</strong><span>Primary-source comparison</span></figcaption></figure><figure class="shot"><img src="assets/enpire.png" alt="ENPIRE official project page"><figcaption><strong>ENPIRE</strong><span>Primary-source comparison</span></figcaption></figure><figure class="shot"><img src="assets/robotwin_2.png" alt="RoboTwin 2 official project page"><figcaption><strong>RoboTwin 2.0</strong><span>Primary-source comparison</span></figcaption></figure><figure class="shot"><img src="assets/openxsim_benchmarks.png" alt="Three Open X Sim RoboTwin benchmark cards"><figcaption><strong>Open X Sim smokes</strong><span>Current execution evidence</span></figcaption></figure><figure class="shot"><img src="assets/openxsim_fallbacks.png" alt="Open X Sim fallback gate blockers"><figcaption><strong>Fallback gates</strong><span>Blocked outcomes remain visible</span></figcaption></figure></div></section>
     <section class="block"><div class="section-head"><h2>Implementation Routing</h2><p class="note">Requirements land on existing commands, not the project intro.</p></div><div class="table-wrap"><table><thead><tr><th>Command</th><th>Harness surfaces</th><th>Required fields</th><th>Promotion gate</th><th>Evidence</th></tr></thead><tbody>{route_rows}</tbody></table></div></section>
     <section class="block"><div class="section-head"><h2>Proof Obligations</h2><p class="note">Unproven system and priority claims remain explicit.</p></div><div class="table-wrap"><table><thead><tr><th>Claim</th><th>Status</th><th>Required next evidence</th></tr></thead><tbody>{proof_rows}</tbody></table></div></section>
-    <section class="block"><div class="boundary"><span class="tag">[KNOWN]</span><span class="tag">[CONFIDENCE: HIGH]</span>{esc(spec['claim_boundary'])}</div></section>
+    <section class="block"><div class="boundary"><span class="tag">[KNOWN]</span><span class="tag">[CONFIDENCE: HIGH]</span>{esc(spec["claim_boundary"])}</div></section>
     <section class="block"><div class="section-head"><h2>Evidence Files</h2><p class="note">Machine-readable package, Markdown, QA, and manifest.</p></div><div class="evidence-links"><a href="assets/embodied_harness_spec.json">Harness spec JSON</a><a href="assets/acceptance_audit.json">Acceptance audit</a><a href="assets/evidence/fixed_checkpoint_rgb_ablation_v1.json">Harness ablation</a><a href="assets/evidence/memory_ablation_rgb_adapter_v1.json">Memory ablation</a><a href="assets/evidence/text2env_empirical_audit_v1.json">Cross-sim audit</a><a href="assets/evidence/pose_conditioned_policy_promotion_v1.json">Policy promotion</a><a href="assets/evidence/isaac_bundle_manifest.json">Isaac bundle manifest</a><a href="assets/evidence/isaac_transfer.json">Transfer mappings</a><a href="embodied_harness_thesis.md">Markdown thesis</a><a href="assets/browser_qa.txt">Browser QA</a><a href="qa/desktop-viewport.png">Desktop QA</a><a href="qa/mobile-viewport.png">Mobile QA</a><a href="report_manifest.json">Bundle manifest</a></div></section>
     <footer><span class="tag">[KNOWN]</span><span class="tag">[CONFIDENCE: HIGH]</span>Static local report. All images, source snapshots, implementation screenshots, JSON, and Markdown are bundled.</footer>
   </main>
 </body>
 </html>
-"""
+"""  # noqa: E501 - Preserve the embedded report HTML/CSS bytes.
 
 
 def write_manifest(output_dir: Path) -> dict:
@@ -163,11 +280,13 @@ def write_manifest(output_dir: Path) -> dict:
     for path in sorted(output_dir.rglob("*")):
         if not path.is_file() or path.name == "report_manifest.json":
             continue
-        rows.append({
-            "path": path.relative_to(output_dir).as_posix(),
-            "bytes": path.stat().st_size,
-            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        })
+        rows.append(
+            {
+                "path": path.relative_to(output_dir).as_posix(),
+                "bytes": path.stat().st_size,
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+        )
     manifest = {
         "schema_version": "alchedata.embodied_harness_report_manifest.v1",
         "status": "pass_report_bundle",
@@ -175,7 +294,9 @@ def write_manifest(output_dir: Path) -> dict:
         "file_count": len(rows),
         "files": rows,
     }
-    (output_dir / "report_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "report_manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
     return manifest
 
 
@@ -212,17 +333,38 @@ def build_report(output_dir: Path) -> dict:
         shutil.copy2(ROOT / source, evidence_assets / name)
     media_sources = (
         (ISAAC_COMMAND_RUN / "isaac_place_on_rollout.mp4", "isaac_task_semantic_transfer.mp4"),
-        (Path(policy["gates"]["heldout_varied_placement"]["videos"][0]["path"]), "policy_heldout.mp4"),
-        (Path(policy["gates"]["declared_domain_randomization"]["videos"][0]["path"]), "policy_randomized.mp4"),
-        (Path(policy["gates"]["cross_task_learned_policy"]["videos"][0]["path"]), "policy_cross_task.mp4"),
+        (
+            Path(policy["gates"]["heldout_varied_placement"]["videos"][0]["path"]),
+            "policy_heldout.mp4",
+        ),
+        (
+            Path(policy["gates"]["declared_domain_randomization"]["videos"][0]["path"]),
+            "policy_randomized.mp4",
+        ),
+        (
+            Path(policy["gates"]["cross_task_learned_policy"]["videos"][0]["path"]),
+            "policy_cross_task.mp4",
+        ),
     )
     for source, name in media_sources:
         shutil.copy2(ROOT / source, evidence_assets / name)
     poster_sources = (
         (ISAAC_COMMAND_RUN / "frames/frame_00023.png", "isaac_task_semantic_transfer_poster.png"),
-        (Path(policy["gates"]["heldout_varied_placement"]["videos"][0]["path"]).parent / "final_observer_camera.png", "policy_heldout_poster.png"),
-        (Path(policy["gates"]["declared_domain_randomization"]["videos"][0]["path"]).parent / "final_observer_camera.png", "policy_randomized_poster.png"),
-        (Path(policy["gates"]["cross_task_learned_policy"]["videos"][0]["path"]).parent / "final_observer_camera.png", "policy_cross_task_poster.png"),
+        (
+            Path(policy["gates"]["heldout_varied_placement"]["videos"][0]["path"]).parent
+            / "final_observer_camera.png",
+            "policy_heldout_poster.png",
+        ),
+        (
+            Path(policy["gates"]["declared_domain_randomization"]["videos"][0]["path"]).parent
+            / "final_observer_camera.png",
+            "policy_randomized_poster.png",
+        ),
+        (
+            Path(policy["gates"]["cross_task_learned_policy"]["videos"][0]["path"]).parent
+            / "final_observer_camera.png",
+            "policy_cross_task_poster.png",
+        ),
     )
     for source, name in poster_sources:
         shutil.copy2(ROOT / source, evidence_assets / name)

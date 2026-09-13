@@ -9,7 +9,6 @@ from pathlib import Path
 
 import jsonschema
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = Path("artifacts/embodied_harness/embodied_harness_spec.json")
 AUDIT = Path("artifacts/embodied_harness/embodied_harness_acceptance_audit.json")
@@ -82,14 +81,24 @@ def validate_manifest(report_root: Path) -> int:
     manifest_path = report_root / "report_manifest.json"
     require(manifest_path.exists(), "embodied-harness report manifest missing")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    require(manifest.get("status") == "pass_report_bundle", "embodied-harness report manifest status mismatch")
+    require(
+        manifest.get("status") == "pass_report_bundle",
+        "embodied-harness report manifest status mismatch",
+    )
     rows = manifest.get("files", [])
-    require(manifest.get("file_count") == len(rows), "embodied-harness report manifest count mismatch")
+    require(
+        manifest.get("file_count") == len(rows), "embodied-harness report manifest count mismatch"
+    )
     for row in rows:
         path = report_root / row["path"]
         require(path.exists(), f"embodied-harness report file missing: {path}")
-        require(path.stat().st_size == row["bytes"], f"embodied-harness report size mismatch: {path}")
-        require(hashlib.sha256(path.read_bytes()).hexdigest() == row["sha256"], f"embodied-harness report hash mismatch: {path}")
+        require(
+            path.stat().st_size == row["bytes"], f"embodied-harness report size mismatch: {path}"
+        )
+        require(
+            hashlib.sha256(path.read_bytes()).hexdigest() == row["sha256"],
+            f"embodied-harness report hash mismatch: {path}",
+        )
     return len(rows)
 
 
@@ -100,20 +109,30 @@ def validate_causal_ablation() -> dict:
         "fixed-checkpoint harness ablation did not promote the candidate",
     )
     intervention = ablation.get("experiment", {}).get("intervention", {})
-    require(intervention.get("harness_surface") == "observations.runtime_color_adapter", "harness intervention mismatch")
+    require(
+        intervention.get("harness_surface") == "observations.runtime_color_adapter",
+        "harness intervention mismatch",
+    )
     require(intervention.get("baseline") == "swap_red_blue", "harness baseline adapter mismatch")
     require(intervention.get("candidate") == "identity", "harness candidate adapter mismatch")
-    require(intervention.get("only_declared_difference") is True, "harness ablation has undeclared differences")
+    require(
+        intervention.get("only_declared_difference") is True,
+        "harness ablation has undeclared differences",
+    )
     fixed = ablation.get("experiment", {}).get("fixed_variables", {})
     require(len(fixed.get("checkpoint_sha256", "")) == 64, "harness checkpoint hash is missing")
-    require(len(fixed.get("dataset_stats_sha256", "")) == 64, "harness dataset stats hash is missing")
+    require(
+        len(fixed.get("dataset_stats_sha256", "")) == 64, "harness dataset stats hash is missing"
+    )
     require(fixed.get("held_out_seeds") == [4, 5, 6], "harness ablation seed set mismatch")
     outcomes = ablation.get("outcomes", {})
     require(outcomes.get("baseline_success_count") == 0, "harness baseline outcome mismatch")
     require(outcomes.get("candidate_success_count") == 3, "harness candidate outcome mismatch")
     require(outcomes.get("episode_count_per_arm") == 3, "harness episode count mismatch")
     require(outcomes.get("success_delta") == 3, "harness success delta mismatch")
-    require(outcomes.get("both_arms_execution_complete") is True, "harness arms did not both execute")
+    require(
+        outcomes.get("both_arms_execution_complete") is True, "harness arms did not both execute"
+    )
     promotion = ablation.get("promotion", {})
     require(promotion.get("decision") == "accept", "harness candidate was not accepted")
     require(all(promotion.get("gates", {}).values()), "harness promotion gate failed")
@@ -146,42 +165,79 @@ def validate_embodied_harness_package(*, require_report: bool = True) -> dict:
     jsonschema.Draft202012Validator.check_schema(schema)
     jsonschema.validate(spec, schema)
     claim = spec["paper_claim"]
-    require(claim["priority_claim_status"] == "not_established", "priority claim must remain unestablished")
-    require(claim["prohibited_public_claim"] == "first real embodied harness system", "prohibited priority claim changed")
-    require("first" not in claim["working_claim"].lower(), "working paper claim silently asserts priority")
-    require("checkpoint" in claim["attribution_control"].lower(), "attribution control does not fix the checkpoint")
-    require("separate" in claim["attribution_control"].lower(), "policy retraining is not separated from harness edits")
+    require(
+        claim["priority_claim_status"] == "not_established",
+        "priority claim must remain unestablished",
+    )
+    require(
+        claim["prohibited_public_claim"] == "first real embodied harness system",
+        "prohibited priority claim changed",
+    )
+    require(
+        "first" not in claim["working_claim"].lower(),
+        "working paper claim silently asserts priority",
+    )
+    require(
+        "checkpoint" in claim["attribution_control"].lower(),
+        "attribution control does not fix the checkpoint",
+    )
+    require(
+        "separate" in claim["attribution_control"].lower(),
+        "policy retraining is not separated from harness edits",
+    )
 
     steps = spec["loop_steps"]
     require([row["order"] for row in steps] == list(range(1, 10)), "harness loop order must be 1-9")
-    require([row["sketch_term"] for row in steps] == REQUIRED_LOOP_TERMS, "harness loop term mapping mismatch")
+    require(
+        [row["sketch_term"] for row in steps] == REQUIRED_LOOP_TERMS,
+        "harness loop term mapping mismatch",
+    )
     for step in steps:
         for evidence in step["evidence"]:
             require_evidence(evidence, step["sketch_term"])
 
     surfaces = spec["embodied_surfaces"]
-    require({row["surface"] for row in surfaces} == REQUIRED_SURFACES, "embodied surface set mismatch")
-    require(len({row["surface"] for row in surfaces}) == len(surfaces), "embodied surfaces are duplicated")
+    require(
+        {row["surface"] for row in surfaces} == REQUIRED_SURFACES, "embodied surface set mismatch"
+    )
+    require(
+        len({row["surface"] for row in surfaces}) == len(surfaces),
+        "embodied surfaces are duplicated",
+    )
 
     comparisons = spec["novelty_table"]
-    require({row["comparison"] for row in comparisons} == REQUIRED_COMPARISONS, "novelty comparison set mismatch")
-    require(all(row["missing_evidence"] for row in comparisons), "novelty table hides missing evidence")
+    require(
+        {row["comparison"] for row in comparisons} == REQUIRED_COMPARISONS,
+        "novelty comparison set mismatch",
+    )
+    require(
+        all(row["missing_evidence"] for row in comparisons), "novelty table hides missing evidence"
+    )
 
     routes = spec["command_routing"]
-    require({row["command"] for row in routes} == REQUIRED_ROUTES, "implementation routing command set mismatch")
+    require(
+        {row["command"] for row in routes} == REQUIRED_ROUTES,
+        "implementation routing command set mismatch",
+    )
     command_registry = read_json(COMMAND_REGISTRY)
     registered = {row["command"] for row in command_registry["commands"]}
-    require(REQUIRED_ROUTES.issubset(registered), "routed command is missing from Open X Sim registry")
+    require(
+        REQUIRED_ROUTES.issubset(registered), "routed command is missing from Open X Sim registry"
+    )
     for route in routes:
         require_evidence(route["evidence"], route["command"])
-        require(set(route["harness_surfaces"]).issubset(REQUIRED_SURFACES), f"{route['command']}: unknown harness surface")
+        require(
+            set(route["harness_surfaces"]).issubset(REQUIRED_SURFACES),
+            f"{route['command']}: unknown harness surface",
+        )
 
     proof_statuses = {row["status"] for row in spec["proof_obligations"]}
-    require({"proven_bounded", "not_run", "not_established"}.issubset(proof_statuses), "proof obligations hide claim classes")
+    require(
+        {"proven_bounded", "not_run", "not_established"}.issubset(proof_statuses),
+        "proof obligations hide claim classes",
+    )
     bounded_rows = {
-        row["claim"]: row
-        for row in spec["proof_obligations"]
-        if row["status"] == "proven_bounded"
+        row["claim"]: row for row in spec["proof_obligations"] if row["status"] == "proven_bounded"
     }
     require(
         {
@@ -193,16 +249,40 @@ def validate_embodied_harness_package(*, require_report: bool = True) -> dict:
         }.issubset(bounded_rows),
         "bounded harness proof obligations were not advanced",
     )
-    real_robot_rows = [row for row in spec["proof_obligations"] if row["claim"] == "real-robot harness evolution"]
-    require(len(real_robot_rows) == 1 and real_robot_rows[0]["status"] == "not_run", "real-robot proof obligation mismatch")
-    priority_rows = [row for row in spec["proof_obligations"] if row["claim"] == "first real embodied harness system"]
-    require(len(priority_rows) == 1 and priority_rows[0]["status"] == "not_established", "priority proof obligation mismatch")
+    real_robot_rows = [
+        row for row in spec["proof_obligations"] if row["claim"] == "real-robot harness evolution"
+    ]
+    require(
+        len(real_robot_rows) == 1 and real_robot_rows[0]["status"] == "not_run",
+        "real-robot proof obligation mismatch",
+    )
+    priority_rows = [
+        row
+        for row in spec["proof_obligations"]
+        if row["claim"] == "first real embodied harness system"
+    ]
+    require(
+        len(priority_rows) == 1 and priority_rows[0]["status"] == "not_established",
+        "priority proof obligation mismatch",
+    )
 
-    require(audit["status"] == "pass_embodied_harness_acceptance", "embodied-harness acceptance status mismatch")
+    require(
+        audit["status"] == "pass_embodied_harness_acceptance",
+        "embodied-harness acceptance status mismatch",
+    )
     items = audit["items"]
-    require(audit["acceptance_count"] == len(items) == 6, "embodied-harness acceptance count must be six")
-    require([item["id"] for item in items] == list(range(1, 7)), "embodied-harness acceptance ids must be 1-6")
-    require(all(item["status"] == "pass" for item in items), "not all embodied-harness acceptance items pass")
+    require(
+        audit["acceptance_count"] == len(items) == 6,
+        "embodied-harness acceptance count must be six",
+    )
+    require(
+        [item["id"] for item in items] == list(range(1, 7)),
+        "embodied-harness acceptance ids must be 1-6",
+    )
+    require(
+        all(item["status"] == "pass" for item in items),
+        "not all embodied-harness acceptance items pass",
+    )
     for item in items:
         for evidence in item["evidence"]:
             if evidence.startswith("reports/") and not require_report:
@@ -230,10 +310,18 @@ def validate_embodied_harness_package(*, require_report: bool = True) -> dict:
     image_count = 0
     if require_report:
         report_root = ROOT / REPORT_ROOT
-        for relative in ("index.html", "embodied_harness_thesis.md", "assets/embodied_harness_spec.json", "assets/embodied_harness_loop.png"):
+        for relative in (
+            "index.html",
+            "embodied_harness_thesis.md",
+            "assets/embodied_harness_spec.json",
+            "assets/embodied_harness_loop.png",
+        ):
             require_evidence(str(REPORT_ROOT / relative), "embodied-harness report")
         image_count = len(list((report_root / "assets").rglob("*.png")))
-        require(image_count == audit["delivery"]["bundled_image_count"], "embodied-harness bundled image count mismatch")
+        require(
+            image_count == audit["delivery"]["bundled_image_count"],
+            "embodied-harness bundled image count mismatch",
+        )
         report_file_count = validate_manifest(report_root)
 
     return {

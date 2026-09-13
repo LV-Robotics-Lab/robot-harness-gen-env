@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import argparse
-import json
+import copy
 import sys
 from pathlib import Path
 from typing import Any
@@ -13,15 +13,24 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.model_providers import (
+# Import follows the legacy source path bootstrap.
+from generate_scene.asset_catalog import load_asset_catalog  # noqa: E402
+from generate_scene.model_providers import (  # noqa: E402 - After legacy source path bootstrap.
     critic_review_from_validation,
     design_initial_spec,
     orchestrate_final_spec,
     validation_plan_for,
 )
-from generate_scene.asset_catalog import load_asset_catalog
-from generate_scene.schemas import read_json, validate_placement_spec, write_json
-from generate_scene.tools import get_smoke_artifacts, run_robotwin_smoke, visual_review
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    validate_placement_spec,
+    write_json,
+)
+from generate_scene.tools import (  # noqa: E402 - After legacy source path bootstrap.
+    get_smoke_artifacts,
+    run_robotwin_smoke,
+    visual_review,
+)
 
 
 def _rel(path: Path) -> str:
@@ -29,6 +38,79 @@ def _rel(path: Path) -> str:
         return str(path.resolve().relative_to(REPO_ROOT))
     except ValueError:
         return str(path.resolve())
+
+
+def _pipeline_exit_code(status: str) -> int:
+    if status in {"pass", "pass_static_only"}:
+        return 0
+    if status == "pending_visual_review":
+        return 2
+    return 1
+
+
+def _mark_review_candidate(
+    *,
+    spec: dict[str, Any],
+    visual_review_report: dict[str, Any],
+) -> dict[str, Any]:
+    candidate = copy.deepcopy(spec)
+    candidate["stage"] = "render_review_required"
+    name = str(candidate.get("placement_name", "placement"))
+    if "render_review_required" not in name:
+        name += "_render_review_required"
+    candidate["placement_name"] = name
+    candidate["source_visual_review"] = "visual_review.json"
+    candidate["orchestrator_decision"] = {
+        "decision": "hold_for_review",
+        "reason": visual_review_report.get(
+            "summary",
+            "Semantic visual review has not passed.",
+        ),
+        "remaining_uncertainties": [
+            "Semantic visual review has not passed; this candidate is not publishable.",
+            "RoboTwin smoke is load/render evidence, not authoritative physics evidence.",
+        ],
+    }
+    candidate.setdefault("validation", {})
+    candidate["validation"].update(
+        {
+            "robotwin_load_check": "pass_smoke",
+            "render_visibility": "pending_visual_review",
+        }
+    )
+    return candidate
+
+
+def _mark_final_accepted(
+    *,
+    spec: dict[str, Any],
+    visual_review_report: dict[str, Any],
+) -> dict[str, Any]:
+    accepted = copy.deepcopy(spec)
+    accepted["stage"] = "final_render_accepted"
+    name = str(accepted.get("placement_name", "placement"))
+    if "final_render_accepted" not in name:
+        name += "_final_render_accepted"
+    accepted["placement_name"] = name
+    accepted["source_visual_review"] = "visual_review.json"
+    accepted["orchestrator_decision"] = {
+        "decision": "accept_final",
+        "reason": visual_review_report.get(
+            "summary",
+            "Configured static, smoke, and visual checks passed.",
+        ),
+        "remaining_uncertainties": [
+            "RoboTwin smoke is load/render evidence, not authoritative physics evidence.",
+        ],
+    }
+    accepted.setdefault("validation", {})
+    accepted["validation"].update(
+        {
+            "robotwin_load_check": "pass_smoke",
+            "render_visibility": "pass_visual_review",
+        }
+    )
+    return accepted
 
 
 def main() -> int:
@@ -48,11 +130,16 @@ def main() -> int:
         "--visual-review-mode",
         choices=["required", "artifact_only"],
         default="required",
-        help="required prevents smoke artifact existence from being treated as semantic visual pass.",
+        help=(
+            "required prevents smoke artifact existence from being treated as semantic visual pass."
+        ),
     )
     parser.add_argument(
         "--visual-review-report",
-        help="Optional human/VLM/Codex-visual review JSON. status must be pass for final pipeline pass.",
+        help=(
+            "Optional human/VLM/Codex-visual review JSON. status must be "
+            "pass for final pipeline pass."
+        ),
     )
     args = parser.parse_args()
 
@@ -81,7 +168,9 @@ def main() -> int:
         designer_path = out_dir / "designer_initial_placement.json"
         write_json(designer_path, designer_spec)
 
-        initial_validation = validate_placement_spec(designer_spec, catalog, robotwin_root=args.robotwin_root)
+        initial_validation = validate_placement_spec(
+            designer_spec, catalog, robotwin_root=args.robotwin_root
+        )
         initial_validation_path = out_dir / "static_validation_initial.json"
         write_json(initial_validation_path, initial_validation)
 
@@ -98,23 +187,27 @@ def main() -> int:
             critic_review=critic_review,
             model_provider=args.model_provider,
         )
-        final_path = out_dir / "final_placement.json"
-        write_json(final_path, final_spec)
+        candidate_path = out_dir / "candidate_placement.json"
+        write_json(candidate_path, final_spec)
 
-        final_validation = validate_placement_spec(final_spec, catalog, robotwin_root=args.robotwin_root)
-        final_validation_path = out_dir / "static_validation_final.json"
-        write_json(final_validation_path, final_validation)
+        final_validation = validate_placement_spec(
+            final_spec, catalog, robotwin_root=args.robotwin_root
+        )
+        candidate_validation_path = out_dir / "static_validation_candidate.json"
+        write_json(candidate_validation_path, final_validation)
 
         validation_plan_path = out_dir / "validation_plan.json"
-        write_json(validation_plan_path, validation_plan_for(final_spec))
+        candidate_plan = validation_plan_for(final_spec)
+        candidate_plan["target_placement"] = "candidate_placement.json"
+        write_json(validation_plan_path, candidate_plan)
 
         summary["artifacts"].update(
             {
                 "designer_initial_placement": _rel(designer_path),
                 "static_validation_initial": _rel(initial_validation_path),
                 "critic_review": _rel(critic_path),
-                "final_placement": _rel(final_path),
-                "static_validation_final": _rel(final_validation_path),
+                "candidate_placement": _rel(candidate_path),
+                "static_validation_candidate": _rel(candidate_validation_path),
                 "validation_plan": _rel(validation_plan_path),
             }
         )
@@ -129,7 +222,7 @@ def main() -> int:
             smoke_dir = out_dir / "smoke"
             smoke_report = run_robotwin_smoke(
                 robotwin_root=Path(args.robotwin_root).expanduser(),
-                placement=final_path,
+                placement=candidate_path,
                 out_dir=smoke_dir,
                 task_config=args.task_config,
                 seed=args.seed,
@@ -140,7 +233,9 @@ def main() -> int:
             smoke_report_path = out_dir / "smoke_report_with_command.json"
             write_json(smoke_report_path, smoke_report)
 
-            visual_review_report = visual_review(smoke_dir, args.prompt, mode=args.visual_review_mode)
+            visual_review_report = visual_review(
+                smoke_dir, args.prompt, mode=args.visual_review_mode
+            )
             if args.visual_review_report:
                 visual_review_report = read_json(Path(args.visual_review_report))
             visual_review_path = out_dir / "visual_review.json"
@@ -154,16 +249,60 @@ def main() -> int:
                     "preview": get_smoke_artifacts(smoke_dir),
                 }
             )
-            smoke_passed = smoke_report.get("status") == "pass" and smoke_report.get("returncode") == 0
+            smoke_passed = (
+                smoke_report.get("status") == "pass" and smoke_report.get("returncode") == 0
+            )
             visual_status = str(visual_review_report.get("status", ""))
             if not smoke_passed:
                 summary["status"] = "fail_smoke"
             elif visual_status == "pass":
                 summary["status"] = "pass"
+                accepted_spec = _mark_final_accepted(
+                    spec=final_spec,
+                    visual_review_report=visual_review_report,
+                )
+                write_json(candidate_path, accepted_spec)
+                final_path = out_dir / "final_placement.json"
+                candidate_path.replace(final_path)
+                final_validation_path = out_dir / "static_validation_final.json"
+                candidate_validation_path.replace(final_validation_path)
+                accepted_plan = validation_plan_for(accepted_spec)
+                accepted_plan["target_placement"] = "final_placement.json"
+                write_json(validation_plan_path, accepted_plan)
+                summary["artifacts"].pop("candidate_placement")
+                summary["artifacts"].pop("static_validation_candidate")
+                summary["artifacts"].update(
+                    {
+                        "final_placement": _rel(final_path),
+                        "static_validation_final": _rel(final_validation_path),
+                    }
+                )
             elif visual_status.startswith("fail"):
                 summary["status"] = "fail_visual_review"
             else:
                 summary["status"] = "pending_visual_review"
+                review_candidate = _mark_review_candidate(
+                    spec=final_spec,
+                    visual_review_report=visual_review_report,
+                )
+                review_candidate_path = out_dir / "review_candidate_placement.json"
+                write_json(candidate_path, review_candidate)
+                candidate_path.replace(review_candidate_path)
+
+                review_validation_path = out_dir / "static_validation_review_candidate.json"
+                candidate_validation_path.replace(review_validation_path)
+                review_plan = validation_plan_for(review_candidate)
+                review_plan["target_placement"] = "review_candidate_placement.json"
+                write_json(validation_plan_path, review_plan)
+
+                summary["artifacts"].pop("candidate_placement")
+                summary["artifacts"].pop("static_validation_candidate")
+                summary["artifacts"].update(
+                    {
+                        "review_candidate_placement": _rel(review_candidate_path),
+                        "static_validation_review_candidate": _rel(review_validation_path),
+                    }
+                )
         else:
             summary["status"] = "pass_static_only"
 
@@ -177,7 +316,7 @@ def main() -> int:
         else:
             label = "FAIL"
         print(f"{label} {out_dir / 'pipeline_summary.json'}")
-        return 0 if summary["status"] in ["pass", "pending_visual_review", "pass_static_only"] else 1
+        return _pipeline_exit_code(summary["status"])
     except Exception as exc:
         summary["status"] = "fail_exception"
         summary["error"] = repr(exc)

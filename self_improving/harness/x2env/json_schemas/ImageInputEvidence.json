@@ -1,0 +1,73 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sha256",
+        "size_bytes",
+        "media_type"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "canonical": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "decoder_version": {
+      "minLength": 1,
+      "title": "Decoder Version",
+      "type": "string"
+    },
+    "height": {
+      "exclusiveMinimum": 0,
+      "title": "Height",
+      "type": "integer"
+    },
+    "mode": {
+      "enum": [
+        "RGB",
+        "RGBA"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "width": {
+      "exclusiveMinimum": 0,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "source",
+    "canonical",
+    "width",
+    "height",
+    "mode",
+    "decoder_version"
+  ],
+  "title": "ImageInputEvidence",
+  "type": "object"
+}

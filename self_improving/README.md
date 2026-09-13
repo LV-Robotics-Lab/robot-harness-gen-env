@@ -8,7 +8,7 @@ runtime assumptions into the core trust boundary.
 
 | Path | Status | Responsibility |
 | --- | --- | --- |
-| `harness/` | active schema tranche | Strict, immutable Harness MVP records and Text2Env compile/replay/validate input-output contracts, plus the 14-version JSON Schema catalog and committed drift snapshots. Registry execution, handlers, and MCP adaptation are intentionally outside this tranche. |
+| `harness/` | active core tranche | Strict Harness records and Text2Env contracts, 14-version schema catalog, artifact/event/package stores, generic qualified-version `SkillRegistry`, and one explicit `text2env.compile` adapter. Replay/validate handlers, promotion transaction, and MCP adaptation remain absent. |
 | `stage5/` | active | Multi-agent scene design, grounding, critique, MCP-lite tools, prompts, and tests recovered from the stage-05 validation tree. |
 | `alchedata/` | active | `/gen-env -> /collect -> /train -> /evaluate -> /diagnose -> /transfer`, failure memory, promotion gates, schemas, tests, and curated structured evidence. |
 | `asset_pipeline/active/` | active | Asset discovery, ingest, ledger, catalog integration, Web Studio, and simulator-migration adapters from `env-gen-dev`. |
@@ -37,10 +37,10 @@ The old AgenticSim checkout was a sparse historical TacHarness state. Its four
 unique Awesome-Isaac audit files were archived in TacHarness before that local
 checkout was deleted; it is not a dependency here.
 
-The PEARL presentation layer lives in `apps/pearl_evidence_portal/`. Its source
-history and bounded hosted-report subset are versioned together so the portal
-build remains self-contained; build output and dependency caches remain
-excluded. It presents platform evidence but does not define acceptance gates.
+The PEARL presentation layer was removed from the active tree in `d8b3787`.
+Its source history remains traceable through Git and `source_inventory.json`, but
+the portal is no longer a required platform capability or a runnable app at the
+current HEAD. Historical presentation output never defined acceptance gates.
 
 ## Harness schema tranche
 
@@ -56,8 +56,30 @@ python script/export_harness_schemas.py
 python script/export_harness_schemas.py --check
 ```
 
-The Harness contract remains `Status: Proposed`. This first implementation
-tranche does not provide `SkillRegistry`, Text2Env handlers, or an MCP server.
+The Harness contract remains `Status: Proposed`. Follow-on modules now provide
+`LocalArtifactStore`/`ArtifactResolver`, `RunRecorder`/`EventSink`,
+`SQLiteEventJournal`, `PackageStore`, a generic `SkillRegistry`, one
+explicitly assembled `Text2EnvCompileHandler`, a strict prepackaged
+qualification-bundle verifier, and an immutable terminal `SQLiteRunStore`.
+At fixed commit `ab03859`, the verifier and RunStore are not wired into the
+Registry; they do not execute qualification cases, provide promotion rollback,
+derive a complete resumable EvaluationRun identity, or revalidate media bytes.
+Replay/validate, automatic
+composition, promotion transaction, and MCP remain absent. Generic `file://`
+resolution has no allowed-root confinement and returns a mutable source path;
+the compile adapter's original check/use race was frozen in `ef5e29e` and fixed
+in `910ccb1`, so it now executes the digest-verified CAS catalog. Referenced
+asset payloads still live outside that JSON snapshot. Generated-asset admission
+also precedes solve and does not roll back when the compile later blocks. This
+is neither a sandbox nor a transaction-safe physical publication boundary.
+CAS capture itself uses one streaming hash+copy and atomic rename as of
+`50e8f18`. Registry qualification now requires the claimed report digest to be
+present in CAS (`51447da`), but it does not yet validate that report's domain
+content or reconcile actual handler/source bytes with the descriptor.
+This status paragraph is pinned to clean commit `ab03859`. Later concurrent
+commits `c365874`, `8d9a01c`, `587b49f`, and `0e6716a` were observed after the
+study cutoff and are not certified here; consult their own clean verification
+before treating any of the open integration boundaries as closed.
 See the [detailed PR1 implementation report](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)
 for the schema inventory, invariants, validation evidence, and follow-up boundary.
 
@@ -105,8 +127,11 @@ python -m pytest -q self_improving/asset_pipeline/active/web/tests
   PYTHONPATH=source/agenticsim python -m pytest -q tests)
 ```
 
-The current source-only baseline is 564 passed and 6 skipped with the required
-top-level external submodules initialized. The skips are
+The last complete cross-platform snapshot recorded by the ASPIRE study is
+`1180aef`: 595 passed and 6 skipped with the required top-level external
+submodules initialized. That count predates the later Harness/compiler/Stage 5
+follow-ons and must not be reported as a current-HEAD green result without a new
+full run. The skips in that snapshot are
 explicit physical/runtime checks that require SAPIEN or the excluded raw
 Isaac, SceneAgent, media, and report bundles; they are not silently mocked.
 In addition, the Jingxiang consolidation gate was exercised in the real
@@ -129,9 +154,9 @@ The completed diffusion-policy `600.ckpt` is handled the same way: its local
 size and SHA-256 are recorded in the 2026-08-14 cleanup receipt, while
 `storage_uri` remains null and therefore no remote backup is claimed.
 
-The PEARL portal is the narrow exception for already curated, browser-served
-report media under `apps/pearl_evidence_portal/public/reports/`; raw runs and
-the portal's generated `dist/` tree are still excluded.
+The former PEARL browser subset is retained only in repository history; the
+current tree keeps bulk report media, raw runs, and generated presentation output
+excluded. Small evidence samples remain governed by the root contribution rules.
 
 The 2026-07-16 OpenXSim acceptance workspaces are preserved without sibling
 checkouts: compact reviewable evidence is tracked under `validation_evidence/`,

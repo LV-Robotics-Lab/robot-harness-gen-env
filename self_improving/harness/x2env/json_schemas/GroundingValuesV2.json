@@ -1,0 +1,86 @@
+{
+  "$defs": {
+    "GeneratedEntityValues": {
+      "additionalProperties": false,
+      "properties": {
+        "dimensions": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "frame": {
+          "title": "Frame",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "position": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Position",
+          "type": "array"
+        },
+        "yaw_degrees": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Yaw Degrees",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "dimensions",
+        "frame",
+        "position",
+        "yaw_degrees"
+      ],
+      "title": "GeneratedEntityValues",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "entities": {
+      "items": {
+        "$ref": "#/$defs/GeneratedEntityValues"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Entities",
+      "type": "array"
+    }
+  },
+  "required": [
+    "entities"
+  ],
+  "title": "GroundingValuesV2",
+  "type": "object"
+}

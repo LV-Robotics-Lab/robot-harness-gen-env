@@ -1,0 +1,112 @@
+{
+  "schema_version": "historical_document_archive.v1",
+  "status": "historical_non_active",
+  "original_repository": "https://github.com/LV-Robotics-Lab/robot-harness-gen-env",
+  "active_instructions": false,
+  "current_capabilities_granted": false,
+  "internal_relative_links": "original_source_context_not_verified_here",
+  "http_check": {
+    "method": "anonymous HEAD, max_time_seconds=15",
+    "unique_urls": 12,
+    "status_404": 12,
+    "cause": "not_determined"
+  },
+  "documents": [
+    {
+      "original_commit": "9460a4b9ac3825e44b6e6641d5fdafe3034a8a6e",
+      "original_path": "self_improving/golden_e2e_progress/HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md",
+      "git_blob": "90d6b3b8d933953e1fffadf0e6d8eba0c9bdf3d9",
+      "sha256": "3414da2264f8538d5a951b0d54fe7659189711d0433d5ae096fcc79489cb5dbb",
+      "size_bytes": 34533,
+      "archive_path": "docs/history/golden-e2e/9460a4b9ac3825e44b6e6641d5fdafe3034a8a6e/self_improving/golden_e2e_progress/HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md"
+    },
+    {
+      "original_commit": "7c739e36b76c3812cac959546fb7f9e52e4e4340",
+      "original_path": "self_improving/golden_e2e_progress/SIM_READY_RELEASE_PLAN.md",
+      "git_blob": "7fcd08444b72dd9d745d3f9a5084f1808ac96b66",
+      "sha256": "43e517e6993ef067cca330baaa217904f2a608e769e630557c50cc93eef8a8f7",
+      "size_bytes": 8342,
+      "archive_path": "docs/history/golden-e2e/7c739e36b76c3812cac959546fb7f9e52e4e4340/self_improving/golden_e2e_progress/SIM_READY_RELEASE_PLAN.md"
+    },
+    {
+      "original_commit": "ba92f749f3cd8c2f5ac69c313b7697e8d912b172",
+      "original_path": "docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md",
+      "git_blob": "76e7c91de3c56e38427ea86d11c5c2ee555ce45e",
+      "sha256": "1835aed88028cef62ce6ff16e9f62ba69e2fd6361a09281f14da1b57e198be60",
+      "size_bytes": 2120,
+      "archive_path": "docs/history/golden-e2e/ba92f749f3cd8c2f5ac69c313b7697e8d912b172/docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md"
+    },
+    {
+      "original_commit": "e5bf6d9e9eaf87b89330ab82ea2b0a21e26447f4",
+      "original_path": "docs/evidence/golden-image2env-controlled-application-20260911.md",
+      "git_blob": "f1bf44ddbe4c67f9d1cd082f9c576c2c5ae39b7c",
+      "sha256": "42f5608c09ac07d39a5393938d71bf53c1b28ca21ac2aa3844cbbad868c926fa",
+      "size_bytes": 3887,
+      "archive_path": "docs/history/golden-e2e/e5bf6d9e9eaf87b89330ab82ea2b0a21e26447f4/docs/evidence/golden-image2env-controlled-application-20260911.md"
+    },
+    {
+      "original_commit": "d7246ee83c42c1d97d746ebab45c2086541c2ec2",
+      "original_path": "docs/evidence/golden-legacy-mouse-representation-staging-20260911.md",
+      "git_blob": "2c0b746d63e21a8a1232684faceab93ecb826957",
+      "sha256": "e90fec459ff286de47116338358d9a33d8f0f9694eb0084dca0f180ef0414544",
+      "size_bytes": 1863,
+      "archive_path": "docs/history/golden-e2e/d7246ee83c42c1d97d746ebab45c2086541c2ec2/docs/evidence/golden-legacy-mouse-representation-staging-20260911.md"
+    },
+    {
+      "original_commit": "a8cf4a4c62011b901bf35793f4e218afae8299c6",
+      "original_path": "docs/evidence/golden-genesis-cpu-asset-probe-20260911.md",
+      "git_blob": "9de604ddccf84d6231b2deed7450e945ac617d5a",
+      "sha256": "42aeb50c309f004e8cd522c2a809a38ed199be0bbda820f29a7c513a403b3b46",
+      "size_bytes": 4042,
+      "archive_path": "docs/history/golden-e2e/a8cf4a4c62011b901bf35793f4e218afae8299c6/docs/evidence/golden-genesis-cpu-asset-probe-20260911.md"
+    },
+    {
+      "original_commit": "92ae72f86f9418a0a45b99cc3af78cb1d733a488",
+      "original_path": "docs/research/genesis-runtime-closure-audit-20260911.md",
+      "git_blob": "96c6eefd3e50d97683a40c8414049f28c6778aed",
+      "sha256": "3d6c3802346fd470978672aa386c8177929b3491802973042c2624f1f52540d1",
+      "size_bytes": 8831,
+      "archive_path": "docs/history/golden-e2e/92ae72f86f9418a0a45b99cc3af78cb1d733a488/docs/research/genesis-runtime-closure-audit-20260911.md"
+    },
+    {
+      "original_commit": "d8ab41f33501c8b59ce15dad53f76ea876416cf7",
+      "original_path": "docs/evidence/golden-genesis-asset-qualification-20260911.md",
+      "git_blob": "add36144349e738123309b6449316d6aa6a641a4",
+      "sha256": "ccf25331cca6f59481b486e55614880fae2d551167e7ea13ec55be5886b8438d",
+      "size_bytes": 3823,
+      "archive_path": "docs/history/golden-e2e/d8ab41f33501c8b59ce15dad53f76ea876416cf7/docs/evidence/golden-genesis-asset-qualification-20260911.md"
+    },
+    {
+      "original_commit": "5ceead34d8e0c89d6280cf987fd204c408317ae2",
+      "original_path": "docs/evidence/golden-runtime-execution-20260911.md",
+      "git_blob": "a7e6e1d640038bc02bbb5fb2d0ed21d58e387a97",
+      "sha256": "afeffec4d0e4612e2431007c786fb307b96d97110e51bd11bee907ed973dd97a",
+      "size_bytes": 4521,
+      "archive_path": "docs/history/golden-e2e/5ceead34d8e0c89d6280cf987fd204c408317ae2/docs/evidence/golden-runtime-execution-20260911.md"
+    },
+    {
+      "original_commit": "fd5057625d7a5e986a49867fdf1d540f027c5431",
+      "original_path": "self_improving/harness/GENESIS_RUNTIME_EXECUTION_CONTRACT.md",
+      "git_blob": "c3cd408271a6b47be912997007e7f0b509972981",
+      "sha256": "eabfa285eddebb8ad14d2ca53e9ab171124a6bb7dd8bbd5a4d3b4cf13a764398",
+      "size_bytes": 3666,
+      "archive_path": "docs/history/golden-e2e/fd5057625d7a5e986a49867fdf1d540f027c5431/self_improving/harness/GENESIS_RUNTIME_EXECUTION_CONTRACT.md"
+    },
+    {
+      "original_commit": "3f7ec31bcc5839bec706892d438eb01a105aaf30",
+      "original_path": "docs/evidence/user-open-cabinet-pink-mouse-20260913.md",
+      "git_blob": "221132664a48432866f4d359671c6448aae29ce9",
+      "sha256": "1be71700c0b0f5f1685146952b3b3b2a39a04ad3183578d0fb784bba62e81842",
+      "size_bytes": 3145,
+      "archive_path": "docs/history/golden-e2e/3f7ec31bcc5839bec706892d438eb01a105aaf30/docs/evidence/user-open-cabinet-pink-mouse-20260913.md"
+    },
+    {
+      "original_commit": "3f7ec31bcc5839bec706892d438eb01a105aaf30",
+      "original_path": "repo-docs/walkthroughs/generic-experiment-20260913.md",
+      "git_blob": "59a0394791353e7bdb1d8fb567276ac77c0b674a",
+      "sha256": "5a8b308b4cc2ad0d023c84ecc5f54b0132407e280ee6e882f6c55fa9b62d11e9",
+      "size_bytes": 13344,
+      "archive_path": "docs/history/golden-e2e/3f7ec31bcc5839bec706892d438eb01a105aaf30/repo-docs/walkthroughs/generic-experiment-20260913.md"
+    }
+  ]
+}

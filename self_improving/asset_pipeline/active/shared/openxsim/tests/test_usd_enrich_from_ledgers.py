@@ -20,7 +20,7 @@ for _p in (
     OX / "deps/metasim_core",
     OX / "third_party/MetaSim",
     DEV / "2_sim_migration" / "lib",
-    DEV / "1_asset_reuse",
+    DEV / "asset_reuse",
 ):
     sys.path.insert(0, str(_p))
 
@@ -49,9 +49,7 @@ def _pkg(asset_ids):
             asset_id=aid,
             category="object",
             representations=(
-                AssetRepresentation(
-                    format="glb", uri=f"sapien://{aid}", backend="sapien"
-                ),
+                AssetRepresentation(format="glb", uri=f"sapien://{aid}", backend="sapien"),
             ),
         )
         for aid in asset_ids
@@ -229,10 +227,7 @@ def test_enrich_from_ledgers_classifies_and_registers(tmp_path):
     assert rep.metadata.get("note") == "pre-existing"  # original metadata preserved
 
     assert by_id["external_302_can_m0"].representation_for("isaacsim", ("usd",)) is None
-    assert (
-        by_id["external_999_missing_m0"].representation_for("isaacsim", ("usd",))
-        is None
-    )
+    assert by_id["external_999_missing_m0"].representation_for("isaacsim", ("usd",)) is None
 
     # scale neutralized only for the enriched object
     obj_by_asset = {o.asset_id: o for o in enriched.env.objects}
@@ -264,9 +259,7 @@ def test_enrich_from_ledgers_no_verification_does_not_set_verified_flag(tmp_path
     upstream_dir = tmp_path / "upstream_ledgers"
     usd_path = tmp_path / "071_can.usd"
     usd_path.write_text('#usda 1.0\ndef "root" {}\n')
-    model = _model_entry(
-        0, [_sapien_rep(), _isaac_rep(str(usd_path))]
-    )  # no verification[]
+    model = _model_entry(0, [_sapien_rep(), _isaac_rep(str(usd_path))])  # no verification[]
     _write_ledger(upstream_dir, "071_can", "robotwin", model)
 
     pkg = _pkg(["robotwin_071_can_m0"])

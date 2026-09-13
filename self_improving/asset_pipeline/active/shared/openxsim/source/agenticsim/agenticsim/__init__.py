@@ -6,20 +6,8 @@ failure memory, attribution, task-environment co-evolution, governance.
 
 __version__ = "0.1.0"
 
+# Keep the historical explicit helper available without changing import-time paths
+# or initializing optional simulator packages for the asset provider.
 from ._third_party import bootstrap_vendored_isaaclab
 
-bootstrap_vendored_isaaclab()
-
-try:
-    from isaaclab_tasks.utils import import_packages as _import_packages
-    _BLACKLIST_PKGS = ["utils", ".mdp"]
-    _import_packages(f"{__name__}.tasks", _BLACKLIST_PKGS)
-except ImportError:
-    pass
-
-try:
-    from .envs.env_factory import EnvFactory as _EnvFactory
-
-    _EnvFactory.discover_and_register()
-except ImportError:
-    pass
+__all__ = ["bootstrap_vendored_isaaclab"]

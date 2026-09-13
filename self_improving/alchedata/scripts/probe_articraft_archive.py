@@ -19,11 +19,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "artifacts" / "adapter_catalog" / "articraft10k_manifest.json"
 DEFAULT_OUT_DIR = ROOT / "runs" / "articraft_archive_probe_weight_bench"
-DEFAULT_ASSET_ID = "rec_adjustable_weight_bench_with_hinged_backrest_008247976e6d499d8bcbd1304f26c972"
+DEFAULT_ASSET_ID = (
+    "rec_adjustable_weight_bench_with_hinged_backrest_008247976e6d499d8bcbd1304f26c972"
+)
 
 
 def read_json(path: Path) -> Any:
@@ -44,7 +45,9 @@ def sha256_file(path: Path) -> str:
 
 
 def download(url: str, path: Path) -> None:
-    request = urllib.request.Request(url, headers={"User-Agent": "alchedata-articraft-archive-probe/0"})
+    request = urllib.request.Request(
+        url, headers={"User-Agent": "alchedata-articraft-archive-probe/0"}
+    )
     with urllib.request.urlopen(request, timeout=120) as response, path.open("wb") as handle:
         shutil.copyfileobj(response, handle)
 
@@ -86,7 +89,11 @@ def parse_urdf(path: Path, extract_dir: Path) -> dict[str, Any]:
     joints = root.findall("joint")
     visual_geometries = root.findall(".//visual/geometry")
     collision_geometries = root.findall(".//collision/geometry")
-    meshes = [mesh.attrib.get("filename", "") for mesh in root.findall(".//mesh") if mesh.attrib.get("filename")]
+    meshes = [
+        mesh.attrib.get("filename", "")
+        for mesh in root.findall(".//mesh")
+        if mesh.attrib.get("filename")
+    ]
     mesh_paths = []
     missing_meshes = []
     for mesh in meshes:
@@ -137,7 +144,11 @@ def run_sapien_smoke(urdf_path: Path, steps: int) -> dict[str, Any]:
     if articulation is None:
         raise RuntimeError("SAPIEN URDF loader returned None")
     link_count = len(articulation.get_links()) if hasattr(articulation, "get_links") else None
-    active_joint_count = len(articulation.get_active_joints()) if hasattr(articulation, "get_active_joints") else None
+    active_joint_count = (
+        len(articulation.get_active_joints())
+        if hasattr(articulation, "get_active_joints")
+        else None
+    )
     for _ in range(steps):
         scene.step()
     return {
@@ -153,7 +164,9 @@ def run_sapien_smoke(urdf_path: Path, steps: int) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Probe one Articraft-10K archive download and URDF/SAPIEN import.")
+    parser = argparse.ArgumentParser(
+        description="Probe one Articraft-10K archive download and URDF/SAPIEN import."
+    )
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
     parser.add_argument("--asset-id", default=DEFAULT_ASSET_ID)
     parser.add_argument("--query", default=None)
@@ -211,7 +224,11 @@ def main() -> int:
     if not all(checks.values()):
         status = "fail_articraft_archive_urdf_metadata_probe"
     if args.sapien_smoke:
-        status = "pass_articraft_archive_sapien_smoke" if status.startswith("pass_") and sapien_smoke.get("status") == "pass" else "fail_articraft_archive_sapien_smoke"
+        status = (
+            "pass_articraft_archive_sapien_smoke"
+            if status.startswith("pass_") and sapien_smoke.get("status") == "pass"
+            else "fail_articraft_archive_sapien_smoke"
+        )
 
     report = {
         "schema_version": "alchedata.articraft_archive_probe.v0",
@@ -261,7 +278,12 @@ def main() -> int:
         ),
     }
     write_json(report_path, report)
-    print(json.dumps({"status": status, "report": str(report_path), "asset_id": entry.get("asset_id")}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"status": status, "report": str(report_path), "asset_id": entry.get("asset_id")},
+            ensure_ascii=False,
+        )
+    )
     time.sleep(0.1)
     return 0 if status.startswith("pass_") else 1
 

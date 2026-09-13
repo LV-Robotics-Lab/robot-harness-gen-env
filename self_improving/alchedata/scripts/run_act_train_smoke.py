@@ -14,7 +14,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = ROOT / "runs" / "act_train_smoke_generated"
 DEFAULT_CONFIG = ROOT / "runs" / "act_hdf5_generated_smoke" / "SIM_TASK_CONFIGS.generated.json"
@@ -30,7 +29,11 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 
 def file_record(path: Path) -> dict[str, Any]:
-    return {"path": str(path), "exists": path.exists(), "size_bytes": path.stat().st_size if path.exists() else 0}
+    return {
+        "path": str(path),
+        "exists": path.exists(),
+        "size_bytes": path.stat().st_size if path.exists() else 0,
+    }
 
 
 def main() -> int:
@@ -70,8 +73,11 @@ def main() -> int:
         "out_dir": str(out_dir),
         "num_epochs": args.num_epochs,
         "claim_boundary": (
-            f"Bounded {args.num_epochs}-epoch ACT training on generated HDF5 data. This proves import, data loading, "
-            "loss computation, optimization, and checkpoint writing; policy quality requires separate evaluation."
+            "Bounded "
+            f"{args.num_epochs}"
+            "-epoch ACT training on generated HDF5 data. This proves import"
+            ", data loading, loss computation, optimization, and checkpoint"
+            " writing; policy quality requires separate evaluation."
         ),
     }
     write_json(report_path, report)
@@ -151,7 +157,9 @@ def main() -> int:
     if completed.returncode == 0 and files["policy_best"]["exists"]:
         status = "pass_act_train_smoke" if args.num_epochs == 1 else "pass_act_train_execution"
     else:
-        status = "blocked_act_train_smoke" if args.num_epochs == 1 else "blocked_act_train_execution"
+        status = (
+            "blocked_act_train_smoke" if args.num_epochs == 1 else "blocked_act_train_execution"
+        )
     report.update(
         {
             "status": status,
@@ -169,7 +177,12 @@ def main() -> int:
         }
     )
     write_json(report_path, report)
-    print(json.dumps({"status": status, "best_val_loss": best_val_loss, "report": str(report_path)}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"status": status, "best_val_loss": best_val_loss, "report": str(report_path)},
+            ensure_ascii=False,
+        )
+    )
     return 0 if status.startswith("pass_") else 1
 
 

@@ -13,7 +13,6 @@ from typing import Any
 
 from pose_conditioned_trajectory_policy import read_json, sha256_file, write_json
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -113,8 +112,10 @@ def main() -> int:
         "selection": selection,
         "fixed_protocol": fixed_protocol,
         "claim_boundary": (
-            "This controller tests whether a matching structured failure memory changes one harness decision. "
-            "It does not change model weights, infer a new policy, or establish general memory benefit."
+            "This controller tests whether a matching structured failure me"
+            "mory changes one harness decision. It does not change model we"
+            "ights, infer a new policy, or establish general memory benefit"
+            "."
         ),
     }
     write_json(controller_path, controller)
@@ -165,7 +166,10 @@ def main() -> int:
         command.extend(["--seed", str(seed)])
     stdout_path = out_dir / "evaluator_stdout.log"
     stderr_path = out_dir / "evaluator_stderr.log"
-    with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open("w", encoding="utf-8") as stderr:
+    with (
+        stdout_path.open("w", encoding="utf-8") as stdout,
+        stderr_path.open("w", encoding="utf-8") as stderr,
+    ):
         result = subprocess.run(command, cwd=ROOT, stdout=stdout, stderr=stderr, check=False)
 
     report_path = evaluator_dir / "evaluate_report.json"

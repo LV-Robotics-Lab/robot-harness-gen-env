@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from scripts.build_failure_score_correlation import (
     average_ranks,
     correlation,
@@ -10,7 +9,9 @@ from scripts.build_failure_score_correlation import (
 
 
 def test_average_ranks_handles_ties() -> None:
-    np.testing.assert_allclose(average_ranks(np.asarray([3.0, 1.0, 1.0, 2.0])), [4.0, 1.5, 1.5, 3.0])
+    np.testing.assert_allclose(
+        average_ranks(np.asarray([3.0, 1.0, 1.0, 2.0])), [4.0, 1.5, 1.5, 3.0]
+    )
 
 
 def test_correlation_and_exact_permutation() -> None:

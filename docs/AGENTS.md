@@ -10,12 +10,17 @@
 | Directory | Purpose |
 |-----------|---------|
 | `evidence/` | 计算得到的物理验收笔记与 prompt-matrix 报告（见 `evidence/AGENTS.md`） |
+| `harness-skill-walkthrough/` | 面向项目组成员的 Harness compile/replay/validate 互动导览网站及其本地依赖 |
+| `integration-provenance/` | Bingsheng、Gujie、Yuxin 功能级来源、版本、整合责任与验证状态台账 |
 
 ## For AI Agents（给 AI agent 的提示）
 
 ### Working In This Directory（在本目录工作）
 - 这里的文件是验收契约的证据，非一般性叙述。不要在此添加叙事文档——把架构/fixture 文档放在它们所描述的代码旁边。
 - 证据笔记与某次真实运行按哈希和时间戳绑定；不要回溯编辑历史笔记，应另起一份带日期的新笔记。
+- 整合 Bingsheng、Gujie 或 Yuxin 的能力时，在同一功能提交中更新
+  `integration-provenance/LEDGER.md`；区分团队责任名、实际 git author、第三方上游与 Harness
+  整合责任，未经证据确认不推断 identity 映射。
 
 ### Testing Requirements（测试要求）
 - 本目录不跑测试。若某证据笔记被测试或 README 断言引用，编辑时保持被引用的事实不变。

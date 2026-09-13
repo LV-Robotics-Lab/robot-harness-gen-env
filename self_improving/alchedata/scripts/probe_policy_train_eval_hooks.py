@@ -13,7 +13,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = ROOT / "runs" / "policy_train_eval_entrypoint_probe"
 GENERATED_COLLECTIONS = [
@@ -32,7 +31,9 @@ def write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def run_command(name: str, command: list[str], cwd: Path, out_dir: Path, timeout: int) -> dict[str, Any]:
+def run_command(
+    name: str, command: list[str], cwd: Path, out_dir: Path, timeout: int
+) -> dict[str, Any]:
     stdout_path = out_dir / f"{name}_stdout.log"
     stderr_path = out_dir / f"{name}_stderr.log"
     started_at = datetime.now(timezone.utc).isoformat()
@@ -56,8 +57,16 @@ def run_command(name: str, command: list[str], cwd: Path, out_dir: Path, timeout
     except subprocess.TimeoutExpired as exc:
         timed_out = True
         returncode = None
-        stdout = exc.stdout if isinstance(exc.stdout, str) else (exc.stdout or b"").decode("utf-8", errors="replace")
-        stderr = exc.stderr if isinstance(exc.stderr, str) else (exc.stderr or b"").decode("utf-8", errors="replace")
+        stdout = (
+            exc.stdout
+            if isinstance(exc.stdout, str)
+            else (exc.stdout or b"").decode("utf-8", errors="replace")
+        )
+        stderr = (
+            exc.stderr
+            if isinstance(exc.stderr, str)
+            else (exc.stderr or b"").decode("utf-8", errors="replace")
+        )
     stdout_path.write_text(stdout, encoding="utf-8")
     stderr_path.write_text(stderr, encoding="utf-8")
     return {
@@ -134,7 +143,9 @@ def act_hdf5_summary(path: Path) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Probe policy train/eval wiring against generated collection artifacts.")
+    parser = argparse.ArgumentParser(
+        description="Probe policy train/eval wiring against generated collection artifacts."
+    )
     parser.add_argument("--robotwin-root", default=str(ROOT / "external" / "RoboTwin"))
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     parser.add_argument("--timeout", type=int, default=30)
@@ -163,7 +174,9 @@ def main() -> int:
             "act_eval": str(act_root / "eval.sh"),
             "robotwin_eval_policy": str(robotwin_root / "script" / "eval_policy.py"),
         },
-        "generated_collections": [collection_summary(path) for path in GENERATED_COLLECTIONS if path.exists()],
+        "generated_collections": [
+            collection_summary(path) for path in GENERATED_COLLECTIONS if path.exists()
+        ],
         "act_hdf5_adapter": act_hdf5_summary(Path(args.act_hdf5_dir).expanduser().resolve()),
         "commands": [],
         "runtime": {
@@ -172,14 +185,18 @@ def main() -> int:
             "cwd": os.getcwd(),
         },
         "claim_boundary": (
-            "This probes whether current generated collection artifacts are wired to RoboTwin policy train/eval entrypoints. "
-            "The ACT HDF5 adapter and loader smoke are checked separately; full train/eval is expected to fail until ACT "
-            "task config, dependencies, env registration, and checkpoint wiring exist."
+            "This probes whether current generated collection artifacts are"
+            " wired to RoboTwin policy train/eval entrypoints. The ACT HDF5"
+            " adapter and loader smoke are checked separately; full train/e"
+            "val is expected to fail until ACT task config, dependencies, e"
+            "nv registration, and checkpoint wiring exist."
         ),
     }
     write_json(out_dir / "probe_report.json", report)
 
-    missing_entrypoints = [name for name, value in report["entrypoints"].items() if not Path(value).exists()]
+    missing_entrypoints = [
+        name for name, value in report["entrypoints"].items() if not Path(value).exists()
+    ]
     if missing_entrypoints:
         report.update(
             {
@@ -189,11 +206,24 @@ def main() -> int:
             }
         )
         write_json(out_dir / "probe_report.json", report)
-        print(json.dumps({"status": report["status"], "report": str(out_dir / "probe_report.json")}, ensure_ascii=False))
+        print(
+            json.dumps(
+                {"status": report["status"], "report": str(out_dir / "probe_report.json")},
+                ensure_ascii=False,
+            )
+        )
         return 0
 
-    process_cmd = ["bash", "process_data.sh", args.task_name, args.task_config, args.expert_data_num]
-    report["commands"].append(run_command("act_process_data", process_cmd, act_root, out_dir, args.timeout))
+    process_cmd = [
+        "bash",
+        "process_data.sh",
+        args.task_name,
+        args.task_config,
+        args.expert_data_num,
+    ]
+    report["commands"].append(
+        run_command("act_process_data", process_cmd, act_root, out_dir, args.timeout)
+    )
 
     train_cmd = [
         sys.executable,
@@ -225,7 +255,9 @@ def main() -> int:
         "--seed",
         "0",
     ]
-    report["commands"].append(run_command("act_train_entry", train_cmd, act_root, out_dir, args.timeout))
+    report["commands"].append(
+        run_command("act_train_entry", train_cmd, act_root, out_dir, args.timeout)
+    )
 
     eval_cmd = [
         "bash",
@@ -237,10 +269,16 @@ def main() -> int:
         "0",
         "0",
     ]
-    report["commands"].append(run_command("act_eval_entry", eval_cmd, act_root, out_dir, args.timeout))
+    report["commands"].append(
+        run_command("act_eval_entry", eval_cmd, act_root, out_dir, args.timeout)
+    )
 
     hdf5_count = report["act_hdf5_adapter"].get("hdf5_file_count", 0)
-    command_failures = [item for item in report["commands"] if item.get("returncode") not in (0, None) or item.get("timed_out")]
+    command_failures = [
+        item
+        for item in report["commands"]
+        if item.get("returncode") not in (0, None) or item.get("timed_out")
+    ]
     blocking_reasons = []
     if hdf5_count == 0:
         blocking_reasons.append("generated ACT HDF5 adapter contains no HDF5 episodes")
@@ -249,17 +287,33 @@ def main() -> int:
     if report["act_hdf5_adapter"].get("loader_status") != "pass_act_hdf5_loader_smoke":
         blocking_reasons.append("generated ACT HDF5 loader smoke did not pass")
     if command_failures:
-        blocking_reasons.append("RoboTwin ACT process/train/eval entrypoint probes did not complete successfully")
-    if any("No Task" in (item.get("stdout_tail", "") + item.get("stderr_tail", "")) for item in report["commands"]):
-        blocking_reasons.append("generated task name is not registered as a RoboTwin env module for eval")
-    if any("Dataset does not exist" in (item.get("stdout_tail", "") + item.get("stderr_tail", "")) for item in report["commands"]):
+        blocking_reasons.append(
+            "RoboTwin ACT process/train/eval entrypoint probes did not complete successfully"
+        )
+    if any(
+        "No Task" in (item.get("stdout_tail", "") + item.get("stderr_tail", ""))
+        for item in report["commands"]
+    ):
+        blocking_reasons.append(
+            "generated task name is not registered as a RoboTwin env module for eval"
+        )
+    if any(
+        "Dataset does not exist" in (item.get("stdout_tail", "") + item.get("stderr_tail", ""))
+        for item in report["commands"]
+    ):
         blocking_reasons.append("ACT process_data cannot find source RoboTwin HDF5 data")
-    if any("sim-task_apple_plate-demo_clean-3" in (item.get("stdout_tail", "") + item.get("stderr_tail", "")) for item in report["commands"]):
+    if any(
+        "sim-task_apple_plate-demo_clean-3"
+        in (item.get("stdout_tail", "") + item.get("stderr_tail", ""))
+        for item in report["commands"]
+    ):
         blocking_reasons.append("default ACT train task name is not registered in SIM_TASK_CONFIGS")
 
     report.update(
         {
-            "status": "blocked_policy_train_eval_not_wired" if blocking_reasons else "pass_policy_train_eval_entrypoints",
+            "status": "blocked_policy_train_eval_not_wired"
+            if blocking_reasons
+            else "pass_policy_train_eval_entrypoints",
             "finished_at": datetime.now(timezone.utc).isoformat(),
             "blocking_reasons": blocking_reasons,
             "hdf5_file_count": hdf5_count,
@@ -267,8 +321,15 @@ def main() -> int:
         }
     )
     write_json(out_dir / "probe_report.json", report)
-    print(json.dumps({"status": report["status"], "report": str(out_dir / "probe_report.json")}, ensure_ascii=False))
-    return 0 if report["status"].startswith("blocked_") or report["status"].startswith("pass_") else 1
+    print(
+        json.dumps(
+            {"status": report["status"], "report": str(out_dir / "probe_report.json")},
+            ensure_ascii=False,
+        )
+    )
+    return (
+        0 if report["status"].startswith("blocked_") or report["status"].startswith("pass_") else 1
+    )
 
 
 if __name__ == "__main__":

@@ -8,7 +8,6 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-
 from agenticsim.openxsim.backends import BackendCompileError, compile_package
 from agenticsim.openxsim.importers import (
     import_compile_manifest,
@@ -39,7 +38,10 @@ def test_environment_package_roundtrip_and_digest(tmp_path: Path) -> None:
     assert recovered == package
     assert recovered.digest() == package.digest()
     assert len(package.digest()) == 64
-    assert json.loads(package.canonical_json())["schema_version"] == "agenticsim.environment_package.v1"
+    assert (
+        json.loads(package.canonical_json())["schema_version"]
+        == "agenticsim.environment_package.v1"
+    )
 
 
 def test_environment_package_rejects_missing_asset(tmp_path: Path) -> None:
@@ -110,7 +112,9 @@ def test_native_sapien_scene_import_without_agenticsim_sidecar(tmp_path: Path) -
 
     assert recovered.source["backend"] == "sapien"
     assert recovered.task.semantic_contract() == package.task.semantic_contract()
-    assert [obj.instance_id for obj in recovered.env.objects] == [obj.instance_id for obj in package.env.objects]
+    assert [obj.instance_id for obj in recovered.env.objects] == [
+        obj.instance_id for obj in package.env.objects
+    ]
     assert recovered.env.objects[0].pose == package.env.objects[0].pose
 
 
@@ -161,7 +165,9 @@ def test_strict_compile_rejects_unresolved_cross_backend_asset(tmp_path: Path) -
     basket_dir = tmp_path / "assets" / "vendor" / "robotwin" / "assets" / "objects" / "110_basket"
     asset_dir.mkdir(parents=True)
     basket_dir.mkdir(parents=True)
-    package = compile_text("Place the cola can into the basket.", repo_root=tmp_path, target_backends=("isaacsim",))
+    package = compile_text(
+        "Place the cola can into the basket.", repo_root=tmp_path, target_backends=("isaacsim",)
+    )
 
     with pytest.raises(BackendCompileError, match="no existing USD representation"):
         compile_package(package, tmp_path / "compiled", ("isaacsim",), strict=True)
@@ -173,7 +179,9 @@ def test_strict_compile_rejects_unresolved_cross_backend_asset(tmp_path: Path) -
 
 def test_robotwin_backend_exports_hash_bound_can_basket_task_program(tmp_path: Path) -> None:
     for modelname in ("071_can", "110_basket"):
-        (tmp_path / "assets" / "vendor" / "robotwin" / "assets" / "objects" / modelname).mkdir(parents=True)
+        (tmp_path / "assets" / "vendor" / "robotwin" / "assets" / "objects" / modelname).mkdir(
+            parents=True
+        )
     package = compile_text(
         "Place the cola can into the basket.",
         repo_root=tmp_path,
@@ -199,9 +207,13 @@ def test_robotwin_backend_exports_hash_bound_can_basket_task_program(tmp_path: P
     assert objects["basket"]["physical"]["is_static"] is True
 
 
-def test_robotwin_rollout_evidence_requires_exact_semantics_and_continuous_video(tmp_path: Path) -> None:
+def test_robotwin_rollout_evidence_requires_exact_semantics_and_continuous_video(
+    tmp_path: Path,
+) -> None:
     for modelname in ("071_can", "110_basket"):
-        (tmp_path / "assets" / "vendor" / "robotwin" / "assets" / "objects" / modelname).mkdir(parents=True)
+        (tmp_path / "assets" / "vendor" / "robotwin" / "assets" / "objects" / modelname).mkdir(
+            parents=True
+        )
     package = compile_text(
         "Place the cola can into the basket.",
         repo_root=tmp_path,
@@ -242,14 +254,18 @@ def test_robotwin_rollout_evidence_requires_exact_semantics_and_continuous_video
     report_path = runtime / "rollout_report.json"
     report_path.write_text(json.dumps(report), encoding="utf-8")
 
-    evidence = runtime_evidence_from_rollout(package, result.artifact_path, report_path, minimum_video_frames=24)
+    evidence = runtime_evidence_from_rollout(
+        package, result.artifact_path, report_path, minimum_video_frames=24
+    )
 
     assert evidence["action_interface_bound"] is True
     assert evidence["success_evaluator_bound"] is True
     assert evidence["video"]["frame_count"] == 120
     assert "trajectory" not in evidence
 
-    report["semantic_verification"]["conditions"] = report["semantic_verification"]["conditions"][:-1]
+    report["semantic_verification"]["conditions"] = report["semantic_verification"]["conditions"][
+        :-1
+    ]
     report_path.write_text(json.dumps(report), encoding="utf-8")
     with pytest.raises(RoboTwinRuntimeEvidenceError, match="semantic conditions differ"):
         runtime_evidence_from_rollout(package, result.artifact_path, report_path)

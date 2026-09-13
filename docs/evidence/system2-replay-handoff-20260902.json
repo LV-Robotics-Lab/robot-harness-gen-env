@@ -1,0 +1,123 @@
+{
+  "schema_version": "harness.system2_replay_handoff_evidence.v1",
+  "recorded_on": "2026-09-02",
+  "baseline_commit": "7bd172c5fe39b4f2467b4a49f1a4c1abf1895832",
+  "public_interface": "self_improving.system2_replay_handoff.System2ReplayHandoff.prepare",
+  "files": [
+    {
+      "bytes": 12345,
+      "lines": 317,
+      "path": "self_improving/system2_replay_handoff.py",
+      "sha256": "356e9bd81d2e8b91aaa7d3e62461b4662e71719bec510691c352f2a0617e591b"
+    },
+    {
+      "bytes": 23900,
+      "lines": 698,
+      "path": "tests/self_improving/test_system2_replay_handoff.py",
+      "sha256": "f7d3b99c422cdb51992b67dd922f78d444b44af5a9b656443cade87fd7426a55"
+    }
+  ],
+  "contract": {
+    "inputs": [
+      "System2CompileTurnResult",
+      "RuntimeConfig"
+    ],
+    "output": "PreparedSystem2Replay",
+    "prepared_replay_input": "Text2EnvReplayInput",
+    "accepted_compile_result": {
+      "history_authority_required": true,
+      "status": "succeeded",
+      "world_state_version": 2
+    },
+    "published_artifacts": {
+      "environment_package": {
+        "canonical_json": true,
+        "media_type": "application/json",
+        "name": "environment_package",
+        "post_write_byte_reread": true,
+        "schema_version": "harness.environment_package.v1"
+      },
+      "request_provenance": {
+        "canonical_json": true,
+        "media_type": "application/json",
+        "name": "text2env_request_provenance",
+        "path_free": true,
+        "post_write_byte_reread": true,
+        "schema_version": "harness.text2env_request_provenance.v1"
+      }
+    }
+  },
+  "integrity": {
+    "trusted_history_authority_reverified": true,
+    "trusted_compile_receipt_reverified": true,
+    "compile_invocation_run_state_output_and_cas_closure_reverified": true,
+    "history_receipt_and_terminal_world_state_cross_bound": true,
+    "state_delta_reapplied_from_history_base": true,
+    "same_base_alternate_transition_receipt_rejected": true,
+    "malformed_or_unavailable_history_rejected": true,
+    "post_resolve_cas_byte_drift_rejected": true,
+    "writes_begin_only_after_input_authority_verification": true
+  },
+  "determinism": {
+    "same_input_across_cloned_cas_stores_returns_equal_output": true,
+    "environment_package_bytes_equal": true,
+    "request_provenance_bytes_equal": true,
+    "request_provenance_contains_host_path": false
+  },
+  "verification": {
+    "targeted": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_handoff.py --cov=self_improving.system2_replay_handoff --cov-branch --cov-report=term-missing --cov-fail-under=100",
+      "failed": 0,
+      "passed": 24
+    },
+    "coverage": {
+      "branches": 20,
+      "branch_percent": 100,
+      "module": "self_improving/system2_replay_handoff.py",
+      "statements": 134,
+      "statement_percent": 100
+    },
+    "adjacent_system2": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider tests/self_improving/test_system2_compile_turn.py tests/self_improving/test_system2_replay_handoff.py tests/self_improving/harness/test_system2_context.py tests/self_improving/harness/test_system2_dispatcher.py tests/self_improving/harness/test_system2_qwen_local.py tests/self_improving/harness/test_system2_history.py tests/self_improving/harness/test_system2_planner.py tests/self_improving/harness/test_system2_domain.py",
+      "failed": 0,
+      "passed": 428
+    },
+    "ruff": {
+      "command": "ruff check self_improving/system2_replay_handoff.py tests/self_improving/test_system2_replay_handoff.py",
+      "status": "pass"
+    },
+    "format": {
+      "command": "ruff format --check self_improving/system2_replay_handoff.py tests/self_improving/test_system2_replay_handoff.py",
+      "status": "pass"
+    },
+    "diff_check": {
+      "commands": [
+        "git diff --no-index --check /dev/null self_improving/system2_replay_handoff.py",
+        "git diff --no-index --check /dev/null tests/self_improving/test_system2_replay_handoff.py"
+      ],
+      "expected_exit_code": 1,
+      "whitespace_diagnostics": 0,
+      "status": "pass"
+    },
+    "review_findings": {
+      "p0": 0,
+      "p1": 0,
+      "p2": 0
+    }
+  },
+  "claim_boundary": {
+    "prepare_only": true,
+    "replay_application_executed": false,
+    "simulator_started": false,
+    "runtime_evidence_collected": false,
+    "validate_executed": false,
+    "portable_run_receipt_emitted": false,
+    "publishability_decision_emitted": false,
+    "request_provenance_payload_is_new_public_schema": false,
+    "request_provenance_ref_matches_predeclared_validate_v2_contract": true,
+    "first_immutable_cas_object_may_persist_if_second_write_fails": true,
+    "prepared_output_returned_after_any_write_failure": false,
+    "replay_qualification_source_identity_changed": false,
+    "replay_qualification_hash_neutral_reason": "implementation and test are sibling files outside self_improving/harness"
+  }
+}

@@ -1,0 +1,643 @@
+{
+  "$defs": {
+    "ArticulationState": {
+      "additionalProperties": false,
+      "properties": {
+        "joint_positions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/JointPosition"
+          },
+          "title": "Joint Positions",
+          "type": "array"
+        },
+        "state": {
+          "enum": [
+            "open",
+            "closed",
+            "specified"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "ArticulationState",
+      "type": "object"
+    },
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sha256",
+        "size_bytes",
+        "media_type"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "EntityProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "articulation_state": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Articulation State",
+          "type": "array"
+        },
+        "category": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Category",
+          "type": "array"
+        },
+        "color": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Color",
+          "type": "array"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "material": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Material",
+          "type": "array"
+        },
+        "pose": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Pose",
+          "type": "array"
+        }
+      },
+      "required": [
+        "category",
+        "color",
+        "dimensions",
+        "material",
+        "pose",
+        "articulation_state"
+      ],
+      "title": "EntityProvenance",
+      "type": "object"
+    },
+    "FieldProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "frame_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frame Index"
+        },
+        "input_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Input Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "explicit",
+            "inferred",
+            "override"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "media_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Index"
+        },
+        "note": {
+          "default": "",
+          "maxLength": 2048,
+          "title": "Note",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "text",
+            "image",
+            "video"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "input_sha256",
+        "kind"
+      ],
+      "title": "FieldProvenance",
+      "type": "object"
+    },
+    "JointPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "JointPosition",
+      "type": "object"
+    },
+    "Pose": {
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "description": "Exactly 'world' or another entity's id; never invent frame aliases. Structural supports use world.",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z][\\w-]*$",
+          "title": "Frame",
+          "type": "string"
+        },
+        "position": {
+          "description": "Intent x/y/z in metres in the declared frame. Use null for each unknown axis, including unresolved support height; do not invent coordinates.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Position",
+          "type": "array"
+        },
+        "yaw_degrees": {
+          "anyOf": [
+            {
+              "maximum": 180,
+              "minimum": -180,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Yaw Degrees"
+        }
+      },
+      "required": [
+        "frame",
+        "position",
+        "yaw_degrees"
+      ],
+      "title": "Pose",
+      "type": "object"
+    },
+    "SceneEntity": {
+      "additionalProperties": false,
+      "properties": {
+        "articulation_state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArticulationState"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "category": {
+          "description": "Foreground object category. For structural_support, exactly table, worktop or counter; tabletop is not a structural category.",
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Color"
+        },
+        "dimensions": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Intent x/y/z dimensions in metres. Preserve known axes and use null for unknown axes (including unknown support thickness). Entirely unknown dimensions may be null. Asset resolution must resolve dimensions before compilation.",
+          "title": "Dimensions"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z][\\w-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "material": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Material"
+        },
+        "pose": {
+          "$ref": "#/$defs/Pose"
+        },
+        "provenance": {
+          "$ref": "#/$defs/EntityProvenance"
+        },
+        "role": {
+          "default": "foreground",
+          "enum": [
+            "foreground",
+            "structural_support"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "surface_rgba": {
+          "anyOf": [
+            {
+              "maxItems": 4,
+              "minItems": 4,
+              "prefixItems": [
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Only structural_support: estimated uniform sRGB RGBA for the declared color, with the same color provenance; not texture recovery. Foreground must use null.",
+          "title": "Surface Rgba"
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "color",
+        "dimensions",
+        "material",
+        "pose",
+        "articulation_state",
+        "provenance"
+      ],
+      "title": "SceneEntity",
+      "type": "object"
+    },
+    "SceneIR": {
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "items": {
+            "$ref": "#/$defs/SceneEntity"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Entities",
+          "type": "array"
+        },
+        "input_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Input Sha256",
+          "type": "string"
+        },
+        "relations": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SceneRelation"
+          },
+          "title": "Relations",
+          "type": "array"
+        },
+        "revision": {
+          "minimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "revision",
+        "input_sha256",
+        "entities"
+      ],
+      "title": "SceneIR",
+      "type": "object"
+    },
+    "SceneIntentProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "scene": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SceneIR"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schema_version": {
+          "const": "x2env.scene_intent_proposal.v2",
+          "default": "x2env.scene_intent_proposal.v2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "unknowns": {
+          "items": {
+            "$ref": "#/$defs/UnknownField"
+          },
+          "maxItems": 64,
+          "title": "Unknowns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "scene",
+        "unknowns"
+      ],
+      "title": "SceneIntentProposal",
+      "type": "object"
+    },
+    "SceneRelation": {
+      "additionalProperties": false,
+      "properties": {
+        "distance": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Distance"
+        },
+        "provenance": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Provenance",
+          "type": "array"
+        },
+        "relation": {
+          "enum": [
+            "on",
+            "inside",
+            "left_of",
+            "right_of",
+            "front_of",
+            "behind",
+            "near"
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "source": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z][\\w-]*$",
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z][\\w-]*$",
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "relation",
+        "target",
+        "provenance"
+      ],
+      "title": "SceneRelation",
+      "type": "object"
+    },
+    "UnknownField": {
+      "additionalProperties": false,
+      "properties": {
+        "critical": {
+          "title": "Critical",
+          "type": "boolean"
+        },
+        "field": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Field",
+          "type": "string"
+        },
+        "provenance": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Provenance",
+          "type": "array"
+        },
+        "reason": {
+          "maxLength": 2048,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "reason_kind": {
+          "default": "unspecified",
+          "enum": [
+            "scale_unobservable",
+            "pose_unobservable",
+            "conflict",
+            "unsupported",
+            "missing_required_semantics",
+            "unspecified"
+          ],
+          "title": "Reason Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "reason",
+        "critical",
+        "provenance"
+      ],
+      "title": "UnknownField",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "authority": {
+      "const": "advisory_only",
+      "default": "advisory_only",
+      "title": "Authority",
+      "type": "string"
+    },
+    "elapsed_seconds": {
+      "minimum": 0,
+      "title": "Elapsed Seconds",
+      "type": "number"
+    },
+    "error_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Error Code"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "proposal": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SceneIntentProposal"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "failed",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "proposal",
+    "evidence",
+    "error_code",
+    "elapsed_seconds"
+  ],
+  "title": "BackendProposal",
+  "type": "object"
+}

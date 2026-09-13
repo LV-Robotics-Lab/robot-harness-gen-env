@@ -13,24 +13,33 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_all_bilingual_golden_prompts_are_stable_and_schema_valid() -> None:
-    golden = json.loads((ROOT / "tests" / "fixtures" / "golden_prompts.json").read_text(encoding="utf-8"))
+    golden = json.loads(
+        (ROOT / "tests" / "fixtures" / "golden_prompts.json").read_text(encoding="utf-8")
+    )
     for case in golden["valid"]:
         first = parse_rule_based(case["prompt"], seed=31)
         second = parse_rule_based(case["prompt"], seed=31)
         assert first.language == case["language"]
         assert first.digest() == second.digest()
-        assert all(item.target == "table" for item in first.relations if item.relation == RelationType.ON_TABLE)
+        assert all(
+            item.target == "table"
+            for item in first.relations
+            if item.relation == RelationType.ON_TABLE
+        )
         assert len(
             [
                 item
                 for item in first.relations
-                if item.relation in {RelationType.ON_TABLE, RelationType.ON_TOP_OF, RelationType.INSIDE}
+                if item.relation
+                in {RelationType.ON_TABLE, RelationType.ON_TOP_OF, RelationType.INSIDE}
             ]
         ) == len(first.objects)
 
 
 def test_all_invalid_golden_prompts_are_rejected() -> None:
-    golden = json.loads((ROOT / "tests" / "fixtures" / "golden_prompts.json").read_text(encoding="utf-8"))
+    golden = json.loads(
+        (ROOT / "tests" / "fixtures" / "golden_prompts.json").read_text(encoding="utf-8")
+    )
     for case in golden["invalid"]:
         with pytest.raises((SceneSpecError, ValidationError)):
             parse_rule_based(case["prompt"], seed=31)
@@ -45,7 +54,9 @@ def test_direction_and_distance_semantics_match_the_fixed_frame() -> None:
     assert hammer.material == "metal"
     assert calculator.material == "plastic"
     assert any(item.relation == RelationType.BEHIND for item in spec.relations)
-    distance = next(item for item in spec.relations if item.relation == RelationType.DISTANCE_AT_LEAST)
+    distance = next(
+        item for item in spec.relations if item.relation == RelationType.DISTANCE_AT_LEAST
+    )
     assert distance.min_distance_m == 0.2
     assert spec.frame.y_axis == "front"
 

@@ -10,7 +10,6 @@ from pathlib import Path
 
 from scripts.build_placement_robustness_splits import build_split
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "runs" / "probe_static_apple_plate_action_repair" / "final_placement.json"
 COLLECTOR = ROOT / "scripts" / "run_generated_rollout_collection.py"
@@ -98,9 +97,14 @@ class RolloutCollectionManifestTest(unittest.TestCase):
             report = json.loads((out_dir / "collection_report.json").read_text(encoding="utf-8"))
             self.assertEqual(report["status"], "pass_generated_rollout_collection")
             self.assertEqual(report["unique_pose_signature_count"], 2)
-            self.assertEqual([episode["placement_id"] for episode in report["episodes"]], ["train_002", "train_000"])
+            self.assertEqual(
+                [episode["placement_id"] for episode in report["episodes"]],
+                ["train_002", "train_000"],
+            )
             self.assertEqual([episode["seed"] for episode in report["episodes"]], [901, 902])
-            self.assertNotEqual(report["episodes"][0]["placement"], report["episodes"][1]["placement"])
+            self.assertNotEqual(
+                report["episodes"][0]["placement"], report["episodes"][1]["placement"]
+            )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,149 @@
+{
+  "schema_version": "harness.system2_replay_evidence_acquisition_evidence.v1",
+  "recorded_on": "2026-09-02",
+  "baseline_commit": "37e6ea963b938be2a74d7d651885fd64c28adb29",
+  "scope": "system2_dynamic_replay_local_contract_and_durable_evidence_reconciliation",
+  "status": "contract_verified_deployed_replay_not_run",
+  "public_interface": "self_improving.system2_replay_evidence_acquisition.System2ReplayEvidenceAcquirer.acquire",
+  "files": [
+    {
+      "bytes": 19359,
+      "lines": 474,
+      "path": "self_improving/system2_replay_evidence_acquisition.py",
+      "sha256": "037e7eecea22a070995b2207fe8e057f3ed51a2ebfd657373bda6c2afa6f2eea"
+    },
+    {
+      "bytes": 63338,
+      "lines": 1759,
+      "path": "tests/self_improving/test_system2_replay_evidence_acquisition.py",
+      "sha256": "70f543be5f7a4b192aaa994463d23cc68b490c98eb09fe0691c62486062e703f"
+    }
+  ],
+  "contract": {
+    "input": "PromotedSystem2ReplayInput",
+    "settings": "ReplayApplicationSettings",
+    "output": "System2ReplayEvidenceAcquisitionResult",
+    "factory": {
+      "public_injection_seam": false,
+      "production_factory_is_only_assembly_seam": true,
+      "exact_skill_ref": "text2env.replay@1.0.0",
+      "descriptor_reproducibility": "evidence_invariant_repeatable",
+      "max_attempts": 2
+    },
+    "preflight": {
+      "fresh_state_root_required": true,
+      "promotion_destination_must_equal_application_evidence_cas": true,
+      "canonical_environment_package_reloaded_from_destination_cas": true,
+      "embedded_environment_package_exact_match_required": true,
+      "catalog_and_manifest_refs_resolved": true
+    },
+    "execution": {
+      "factory_call_count": 1,
+      "dynamic_replay_call_count": 1,
+      "input_is_promoted_replay_input": true
+    },
+    "durable_reconciliation": {
+      "terminal_run_state_exact_match_across_two_reads": true,
+      "invocation_exact_match_across_two_reads": true,
+      "event_page_matches_terminal_state": true,
+      "event_ids_are_sorted_unique_positive_integers": true,
+      "journal_is_exact_canonical_regular_file": true,
+      "dynamic_invocation_parameters_match_input": true,
+      "dependency_names_match_replay_registry_contract": true,
+      "started_run_artifacts_resolve_from_destination_cas": true,
+      "event_only_artifacts_resolve_from_destination_cas": true,
+      "duplicate_artifact_refs_resolved_once": true,
+      "succeeded_output_is_strict_text2env_replay_output": true
+    },
+    "terminal_semantics": {
+      "succeeded_returns_typed_output": true,
+      "blocked_returns_normal_terminal_result": true,
+      "failed_returns_normal_terminal_result": true,
+      "blocked_or_failed_typed_output": null,
+      "attempt_zero_may_succeed": false,
+      "persistence_error_state_is_diagnostic_only": true
+    }
+  },
+  "qualification_relationship": {
+    "checked_in_fixed_case_qualifies_factory_wiring_and_descriptor": true,
+    "fixed_case_qualifies_dynamic_input": false,
+    "fixed_case_qualifies_dynamic_result": false,
+    "dynamic_dependency_digests_requalified_by_this_slice": false,
+    "qualification_evidence_ref_count": 63,
+    "qualification_evidence_present_in_package_only_promotion": false
+  },
+  "tdd": {
+    "initial_red": "ModuleNotFoundError",
+    "ordinary_contract_red_categories": [
+      "attempt-zero terminal semantics",
+      "durable state and journal reconciliation",
+      "EventPage shape and identity",
+      "state, event, blocker, and output artifact binding",
+      "package reference media and canonical JSON binding",
+      "event-only artifact resolution",
+      "duplicate artifact resolution"
+    ]
+  },
+  "verification": {
+    "targeted": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_evidence_acquisition.py --cov=self_improving.system2_replay_evidence_acquisition --cov-branch --cov-report=term-missing --cov-fail-under=100",
+      "failed": 0,
+      "passed": 71
+    },
+    "coverage": {
+      "branches": 72,
+      "branch_percent": 100,
+      "module": "self_improving/system2_replay_evidence_acquisition.py",
+      "statements": 194,
+      "statement_percent": 100
+    },
+    "adjacent_nine_file_regression": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_evidence_acquisition.py tests/self_improving/test_system2_replay_input_promotion.py tests/self_improving/test_system2_replay_handoff.py tests/self_improving/harness/test_replay_application.py tests/self_improving/harness/test_replay_dependencies.py tests/self_improving/harness/test_text2env_replay_handler.py tests/self_improving/harness/test_artifacts.py tests/self_improving/harness/test_package_store.py tests/self_improving/harness/test_event_journal.py",
+      "failed": 0,
+      "passed": 363
+    },
+    "ruff": {
+      "command": "ruff check self_improving/system2_replay_evidence_acquisition.py tests/self_improving/test_system2_replay_evidence_acquisition.py",
+      "status": "pass"
+    },
+    "format": {
+      "command": "ruff format --check self_improving/system2_replay_evidence_acquisition.py tests/self_improving/test_system2_replay_evidence_acquisition.py",
+      "status": "pass"
+    },
+    "diff_check": {
+      "commands": [
+        "git diff --no-index --check /dev/null self_improving/system2_replay_evidence_acquisition.py",
+        "git diff --no-index --check /dev/null tests/self_improving/test_system2_replay_evidence_acquisition.py"
+      ],
+      "expected_exit_code": 1,
+      "status": "pass",
+      "whitespace_diagnostics": 0
+    },
+    "review_findings": {
+      "independent_final_review_count": 2,
+      "p0": 0,
+      "p1": 0,
+      "p2": 0
+    }
+  },
+  "deployment_requirements": {
+    "external_qualification_cas_ref_count": 63,
+    "qualified_tools_and_runtime_assets_required": true,
+    "runtime_capability_required": true,
+    "delegated_cgroup_required": true,
+    "fresh_state_root_required": true,
+    "promotion_destination_must_be_deployed_evidence_cas": true
+  },
+  "claim_boundary": {
+    "module_internal_factory_boundary_simulated_in_tests": true,
+    "real_deployed_dynamic_replay_run": false,
+    "simulator_run_claimed": false,
+    "runtime_physics_validation_claimed": false,
+    "validate_v2_executed": false,
+    "publishable_claimed": false,
+    "system2_state_advanced": false,
+    "portable_offline_authority_emitted": false,
+    "package_only_promotion_copied_provenance_closure": false,
+    "production_dynamic_replay_acceptance_complete": false
+  }
+}

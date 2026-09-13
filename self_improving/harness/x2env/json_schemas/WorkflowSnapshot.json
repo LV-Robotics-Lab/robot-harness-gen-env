@@ -1,0 +1,541 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sha256",
+        "size_bytes",
+        "media_type"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "InputMedia": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "InputMedia",
+      "type": "object"
+    },
+    "OperationRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "capability": {
+          "title": "Capability",
+          "type": "string"
+        },
+        "ended_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ended At"
+        },
+        "operation_id": {
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "repair_reservation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RepairReservation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolResult"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "started_at": {
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "succeeded",
+            "failed",
+            "blocked",
+            "cancelled"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation_id",
+        "capability",
+        "version",
+        "status",
+        "started_at"
+      ],
+      "title": "OperationRecord",
+      "type": "object"
+    },
+    "RepairReservation": {
+      "additionalProperties": false,
+      "description": "Controller approval reserved against the workflow head, not a SceneIR revision.",
+      "properties": {
+        "approval": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "base_revision": {
+          "minimum": 0,
+          "title": "Base Revision",
+          "type": "integer"
+        },
+        "cost": {
+          "maximum": 2,
+          "minimum": 1,
+          "title": "Cost",
+          "type": "integer"
+        },
+        "failure_fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Failure Fingerprint",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "scene",
+            "asset",
+            "scene_asset"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "cost",
+        "failure_fingerprint",
+        "approval",
+        "base_revision"
+      ],
+      "title": "RepairReservation",
+      "type": "object"
+    },
+    "RequestConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_cousin": {
+          "default": false,
+          "title": "Allow Cousin",
+          "type": "boolean"
+        }
+      },
+      "title": "RequestConstraints",
+      "type": "object"
+    },
+    "ToolResult": {
+      "additionalProperties": false,
+      "properties": {
+        "error_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "message": {
+          "default": "",
+          "title": "Message",
+          "type": "string"
+        },
+        "operation_id": {
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "outputs": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Outputs",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "blocked",
+            "cancelled"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation_id",
+        "status"
+      ],
+      "title": "ToolResult",
+      "type": "object"
+    },
+    "X2EnvRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_sources": {
+          "default": [
+            "local",
+            "web",
+            "reconstruction"
+          ],
+          "items": {
+            "enum": [
+              "local",
+              "web",
+              "reconstruction"
+            ],
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Allowed Sources",
+          "type": "array"
+        },
+        "constraints": {
+          "$ref": "#/$defs/RequestConstraints",
+          "default": {
+            "allow_cousin": false
+          }
+        },
+        "idempotency_key": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Idempotency Key",
+          "type": "string"
+        },
+        "images": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/InputMedia"
+          },
+          "maxItems": 8,
+          "title": "Images",
+          "type": "array"
+        },
+        "output_dir": {
+          "minLength": 1,
+          "title": "Output Dir",
+          "type": "string"
+        },
+        "seed": {
+          "maximum": 2147483647,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "maxLength": 32768,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "video": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InputMedia"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "seed",
+        "idempotency_key",
+        "output_dir"
+      ],
+      "title": "X2EnvRequest",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "asset_resolution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "compiled_scene": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "diagnosis": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "environment_package": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "grounding": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "input_bundle": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "observation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "operations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/OperationRecord"
+      },
+      "title": "Operations",
+      "type": "array"
+    },
+    "owner": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Owner"
+    },
+    "pending_scene_ir": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "proposal": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "replay_result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "request": {
+      "$ref": "#/$defs/X2EnvRequest"
+    },
+    "required_resources": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Resources",
+      "type": "array"
+    },
+    "resolved_assets": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "revision": {
+      "minimum": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "revisions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Revisions",
+      "type": "array"
+    },
+    "scene_ir": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "status": {
+      "enum": [
+        "active",
+        "succeeded",
+        "failed",
+        "blocked",
+        "cancelled"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "stop_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Stop Reason"
+    },
+    "validation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "workflow_id": {
+      "minLength": 1,
+      "title": "Workflow Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "workflow_id",
+    "status",
+    "revision",
+    "request"
+  ],
+  "title": "WorkflowSnapshot",
+  "type": "object"
+}

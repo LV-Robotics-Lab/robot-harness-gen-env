@@ -3,14 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from agenticsim.openxsim.backends import IsaacSimCompiler
 from agenticsim.openxsim.importers import import_environment
 from agenticsim.openxsim.robotwin import RoboTwinExportError, write_robotwin_bundle
 
-FIX = (
-    Path(__file__).parent / "fixtures" / "env_gen" / "can_on_plate.resolved_scene.json"
-)
+FIX = Path(__file__).parent / "fixtures" / "env_gen" / "can_on_plate.resolved_scene.json"
 
 
 def test_env_gen_ir_compiles_to_isaac_reports_missing_usd(tmp_path: Path) -> None:

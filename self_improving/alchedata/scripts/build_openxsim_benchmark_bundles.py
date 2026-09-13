@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 OUT_ROOT = ROOT / "artifacts" / "openxsim_benchmarks"
 WORKSPACE_ROOTS = (
@@ -17,7 +16,10 @@ WORKSPACE_ROOTS = (
 BENCHMARK_RUNS = {
     "open_laptop": ROOT / "runs" / "official_rollout_open_laptop" / "rollout_report.json",
     "place_mouse_pad": ROOT / "runs" / "official_rollout_place_mouse_pad" / "rollout_report.json",
-    "place_container_plate": ROOT / "runs" / "official_rollout_place_container_plate" / "rollout_report.json",
+    "place_container_plate": ROOT
+    / "runs"
+    / "official_rollout_place_container_plate"
+    / "rollout_report.json",
 }
 
 
@@ -32,7 +34,9 @@ def write_json(path: Path, data: Any) -> None:
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
+    path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+    )
 
 
 def relative_artifact(value: str | Path) -> str:
@@ -50,7 +54,9 @@ def relative_artifact(value: str | Path) -> str:
 def build_bundle(task_name: str, report_path: Path) -> dict[str, Any]:
     report = read_json(report_path)
     if report.get("task_name") != task_name:
-        raise ValueError(f"Task mismatch for {report_path}: {report.get('task_name')} != {task_name}")
+        raise ValueError(
+            f"Task mismatch for {report_path}: {report.get('task_name')} != {task_name}"
+        )
     if report.get("status") != "pass_action_rollout" or report.get("check_success") is not True:
         raise ValueError(f"Official rollout did not pass for {task_name}")
 
@@ -67,7 +73,9 @@ def build_bundle(task_name: str, report_path: Path) -> dict[str, Any]:
         or video_capture.get("frame_count", 0) < 24
         or video_capture.get("duration_sec", 0) < 2
     ):
-        raise ValueError(f"Official rollout video is not continuous for {task_name}: {video_capture}")
+        raise ValueError(
+            f"Official rollout video is not continuous for {task_name}: {video_capture}"
+        )
     failure_diagnosis_path = str((out_dir / "failure_diagnosis.json").relative_to(ROOT))
     run_state_path = str((out_dir / "run_state.json").relative_to(ROOT))
     events_path = str((out_dir / "events.jsonl").relative_to(ROOT))
@@ -186,7 +194,10 @@ def build_bundle(task_name: str, report_path: Path) -> dict[str, Any]:
         "status": "pass_openxsim_scripted_benchmark_bundle",
         "video_capture": video_capture,
         "command_loop": {
-            "/gen-env": {"status": "pass_reused_official_environment", "artifact": scene_manifest_path},
+            "/gen-env": {
+                "status": "pass_reused_official_environment",
+                "artifact": scene_manifest_path,
+            },
             "/collect": {"status": report["status"], "artifact": rollout_report},
             "/diagnose": {"status": diagnosis["status"], "artifact": failure_diagnosis_path},
             "/evaluate": {
@@ -208,8 +219,9 @@ def build_bundle(task_name: str, report_path: Path) -> dict[str, Any]:
         },
         "next_data_requirement": report["next_data_requirement"],
         "claim_boundary": (
-            "This bundle unifies an official RoboTwin scripted-expert rollout across PEARL command artifacts. "
-            "Its /evaluate stage is the official task success verifier, not learned-policy evaluation."
+            "This bundle unifies an official RoboTwin scripted-expert rollo"
+            "ut across PEARL command artifacts. Its /evaluate stage is the "
+            "official task success verifier, not learned-policy evaluation."
         ),
     }
     write_json(out_dir / "benchmark_manifest.json", bundle)
@@ -227,17 +239,24 @@ def main() -> int:
                 "benchmark_id": bundle["benchmark_id"],
                 "task_name": bundle["task_name"],
                 "status": bundle["status"],
-                "manifest": f"artifacts/openxsim_benchmarks/{bundle['task_name']}/benchmark_manifest.json",
+                "manifest": (
+                    f"artifacts/openxsim_benchmarks/{bundle['task_name']}/benchmark_manifest.json"
+                ),
             }
             for bundle in bundles
         ],
         "claim_boundary": (
-            "Three official RoboTwin scripted benchmark bundles with unified command-loop artifacts; "
-            "not three learned-policy evaluations."
+            "Three official RoboTwin scripted benchmark bundles with unifie"
+            "d command-loop artifacts; not three learned-policy evaluations"
+            "."
         ),
     }
     write_json(OUT_ROOT / "manifest.json", manifest)
-    print(json.dumps({"status": manifest["status"], "benchmark_count": len(bundles)}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"status": manifest["status"], "benchmark_count": len(bundles)}, ensure_ascii=False
+        )
+    )
     return 0
 
 

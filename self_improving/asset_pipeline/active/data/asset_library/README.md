@@ -19,8 +19,14 @@ asset_library/
 ├── objaverse/   21  ← Objaverse（检索 tier3）
 ├── github/       4  ← Khronos glTF-Sample-Models 等 github tree（tier4）
 ├── robotwin/   131  ← 上游 RoboTwin 自带（+ LICENSE.upstream；账本在 ../upstream_ledgers/）
+├── generated/ 动态  ← 生产 compile 运行生成并通过 admission 的可复用资产
 └── _source/     92  ← 各采购组的源镜像 + SHA-256 清单（按 group 名，不按来源）
 ```
+
+`generated/` 是生产生成资产的固定落点，不是实验目录。`robot-harness-compile` 默认把新资产
+保存为 `generated/<asset_id>/`；可用 `--asset-library-root` 显式改到另一套生产库。实验输入、
+消融结果和临时运行继续留在 `self_improving/studies/` 或运行的 `state_root`，不得混入这里。
+`state_root` 只保存 SQLite/CAS、工作目录和生成 staging，不再拥有可复用资产库。
 
 每个资产夹 `<号>_<类目>/`（`robotwin/` 下另有 5 个非数字命名的原生资产：
 `cube` `vis_box` `sapien-block1/2` `objaverse`，`iter_assets` 在来源夹下不做名字
@@ -59,6 +65,20 @@ asset_library/
 `ledger.json`（来源、许可、实测、验证）。目录结构只负责存放和搬运，不是查询接口。
 
 ## 新资产落哪
+
+生产 compile 生成的资产由 `GeneratedAssetAdmitter` 原子写到
+`generated/<asset_id>/`，其中包含 visual/collision OBJ、MTL、`model_data0.json`、
+`generation_provenance.json` 和 `ledger.json`。当前已入库的确定性样例是
+`generated/900_gen_hexagonal_pedestal_5695f4e5/`；它只通过 generation QC，admission 回执仍标记
+`physical_qualification=pending_settle`，不能当成真实物理通过。
+发布后的 `generation_provenance.json` 只保留资产内相对路径，ledger URI 则相对 active asset tree；
+不得把生成 staging、pytest 或本机 checkout 的绝对 locator 提交到项目资产库。重用既有生成资产时，
+provenance locator 也必须精确是这些资产内相对 POSIX 路径，不能只靠相同 basename 通过。
+provenance v1 的顶层、file identity、derived compatibility 与各字段类型也都是精确闭包；不能在
+`requested_material` 等合法字段里嵌套对象来夹带 locator，derived 的语义名称和字符串列表也不得
+携带路径分隔符或控制字符。
+
+下面的 provider 分流规则只适用于外部采购/转换资产：
 
 `scripts/3_materialize/import_materialize.py` 自动决定，规则和它写进账本
 `source.library` 的分支是同一处判断（`_provider_dir()`），两者不可能对不上：

@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_RELATIONS = {
     "place_on": "on",
@@ -142,11 +141,7 @@ def validate_task_program_references(
     checks.append(
         {
             "name": "verifier_source_matches_binding",
-            "status": (
-                "pass"
-                if binding and verifier_source == binding["source_id"]
-                else "fail"
-            ),
+            "status": ("pass" if binding and verifier_source == binding["source_id"] else "fail"),
             "message": f"verifier_source={verifier_source}",
         }
     )
@@ -155,9 +150,7 @@ def validate_task_program_references(
         {
             "name": "verifier_relation_matches_binding",
             "status": (
-                "pass"
-                if binding and verifier.get("relation") == expected_relation
-                else "fail"
+                "pass" if binding and verifier.get("relation") == expected_relation else "fail"
             ),
             "message": (
                 f"verifier_relation={verifier.get('relation')} "
@@ -216,7 +209,9 @@ def validate_scene_task_pair(
         },
         {
             "name": "placement_path_is_shared",
-            "status": "pass" if primary.get("placement_spec") == alternate.get("placement_spec") else "fail",
+            "status": "pass"
+            if primary.get("placement_spec") == alternate.get("placement_spec")
+            else "fail",
             "message": str(primary.get("placement_spec")),
         },
         {

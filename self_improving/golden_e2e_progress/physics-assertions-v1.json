@@ -1,0 +1,116 @@
+{
+  "schema_version": "x2env.physics_assertions.v1",
+  "status": "accepted_matrix_v1_frozen",
+  "approval_commit": "0a8abc01839f2c37a64b9c08f643f48985fb4a79",
+  "inherited_contract_sha256": "7064a6425ec8de03ca3fb4d1304d7db60132157741160af11a426c513606de5c",
+  "authority": {
+    "workflow_states": [
+      "active",
+      "succeeded",
+      "failed",
+      "blocked",
+      "cancelled"
+    ],
+    "public_skills": [
+      "x2env.compile",
+      "x2env.replay",
+      "x2env.validate"
+    ],
+    "initial_internal_tools": [
+      "asset.resolve",
+      "observe",
+      "revise"
+    ],
+    "timeout_state": "cancelled",
+    "timeout_error_code": "timed_out",
+    "physical_authority": "programmatic_frozen_assertions",
+    "visual_authority": "managed_Codex_advisory",
+    "success_requires_readable_materialized_package": true
+  },
+  "replay": {
+    "baseline": {
+      "dt_s": 0.004,
+      "steps": 1000
+    },
+    "half_dt": {
+      "dt_s": 0.002,
+      "steps": 2000
+    },
+    "duration_s": 4,
+    "zero_initial_velocity": true,
+    "independent_runs": true
+  },
+  "stability": {
+    "scope": "every_dynamic_foreground",
+    "window_s": 0.5,
+    "translation_m_max": 0.001,
+    "rotation_deg_max": 0.5,
+    "drift_m_per_s_max": 0.002,
+    "rotation_rate_deg_per_s_max": 1,
+    "excursion_m_max": 0.001,
+    "sustained_effective_speed": {
+      "formula": "max(norm(v), radius*norm(w)) >= 1.5*g*dt",
+      "consecutive_rows_exclusive_max": 5
+    }
+  },
+  "support": {
+    "scope": "each_declared_on_relation",
+    "tail_contact_dropout_max": 0.05,
+    "effective_upward_force_N_exclusive_min": 0.000001,
+    "effective_upward_fraction_min": 0.8,
+    "force_fraction_denominator": "contact_samples",
+    "target_local_complete_footprint_margin_m_min": 0.02,
+    "footprint_geometry": [
+      "rotated_visual",
+      "rotated_collision"
+    ],
+    "ground_contact_cannot_replace_target": true
+  },
+  "penetration": {
+    "all_trajectory_m_max": 0.001,
+    "foreground_lowest_vertex_m_min": -0.001
+  },
+  "containment": {
+    "geometry": "measured_inner_cavity",
+    "outer_aabb_forbidden": true,
+    "complete_footprint_required": true,
+    "horizontal_clearance_m_min": 0.005,
+    "lowest_point_to_inner_support_m_max": 0.003,
+    "also_requires": [
+      "contact",
+      "support",
+      "penetration"
+    ]
+  },
+  "multi_support": {
+    "per_declared_target_tail_effective_contact_fraction_min": 0.5,
+    "also_requires": [
+      "stability",
+      "penetration"
+    ]
+  },
+  "cross_profile": {
+    "per_foreground_final_position_m_max": 0.01,
+    "per_foreground_final_rotation_deg_max": 5
+  },
+  "articulation": {
+    "metadata_source": "immutable_asset_version",
+    "required_metadata": [
+      "joint_type",
+      "axis",
+      "finite_lower_limit",
+      "finite_upper_limit",
+      "closed_reference"
+    ],
+    "open_revolute_limit_span_deg_min": 30,
+    "initial_distance_from_closed": "max(15deg, opening_span*0.20)",
+    "initial_opening_span_fraction_min": 0.2,
+    "initial_opening_span_fraction_max": 0.8,
+    "drift_deg_max": 2,
+    "tail_speed_deg_per_s_max": 1,
+    "all_trajectory_limit_excess_deg_max": 0.5
+  },
+  "missing_metadata_error": "missing_physical_metadata",
+  "case_assertions": "qualification-matrix-v1.json adds per-case assertions; never replaces common profile",
+  "mutation_policy": "v1 immutable; numerical changes require explicitly approved v2 and full rerun"
+}

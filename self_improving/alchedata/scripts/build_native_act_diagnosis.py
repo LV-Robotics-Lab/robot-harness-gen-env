@@ -15,7 +15,6 @@ import h5py
 import numpy as np
 from PIL import Image
 
-
 ROOT = Path(__file__).resolve().parents[1]
 KNOWN_ROOTS = (
     ROOT,
@@ -113,7 +112,8 @@ def color_repair_evidence(collection: dict[str, Any]) -> dict[str, Any]:
     episode = next(
         item
         for item in collection.get("episodes", [])
-        if item.get("native_synchronized_data", {}).get("status") == "pass_native_synchronized_recording"
+        if item.get("native_synchronized_data", {}).get("status")
+        == "pass_native_synchronized_recording"
     )
     native_path = resolve_path(episode["native_synchronized_data"]["hdf5"])
     reference_path = resolve_path(episode["images"]["initial_head_camera"])
@@ -157,7 +157,9 @@ def evaluation_summary(path: Path, expert_actions: np.ndarray) -> dict[str, Any]
                 "nearest_expert_index_at_start": int(nearest[0]) if len(nearest) else None,
                 "nearest_expert_index_at_end": int(nearest[-1]) if len(nearest) else None,
                 "nearest_expert_index_max": int(nearest.max()) if len(nearest) else None,
-                "unique_nearest_expert_indices": int(len(np.unique(nearest))) if len(nearest) else 0,
+                "unique_nearest_expert_indices": int(len(np.unique(nearest)))
+                if len(nearest)
+                else 0,
             }
         )
     return {
@@ -192,16 +194,35 @@ def train_summary(path: Path) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build native synchronized ACT closed-loop diagnosis.")
-    parser.add_argument("--collection", default="runs/generated_collect_apple_plate_native_sync/collection_report.json")
+    parser = argparse.ArgumentParser(
+        description="Build native synchronized ACT closed-loop diagnosis."
+    )
+    parser.add_argument(
+        "--collection",
+        default="runs/generated_collect_apple_plate_native_sync/collection_report.json",
+    )
     parser.add_argument("--conversion", default="runs/act_hdf5_native_sync/conversion_report.json")
     parser.add_argument("--loader", default="runs/act_hdf5_native_sync/load_data_report.json")
     parser.add_argument("--replay", default="runs/act_action_replay_native_sync/replay_report.json")
-    parser.add_argument("--chunk20-train", default="runs/act_train_native_sync_rgb_chunk20_1200e/train_smoke_report.json")
-    parser.add_argument("--chunk20-eval", default="runs/act_eval_native_sync_rgb_chunk20_1200e_best/evaluate_report.json")
-    parser.add_argument("--chunk161-train", default="runs/act_train_native_sync_rgb_chunk161_1200e/train_smoke_report.json")
-    parser.add_argument("--chunk161-eval", default="runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json")
-    parser.add_argument("--out", default="artifacts/diagnosis/native_act_closed_loop_diagnosis.json")
+    parser.add_argument(
+        "--chunk20-train",
+        default="runs/act_train_native_sync_rgb_chunk20_1200e/train_smoke_report.json",
+    )
+    parser.add_argument(
+        "--chunk20-eval",
+        default="runs/act_eval_native_sync_rgb_chunk20_1200e_best/evaluate_report.json",
+    )
+    parser.add_argument(
+        "--chunk161-train",
+        default="runs/act_train_native_sync_rgb_chunk161_1200e/train_smoke_report.json",
+    )
+    parser.add_argument(
+        "--chunk161-eval",
+        default="runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json",
+    )
+    parser.add_argument(
+        "--out", default="artifacts/diagnosis/native_act_closed_loop_diagnosis.json"
+    )
     args = parser.parse_args()
 
     paths = {name: resolve_path(value) for name, value in vars(args).items() if name != "out"}
@@ -214,7 +235,8 @@ def main() -> int:
     chunk161_eval = evaluation_summary(paths["chunk161_eval"], expert_actions)
 
     native_pass_count = sum(
-        episode.get("native_synchronized_data", {}).get("status") == "pass_native_synchronized_recording"
+        episode.get("native_synchronized_data", {}).get("status")
+        == "pass_native_synchronized_recording"
         for episode in collection.get("episodes", [])
     )
     source_task_success_count = sum(
@@ -235,9 +257,11 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "task_id": collection.get("task_id"),
         "claim_boundary": (
-            "Native synchronized collection, ACT conversion/loading/training, expert-action replay, and learned-policy "
-            "evaluation are proven for one fixed apple/plate placement. Seeds change reset RNG only; placement and "
-            "domain randomization remain fixed, so this is not cross-placement, cross-task, or robustness proof."
+            "Native synchronized collection, ACT conversion/loading/trainin"
+            "g, expert-action replay, and learned-policy evaluation are pro"
+            "ven for one fixed apple/plate placement. Seeds change reset RN"
+            "G only; placement and domain randomization remain fixed, so th"
+            "is is not cross-placement, cross-task, or robustness proof."
         ),
         "collection": {
             "report": workspace_path(paths["collection"]),
@@ -292,32 +316,49 @@ def main() -> int:
                 "rank": 2,
                 "hypothesis": "The native-to-ACT action ordering or 14-D qpos semantics are wrong.",
                 "verdict": "falsified",
-                "evidence": "A fresh reset matches the source initial qpos exactly and all 161 expert actions replay to task success.",
+                "evidence": (
+                    "A fresh reset matches the source initial qpos exactly and all "
+                    "161 expert actions replay to task success."
+                ),
             },
             {
                 "rank": 3,
-                "hypothesis": "The native JPEG channel order does not match runtime head-camera RGB.",
+                "hypothesis": (
+                    "The native JPEG channel order does not match runtime head-camera RGB."
+                ),
                 "verdict": "confirmed_and_fixed",
-                "evidence": "Swapping decoded red/blue channels lowers MSE against the runtime RGB reference.",
+                "evidence": (
+                    "Swapping decoded red/blue channels lowers MSE against the runt"
+                    "ime RGB reference."
+                ),
             },
             {
                 "rank": 4,
-                "hypothesis": "A 20-action chunk with full-chunk replanning preserves enough temporal progress.",
+                "hypothesis": (
+                    "A 20-action chunk with full-chunk replanning preserves enough "
+                    "temporal progress."
+                ),
                 "verdict": "falsified_for_this_dataset",
-                "evidence": "Chunk 20 reaches only a narrow expert-index range and scores 0/3, while chunk 161 scores 3/3 under otherwise matched settings.",
+                "evidence": (
+                    "Chunk 20 reaches only a narrow expert-index range and scores 0"
+                    "/3, while chunk 161 scores 3/3 under otherwise matched setting"
+                    "s."
+                ),
             },
         ],
         "conclusion": {
             "fixed_scene_closed_loop": "pass" if fixed_scene_success else "fail",
             "failure_to_fix": (
-                "RoboTwin-native synchronized recording plus RGB repair made the data executable; full-episode chunking "
-                "removed the temporal-progress stall on the one unique fixed-scene trajectory."
+                "RoboTwin-native synchronized recording plus RGB repair made th"
+                "e data executable; full-episode chunking removed the temporal-"
+                "progress stall on the one unique fixed-scene trajectory."
             ),
             "policy_promotion": "blocked_robustness_not_tested",
             "next_data_requirement": (
-                "Collect non-identical successful demonstrations across varied source/target poses and declared domain "
-                "randomization, verify trajectory/image uniqueness, then evaluate on held-out placements and at least "
-                "one additional task before promotion."
+                "Collect non-identical successful demonstrations across varied "
+                "source/target poses and declared domain randomization, verify "
+                "trajectory/image uniqueness, then evaluate on held-out placeme"
+                "nts and at least one additional task before promotion."
             ),
         },
     }

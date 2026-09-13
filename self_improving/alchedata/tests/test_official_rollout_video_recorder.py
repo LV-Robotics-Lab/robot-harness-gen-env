@@ -4,7 +4,6 @@ import unittest
 from pathlib import Path
 
 import numpy as np
-
 from scripts.rollout_video_recorder import RolloutVideoRecorder
 
 

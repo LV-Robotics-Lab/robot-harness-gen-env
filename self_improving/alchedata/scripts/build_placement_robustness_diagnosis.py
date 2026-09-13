@@ -10,7 +10,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 KNOWN_ROOTS = (
     ROOT,
@@ -62,12 +61,14 @@ def collection_summary(path: Path, report: dict[str, Any]) -> dict[str, Any]:
     passed = [
         episode
         for episode in report.get("episodes", [])
-        if episode.get("status") == "pass_generated_action_rollout" and episode.get("check_success") is True
+        if episode.get("status") == "pass_generated_action_rollout"
+        and episode.get("check_success") is True
     ]
     native_passed = [
         episode
         for episode in passed
-        if episode.get("native_synchronized_data", {}).get("status") == "pass_native_synchronized_recording"
+        if episode.get("native_synchronized_data", {}).get("status")
+        == "pass_native_synchronized_recording"
     ]
     return {
         "report": workspace_path(path),
@@ -76,7 +77,9 @@ def collection_summary(path: Path, report: dict[str, Any]) -> dict[str, Any]:
         "pass_count": len(passed),
         "native_synchronized_pass_count": len(native_passed),
         "passed_placement_ids": [episode.get("placement_id") for episode in passed],
-        "passed_pose_signatures": [episode.get("pose_signature") for episode in passed if episode.get("pose_signature")],
+        "passed_pose_signatures": [
+            episode.get("pose_signature") for episode in passed if episode.get("pose_signature")
+        ],
         "domain_randomization": report.get("domain_randomization"),
     }
 
@@ -167,7 +170,8 @@ def main() -> int:
     recovery_passed_ids = {
         str(episode.get("placement_id"))
         for episode in recovery_collection.get("episodes", [])
-        if episode.get("status") == "pass_generated_action_rollout" and episode.get("check_success") is True
+        if episode.get("status") == "pass_generated_action_rollout"
+        and episode.get("check_success") is True
     }
     training_vectors = [
         episode["pose_vector"]
@@ -177,7 +181,9 @@ def main() -> int:
         and episode.get("check_success") is True
         and episode.get("pose_vector")
     ]
-    final_eval_vectors = [entry["pose_vector"] for entry in final_manifest.get("splits", {}).get("eval", [])]
+    final_eval_vectors = [
+        entry["pose_vector"] for entry in final_manifest.get("splits", {}).get("eval", [])
+    ]
     eval_to_training_distances = [
         min(vector_distance(eval_vector, train_vector) for train_vector in training_vectors)
         for eval_vector in final_eval_vectors
@@ -189,7 +195,9 @@ def main() -> int:
         and final_eval.get("episode_count") == 4
         and final_eval.get("all_eval_placements_held_out") is True
     )
-    heldout_success_gate = final_infrastructure_pass and final_eval.get("success_count") == final_eval.get("episode_count")
+    heldout_success_gate = final_infrastructure_pass and final_eval.get(
+        "success_count"
+    ) == final_eval.get("episode_count")
     recovery_targeting_pass = bool(initial_failed_ids) and initial_failed_ids <= recovery_passed_ids
     extra_task_execution_pass = (
         extra_task.get("task_id") != "task_apple_plate"
@@ -213,10 +221,14 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "task_id": "task_apple_plate",
         "claim_boundary": (
-            "This diagnosis proves varied native demonstrations, byte-level trajectory diversity, two ACT training runs, "
-            "two signature-disjoint held-out placement evaluations, a targeted failure-to-data repair, and fresh scripted "
-            "execution on an additional task. It does not claim robust policy promotion because both held-out learned-policy "
-            "evaluations score 1/4, domain randomization is disabled, and the additional task is not a learned-policy eval."
+            "This diagnosis proves varied native demonstrations, byte-level"
+            " trajectory diversity, two ACT training runs, two signature-di"
+            "sjoint held-out placement evaluations, a targeted failure-to-d"
+            "ata repair, and fresh scripted execution on an additional task"
+            ". It does not claim robust policy promotion because both held-"
+            "out learned-policy evaluations score 1/4, domain randomization"
+            " is disabled, and the additional task is not a learned-policy "
+            "eval."
         ),
         "initial_iteration": {
             "dataset": diversity_summary(paths["initial_diversity"], reports["initial_diversity"]),
@@ -227,13 +239,21 @@ def main() -> int:
         },
         "failure_to_data_iteration": {
             "mined_failed_placement_ids": sorted(initial_failed_ids),
-            "recovery_collection": collection_summary(paths["recovery_collection"], recovery_collection),
+            "recovery_collection": collection_summary(
+                paths["recovery_collection"], recovery_collection
+            ),
             "all_failed_placements_recovered_as_expert_data": recovery_targeting_pass,
-            "dataset": diversity_summary(paths["recovery_diversity"], reports["recovery_diversity"]),
+            "dataset": diversity_summary(
+                paths["recovery_diversity"], reports["recovery_diversity"]
+            ),
             "train": train_summary(paths["recovery_train"], reports["recovery_train"]),
-            "new_holdout_feasibility": collection_summary(paths["final_feasibility"], reports["final_feasibility"]),
+            "new_holdout_feasibility": collection_summary(
+                paths["final_feasibility"], reports["final_feasibility"]
+            ),
             "new_holdout_manifest": workspace_path(paths["final_manifest"]),
-            "new_holdout_minimum_pose_vector_distance_to_training_m": min(eval_to_training_distances),
+            "new_holdout_minimum_pose_vector_distance_to_training_m": min(
+                eval_to_training_distances
+            ),
             "new_holdout_pose_vector_distances_to_training_m": eval_to_training_distances,
             "new_heldout_evaluate": eval_summary(paths["final_eval"], final_eval),
             "promotion_decision": "reject_heldout_success_1_of_4",
@@ -246,32 +266,66 @@ def main() -> int:
                 "rank": 1,
                 "hypothesis": "The fixed-placement source data lacks real trajectory diversity.",
                 "verdict": "confirmed_and_fixed",
-                "evidence": "The repaired dataset grows to 15 episodes, 10 placement signatures, and 14 unique action/qpos/image trajectories.",
+                "evidence": (
+                    "The repaired dataset grows to 15 episodes, 10 placement signat"
+                    "ures, and 14 unique action/qpos/image trajectories."
+                ),
             },
             {
                 "rank": 2,
-                "hypothesis": "Executing the full 175-action chunk is the primary cause of held-out failure.",
+                "hypothesis": (
+                    "Executing the full 175-action chunk is the primary cause of held-out failure."
+                ),
                 "verdict": "falsified",
-                "evidence": "A 40-action replanning prefix remains at 1/4 on the same held-out split.",
+                "evidence": (
+                    "A 40-action replanning prefix remains at 1/4 on the same held-out split."
+                ),
             },
             {
                 "rank": 3,
-                "hypothesis": "Adding expert demonstrations for the three failed placements is sufficient for broad placement generalization.",
+                "hypothesis": (
+                    "Adding expert demonstrations for the three failed placements i"
+                    "s sufficient for broad placement generalization."
+                ),
                 "verdict": "falsified_for_current_act_configuration",
-                "evidence": "All three targeted recovery demonstrations pass, but a fresh signature-disjoint split remains at 1/4.",
+                "evidence": (
+                    "All three targeted recovery demonstrations pass, but a fresh s"
+                    "ignature-disjoint split remains at 1/4."
+                ),
             },
             {
                 "rank": 4,
-                "hypothesis": "The learned-policy failures are caused by evaluation infrastructure errors or infeasible placements.",
+                "hypothesis": (
+                    "The learned-policy failures are caused by evaluation infrastru"
+                    "cture errors or infeasible placements."
+                ),
                 "verdict": "falsified",
-                "evidence": "Both eval runs execute 4/4 without infrastructure errors, and each final eval placement passed scripted feasibility first.",
+                "evidence": (
+                    "Both eval runs execute 4/4 without infrastructure errors, and "
+                    "each final eval placement passed scripted feasibility first."
+                ),
             },
         ],
         "next_data_requirement": {
-            "placement_coverage": "Collect substantially more successful unique placements across the declared regions before another ACT promotion attempt.",
-            "observation_ablation": "Compare the current 96x72 head camera against a higher-resolution observation and an explicit object-pose-conditioned baseline.",
-            "domain_randomization": "Train and evaluate declared lighting, camera, background, and table-height variations instead of leaving all randomization disabled.",
-            "cross_task": "Train and evaluate a learned policy on at least one additional generated task; scripted can/basket execution is only an action-stack regression proof.",
+            "placement_coverage": (
+                "Collect substantially more successful unique placements across"
+                " the declared regions before another ACT promotion attempt."
+            ),
+            "observation_ablation": (
+                "Compare the current 96x72 head camera against a higher-resolut"
+                "ion observation and an explicit object-pose-conditioned baseli"
+                "ne."
+            ),
+            "domain_randomization": (
+                "Train and evaluate declared lighting, camera, background, and "
+                "table-height variations instead of leaving all randomization d"
+                "isabled."
+            ),
+            "cross_task": (
+                "Train and evaluate a learned policy on at least one additional"
+                " generated task; scripted can/basket execution is only an acti"
+                "on-stack regression proof."
+            ),
         },
     }
     out_path = resolve_path(args.out)
@@ -287,7 +341,14 @@ def main() -> int:
             }
         )
     )
-    return 0 if dataset_gate and recovery_targeting_pass and final_infrastructure_pass and extra_task_execution_pass else 1
+    return (
+        0
+        if dataset_gate
+        and recovery_targeting_pass
+        and final_infrastructure_pass
+        and extra_task_execution_pass
+        else 1
+    )
 
 
 if __name__ == "__main__":

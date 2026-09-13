@@ -1,0 +1,61 @@
+{
+  "schema_version": "harness.compile_qualification_refresh_evidence.v1",
+  "recorded_date": "2026-09-01",
+  "skill_ref": "text2env.compile@1.0.0",
+  "trigger_commit": "db24ea9",
+  "red": {
+    "reason": "implementation_file_mismatch",
+    "first_mismatch": "self_improving/harness/assets.py"
+  },
+  "generator": {
+    "real_candidate_runs": 3,
+    "fresh_scratch_and_asset_library": true,
+    "admission_date_input": "2026-08-31",
+    "observed_lifecycle": [
+      "admitted",
+      "reused",
+      "reused"
+    ],
+    "asset_ids_stable": true,
+    "asset_id": "900_gen_hexagonal_pedestal_5695f4e5"
+  },
+  "verification": {
+    "production_loader_passed": true,
+    "checks": [
+      "admission.lifecycle",
+      "artifacts.cas_resolution",
+      "invocation.stability",
+      "ledger.v3_files",
+      "package.binding",
+      "source.stability",
+      "static_validation.boundary"
+    ],
+    "ledger_file_records": 3,
+    "ledger_violations": 0,
+    "ledger_sha256": "72a8bc471e0b21c6b58cf6e81902d4d0661dbb94d762e507793bca467949462e",
+    "second_and_third_invocation_sha256": "efcfe2bf4ea7c9531ff66f7124acf7fbf981a0af070a4b7a7026883928db40d2",
+    "second_and_third_output_sha256": "9507350fbb9a0f861d93f0f154db0593ce7318a081c19cd922178507ae28f548"
+  },
+  "bindings": {
+    "implementation_sha256": "cd57e5491c54b253c65da98429baf79a27af33587678154a3eb6380e9daef3e7",
+    "scene_gen_tree_sha256": "e2fe9fd66d917dc6dea40e8990248206e180e3a086c1619b9f40558c3efec330",
+    "ledger_contract_tree_sha256": "1d52584d44ca5f5d759f5e72d327fed282f0bdb4adaf763387b2fda2467ef489",
+    "report_sha256": "a0ebc959d214a24329788466a3eaea257b0f74851b2ed445c0ab29f293f80971",
+    "documents": {
+      "manifest.json": {
+        "bytes": 1944,
+        "sha256": "6ca8764b4cf1f314a8f0dec42f0e11cce78251756d6f976ff186fd05bd0b67f3"
+      },
+      "qualification.json": {
+        "bytes": 294,
+        "sha256": "fafd437b33f5d3ddb4262a251326960cc95729e1a41d47834f6cf5c3772110e0"
+      },
+      "report.json": {
+        "bytes": 6990,
+        "sha256": "a0ebc959d214a24329788466a3eaea257b0f74851b2ed445c0ab29f293f80971"
+      }
+    }
+  },
+  "claim_boundary": "Compile generation, strict ledger admission, stable reuse, package/CAS binding, and source stability passed. Static validation remains incomplete and physical qualification remains pending_settle; no replay or publishability is claimed.",
+  "host_paths_present": false
+}

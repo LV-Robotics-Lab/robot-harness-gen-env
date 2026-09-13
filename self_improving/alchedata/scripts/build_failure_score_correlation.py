@@ -42,7 +42,9 @@ def correlation(first: np.ndarray, second: np.ndarray) -> float | None:
     return float(np.corrcoef(first, second)[0, 1])
 
 
-def exact_permutation_p_value(scores: np.ndarray, outcomes: np.ndarray, observed: float | None) -> float | None:
+def exact_permutation_p_value(
+    scores: np.ndarray, outcomes: np.ndarray, observed: float | None
+) -> float | None:
     if observed is None:
         return None
     positives = int(np.sum(outcomes))
@@ -61,9 +63,18 @@ def build_result(protocol_path: Path, report_path: Path, out_path: Path) -> dict
     report = read_json(report_path)
     require(protocol["status"] == "predeclared_before_outcomes", "Protocol was not predeclared")
     require(protocol["sample_count"] == 12, "Protocol does not contain twelve cases")
-    require(report["episode_count"] == 12 and report["execution_count"] == 12, "Twelve episodes did not execute")
-    require(report["status"] == "pass_generated_act_evaluate_execution", "ACT evaluation execution failed")
-    require(report["started_at"] > protocol["generated_at"], "Evaluation did not start after protocol creation")
+    require(
+        report["episode_count"] == 12 and report["execution_count"] == 12,
+        "Twelve episodes did not execute",
+    )
+    require(
+        report["status"] == "pass_generated_act_evaluate_execution",
+        "ACT evaluation execution failed",
+    )
+    require(
+        report["started_at"] > protocol["generated_at"],
+        "Evaluation did not start after protocol creation",
+    )
 
     by_id = {episode["placement_id"]: episode for episode in report["episodes"]}
     samples = []
@@ -71,7 +82,9 @@ def build_result(protocol_path: Path, report_path: Path, out_path: Path) -> dict
         episode = by_id.get(case["case_id"])
         require(episode is not None, f"Missing outcome for {case['case_id']}")
         require(episode["pose_signature"] == case["pose_signature"], "Pose signature mismatch")
-        require(episode["execution_complete"] is True, "Infrastructure failure is not a policy outcome")
+        require(
+            episode["execution_complete"] is True, "Infrastructure failure is not a policy outcome"
+        )
         failure = 0 if episode["policy_success"] else 1
         samples.append(
             {

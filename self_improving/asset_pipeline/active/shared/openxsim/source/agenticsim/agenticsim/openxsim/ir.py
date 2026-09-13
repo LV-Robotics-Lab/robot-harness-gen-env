@@ -15,7 +15,6 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-
 SCHEMA_VERSION = "agenticsim.environment_package.v1"
 
 
@@ -55,7 +54,9 @@ class Pose:
     def from_dict(cls, data: Mapping[str, Any] | None) -> "Pose":
         data = data or {}
         return cls(
-            position=_tuple_floats(data.get("position", (0.0, 0.0, 0.0)), length=3, field_name="pose.position"),
+            position=_tuple_floats(
+                data.get("position", (0.0, 0.0, 0.0)), length=3, field_name="pose.position"
+            ),
             orientation_wxyz=_tuple_floats(
                 data.get("orientation_wxyz", (1.0, 0.0, 0.0, 0.0)),
                 length=4,
@@ -176,7 +177,9 @@ class SceneObject:
             pose=Pose.from_dict(data.get("pose")),
             role=str(data.get("role", "object")),
             static=bool(data.get("static", False)),
-            scale=_tuple_floats(data.get("scale", (1.0, 1.0, 1.0)), length=3, field_name="scene_object.scale"),
+            scale=_tuple_floats(
+                data.get("scale", (1.0, 1.0, 1.0)), length=3, field_name="scene_object.scale"
+            ),
             randomization=dict(data.get("randomization") or {}),
             metadata=dict(data.get("metadata") or {}),
         )
@@ -212,7 +215,9 @@ class EnvSpec:
         if self.up_axis not in {"X", "Y", "Z"}:
             raise IRValidationError("env.up_axis must be X, Y, or Z")
         _tuple_floats(self.gravity_mps2, length=3, field_name="env.gravity_mps2")
-        bounds = _tuple_floats(self.workspace_bounds_m, length=6, field_name="env.workspace_bounds_m")
+        bounds = _tuple_floats(
+            self.workspace_bounds_m, length=6, field_name="env.workspace_bounds_m"
+        )
         if any(bounds[index] >= bounds[index + 3] for index in range(3)):
             raise IRValidationError("env.workspace_bounds_m minimums must be below maximums")
         instance_ids: set[str] = set()
@@ -337,7 +342,9 @@ class AnchorSpec:
             object_constraints=tuple(dict(item) for item in data.get("object_constraints", [])),
             spatial_constraints=tuple(dict(item) for item in data.get("spatial_constraints", [])),
             camera_constraints=tuple(dict(item) for item in data.get("camera_constraints", [])),
-            appearance_constraints=tuple(dict(item) for item in data.get("appearance_constraints", [])),
+            appearance_constraints=tuple(
+                dict(item) for item in data.get("appearance_constraints", [])
+            ),
             motion_constraints=tuple(dict(item) for item in data.get("motion_constraints", [])),
             evidence=tuple(dict(item) for item in data.get("evidence", [])),
             uncertainty=tuple(str(value) for value in data.get("uncertainty", [])),

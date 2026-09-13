@@ -1,0 +1,15 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "path": {
+      "minLength": 1,
+      "title": "Path",
+      "type": "string"
+    }
+  },
+  "required": [
+    "path"
+  ],
+  "title": "InputMedia",
+  "type": "object"
+}

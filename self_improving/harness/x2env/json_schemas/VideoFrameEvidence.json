@@ -1,0 +1,38 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "duration": {
+      "exclusiveMinimum": 0,
+      "title": "Duration",
+      "type": "integer"
+    },
+    "index": {
+      "minimum": 0,
+      "title": "Index",
+      "type": "integer"
+    },
+    "pts": {
+      "title": "Pts",
+      "type": "integer"
+    },
+    "sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Sha256",
+      "type": "string"
+    },
+    "size_bytes": {
+      "exclusiveMinimum": 0,
+      "title": "Size Bytes",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "index",
+    "pts",
+    "duration",
+    "sha256",
+    "size_bytes"
+  ],
+  "title": "VideoFrameEvidence",
+  "type": "object"
+}

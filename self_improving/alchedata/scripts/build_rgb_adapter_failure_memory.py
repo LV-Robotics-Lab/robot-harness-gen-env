@@ -56,18 +56,25 @@ def main() -> int:
         "recommendation": {
             "runtime_color_adapter": "identity",
             "reason": (
-                "The synchronized HDF5 conversion already repairs stored JPEG BGR ordering into runtime RGB. "
-                "Applying swap_red_blue again at runtime is a double swap; preserve runtime RGB with identity."
+                "The synchronized HDF5 conversion already repairs stored JPEG B"
+                "GR ordering into runtime RGB. Applying swap_red_blue again at "
+                "runtime is a double swap; preserve runtime RGB with identity."
             ),
         },
         "claim_boundary": (
-            "This memory records one executed failure and a matching data-contract correction. It is not a "
-            "general semantic memory, retrieval benchmark, or proof that memory improves unseen failure classes."
+            "This memory records one executed failure and a matching data-c"
+            "ontract correction. It is not a general semantic memory, retri"
+            "eval benchmark, or proof that memory improves unseen failure c"
+            "lasses."
         ),
     }
     out_path = Path(args.out).expanduser().resolve()
     write_json(out_path, memory)
-    print(json.dumps({"status": memory["status"], "memory_id": memory["memory_id"], "out": str(out_path)}))
+    print(
+        json.dumps(
+            {"status": memory["status"], "memory_id": memory["memory_id"], "out": str(out_path)}
+        )
+    )
     return 0
 
 

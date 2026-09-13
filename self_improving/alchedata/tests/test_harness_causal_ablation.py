@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from scripts.build_harness_causal_ablation import build_ablation
 from scripts.harness_observation_adapter import apply_runtime_color_adapter
 

@@ -19,6 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
+x2env = "self_improving.harness.x2env.cli:main"
 self-improving-audit = "self_improving.__main__:main"
 
 [project.optional-dependencies]
@@ -28,21 +29,44 @@ vlm = [
   "qwen-vl-utils>=0.0.8,<0.1",
   "transformers>=4.49,<5",
 ]
-dev = ["pytest>=8.3,<9", "pytest-cov>=6,<8", "ruff>=0.9,<1"]
+dev = ["pytest>=8.3,<9", "pytest-cov>=6,<8", "ruff>=0.9,<1", "markdown-it-py==4.2.0"]
 platform = [
   "jsonschema>=4.23,<5",
   "numpy>=1.26,<3",
+  "scipy>=1.17,<2",
+  "shapely==2.1.2",
   "trimesh>=4.5,<5",
 ]
 
 [tool.setuptools.packages.find]
-include = ["scene_gen*", "demo*", "self_improving", "self_improving.harness*"]
+where = [
+  ".",
+  "self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim",
+]
+include = [
+  "agenticsim",
+  "agenticsim.openxsim",
+  "agenticsim.generation",
+  "scene_gen*",
+  "demo*",
+  "self_improving",
+  "self_improving.harness*",
+  "self_improving.asset_pipeline.active.asset_reuse.lib*",
+]
 
 [tool.setuptools.package-data]
-scene_gen = ["asset_overrides.yml", "prompts/*.md"]
-"self_improving.harness" = ["json_schemas/*.json"]
+scene_gen = ["AGENTS.md", "asset_overrides.yml", "envs/AGENTS.md", "prompts/*.md"]
+"self_improving.harness" = [
+  "IMPLEMENTATION_LOG.md",
+]
+self_improving = [
+  "asset_pipeline/active/asset_reuse/lib/README.md",
+  "golden_e2e_progress/physics-assertions-v1.json",
+]
+"self_improving.harness.x2env" = ["json_schemas/*.json", "json_schemas/api-fields.md"]
 
 [tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
 pythonpath = ["."]
 testpaths = ["tests"]
 

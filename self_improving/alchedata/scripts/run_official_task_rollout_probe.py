@@ -30,7 +30,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
+    path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+    )
 
 
 def save_rgb(path: Path, rgb: np.ndarray) -> None:
@@ -121,7 +123,13 @@ def load_robotwin_args(robotwin_root: Path, task_config: str, *, save_path: Path
 def collect_named_entities(task: Any) -> dict[str, dict[str, Any]]:
     rows: dict[str, dict[str, Any]] = {}
     for attr_name, value in sorted(vars(task).items()):
-        if attr_name.startswith("_") or attr_name in {"scene", "engine", "renderer", "robot", "cameras"}:
+        if attr_name.startswith("_") or attr_name in {
+            "scene",
+            "engine",
+            "renderer",
+            "robot",
+            "cameras",
+        }:
             continue
         if hasattr(value, "get_pose"):
             rows[attr_name] = pose_record(value)
@@ -196,8 +204,14 @@ def main() -> int:
         "out_dir": str(out_dir),
         "status": "started",
         "limitations": [
-            "This probe runs an official RoboTwin task class play_once(), not a generated selection2env play_once().",
-            "It tests the action/planner stack and produces rollout evidence for PEARL command-loop smoke.",
+            (
+                "This probe runs an official RoboTwin task class play_once(), n"
+                "ot a generated selection2env play_once()."
+            ),
+            (
+                "It tests the action/planner stack and produces rollout evidenc"
+                "e for PEARL command-loop smoke."
+            ),
             "It does not train or evaluate a learned policy.",
         ],
     }
@@ -339,9 +353,15 @@ def main() -> int:
                     "task_success": success,
                 },
                 "next_data_requirement": (
-                    "Promote from official RoboTwin task smoke to generated selection2env play_once and policy /train-/evaluate integration."
+                    (
+                        "Promote from official RoboTwin task smoke to generated selecti"
+                        "on2env play_once and policy /train-/evaluate integration."
+                    )
                     if success
-                    else "Inspect move_events.jsonl, final camera frames, and object state deltas before adding this task to train/evaluate."
+                    else (
+                        "Inspect move_events.jsonl, final camera frames, and object sta"
+                        "te deltas before adding this task to train/evaluate."
+                    )
                 ),
                 "initial_entities": initial_entities,
                 "final_entities": final_entities,

@@ -1,0 +1,8 @@
+{
+  "schema_version": "robotwin.visual_review.v0",
+  "status": "pending_semantic_review",
+  "checks": [],
+  "issues": [],
+  "repair_suggestions": [],
+  "summary": "Synthetic review receipt: semantic review intentionally pending."
+}

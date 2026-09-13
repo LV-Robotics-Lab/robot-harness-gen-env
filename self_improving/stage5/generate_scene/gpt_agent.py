@@ -14,8 +14,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene import moonshot_client, openai_client
-from generate_scene.schemas import write_json
+from generate_scene import (  # noqa: E402 - After legacy source path bootstrap.
+    moonshot_client,
+    openai_client,
+)
+from generate_scene.schemas import write_json  # noqa: E402 - After legacy source path bootstrap.
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 
@@ -37,8 +40,12 @@ def _json_chat_for_provider(
     model: str | None = None,
 ) -> dict[str, Any]:
     if _uses_openai(provider):
-        return openai_client.json_chat(system=system, user=user, model=model or openai_client.model_from_env(kind))
-    return moonshot_client.json_chat(system=system, user=user, model=model or moonshot_client.model_from_env(kind))
+        return openai_client.json_chat(
+            system=system, user=user, model=model or openai_client.model_from_env(kind)
+        )
+    return moonshot_client.json_chat(
+        system=system, user=user, model=model or moonshot_client.model_from_env(kind)
+    )
 
 
 def _compact_catalog(catalog: dict[str, Any]) -> list[dict[str, Any]]:
@@ -145,7 +152,9 @@ def moonshot_ground_assets(
                 {
                     "subject_mention": "asset mention",
                     "subject_asset_id": "catalog asset_id",
-                    "relation": "on_surface | left_of | right_of | in_front_of | behind | near | inside",
+                    "relation": (
+                        "on_surface | left_of | right_of | in_front_of | behind | near | inside"
+                    ),
                     "reference": "table or another mention",
                     "reference_asset_id": None,
                     "direction_frame": "robot_or_dual_arm_first_person",
@@ -176,7 +185,9 @@ def moonshot_ground_assets(
     result.setdefault("generated_at", date.today().isoformat())
     result.setdefault("warnings", [])
     result.setdefault("unmatched_mentions", [])
-    result["selected_asset_ids"] = [item.get("asset_id") for item in result.get("matched_assets", []) if item.get("asset_id")]
+    result["selected_asset_ids"] = [
+        item.get("asset_id") for item in result.get("matched_assets", []) if item.get("asset_id")
+    ]
     return result
 
 
@@ -213,7 +224,10 @@ def moonshot_design_initial_spec(
             },
             "workspace": {
                 "surface": "table",
-                "coordinate_convention": "robot_first_person_tabletop; x negative=robot-left, x positive=robot-right, y positive=front/away, z up",
+                "coordinate_convention": (
+                    "robot_first_person_tabletop; x negative=robot-left, x positi"
+                    "ve=robot-right, y positive=front/away, z up"
+                ),
                 "bounds": {"x": [-0.45, 0.45], "y": [-0.35, 0.25], "z": [0.74, 1.1]},
                 "spatial_regions": {
                     "left_reachable_area": {"x": [-0.24, -0.06], "y": [-0.16, 0.08]},
@@ -253,7 +267,10 @@ def moonshot_design_initial_spec(
         },
         "placement_rules": [
             "Use table z around 0.75 to 0.78; snap_to_tabletop_on_load may correct it.",
-            "Keep approximate object centers separated by at least 0.28m unless the prompt asks for contact.",
+            (
+                "Keep approximate object centers separated by at least 0.28m "
+                "unless the prompt asks for contact."
+            ),
             "For 'A right of B', A.x must be greater than B.x.",
             "For 'A left of B', A.x must be less than B.x.",
             "Do not output task code or robot actions.",
@@ -264,9 +281,19 @@ def moonshot_design_initial_spec(
             "previous_accepted_placements": diversity_context or [],
             "requirements": [
                 "Preserve all requested objects and semantic relations from the prompt.",
-                "Make this variation visibly distinct from previous accepted placements by changing valid x/y positions, spacing, and in-plane yaw.",
-                "Do not change left/right/front/back truth values; directions use the robot or dual-arm first-person frame.",
-                "Keep thin everyday objects flat on the tabletop; only vary in-plane yaw unless the prompt requests upright placement.",
+                (
+                    "Make this variation visibly distinct from previous accepted "
+                    "placements by changing valid x/y positions, spacing, and in-"
+                    "plane yaw."
+                ),
+                (
+                    "Do not change left/right/front/back truth values; directions"
+                    " use the robot or dual-arm first-person frame."
+                ),
+                (
+                    "Keep thin everyday objects flat on the tabletop; only vary i"
+                    "n-plane yaw unless the prompt requests upright placement."
+                ),
                 "Keep the scene reachable, visible, stable, and collision-free.",
             ],
         },
@@ -291,7 +318,9 @@ def moonshot_design_initial_spec(
             "generated_at": date.today().isoformat(),
         }
     )
-    spec.setdefault("constraints", ["use_only_catalog_assets", "objects_on_table", "no_initial_collision"])
+    spec.setdefault(
+        "constraints", ["use_only_catalog_assets", "objects_on_table", "no_initial_collision"]
+    )
     spec.setdefault("relations", [])
     spec.setdefault("downstream_task_hints", [])
     spec.setdefault("validation", {})
@@ -311,7 +340,14 @@ def moonshot_critic_review(
         "task": "Review placement and static validation report.",
         "placement": placement,
         "validation_report": validation_report,
-        "required_fields": ["schema_version", "stage", "verdict", "summary", "issues", "repair_suggestions"],
+        "required_fields": [
+            "schema_version",
+            "stage",
+            "verdict",
+            "summary",
+            "issues",
+            "repair_suggestions",
+        ],
         "verdict_values": ["accept_for_next_stage", "repair_required"],
     }
     review = _json_chat_for_provider(
@@ -337,7 +373,9 @@ def moonshot_critic_review(
         review["verdict"] = "repair_required"
     review.setdefault("issues", [])
     review.setdefault("repair_suggestions", [])
-    review.setdefault("next_stage_requirements", ["Run RoboTwin smoke render and inspect preview images."])
+    review.setdefault(
+        "next_stage_requirements", ["Run RoboTwin smoke render and inspect preview images."]
+    )
     return review
 
 
@@ -352,7 +390,10 @@ def moonshot_orchestrate_final_spec(
 ) -> dict[str, Any]:
     """Use Moonshot/Kimi as Orchestrator Agent to accept or repair the placement."""
 
-    if critic_review.get("verdict") == "accept_for_next_stage" and validation_report.get("status") == "pass":
+    if (
+        critic_review.get("verdict") == "accept_for_next_stage"
+        and validation_report.get("status") == "pass"
+    ):
         final_spec = copy.deepcopy(designer_spec)
     else:
         system = _load_prompt("orchestrator_agent.md")
@@ -365,7 +406,10 @@ def moonshot_orchestrate_final_spec(
             "hard_constraints": [
                 "Use only catalog asset ids and model ids.",
                 "Keep objects inside workspace bounds.",
-                "Avoid approximate collision unless a relation explicitly requires containment such as inside/contained_in.",
+                (
+                    "Avoid approximate collision unless a relation explicitly req"
+                    "uires containment such as inside/contained_in."
+                ),
                 "Do not generate task code or robot actions.",
             ],
         }
@@ -379,9 +423,9 @@ def moonshot_orchestrate_final_spec(
         final_spec = _merge_asset_metadata(final_spec, catalog)
 
     final_spec["schema_version"] = "robotwin.tabletop_placement.v0"
-    final_spec["placement_name"] = str(final_spec.get("placement_name", designer_spec.get("placement_name", "placement"))).replace(
-        "designer_initial", "final_static"
-    )
+    final_spec["placement_name"] = str(
+        final_spec.get("placement_name", designer_spec.get("placement_name", "placement"))
+    ).replace("designer_initial", "final_static")
     if "final_static" not in final_spec["placement_name"]:
         final_spec["placement_name"] += "_final_static_v0"
     final_spec["stage"] = "final_static_for_smoke"
@@ -397,7 +441,9 @@ def moonshot_orchestrate_final_spec(
         }
     )
     final_spec["orchestrator_decision"] = {
-        "decision": "accept_for_smoke" if critic_review.get("verdict") == "accept_for_next_stage" else "repair_then_smoke",
+        "decision": "accept_for_smoke"
+        if critic_review.get("verdict") == "accept_for_next_stage"
+        else "repair_then_smoke",
         "reason": critic_review.get("summary", "Moonshot orchestrator finalized the placement."),
         "remaining_uncertainties": [
             "Exact simulator contact must be confirmed by RoboTwin smoke.",
@@ -441,7 +487,9 @@ def moonshot_repair_from_visual_review(
     repaired = _merge_asset_metadata(repaired, catalog)
     repaired["schema_version"] = "robotwin.tabletop_placement.v0"
     repaired["stage"] = "final_static_for_smoke"
-    repaired["placement_name"] = str(final_spec.get("placement_name", "placement")).replace("_visual_repaired", "")
+    repaired["placement_name"] = str(final_spec.get("placement_name", "placement")).replace(
+        "_visual_repaired", ""
+    )
     repaired["placement_name"] += "_visual_repaired"
     repaired.setdefault("generated_by", {})
     repaired["generated_by"].update(
@@ -457,7 +505,10 @@ def moonshot_repair_from_visual_review(
         "decision": "repair_from_visual_review",
         "reason": visual_review.get("summary", "Visual review requested repair."),
         "remaining_uncertainties": [
-            "Repaired placement must pass static validation, RoboTwin smoke, and visual review again.",
+            (
+                "Repaired placement must pass static validation, RoboTwin smo"
+                "ke, and visual review again."
+            ),
         ],
     }
     return repaired
@@ -481,10 +532,25 @@ def moonshot_repair_from_scene_critic(
         "scene_critic_review": scene_critic_review,
         "catalog_entries": _compact_catalog(catalog),
         "repair_rules": [
-            "If rule_static_check failed, repair schema, asset ids, model ids, workspace bounds, or approximate collisions before rendering again.",
-            "If simulator_smoke failed, repair placement, qpos, z_policy, loader defaults, or asset physical settings.",
-            "If visual_render_review failed, repair object identity, pose.xyz, pose.qpos, spacing, table contact, containment, orientation, or occlusion.",
-            "For containment such as 'in' or 'inside', keep the contained object visually inside the container while avoiding visible penetration.",
+            (
+                "If rule_static_check failed, repair schema, asset ids, model"
+                " ids, workspace bounds, or approximate collisions before ren"
+                "dering again."
+            ),
+            (
+                "If simulator_smoke failed, repair placement, qpos, z_policy,"
+                " loader defaults, or asset physical settings."
+            ),
+            (
+                "If visual_render_review failed, repair object identity, pose"
+                ".xyz, pose.qpos, spacing, table contact, containment, orient"
+                "ation, or occlusion."
+            ),
+            (
+                "For containment such as 'in' or 'inside', keep the contained"
+                " object visually inside the container while avoiding visible"
+                " penetration."
+            ),
             "Keep all object asset_id and model_id values from the catalog.",
             "Do not generate play_once(), task code, robot actions, or check_success().",
         ],
@@ -499,7 +565,9 @@ def moonshot_repair_from_scene_critic(
     repaired = _merge_asset_metadata(repaired, catalog)
     repaired["schema_version"] = "robotwin.tabletop_placement.v0"
     repaired["stage"] = "designer_render_loop_repaired"
-    repaired["placement_name"] = str(placement_spec.get("placement_name", "placement")).replace("_scene_critic_repaired", "")
+    repaired["placement_name"] = str(placement_spec.get("placement_name", "placement")).replace(
+        "_scene_critic_repaired", ""
+    )
     repaired["placement_name"] += "_scene_critic_repaired"
     repaired.setdefault("generated_by", {})
     repaired["generated_by"].update(

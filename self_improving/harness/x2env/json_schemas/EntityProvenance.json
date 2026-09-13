@@ -1,0 +1,132 @@
+{
+  "$defs": {
+    "FieldProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "frame_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frame Index"
+        },
+        "input_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Input Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "explicit",
+            "inferred",
+            "override"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "media_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Index"
+        },
+        "note": {
+          "default": "",
+          "maxLength": 2048,
+          "title": "Note",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "text",
+            "image",
+            "video"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "input_sha256",
+        "kind"
+      ],
+      "title": "FieldProvenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "articulation_state": {
+      "items": {
+        "$ref": "#/$defs/FieldProvenance"
+      },
+      "minItems": 1,
+      "title": "Articulation State",
+      "type": "array"
+    },
+    "category": {
+      "items": {
+        "$ref": "#/$defs/FieldProvenance"
+      },
+      "minItems": 1,
+      "title": "Category",
+      "type": "array"
+    },
+    "color": {
+      "items": {
+        "$ref": "#/$defs/FieldProvenance"
+      },
+      "minItems": 1,
+      "title": "Color",
+      "type": "array"
+    },
+    "dimensions": {
+      "items": {
+        "$ref": "#/$defs/FieldProvenance"
+      },
+      "minItems": 1,
+      "title": "Dimensions",
+      "type": "array"
+    },
+    "material": {
+      "items": {
+        "$ref": "#/$defs/FieldProvenance"
+      },
+      "minItems": 1,
+      "title": "Material",
+      "type": "array"
+    },
+    "pose": {
+      "items": {
+        "$ref": "#/$defs/FieldProvenance"
+      },
+      "minItems": 1,
+      "title": "Pose",
+      "type": "array"
+    }
+  },
+  "required": [
+    "category",
+    "color",
+    "dimensions",
+    "material",
+    "pose",
+    "articulation_state"
+  ],
+  "title": "EntityProvenance",
+  "type": "object"
+}

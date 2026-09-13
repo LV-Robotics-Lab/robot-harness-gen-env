@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "MeasuredLayoutChoice": {
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "title": "Entity Id",
+          "type": "string"
+        },
+        "path": {
+          "enum": [
+            "dimensions[0]",
+            "dimensions[1]",
+            "pose.position[0]",
+            "pose.position[1]",
+            "pose.yaw_degrees"
+          ],
+          "title": "Path",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "entity_id",
+        "path",
+        "value"
+      ],
+      "title": "MeasuredLayoutChoice",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "choices": {
+      "items": {
+        "$ref": "#/$defs/MeasuredLayoutChoice"
+      },
+      "maxItems": 40,
+      "title": "Choices",
+      "type": "array"
+    }
+  },
+  "required": [
+    "choices"
+  ],
+  "title": "MeasuredLayoutValues",
+  "type": "object"
+}

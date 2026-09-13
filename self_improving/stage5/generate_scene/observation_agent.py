@@ -14,8 +14,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene import moonshot_client, openai_client
-from generate_scene.schemas import read_json, write_json
+from generate_scene import (  # noqa: E402 - After legacy source path bootstrap.
+    moonshot_client,
+    openai_client,
+)
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    write_json,
+)
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 
@@ -42,8 +48,12 @@ def _json_chat_for_provider(
     model: str | None = None,
 ) -> dict[str, Any]:
     if _uses_openai(provider):
-        return openai_client.json_chat(system=system, user=user, model=model or openai_client.model_from_env("vision"))
-    return moonshot_client.json_chat(system=system, user=user, model=model or moonshot_client.model_from_env("vision"))
+        return openai_client.json_chat(
+            system=system, user=user, model=model or openai_client.model_from_env("vision")
+        )
+    return moonshot_client.json_chat(
+        system=system, user=user, model=model or moonshot_client.model_from_env("vision")
+    )
 
 
 def _image_blocks(smoke_dir: Path, provider: str) -> tuple[list[dict[str, Any]], list[str]]:
@@ -55,7 +65,9 @@ def _image_blocks(smoke_dir: Path, provider: str) -> tuple[list[dict[str, Any]],
             missing.append(name)
             continue
         content.append({"type": "text", "text": f"Image: {name}"})
-        content.append({"type": "image_url", "image_url": {"url": _image_to_data_url(path, provider)}})
+        content.append(
+            {"type": "image_url", "image_url": {"url": _image_to_data_url(path, provider)}}
+        )
     return content, missing
 
 
@@ -101,7 +113,10 @@ def observe_scene_with_provider(
             "summary": "short summary",
             "checks": [
                 {
-                    "name": "object_identity | object_presence | table_contact | penetration | floating | orientation | occlusion | spatial_relation",
+                    "name": (
+                        "object_identity | object_presence | table_contact | penetrat"
+                        "ion | floating | orientation | occlusion | spatial_relation"
+                    ),
                     "status": "pass | fail | warning",
                     "evidence": "what you saw in the image",
                 }
@@ -120,10 +135,18 @@ def observe_scene_with_provider(
                 }
             ],
         },
-        "direction_rule": "left/right/front/back are judged in robot or dual-arm first-person frame, not image screen coordinates.",
+        "direction_rule": (
+            "left/right/front/back are judged in robot or dual-arm first-"
+            "person frame, not image screen coordinates."
+        ),
     }
-    user_content: list[dict[str, Any]] = [{"type": "text", "text": json.dumps(text_prompt, ensure_ascii=False, indent=2)}, *content]
-    review = _json_chat_for_provider(provider=model_provider, system=system, user=user_content, model=model)
+    user_content: list[dict[str, Any]] = [
+        {"type": "text", "text": json.dumps(text_prompt, ensure_ascii=False, indent=2)},
+        *content,
+    ]
+    review = _json_chat_for_provider(
+        provider=model_provider, system=system, user=user_content, model=model
+    )
     review["schema_version"] = "robotwin.tabletop_visual_review.v0"
     review["prompt"] = prompt
     review["review_mode"] = model_provider
@@ -176,7 +199,9 @@ def observe_scene_with_openai(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Review RoboTwin scene preview images with a VLM provider.")
+    parser = argparse.ArgumentParser(
+        description="Review RoboTwin scene preview images with a VLM provider."
+    )
     parser.add_argument("--smoke-dir", required=True)
     parser.add_argument("--prompt", required=True)
     parser.add_argument("--placement")

@@ -22,12 +22,12 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
+from scripts.rollout_video_recorder import RolloutVideoRecorder  # noqa: E402
 from scripts.selection2env_contract import (  # noqa: E402
     normalize_task_binding,
     sha256_file,
     workspace_path,
 )
-from scripts.rollout_video_recorder import RolloutVideoRecorder  # noqa: E402
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -41,7 +41,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
+    path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+    )
 
 
 def save_rgb(path: Path, rgb: np.ndarray) -> None:
@@ -100,8 +102,10 @@ def joint_path_record(task: Any) -> dict[str, Any]:
         "left_joint_path_len": len(left_path),
         "right_joint_path_len": len(right_path),
         "claim_boundary": (
-            "Planner joint paths captured after generated play_once; this is trajectory source data for a policy-data adapter, "
-            "not learned-policy training or synchronized per-frame teleoperation data."
+            "Planner joint paths captured after generated play_once; this i"
+            "s trajectory source data for a policy-data adapter, not learne"
+            "d-policy training or synchronized per-frame teleoperation data"
+            "."
         ),
     }
 
@@ -115,7 +119,9 @@ def load_scene_module(path: Path | None):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     if not hasattr(module, "load_scene"):
-        raise RuntimeError(f"Generated scene module has no load_scene(task, placement_spec=None): {path}")
+        raise RuntimeError(
+            f"Generated scene module has no load_scene(task, placement_spec=None): {path}"
+        )
     return module
 
 
@@ -230,13 +236,14 @@ def _entity_name(entity: Any) -> str:
 def object_contact_pairs(task: Any) -> list[list[str]]:
     actors = dict(task.placement_objects)
     by_identity = {id(actor): object_id for object_id, actor in actors.items()}
-    by_name = {_entity_name(actor): object_id for object_id, actor in actors.items() if _entity_name(actor)}
+    by_name = {
+        _entity_name(actor): object_id for object_id, actor in actors.items() if _entity_name(actor)
+    }
     pairs: set[tuple[str, str]] = set()
     for contact in task.scene.get_contacts():
         entities = [body.entity for body in contact.bodies]
         object_ids = [
-            by_identity.get(id(entity)) or by_name.get(_entity_name(entity))
-            for entity in entities
+            by_identity.get(id(entity)) or by_name.get(_entity_name(entity)) for entity in entities
         ]
         if object_ids[0] and object_ids[1] and object_ids[0] != object_ids[1]:
             pairs.add(tuple(sorted((str(object_ids[0]), str(object_ids[1])))))
@@ -271,7 +278,11 @@ def evaluate_task_conditions(
             metrics = {"metric": metric, "distance_m": distance, "threshold_m": threshold}
             passed = distance <= threshold
         elif condition_type == "contact":
-            pair = tuple(sorted((str(condition.get("object") or ""), str(condition.get("target_object") or ""))))
+            pair = tuple(
+                sorted(
+                    (str(condition.get("object") or ""), str(condition.get("target_object") or ""))
+                )
+            )
             metrics = {"object_pair": list(pair), "observed_contact_pairs": contact_pairs}
             passed = pair in contact_set
         elif condition_type == "grippers_open":
@@ -285,9 +296,15 @@ def evaluate_task_conditions(
             tolerance = float(condition.get("tolerance_m", region.get("success_tolerance_m", 0.0)))
             passed = bool(
                 float(region["x"][0]) - tolerance <= source[0] <= float(region["x"][1]) + tolerance
-                and float(region["y"][0]) - tolerance <= source[1] <= float(region["y"][1]) + tolerance
+                and float(region["y"][0]) - tolerance
+                <= source[1]
+                <= float(region["y"][1]) + tolerance
             )
-            metrics = {"source_xy": source[:2].tolist(), "region": region_id, "tolerance_m": tolerance}
+            metrics = {
+                "source_xy": source[:2].tolist(),
+                "region": region_id,
+                "tolerance_m": tolerance,
+            }
         elif condition_type == "max_displacement":
             source_id = str(condition.get("object") or "")
             initial = np.asarray(initial_objects[source_id]["p"], dtype=float)
@@ -314,7 +331,9 @@ def evaluate_task_conditions(
         "results": results,
         "contact_pairs": contact_pairs,
         "plan_success": bool(task.plan_success),
-        "all_passed": bool(task.plan_success) and bool(results) and all(item["passed"] for item in results),
+        "all_passed": bool(task.plan_success)
+        and bool(results)
+        and all(item["passed"] for item in results),
     }
 
 
@@ -372,12 +391,22 @@ def infer_task_binding(task_id: str, placement: dict[str, Any]) -> dict[str, str
     prompt = str(placement.get("language_prompt", "")).lower()
 
     if task_id == "task_apple_plate" or ("apple" in prompt and "plate" in prompt):
-        return {"template": "place_on", "source_id": by_semantic["apple"], "target_id": by_semantic["plate"]}
-    if task_id == "task_vegetable_basket" or ("basket" in prompt and ("vegetable" in prompt or "vagetable" in prompt)):
+        return {
+            "template": "place_on",
+            "source_id": by_semantic["apple"],
+            "target_id": by_semantic["plate"],
+        }
+    if task_id == "task_vegetable_basket" or (
+        "basket" in prompt and ("vegetable" in prompt or "vagetable" in prompt)
+    ):
         source_id = by_semantic.get("vegetable") or by_semantic.get("vagetable")
         return {"template": "place_in", "source_id": source_id, "target_id": by_semantic["basket"]}
     if task_id == "task_can_basket" or ("basket" in prompt and "can" in prompt):
-        return {"template": "place_in", "source_id": by_semantic["can"], "target_id": by_semantic["basket"]}
+        return {
+            "template": "place_in",
+            "source_id": by_semantic["can"],
+            "target_id": by_semantic["basket"],
+        }
 
     source_id = by_role.get("manipuland_candidate") or by_role.get("scene_object")
     target_id = by_role.get("support_or_target_candidate") or by_role.get("container_candidate")
@@ -420,10 +449,14 @@ def main() -> int:
         parser.error("--max-video-frames must be at least --min-video-frames")
 
     if not args.task_program_input and (not args.placement or not args.task_id):
-        parser.error("--placement and --task-id are required unless --task-program-input is provided")
+        parser.error(
+            "--placement and --task-id are required unless --task-program-input is provided"
+        )
 
     robotwin_root = Path(args.robotwin_root).expanduser().resolve()
-    task_program_path = workspace_path(args.task_program_input).resolve() if args.task_program_input else None
+    task_program_path = (
+        workspace_path(args.task_program_input).resolve() if args.task_program_input else None
+    )
     task_program = read_json(task_program_path) if task_program_path else None
     if task_program:
         task_id = str(task_program["task_id"])
@@ -441,7 +474,9 @@ def main() -> int:
     episode_dir = out_dir / "episode_000"
     out_dir.mkdir(parents=True, exist_ok=True)
     episode_dir.mkdir(parents=True, exist_ok=True)
-    scene_module_path = Path(args.scene_module).expanduser().resolve() if args.scene_module else None
+    scene_module_path = (
+        Path(args.scene_module).expanduser().resolve() if args.scene_module else None
+    )
     placement = read_json(placement_path)
     task_binding = (
         normalize_task_binding(task_program, placement)
@@ -483,7 +518,10 @@ def main() -> int:
         "domain_randomization": domain_randomization,
         "status": "started",
         "limitations": [
-            "This probe executes a generated selection2env play_once template against a generated placement.",
+            (
+                "This probe executes a generated selection2env play_once templa"
+                "te against a generated placement."
+            ),
             "It is an action-stack smoke test, not learned-policy training or evaluation.",
             "It does not prove robustness across randomization, embodiments, or held-out tasks.",
         ],
@@ -515,7 +553,9 @@ def main() -> int:
 
         def load_actors(self) -> None:
             if self.generated_scene_module is not None:
-                self.placement_objects = self.generated_scene_module.load_scene(self, self.placement_spec)
+                self.placement_objects = self.generated_scene_module.load_scene(
+                    self, self.placement_spec
+                )
             else:
                 self.placement_objects = {}
                 table_z = 0.741 + self.table_z_bias
@@ -537,7 +577,9 @@ def main() -> int:
                             pose=sapien.Pose(xyz, qpos),
                             modelname=obj["asset_id"],
                             modelid=obj.get("model_id", 0),
-                            fix_root_link=defaults.get("fix_root_link", obj.get("physical", {}).get("is_static", False)),
+                            fix_root_link=defaults.get(
+                                "fix_root_link", obj.get("physical", {}).get("is_static", False)
+                            ),
                         )
                         if "articulation_qpos" in defaults:
                             actor.set_qpos(defaults["articulation_qpos"])
@@ -579,11 +621,20 @@ def main() -> int:
                 p = np.asarray(source.get_pose().p, dtype=float)
                 quat = topdown_quat()
                 return self.arm_tag, [
-                    Action(self.arm_tag, "move", target_pose=[float(p[0]), float(p[1]), float(p[2] + 0.18), *quat]),
                     Action(
                         self.arm_tag,
                         "move",
-                        target_pose=[float(p[0]), float(p[1]), float(p[2] + args.grasp_z_offset), *quat],
+                        target_pose=[float(p[0]), float(p[1]), float(p[2] + 0.18), *quat],
+                    ),
+                    Action(
+                        self.arm_tag,
+                        "move",
+                        target_pose=[
+                            float(p[0]),
+                            float(p[1]),
+                            float(p[2] + args.grasp_z_offset),
+                            *quat,
+                        ],
                     ),
                     Action(self.arm_tag, "close", target_gripper_pos=0.0),
                 ]
@@ -607,8 +658,16 @@ def main() -> int:
                     p = np.asarray(target_pose[:3], dtype=float)
                 quat = topdown_quat()
                 return self.arm_tag, [
-                    Action(self.arm_tag, "move", target_pose=[float(p[0]), float(p[1]), float(p[2] + 0.16), *quat]),
-                    Action(self.arm_tag, "move", target_pose=[float(p[0]), float(p[1]), float(p[2]), *quat]),
+                    Action(
+                        self.arm_tag,
+                        "move",
+                        target_pose=[float(p[0]), float(p[1]), float(p[2] + 0.16), *quat],
+                    ),
+                    Action(
+                        self.arm_tag,
+                        "move",
+                        target_pose=[float(p[0]), float(p[1]), float(p[2]), *quat],
+                    ),
                     Action(self.arm_tag, "open", target_gripper_pos=1.0),
                 ]
 
@@ -649,14 +708,26 @@ def main() -> int:
                                 break
                             except Exception as exc:  # noqa: BLE001
                                 grasp_errors.append(
-                                    f"arm={arm_candidate} pre={pre_grasp_dis} contact={contact_point_id}: {exc!r}"
+                                    (
+                                        "arm="
+                                        f"{arm_candidate}"
+                                        " pre="
+                                        f"{pre_grasp_dis}"
+                                        " contact="
+                                        f"{contact_point_id}"
+                                        ": "
+                                        f"{exc!r}"
+                                    )
                                 )
                         if grasp_action is not None:
                             break
                     if grasp_action is not None:
                         break
                 if grasp_action is None:
-                    raise RuntimeError("No generated grasp action could be planned: " + " | ".join(grasp_errors[:12]))
+                    raise RuntimeError(
+                        "No generated grasp action could be planned: "
+                        + " | ".join(grasp_errors[:12])
+                    )
                 used_motion_mode = "robotwin_contact_grasp"
 
             self.generated_grasp_attempt_errors = grasp_errors
@@ -676,7 +747,7 @@ def main() -> int:
 
             place_errors: list[str] = []
             place_action = None
-            for constrain in (("free", "auto") if relation == "in" else ("auto", "free", "align")):
+            for constrain in ("free", "auto") if relation == "in" else ("auto", "free", "align"):
                 for pre_dis, dis in ((0.10, 0.02), (0.07, 0.01), (0.04, 0.0)):
                     try:
                         place_action = self.place_actor(
@@ -695,11 +766,15 @@ def main() -> int:
                         )
                         break
                     except Exception as exc:  # noqa: BLE001
-                        place_errors.append(f"constrain={constrain} pre={pre_dis} dis={dis}: {exc!r}")
+                        place_errors.append(
+                            f"constrain={constrain} pre={pre_dis} dis={dis}: {exc!r}"
+                        )
                 if place_action is not None:
                     break
             if place_action is None:
-                raise RuntimeError("No generated place action could be planned: " + " | ".join(place_errors[:12]))
+                raise RuntimeError(
+                    "No generated place action could be planned: " + " | ".join(place_errors[:12])
+                )
 
             self.generated_place_attempt_errors = place_errors
             if args.motion_mode == "direct-topdown" or not self.plan_success:
@@ -725,7 +800,11 @@ def main() -> int:
                 else task_binding["target_region"]
             )
             self.info["info"] = {
-                "{source}": f"{specs_by_id[task_binding['source_id']]['asset_id']}/base{specs_by_id[task_binding['source_id']].get('model_id', 0)}",
+                "{source}": (
+                    f"{specs_by_id[task_binding['source_id']]['asset_id']}"
+                    "/base"
+                    f"{specs_by_id[task_binding['source_id']].get('model_id', 0)}"
+                ),
                 "{target}": target_description,
                 "{arm}": str(self.arm_tag),
                 "{template}": task_binding["template"],
@@ -746,8 +825,12 @@ def main() -> int:
                 region = placement["workspace"]["spatial_regions"][task_binding["target_region"]]
                 tolerance = float(region.get("success_tolerance_m", 0.0))
                 inside_xy = (
-                    float(region["x"][0]) - tolerance <= source_p[0] <= float(region["x"][1]) + tolerance
-                    and float(region["y"][0]) - tolerance <= source_p[1] <= float(region["y"][1]) + tolerance
+                    float(region["x"][0]) - tolerance
+                    <= source_p[0]
+                    <= float(region["x"][1]) + tolerance
+                    and float(region["y"][0]) - tolerance
+                    <= source_p[1]
+                    <= float(region["y"][1]) + tolerance
                 )
                 return bool(inside_xy and source_p[2] >= 0.72 + self.table_z_bias and grippers_open)
 
@@ -758,11 +841,20 @@ def main() -> int:
                 return xy_distance < 0.13 and source_p[2] > target_p[2] and grippers_open
             target_radius = 0.08
             try:
-                target_extents = np.asarray(specs_by_id[task_binding["target_id"]]["asset_metadata"]["approx_scaled_extents_m"], dtype=float)
+                target_extents = np.asarray(
+                    specs_by_id[task_binding["target_id"]]["asset_metadata"][
+                        "approx_scaled_extents_m"
+                    ],
+                    dtype=float,
+                )
                 target_radius = float(max(target_extents[0], target_extents[1]) / 2.0)
             except Exception:
                 pass
-            return xy_distance < min(max(target_radius, 0.08), 0.13) and source_p[2] >= target_p[2] - 0.03 and grippers_open
+            return (
+                xy_distance < min(max(target_radius, 0.08), 0.13)
+                and source_p[2] >= target_p[2] - 0.03
+                and grippers_open
+            )
 
     move_events: list[dict[str, Any]] = []
     endpoint_frames: list[np.ndarray] = []
@@ -829,7 +921,9 @@ def main() -> int:
             )
             video_recorder.append_frame(initial_observer_frame)
             video_recorder.install()
-        initial_objects = {name: pose_record(actor) for name, actor in task.placement_objects.items()}
+        initial_objects = {
+            name: pose_record(actor) for name, actor in task.placement_objects.items()
+        }
 
         play_started = time.time()
         task_info = task.play_once()
@@ -911,8 +1005,12 @@ def main() -> int:
                     "distance_to_region_center_m": float(np.linalg.norm(source_p[:2] - center)),
                     "region_tolerance_m": tolerance,
                     "inside_region": bool(
-                        float(region["x"][0]) - tolerance <= source_p[0] <= float(region["x"][1]) + tolerance
-                        and float(region["y"][0]) - tolerance <= source_p[1] <= float(region["y"][1]) + tolerance
+                        float(region["x"][0]) - tolerance
+                        <= source_p[0]
+                        <= float(region["x"][1]) + tolerance
+                        and float(region["y"][0]) - tolerance
+                        <= source_p[1]
+                        <= float(region["y"][1]) + tolerance
                     ),
                 }
             )
@@ -936,7 +1034,9 @@ def main() -> int:
         }
         if args.record_native_data:
             if task.FRAME_IDX < 2:
-                raise RuntimeError(f"Native synchronized recorder captured too few frames: {task.FRAME_IDX}")
+                raise RuntimeError(
+                    f"Native synchronized recorder captured too few frames: {task.FRAME_IDX}"
+                )
             task.merge_pkl_to_hdf5_video()
             native_hdf5 = episode_dir / "data" / "episode0.hdf5"
             native_video = episode_dir / "video" / "episode0.mp4"
@@ -952,14 +1052,18 @@ def main() -> int:
                 "video_exists": native_video.exists(),
                 "video_size_bytes": native_video.stat().st_size if native_video.exists() else 0,
                 "claim_boundary": (
-                    "RoboTwin native per-step recorder output from generated play_once. This records synchronized "
-                    "camera and full joint-action observations at save_freq, but is not yet ACT training-format proof."
+                    "RoboTwin native per-step recorder output from generated play_o"
+                    "nce. This records synchronized camera and full joint-action ob"
+                    "servations at save_freq, but is not yet ACT training-format pr"
+                    "oof."
                 ),
             }
             task.remove_data_cache()
         report.update(
             {
-                "status": "pass_generated_action_rollout" if success else "fail_generated_action_rollout",
+                "status": "pass_generated_action_rollout"
+                if success
+                else "fail_generated_action_rollout",
                 "setup_duration_sec": round(setup_duration, 4),
                 "play_once_duration_sec": round(play_duration, 4),
                 "plan_success": bool(task.plan_success),
@@ -990,9 +1094,15 @@ def main() -> int:
                 "policy_trace": str(out_dir / "policy_trace.json"),
                 "native_synchronized_data": native_data,
                 "next_data_requirement": (
-                    "Use this generated play_once template to record full multi-episode demonstrations before /train."
+                    (
+                        "Use this generated play_once template to record full multi-epi"
+                        "sode demonstrations before /train."
+                    )
                     if success
-                    else "Repair generated play_once target pose, grasp contact point, or asset pose before claiming /collect success."
+                    else (
+                        "Repair generated play_once target pose, grasp contact point, o"
+                        "r asset pose before claiming /collect success."
+                    )
                 ),
                 "failure_diagnosis": {
                     "status": "no_failure_observed" if success else "failure_observed",

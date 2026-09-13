@@ -1,0 +1,15 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "workflow_id": {
+      "minLength": 1,
+      "title": "Workflow Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "workflow_id"
+  ],
+  "title": "WorkflowHandle",
+  "type": "object"
+}

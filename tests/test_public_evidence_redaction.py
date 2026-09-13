@@ -1,6 +1,5 @@
-from pathlib import Path
 import re
-
+from pathlib import Path
 
 PUBLIC_EVIDENCE_ROOTS = (
     Path("apps/pearl_evidence_portal/public/reports"),

@@ -14,7 +14,6 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-
 DEFAULT_BASE_URL = "https://api.moonshot.cn/v1"
 DEFAULT_TEXT_MODEL = "kimi-k2.5"
 DEFAULT_VISION_MODEL = "kimi-k2.5"
@@ -55,19 +54,34 @@ def api_key_from_env() -> str:
     )
     if not key:
         raise MoonshotConfigError(
-            "Set MOONSHOT_API_KEY/KIMI_API_KEY or create generate_scene/local_config.py with MOONSHOT_API_KEY."
+            (
+                "Set MOONSHOT_API_KEY/KIMI_API_KEY or create generate_scene/l"
+                "ocal_config.py with MOONSHOT_API_KEY."
+            )
         )
     return key
 
 
 def model_from_env(kind: str) -> str:
     if kind == "vision":
-        return os.environ.get("MOONSHOT_VISION_MODEL") or _local_config_value("MOONSHOT_VISION_MODEL") or DEFAULT_VISION_MODEL
-    return os.environ.get("MOONSHOT_TEXT_MODEL") or _local_config_value("MOONSHOT_TEXT_MODEL") or DEFAULT_TEXT_MODEL
+        return (
+            os.environ.get("MOONSHOT_VISION_MODEL")
+            or _local_config_value("MOONSHOT_VISION_MODEL")
+            or DEFAULT_VISION_MODEL
+        )
+    return (
+        os.environ.get("MOONSHOT_TEXT_MODEL")
+        or _local_config_value("MOONSHOT_TEXT_MODEL")
+        or DEFAULT_TEXT_MODEL
+    )
 
 
 def base_url_from_env() -> str:
-    return (os.environ.get("MOONSHOT_BASE_URL") or _local_config_value("MOONSHOT_BASE_URL") or DEFAULT_BASE_URL).rstrip("/")
+    return (
+        os.environ.get("MOONSHOT_BASE_URL")
+        or _local_config_value("MOONSHOT_BASE_URL")
+        or DEFAULT_BASE_URL
+    ).rstrip("/")
 
 
 def chat_completion(
@@ -111,20 +125,28 @@ def chat_completion(
             data = _send(payload)
     except urllib.error.HTTPError as exc:
         error_body = exc.read().decode("utf-8", errors="replace")
-        if exc.code == 400 and "invalid temperature" in error_body and "only 1 is allowed" in error_body:
+        if (
+            exc.code == 400
+            and "invalid temperature" in error_body
+            and "only 1 is allowed" in error_body
+        ):
             payload["temperature"] = 1
             try:
                 data = _send(payload)
             except urllib.error.HTTPError as retry_exc:
                 retry_body = retry_exc.read().decode("utf-8", errors="replace")
-                raise RuntimeError(f"Moonshot API HTTP {retry_exc.code}: {retry_body}") from retry_exc
+                raise RuntimeError(
+                    f"Moonshot API HTTP {retry_exc.code}: {retry_body}"
+                ) from retry_exc
         elif response_format is not None and exc.code in {400, 422}:
             payload.pop("response_format", None)
             try:
                 data = _send(payload)
             except urllib.error.HTTPError as retry_exc:
                 retry_body = retry_exc.read().decode("utf-8", errors="replace")
-                raise RuntimeError(f"Moonshot API HTTP {retry_exc.code}: {retry_body}") from retry_exc
+                raise RuntimeError(
+                    f"Moonshot API HTTP {retry_exc.code}: {retry_body}"
+                ) from retry_exc
         else:
             raise RuntimeError(f"Moonshot API HTTP {exc.code}: {error_body}") from exc
 

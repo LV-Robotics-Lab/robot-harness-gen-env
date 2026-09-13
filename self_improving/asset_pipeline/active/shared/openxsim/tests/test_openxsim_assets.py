@@ -5,12 +5,10 @@ import json
 import threading
 import xml.etree.ElementTree as ET
 import zipfile
-from dataclasses import replace
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
-
 from agenticsim.openxsim.assets import (
     AssetCandidate,
     AssetScout,
@@ -138,7 +136,11 @@ def test_asset_conversion_produces_real_backend_files(asset_server, tmp_path: Pa
     ET.parse(mjcf.uri)
     assert bundle.source["download_sha256"] == downloaded.sha256
     validation = json.loads(
-        Path(next(item.uri for item in bundle.representations if item.format == "validation_manifest")).read_text()
+        Path(
+            next(
+                item.uri for item in bundle.representations if item.format == "validation_manifest"
+            )
+        ).read_text()
     )
     assert validation["normalization"]["target_max_extent_m"] == 1.0
     assert max(validation["normalization"]["normalized_bounds"]["extent"]) == pytest.approx(1.0)

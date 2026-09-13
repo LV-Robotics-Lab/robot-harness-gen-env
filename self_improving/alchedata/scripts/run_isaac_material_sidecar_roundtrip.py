@@ -8,7 +8,6 @@ import hashlib
 import json
 import os
 import platform
-import shutil
 import socket
 import sys
 import traceback
@@ -85,7 +84,9 @@ def red_foreground_mask(rgb: np.ndarray) -> np.ndarray:
     return (red > 110.0) & (red > 1.35 * green) & (red > 1.35 * blue)
 
 
-def extract_sidecar(image: np.ndarray, crop: tuple[int, int, int, int]) -> tuple[dict[str, Any], np.ndarray, np.ndarray]:
+def extract_sidecar(
+    image: np.ndarray, crop: tuple[int, int, int, int]
+) -> tuple[dict[str, Any], np.ndarray, np.ndarray]:
     x0, y0, x1, y1 = crop
     if x1 > image.shape[1] or y1 > image.shape[0]:
         raise ValueError(f"Crop {crop} exceeds image shape {image.shape}")
@@ -115,8 +116,9 @@ def extract_sidecar(image: np.ndarray, crop: tuple[int, int, int, int]) -> tuple
             "formula": "clip(1.15 - 0.42 * highlight_ratio, 0.18, 0.90)",
         },
         "claim_boundary": (
-            "This is a deterministic observation heuristic for a bounded roundtrip, not intrinsic decomposition, "
-            "BRDF identification, relighting invariance, or a NeuMaTeX reproduction."
+            "This is a deterministic observation heuristic for a bounded ro"
+            "undtrip, not intrinsic decomposition, BRDF identification, rel"
+            "ighting invariance, or a NeuMaTeX reproduction."
         ),
     }
     return sidecar, crop_rgb, mask
@@ -128,7 +130,9 @@ def save_masked(path: Path, rgb: np.ndarray, mask: np.ndarray) -> None:
     Image.fromarray(output).save(path)
 
 
-def compare_foregrounds(source_rgb: np.ndarray, source_mask: np.ndarray, rendered_rgb: np.ndarray) -> tuple[dict[str, Any], np.ndarray]:
+def compare_foregrounds(
+    source_rgb: np.ndarray, source_mask: np.ndarray, rendered_rgb: np.ndarray
+) -> tuple[dict[str, Any], np.ndarray]:
     target_mask = red_foreground_mask(rendered_rgb)
     if int(np.count_nonzero(target_mask)) < 100:
         raise ValueError("Rendered foreground segmentation contains fewer than 100 pixels")
@@ -142,11 +146,15 @@ def compare_foregrounds(source_rgb: np.ndarray, source_mask: np.ndarray, rendere
         "source_median_srgb": source_median.tolist(),
         "rendered_median_srgb": target_median.tolist(),
         "rgb_mean_absolute_error": float(np.mean(np.abs(source_median - target_median))),
-        "rgb_root_mean_squared_error": float(np.sqrt(np.mean((source_median - target_median) ** 2))),
+        "rgb_root_mean_squared_error": float(
+            np.sqrt(np.mean((source_median - target_median) ** 2))
+        ),
         "source_cie_lab": source_lab.tolist(),
         "rendered_cie_lab": target_lab.tolist(),
         "cie76_delta_e": float(np.linalg.norm(source_lab - target_lab)),
-        "comparison_scope": "robust median foreground color; geometry, framing, and lighting are not pixel-aligned",
+        "comparison_scope": (
+            "robust median foreground color; geometry, framing, and lighting are not pixel-aligned"
+        ),
     }
     return metrics, target_mask
 
@@ -198,7 +206,9 @@ def main() -> int:
             "source_image_sha256": sha256_file(source_path),
         }
     )
-    Image.fromarray(source_crop).resize((352, 352), Image.Resampling.NEAREST).save(out_dir / "source_crop.png")
+    Image.fromarray(source_crop).resize((352, 352), Image.Resampling.NEAREST).save(
+        out_dir / "source_crop.png"
+    )
     save_masked(out_dir / "source_foreground.png", source_crop, source_mask)
     sidecar_path = out_dir / "material_sidecar.json"
     write_json(sidecar_path, sidecar)
@@ -244,8 +254,12 @@ def main() -> int:
         sphere = UsdGeom.Sphere.Define(world.stage, "/World/ExtractedMaterialSphere")
         sphere.CreateRadiusAttr(0.25)
         UsdGeom.Xformable(sphere).AddTranslateOp().Set(Gf.Vec3d(0.0, 0.0, 0.25))
-        material = UsdShade.Material.Define(world.stage, "/World/Looks/ExtractedObservationMaterial")
-        shader = UsdShade.Shader.Define(world.stage, "/World/Looks/ExtractedObservationMaterial/PreviewSurface")
+        material = UsdShade.Material.Define(
+            world.stage, "/World/Looks/ExtractedObservationMaterial"
+        )
+        shader = UsdShade.Shader.Define(
+            world.stage, "/World/Looks/ExtractedObservationMaterial/PreviewSurface"
+        )
         shader.CreateIdAttr("UsdPreviewSurface")
         shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
             Gf.Vec3f(*[float(value) for value in sidecar["base_color_linear"]])
@@ -263,7 +277,9 @@ def main() -> int:
         key.CreateIntensityAttr(1800.0)
         key.CreateAngleAttr(1.0)
         key.CreateColorAttr(Gf.Vec3f(1.0, 0.98, 0.96))
-        set_camera_view([1.25, 1.25, 0.78], [0.0, 0.0, 0.25], camera_prim_path="/OmniverseKit_Persp")
+        set_camera_view(
+            [1.25, 1.25, 0.78], [0.0, 0.0, 0.25], camera_prim_path="/OmniverseKit_Persp"
+        )
         world.reset()
         for _ in range(12):
             world.step(render=True)
@@ -389,7 +405,11 @@ def main() -> int:
             }
         )
         write_json(out_dir / "run_state.json", run_state)
-        summary = {"status": "fail_material_sidecar_roundtrip", "error": run_state["error"], "out_dir": str(out_dir)}
+        summary = {
+            "status": "fail_material_sidecar_roundtrip",
+            "error": run_state["error"],
+            "out_dir": str(out_dir),
+        }
     finally:
         app.close()
     print(json.dumps(summary, sort_keys=True))

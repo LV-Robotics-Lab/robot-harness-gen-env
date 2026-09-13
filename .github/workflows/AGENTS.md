@@ -9,7 +9,7 @@ GitHub Actions CI 工作流定义。在受支持的 Python 版本上跑基于 fi
 ## Key Files（关键文件）
 | File | Description |
 |------|-------------|
-| `ci.yml` | CI：在 Python 3.11 & 3.12、ubuntu-latest 上初始化 submodule，并跑核心与 self-improving 全量离线测试。 |
+| `ci.yml` | CI：Python 3.11/3.12 的六组与独立 root 测试，以及同版本覆盖归并；保留限时日志与测量。 |
 
 ## Subdirectories（子目录）
 无。
@@ -22,11 +22,17 @@ GitHub Actions CI 工作流定义。在受支持的 Python 版本上跑基于 fi
 
 ### Testing Requirements（测试要求）
 - push 会触发 CI 运行；合并前确认工作流为绿。
-- 统一入口是 `script/run_self_improving_tests.sh`；新增模块时同步扩展该脚本。
+- 统一入口是 `script/run_self_improving_tests.sh`；新增 canonical 测试须更新 `x2env_test_groups.py` 显式归属。
+- 验收使用同源六组的成功测量；当前matrix v2按用户授权报告语句/分支覆盖与缺口，不要求精确100%。
+  测试/lint/测量完整性仍阻断；不扩大排除。检查 `pending-gates.json`，未执行门不计通过。
+- CI 制品只上传日志、JUnit、结果与覆盖测量；隔离临时环境和fixtures不上传。
+- 第五组额外保留reader-docs.json，本地链接/anchor、历史bytes与有界公共HTTP分别报告；
+  未执行远端不是通过。源码身份也覆盖这些读者文档与归档manifest，不能跨docs变更复用测量。
 - 提交前用 action 校验器校验 YAML 语法。
 
 ### Common Patterns（常见模式）
-- 通过 `pip install -e '.[dev,demo]'` 安装；用 `pytest -q` 跑套件。
+- 安装含 `platform` 的开发依赖；每测试组、独立 `pytest -q` 与覆盖归并各有1770秒加30秒清理预算。
+- matrix v2本次人工执行额外收紧为1170秒加30秒；不将此称为上述CI配置默认已改变。
 
 ## Dependencies（依赖）
 

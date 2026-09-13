@@ -1,0 +1,390 @@
+{
+  "schema_version": "robot_harness.aspire_study.source_receipt.v1",
+  "preflight_captured_at": "2026-08-31T01:24:43+08:00",
+  "study_closed_at": "2026-08-31T03:34:17+08:00",
+  "study_report_commit": "4f289a15e06c609adf1b13879dc38e88d842dec5",
+  "study_close_source_commit": "148001dd4049346b9deadca1fec3bb8f588fc8d5",
+  "post_close_concurrent_snapshot_commit": "ab0385967531737b4ae075f65af1fd9d224e03dc",
+  "observed_after_post_close_cutoff": [
+    "c365874afdc3cce3623897490ff99f414a4dc36e",
+    "8d9a01c610df76ad55353751fea5cfd0773d1f7a",
+    "587b49f8ba4fe3c43622899108765164e69cf1e7",
+    "0e6716a7d6fd71cb87fdc4526534db8b51f47b6d"
+  ],
+  "study_branch": "worktree/bingsheng",
+  "study_start_commit": "732e190",
+  "experiment_snapshot_commit": "1180aef33936fcf1955923ed2a270e5a775029fb",
+  "experiment_snapshot_committed_at": "2026-08-31T01:53:39+08:00",
+  "source_verification_snapshot_commit": "148001dd4049346b9deadca1fec3bb8f588fc8d5",
+  "source_verification_snapshot_committed_at": "2026-08-31T03:25:44+08:00",
+  "follow_on_behavior_commits": {
+    "pending_entrypoints_protocol": "1f1064b37d48b7200a754dd4d10ce704cfcd4cc2",
+    "pending_entrypoints_fix": "bd4f64f30e3d1677a9b8dcba607d84b9d99ddb28",
+    "legacy_candidate_first_fix": "fda13b81236d0be325990518bd58eb56e40f77e7",
+    "static_only_protocol": "52fef1e2b1fe097eab5346a52c5878b93cec0d5a",
+    "static_only_probe_method_fix": "ed5197b5fa4ff39970017723e2edbb03616d53c0",
+    "static_only_fix": "72b35c48884a7bd0b31fd82c5c8dff04b383b874",
+    "compile_catalog_snapshot_protocol_and_attack": "ef5e29e5286e1bd2680b10c31f4d3b2496cf0f02",
+    "compile_catalog_snapshot_fix": "910ccb127eb5d2564caac42f1cd5cca3c3ec2d29"
+  },
+  "independent_source_follow_on_commits": {
+    "sqlite_event_journal": "315524f13e0eb6684499327bcd6e80ac1fae2e3b",
+    "actual_compile_stage_events": "9af9db5fc962bebfbd74345a30ad1e574e91c0a0",
+    "effective_catalog_file_validation": "28333dee6871ac6a217973c78ad691ea4ffabcf1",
+    "post_verification_artifact_dedup": "dc81ade1c6b5cad7faf13afdbc84b484857ffc43",
+    "text2env_compile_handler": "284ffb15b8813a3e05e4bd5b9c5f7da56c99fea9",
+    "package_store": "1a1f3d878b4baafc06b32cab519e115950d36890",
+    "parameter_aware_dependency_interface": "e98e8c1c22f00ee9a5781276e6298a4788e33846",
+    "compile_mutable_dependency_receipts": "5915315ba80fa870bcfe7ce2732620c94969aef6",
+    "atomic_cas_capture": "50e8f1829a6a3124a910ef2ae88f5d741f974247",
+    "qualification_report_reachability": "51447da0e982875d46222ed1a25c533925b4a300",
+    "adaptive_replay_video_endpoint_binding": "e6ed0ff4c6e9fe9091f81ff858baf2fa6e4033b0",
+    "legacy_cli_failure_contract_fix": "148001dd4049346b9deadca1fec3bb8f588fc8d5"
+  },
+  "sources": {
+    "paper": {
+      "url": "https://arxiv.org/abs/2607.00272",
+      "version": "v1",
+      "submitted": "2026-06-30"
+    },
+    "project_page": {
+      "url": "https://research.nvidia.com/labs/gear/aspire/"
+    },
+    "repository": {
+      "url": "https://github.com/NVlabs/ASPIRE.git",
+      "local_path": "external/ASPIRE",
+      "commit": "7ba73d3bcac8f6b6d4a7d67ed4040988f768d282",
+      "integration": "git_submodule"
+    }
+  },
+  "host_preflight": {
+    "gpu_count": 1,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gpu_memory_mib": 32607,
+    "driver": "580.159.03",
+    "nvcc": "missing",
+    "uv": "0.12.3",
+    "disk_free_gib_approx": 710,
+    "aspire_venvs_present": [],
+    "aspire_submodules_initialized": false,
+    "perception_ports_8114_8116": "down",
+    "nvidia_api_key_present": false,
+    "hugging_face_token_present": false
+  },
+  "unmodified_project_baselines": {
+    "root_pytest": {
+      "command": "pytest -q",
+      "passed": 125,
+      "failed": 0,
+      "elapsed_seconds": 0.79
+    },
+    "self_improving_matrix": {
+      "command": "script/run_self_improving_tests.sh",
+      "passed": 591,
+      "skipped": 6,
+      "failed": 0,
+      "harness_statement_coverage_percent": 100,
+      "harness_branch_coverage_percent": 100
+    }
+  },
+  "final_local_outcomes": {
+    "root_pytest": {
+      "verification_commit": "1180aef33936fcf1955923ed2a270e5a775029fb",
+      "passed": 125,
+      "failed": 0,
+      "claim_scope": "E0-E2 experiment snapshot; predates E1c/E1d and concurrent Harness follow-ons"
+    },
+    "self_improving_matrix": {
+      "verification_commit": "1180aef33936fcf1955923ed2a270e5a775029fb",
+      "passed": 595,
+      "skipped": 6,
+      "failed": 0,
+      "harness_statement_coverage_percent": 100,
+      "harness_branch_coverage_percent": 100,
+      "claim_scope": "E0-E2 experiment snapshot; not a current-HEAD result"
+    },
+    "upstream_no_service_tests_host": {
+      "passed": 18,
+      "skipped": 4,
+      "failed": 2,
+      "junit_sha256": "23e702a290403220d4d4ed5ac5ae0f2463a00e1f5e1ae53c6ecdf46f6b48f947",
+      "failure_scope": "exact NumPy and SciPy version checks"
+    },
+    "upstream_no_service_tests_pinned": {
+      "passed": 20,
+      "skipped": 4,
+      "failed": 0,
+      "pinned_environment_junit_sha256": "280599673fed85e194bb3676d4f1797cacfb76852dc61ee0d5c0df3e4d47cd7d",
+      "claim_scope": "partial harness mechanism reproduction only"
+    },
+    "runtime_binding_probe": {
+      "protocol_commit": "113e54be39f50c46dc44572fdebfa0f41fcab39e",
+      "fix_commit": "795273f16a5a7b9f18e91b3c87c048123e2b1258",
+      "baseline_accuracy": 0.2,
+      "final_accuracy": 1.0,
+      "baseline_unsafe_accepts": 4,
+      "final_unsafe_accepts": 0,
+      "baseline_artifact_sha256": "a631152c37bc0565f5b2e58321a66d429e5d75849f2727436a02f03d962c7576",
+      "final_artifact_sha256": "09487ef850b8da691a47daee92194cee3df09bb1edce70a051a0f912c866767f",
+      "limitation": "checks producer-declared scene and digest equality; does not bind the complete run or media receipt"
+    },
+    "pending_review_main_probe": {
+      "protocol_commit": "bbfa19d3f23ee7fc24247a131e1cda3c4da4f848",
+      "fix_commit": "fa9121f7d6b70b8e8ad69450b4e4e89840bfecf1",
+      "baseline_accuracy": 0.0,
+      "final_accuracy": 1.0,
+      "pass_control_accuracy": 1.0,
+      "baseline_artifact_sha256": "5b7831c700f952cf1d9a6e2a41c886a9c88fcf27bc387539c55b318b72a54e6a",
+      "final_artifact_sha256": "6d46f4c0daff648b87067eff381fb8160a67ee1485101061a4335714dcbf72e5"
+    },
+    "pending_review_entrypoints_probe": {
+      "protocol_commit": "1f1064b37d48b7200a754dd4d10ce704cfcd4cc2",
+      "fix_commit": "bd4f64f30e3d1677a9b8dcba607d84b9d99ddb28",
+      "active_entrypoints_baseline_accuracy": 0.625,
+      "active_entrypoints_final_accuracy": 1.0,
+      "baseline_artifact_sha256": "193721bf7365efa7560800c42f7ff4cd6bfb2675d05310159467b10b31bccf39",
+      "final_artifact_sha256": "bd353c726b40c094d14de8b28f6decabbcc58b266a481da6564580f20037771c"
+    },
+    "legacy_candidate_first_promotion": {
+      "fix_commit": "fda13b81236d0be325990518bd58eb56e40f77e7",
+      "legacy_candidate_first_promotion_tests": 3
+    },
+    "static_only_state_probe": {
+      "protocol_commit": "52fef1e2b1fe097eab5346a52c5878b93cec0d5a",
+      "probe_method_fix_commit": "ed5197b5fa4ff39970017723e2edbb03616d53c0",
+      "production_fix_commit": "72b35c48884a7bd0b31fd82c5c8dff04b383b874",
+      "baseline_accuracy": 0.2222222222222222,
+      "baseline_correct": 2,
+      "final_accuracy": 1.0,
+      "final_correct": 9,
+      "focused_stage5_tests_passed": 10,
+      "baseline_artifact_sha256": "0cba355326de5d123860f38cecc5740b86e74fc8645dae2344bd0f8e2fcf4954",
+      "final_artifact_sha256": "f23b109230dcbd2053af1eae18dfa400967683eaaf812dc0f44495db5d8bd28e",
+      "claim_scope": "static-stage state integrity only; no smoke, visual, or physical success claim"
+    },
+    "compile_catalog_snapshot_use": {
+      "baseline_source_commit": "5915315ba80fa870bcfe7ce2732620c94969aef6",
+      "protocol_and_attack_commit": "ef5e29e5286e1bd2680b10c31f4d3b2496cf0f02",
+      "fix_commit": "910ccb127eb5d2564caac42f1cd5cca3c3ec2d29",
+      "baseline_mutation_guard": 0.0,
+      "final_mutation_guard": 1.0,
+      "baseline_outside_root_consumed": true,
+      "final_outside_root_consumed": false,
+      "final_harness_tests_passed": 74,
+      "final_harness_statements_covered": 1291,
+      "final_harness_statements_total": 1291,
+      "final_harness_branches_covered": 312,
+      "final_harness_branches_total": 312,
+      "claim_scope": "compile catalog snapshot/check-use integrity only; asset admission rollback and physical qualification remain open"
+    },
+    "real_sapien_binding_replay": {
+      "gate_commit": "795273f16a5a7b9f18e91b3c87c048123e2b1258",
+      "passed": 1,
+      "failed": 0,
+      "video_frames": 120,
+      "unique_video_frames": 100,
+      "runtime_evidence_file_sha256": "b41ff31f79ddd0549dd63c41b48f348d8cbdee3406dc50bb6e0372c0fba0acdd",
+      "validation_report_file_sha256": "197ab014af7aaaf3b631e7b54c3919de64d2e8d74dc70b0de92109089d0d7dc1",
+      "receipt_limitation": "artifact lacks exact command, resolved/package manifest, simulator commit, and environment lock"
+    },
+    "heldout_synthetic_harness": {
+      "benchmark_commit": "9540dd3285c70acaf9bdf56247bacc7079750fca",
+      "fault_cases_per_arm": 120,
+      "frozen_mhrc": 0.0,
+      "reactive_mhrc": 0.5,
+      "validated_memory_mhrc": 1.0,
+      "validated_memory_worst_family": 1.0,
+      "unsafe_publications": 0,
+      "clean_regressions": 0,
+      "result_sha256": "58b7fe73b6cef35d8259a0fae165648046ba49385e126a329aafd1c5420f2c99",
+      "artifact_file_sha256": "5a3d8c2d8decad3c456b054809ed43877486a17c690c07beed21dfa0a34f967b",
+      "claim_scope": "fixed synthetic contract families only"
+    }
+  },
+  "historical_source_verification": {
+    "commit": "f9d6ad5c844f51b34c882e8d563f99e19208bd07",
+    "default_root_pytest": {
+      "status": "collection_error",
+      "reason": "duplicate test_registry module names across two non-package test directories"
+    },
+    "default_self_improving_matrix": {
+      "status": "collection_error",
+      "reason": "same duplicate test_registry import mismatch; later sub-suites did not run"
+    },
+    "diagnostic_importlib_mode": {
+      "passed": 145,
+      "failed": 1,
+      "failure": "invalid-prompt compiler stage is parse; historical test expects scene_spec_validation",
+      "harness_statement_coverage_percent": 100,
+      "harness_branch_coverage_percent": 99.89,
+      "coverage_gate_passed": false
+    },
+    "aspire_probes": {
+      "runtime_binding_accuracy": 1.0,
+      "pending_review_accuracy": 1.0,
+      "pending_entrypoints_accuracy": 1.0,
+      "static_only_accuracy": 1.0,
+      "heldout_benchmark_tests_passed": 8,
+      "heldout_benchmark_byte_identical": true
+    },
+    "claim_scope": "read-only post-experiment historical snapshot; not a current-HEAD result"
+  },
+  "later_historical_source_verification": {
+    "commit": "28333dee6871ac6a217973c78ad691ea4ffabcf1",
+    "committed_at": "2026-08-31T02:46:17+08:00",
+    "default_root_pytest": {
+      "status": "collection_error",
+      "reason": "duplicate test_registry module names across two non-package test directories"
+    },
+    "diagnostic_importlib_mode": {
+      "passed": 155,
+      "failed": 1,
+      "failure": "invalid-prompt compiler stage is parse; historical test expects scene_spec_validation",
+      "harness_statements_covered": 895,
+      "harness_statements_total": 895,
+      "harness_branches_covered": 196,
+      "harness_branches_total": 196,
+      "harness_statement_coverage_percent": 100,
+      "harness_branch_coverage_percent": 100,
+      "coverage_gate_passed": true
+    },
+    "full_repository_green": false,
+    "remaining_blockers": [
+      "default pytest collection import mismatch",
+      "invalid-prompt compiler stage behavior drift"
+    ],
+    "claim_scope": "intermediate clean archived source-verification snapshot; not part of E0-E2"
+  },
+  "clean_source_verification_51447da": {
+    "commit": "51447da0e982875d46222ed1a25c533925b4a300",
+    "committed_at": "2026-08-31T03:16:18+08:00",
+    "methods": [
+      "git archive for direct root/importlib/Harness pytest",
+      "detached shared clone with required submodules initialized for the canonical platform script"
+    ],
+    "default_root_pytest": {
+      "status": "collection_error",
+      "exit_code": 2,
+      "reason": "duplicate test_registry module names across two non-package test directories"
+    },
+    "diagnostic_importlib_mode": {
+      "passed": 184,
+      "failed": 1,
+      "failure": "invalid-prompt compiler stage is parse; historical test expects scene_spec_validation"
+    },
+    "directed_harness_coverage": {
+      "tests_passed": 76,
+      "test_failures": 0,
+      "command_exit_code": 1,
+      "statements_covered": 1312,
+      "statements_total": 1313,
+      "branches_total": 322,
+      "partial_branches": 1,
+      "coverage_percent": 99.88,
+      "coverage_gate_passed": false,
+      "missing_path": "self_improving/harness/handlers/text2env_compile_dependencies.py:154 bytecode/cache exclusion branch"
+    },
+    "canonical_self_improving_script": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 script/run_self_improving_tests.sh",
+      "module_audit_ready": true,
+      "status": "collection_error",
+      "exit_code": 2,
+      "reason": "same duplicate test_registry import mismatch; later suites did not run"
+    },
+    "full_repository_green": false,
+    "remaining_blockers": [
+      "default pytest collection import mismatch",
+      "invalid-prompt compiler stage behavior drift",
+      "Harness 100% coverage gate misses one deterministic production branch"
+    ],
+    "claim_scope": "intermediate clean committed-source diagnosis; independent of E0-E2 and superseded for current diagnostics by 148001d"
+  },
+  "final_clean_source_verification": {
+    "commit": "148001dd4049346b9deadca1fec3bb8f588fc8d5",
+    "committed_at": "2026-08-31T03:25:44+08:00",
+    "method": "git archive with direct root/importlib/Harness pytest",
+    "default_root_pytest": {
+      "status": "collection_error",
+      "exit_code": 2,
+      "reason": "duplicate test_registry module names across two non-package test directories"
+    },
+    "diagnostic_importlib_mode": {
+      "passed": 201,
+      "failed": 0,
+      "cli_failure_stage_contract_restored": true
+    },
+    "directed_harness_coverage": {
+      "tests_passed": 76,
+      "test_failures": 0,
+      "command_exit_code": 1,
+      "statements_total": 1313,
+      "statements_missed": 1,
+      "branches_total": 322,
+      "partial_branches": 1,
+      "coverage_percent": 99.88,
+      "coverage_gate_passed": false,
+      "missing_path": "self_improving/harness/handlers/text2env_compile_dependencies.py:154 bytecode/cache exclusion branch"
+    },
+    "full_repository_green": false,
+    "remaining_blockers": [
+      "default pytest collection import mismatch",
+      "Harness 100% coverage gate misses one deterministic production branch"
+    ],
+    "independent_follow_on_boundary": "e6ed0ff replay-timeline evidence was not rerun as the study's matched physical repair trial",
+    "claim_scope": "final fixed clean committed-source diagnosis; independent of E0-E2 and not a claim about later or uncommitted concurrent work"
+  },
+  "post_close_concurrent_verification": {
+    "commit": "ab0385967531737b4ae075f65af1fd9d224e03dc",
+    "included_commits": {
+      "qualification_bundle_loader": "4836ebf5a7ee757219b7c40d1730e81909876ed0",
+      "ledger_wheel_packaging": "38518e5b423abf69bf59d737e51e93209b69d0c5",
+      "sqlite_run_store": "ab0385967531737b4ae075f65af1fd9d224e03dc"
+    },
+    "default_root_pytest": {
+      "status": "collection_error",
+      "exit_code": 2,
+      "reason": "duplicate test_registry module names across two non-package test directories"
+    },
+    "directed_harness_coverage": {
+      "tests_passed": 133,
+      "test_failures": 0,
+      "command_exit_code": 1,
+      "statements_total": 1673,
+      "statements_missed": 1,
+      "branches_total": 436,
+      "partial_branches": 1,
+      "coverage_percent": 99.91,
+      "coverage_gate_passed": false,
+      "missing_path": "self_improving/harness/handlers/text2env_compile_dependencies.py:154 bytecode/cache exclusion branch"
+    },
+    "focused_component_receipts_from_fixed_source": {
+      "qualification_tests_passed": 43,
+      "packaging_tests_passed": 2,
+      "run_store_and_journal_tests_passed": 21
+    },
+    "p0_claims": {
+      "qualification_promotion_transaction_closed": false,
+      "identity_frozen_resumable_evaluation_run_closed": false,
+      "package_run_media_binding_closed": false
+    },
+    "source_boundaries": [
+      "qualification loader verifies a prepackaged pass bundle but has no committed Registry callsite and does not execute qualification cases",
+      "qualification report and receipt CAS publications are sequential, not an atomic promotion or rollback transaction",
+      "implementation files omitted from the implementation manifest are not proven absent from the implementation root",
+      "packaging declares a future qualification resource glob but the fixed tree contains no real qualification bundle",
+      "RunStore is a persistence adapter with no committed Registry callsite, no resume state, no artifact-byte resolution, and no complete run identity derivation",
+      "Text2Env ReplayOutput has no package/run reverse binding and allows media references without a payload schema"
+    ],
+    "full_repository_green": false,
+    "claim_scope": "post-study concurrent prerequisites only; does not modify E0-E2, E1e, or physical-robustness conclusions"
+  },
+  "dashboard_sync": {
+    "attempted_at": "2026-08-31T03:34:17+08:00",
+    "portfolio_http_status": 404,
+    "tasks_http_status": 404,
+    "project_http_status": 404,
+    "clawcross_wrapper_status": "HTTP 404 for dashboard/state/tasks.json",
+    "task_state_updated": false,
+    "claim_scope": "dashboard control plane was unavailable; no TODO status update is claimed"
+  }
+}

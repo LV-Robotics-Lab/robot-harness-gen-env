@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import numpy as np
 
-
 RUNTIME_COLOR_ADAPTERS = ("identity", "swap_red_blue")
 
 
@@ -22,7 +21,13 @@ def apply_runtime_color_adapter(rgb: np.ndarray, adapter: str) -> np.ndarray:
 
 def color_adapter_reason(adapter: str) -> str:
     if adapter == "identity":
-        return "Preserve RoboTwin runtime RGB because the native HDF5 converter repaired stored JPEG BGR ordering to RGB."
+        return (
+            "Preserve RoboTwin runtime RGB because the native HDF5 converte"
+            "r repaired stored JPEG BGR ordering to RGB."
+        )
     if adapter == "swap_red_blue":
-        return "Counterfactual harness baseline that swaps red and blue at runtime while holding policy and task inputs fixed."
+        return (
+            "Counterfactual harness baseline that swaps red and blue at run"
+            "time while holding policy and task inputs fixed."
+        )
     raise ValueError(f"Unsupported runtime color adapter: {adapter}")

@@ -1,0 +1,199 @@
+{
+  "schema_version": "harness.compile_production_qualification_evidence.v1",
+  "recorded_date": "2026-08-31",
+  "purpose": "Prove that the fixed qualified text2env.compile application accepts a business request, generates and admits a missing asset, persists the run, and deterministically reuses the admitted asset after process restart.",
+  "claim_boundary": "This evidence qualifies deterministic compile, admission, CAS, and durable recovery only. Static validation remained incomplete by design; no simulator replay or physical publication eligibility is claimed.",
+  "source": {
+    "commit": "9b7258f",
+    "skill_ref": "text2env.compile@1.0.0",
+    "qualification_case": "generated-purple-hexagonal-pedestal-seed-77",
+    "implementation_sha256": "2a90206b0aae52dd38021b6bb3f9b3172aeb711e75b78b449db188e9edabba29",
+    "scene_gen_tree_sha256": "9bf03fc1eaee1fd5038e2aab2ef5156fa2f32e0f9b0d0fe7f663b221f567025d",
+    "ledger_contract_tree_sha256": "3f73617c70ae77f0cbf494ba7c8b25574277ff24d2ef84c98d21f2d2ef262570"
+  },
+  "runtime": {
+    "python": "3.13.12",
+    "pydantic": "2.12.4",
+    "numpy": "2.4.4",
+    "pyyaml": "6.0.3",
+    "pillow": "11.3.0"
+  },
+  "qualification_bundle": {
+    "path": "self_improving/harness/qualified_skills/text2env.compile/1.0.0",
+    "files": {
+      "manifest.json": {
+        "bytes": 1944,
+        "sha256": "2039c27712899f792d165e0380d8747dd9e6a0a99a3081261236895c4b101ee8"
+      },
+      "qualification.json": {
+        "bytes": 294,
+        "sha256": "2d2f1397578296c2e6b6a213e9f42cba99ebb0c6ed69119448a8b9262f5610b1"
+      },
+      "report.json": {
+        "bytes": 6990,
+        "sha256": "bc31879efd1150ef67d2be2660e02a122d4104a454a08030cc9e1119ea7223bd"
+      }
+    },
+    "checks": [
+      "admission.lifecycle",
+      "artifacts.cas_resolution",
+      "invocation.stability",
+      "ledger.v3_files",
+      "package.binding",
+      "source.stability",
+      "static_validation.boundary"
+    ]
+  },
+  "business_input": {
+    "request": "Place a purple hexagonal pedestal on the table.",
+    "seed": 77,
+    "generate_missing_assets": true,
+    "starting_catalog_entry_count": 0
+  },
+  "runs": [
+    {
+      "ordinal": 1,
+      "run_id": "7950ee93-a72f-4c24-8553-09ed80b43272",
+      "started_at": "2026-08-30T19:58:54.284153Z",
+      "ended_at": "2026-08-30T19:58:54.331894Z",
+      "status": "succeeded",
+      "attempt": 1,
+      "event_count": 18,
+      "artifact_count": 11,
+      "admission_status": "admitted",
+      "invocation_sha256": "400434c131fb1de33ee6522abd1ebcdcc9222d017f8e0bcc56816c979f84aeec",
+      "typed_output_sha256": "803f5997767844507478aa1460e45c41c331a7fb991c030aa19777a413e86e30",
+      "stdout_sha256": "9ceb10870714610cfb852dd17a5dc47fc39ce57f43a15258ea374f2d33c159cb"
+    },
+    {
+      "ordinal": 2,
+      "run_id": "4e73ad9b-e6fb-420e-981a-5693dd058ad2",
+      "started_at": "2026-08-30T19:59:11.021779Z",
+      "ended_at": "2026-08-30T19:59:11.068202Z",
+      "status": "succeeded",
+      "attempt": 1,
+      "event_count": 18,
+      "artifact_count": 11,
+      "admission_status": "reused",
+      "invocation_sha256": "55a10c77b1d4a068006b6c1e9bcb4177208547fff26d89904cd2398f2d2d6795",
+      "typed_output_sha256": "803f5997767844507478aa1460e45c41c331a7fb991c030aa19777a413e86e30"
+    },
+    {
+      "ordinal": 3,
+      "run_id": "04b1da17-4ed5-406f-8e8d-80d44e2b1a96",
+      "started_at": "2026-08-30T20:00:19.665768Z",
+      "ended_at": "2026-08-30T20:00:19.712123Z",
+      "status": "succeeded",
+      "attempt": 1,
+      "event_count": 18,
+      "artifact_count": 11,
+      "admission_status": "reused",
+      "invocation_sha256": "55a10c77b1d4a068006b6c1e9bcb4177208547fff26d89904cd2398f2d2d6795",
+      "typed_output_sha256": "803f5997767844507478aa1460e45c41c331a7fb991c030aa19777a413e86e30"
+    }
+  ],
+  "output": {
+    "asset_id": "900_gen_hexagonal_pedestal_5695f4e5",
+    "asset_qualification": "generation_qc_only",
+    "physical_qualification": "pending_settle",
+    "scene_id": "place_a_purple_hexagonal_pedestal_on_the_table_d38c3bf3d4",
+    "scene_spec_sha256": "1db0294cca0b42024acc541c01e5bcf91506752a9d67b00727d859e4d2a86fcd",
+    "resolved_scene_sha256": "8b0391f81ff0b282d1f32d8bd278cc95b998eedefe1c385acd98ce717b00f922",
+    "asset_catalog_sha256": "3d614c41b19ff5bf9153455e0f78958863370dd0e7d7095be9fa4d20247a196e",
+    "package_manifest_sha256": "2850f740aa0d3195f89e8817f945b2a70f785b2058359903b78943d4ce8130f6",
+    "static_validation_sha256": "daaee7ca83432d6bb931ba8890b7d1bb7d9ed3190645e5d6e67ff2ee2ae4cd4d",
+    "static_validation_status": "incomplete",
+    "static_validation_fail_count": 0,
+    "static_validation_not_run_count": 1
+  },
+  "admitted_asset": {
+    "ledger": {
+      "schema_version": "asset_ledger.v3",
+      "sha256": "8c2477ad6c2b7d834c578808880701f0f60077871af61fa456580f331db2a4e7",
+      "check_files": true,
+      "violation_count": 0
+    },
+    "files": {
+      "visual/textured0.obj": {
+        "bytes": 662,
+        "sha256": "a3517e0da28a2e44bb33981c0f91f3b92d2e4bee3a20a1d3a1d041d6d6176495"
+      },
+      "visual/material.mtl": {
+        "bytes": 129,
+        "sha256": "b2f39d95affbd58fa63ad649dd579a22737de7dab61ec40cabe60562a4321f61"
+      },
+      "collision/textured0.obj": {
+        "bytes": 616,
+        "sha256": "73628bac5120cd41520410d7e6404aa04fd377a126c18af1a75361c7775704c9"
+      },
+      "model_data0.json": {
+        "bytes": 349,
+        "sha256": "b2cbc51850dae042e07041fade5c0f13a5cdfecf723f74f0a7d4b4968b54f643"
+      },
+      "generation_provenance.json": {
+        "bytes": 1709,
+        "sha256": "3a9fe17dcec3c92f70fc295d16d5867119cb86e5e9334d7c4f1a79cd42eed4e4"
+      }
+    }
+  },
+  "durability": {
+    "invocation_rows": 3,
+    "event_rows": 54,
+    "terminal_run_state_rows": 3,
+    "restart_recovery_passed": true,
+    "all_run_artifacts_resolved_and_rehashed": true
+  },
+  "assertions": {
+    "fixed_qualification_loaded": true,
+    "first_run_generated_and_admitted_asset": true,
+    "second_and_third_runs_reused_same_asset": true,
+    "second_and_third_invocation_identity_equal": true,
+    "all_three_typed_outputs_equal": true,
+    "package_hash_binding_passed": true,
+    "ledger_v3_file_validation_passed": true,
+    "durable_restart_recovery_passed": true,
+    "physical_validation_claimed": false
+  },
+  "attempt_log": [
+    {
+      "id": "Q1",
+      "action": "Generate the fixed three-document qualification bundle from three direct candidate executions.",
+      "outcome": "pass"
+    },
+    {
+      "id": "P1",
+      "action": "Invoke the fixed production CLI from an empty catalog.",
+      "outcome": "pass: asset admitted"
+    },
+    {
+      "id": "I1",
+      "action": "Inspect P1 using an assumed blockers field and legacy SQLite table names.",
+      "outcome": "inspection failed; the run remained succeeded. Corrected to blocker and the current harness_* tables after reading the public schema."
+    },
+    {
+      "id": "P2",
+      "action": "Restart the CLI and invoke the identical input.",
+      "outcome": "pass: same asset reused and typed output unchanged"
+    },
+    {
+      "id": "I2",
+      "action": "Sort raw optional artifact schema values during inspection.",
+      "outcome": "inspection failed because the set contains null and strings; corrected by preserving or string-normalizing optional values."
+    },
+    {
+      "id": "I3",
+      "action": "Import the numeric asset-pipeline package segment with normal Python import syntax.",
+      "outcome": "inspection failed with SyntaxError; corrected by using the Harness ledger-contract loader."
+    },
+    {
+      "id": "P3",
+      "action": "Restart the CLI and invoke the identical input a third time.",
+      "outcome": "pass: reuse, stable invocation identity after admission, and stable typed output"
+    },
+    {
+      "id": "V1",
+      "action": "Reload the production application and re-read all three invocations, event streams, terminal states, CAS objects, and the admitted ledger.",
+      "outcome": "pass"
+    }
+  ]
+}

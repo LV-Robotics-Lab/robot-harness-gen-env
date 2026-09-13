@@ -1,10 +1,9 @@
 from pathlib import Path
+
 import pytest
 from agenticsim.openxsim.env_gen import import_env_gen
 
-FIX = (
-    Path(__file__).parent / "fixtures" / "env_gen" / "can_on_plate.resolved_scene.json"
-)
+FIX = Path(__file__).parent / "fixtures" / "env_gen" / "can_on_plate.resolved_scene.json"
 
 
 def test_rigid_scene_maps_to_valid_ir():

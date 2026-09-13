@@ -1,0 +1,1572 @@
+{
+  "schema_version": "vlm_fallback.experiment_spec.v1",
+  "study_id": "vlm-fallback-prompt-optimization-2026-08-31",
+  "frozen_at_utc": "2026-08-31T02:23:10Z",
+  "status": "preregistered_expensive_execution_not_started",
+  "claim_boundary": "This protocol can measure visible-semantic review and typed fallback behavior. It cannot turn render or VLM output into physical evidence, and it makes no closed-loop improvement claim until the frozen test and promotion gates pass.",
+  "physical_gate_authority": "deterministic_runtime_and_typed_geometry_only",
+  "secrets_and_network": {
+    "remote_api_keys_assumed": false,
+    "network_allowed_during_model_execution": false,
+    "hf_hub_offline": true,
+    "transformers_offline": true
+  },
+  "execution_environment": {
+    "preferred_python": "/home/jingxiang/miniconda3/envs/robotwin-5090/bin/python",
+    "equivalent_python": "/home/jingxiang/miniconda3/envs/env-gen-yuxin/bin/python",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gpu_memory_mib": 32607,
+    "driver": "580.159.03",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "4.57.6",
+      "qwen-vl-utils": "0.0.14",
+      "accelerate": "1.14.0"
+    }
+  },
+  "models": [
+    {
+      "role": "primary_local_vlm",
+      "model_id": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "revision": "66285546d2b821cf421d4f5eb2576359d3770cd3",
+      "snapshot_manifest_sha256": "b0f4cf794ec552f5e23de019107801e5adfec633d3b5c74564cdf6b65e9f1cad",
+      "snapshot_total_bytes": 7520892432,
+      "local_snapshot_path": "~/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3",
+      "local_files_only": true,
+      "generation": {
+        "do_sample": false,
+        "max_new_tokens": 768
+      }
+    },
+    {
+      "role": "confirmatory_model_size_ceiling",
+      "model_id": "Qwen/Qwen2.5-VL-7B-Instruct",
+      "revision": "cc594898137f460bfe9f0759e9844b3ce807cfb5",
+      "snapshot_manifest_sha256": "3b785e700f59d59733b8ba4c92dedacbbd9fbaac642fc8a8a49b5af7545fd145",
+      "snapshot_total_bytes": 16595981281,
+      "local_snapshot_path": "~/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-7B-Instruct/snapshots/cc594898137f460bfe9f0759e9844b3ce807cfb5",
+      "local_files_only": true,
+      "generation": {
+        "do_sample": false,
+        "max_new_tokens": 768
+      }
+    }
+  ],
+  "model_digest_definition": "SHA-256 of canonical sorted snapshot entries {path, resolved HF blob id, size_bytes}; weight blob ids are their HF LFS SHA-256 identifiers.",
+  "logging_contract": {
+    "schema_version": "vlm_fallback.run_event.v1",
+    "format": "JSON Lines; append-only; one event per decision, invocation, gate, or artifact",
+    "required_fields": [
+      "schema_version",
+      "event_id",
+      "timestamp_utc",
+      "study_id",
+      "experiment_id",
+      "phase",
+      "case_id",
+      "arm",
+      "attempt",
+      "decision",
+      "input_bindings",
+      "model_receipt",
+      "resource_receipt",
+      "outputs",
+      "gate_results",
+      "error",
+      "expensive_execution_started"
+    ],
+    "secret_policy": "Never log keys, tokens, cookies, private chat/mail, or environment dumps.",
+    "invocation_receipt_fields": [
+      "prompt_sha256",
+      "prompt_template_version",
+      "model_id",
+      "model_revision",
+      "snapshot_manifest_sha256",
+      "processor_config_sha256",
+      "input_image_sha256",
+      "resolved_scene_sha256",
+      "seed",
+      "wall_time_ms",
+      "peak_vram_mib",
+      "input_tokens",
+      "output_tokens",
+      "raw_response_sha256",
+      "parsed_response_sha256"
+    ]
+  },
+  "experiments": [
+    {
+      "experiment_id": "A_visible_semantic_correction",
+      "question": "Can a pinned local VLM detect and type visible environment/asset defects without impersonating a physics gate?",
+      "hypothesis": "A calibrated typed/abstaining prompt on Qwen2.5-VL-3B improves failure-class macro F1 over the current five-check prompt while preserving zero unsafe semantic passes; the 7B arm is a confirmatory size ceiling.",
+      "declared_sample_count": 39,
+      "split_policy": {
+        "train": "13 asset-probe units; prompt/schema design only, never model-weight training",
+        "dev": "11 SceneAgent units plus one ASPIRE real replay; select one prompt by frozen rule",
+        "test": "4 held-out SceneAgent, 6 grouped OpenXSim, and 4 grouped USG units; sealed until prompt SHA is logged",
+        "grouped_analysis": true
+      },
+      "visible_checks": [
+        "object_presence",
+        "object_identity",
+        "object_count",
+        "orientation",
+        "table_contact",
+        "visible_penetration_or_floating",
+        "spatial_relation",
+        "overall_prompt_match"
+      ],
+      "gold_annotation": {
+        "raters": 2,
+        "blinded_to": [
+          "arm",
+          "model output",
+          "runtime pass/fail",
+          "fallback result"
+        ],
+        "adjudication": "third adjudicator resolves every disagreement before test scoring",
+        "statuses": [
+          "pass",
+          "fail",
+          "not_applicable",
+          "insufficient_view"
+        ],
+        "insufficient_view_maps_to": "gold_not_scorable_and_model_must_abstain",
+        "agreement_report": [
+          "raw agreement",
+          "Cohen kappa per check",
+          "disagreement count"
+        ],
+        "test_labels_sealed_until": "candidate prompt SHA-256 and model receipts are appended to run log"
+      },
+      "arms": [
+        {
+          "arm": "A0_current_critic_3b",
+          "description": "Unmodified build_critic_prompt/review_rendered_scene behavior at the frozen source commit.",
+          "model_role": "primary_local_vlm"
+        },
+        {
+          "arm": "A1_typed_abstaining_critic_3b",
+          "description": "One prompt chosen after at most three train-only revisions, then lexicographically selected on dev.",
+          "model_role": "primary_local_vlm",
+          "selection_order": [
+            "zero unsafe_visible_pass_count",
+            "highest macro_f1_fail",
+            "highest selective_accuracy at coverage>=0.80",
+            "lower mean latency",
+            "shorter prompt bytes"
+          ]
+        },
+        {
+          "arm": "A2_typed_abstaining_critic_7b",
+          "description": "Exact A1 prompt bytes with only the pinned model changed; confirmatory ceiling, not default promotion.",
+          "model_role": "confirmatory_model_size_ceiling"
+        }
+      ],
+      "abstain_rule": {
+        "triggers": [
+          "required object or relation is occluded",
+          "camera frame makes left/right/front/back ambiguous",
+          "resolution is insufficient",
+          "requested physical fact is not visibly decidable",
+          "required image is missing",
+          "response schema remains invalid after one format-only repair"
+        ],
+        "effect": "check=abstain and overall=review_required; no prompt mutation and no pass"
+      },
+      "metrics": {
+        "primary": "group-weighted macro F1 for visible fail detection on sealed test",
+        "secondary": [
+          "coverage",
+          "selective accuracy",
+          "per-check precision/recall/F1",
+          "unsafe visible pass count",
+          "schema-valid response rate",
+          "typed correction precision under blinded adjudication",
+          "wall time and peak VRAM"
+        ],
+        "statistics": {
+          "method": "paired group-cluster percentile bootstrap",
+          "resamples": 10000,
+          "seed": 20260831,
+          "confidence": 0.95
+        }
+      },
+      "success_threshold": {
+        "A1_minus_A0_macro_f1_fail": ">=0.10 and bootstrap 95% CI lower bound >0",
+        "coverage": ">=0.80",
+        "unsafe_visible_pass_count": 0,
+        "schema_valid_rate": ">=0.98",
+        "typed_correction_precision": ">=0.80",
+        "promotion_note": "A2 is promoted over A1 only if it clears all gates and adds >=0.05 macro F1 for <=2x latency."
+      },
+      "budget": {
+        "max_train_prompt_revisions": 3,
+        "max_base_vlm_invocations": 118,
+        "max_format_only_repairs_per_invocation": 1,
+        "max_input_images_per_case": 6,
+        "max_new_tokens": 768,
+        "max_gpu_hours": 3.0,
+        "max_peak_vram_mib": 30000,
+        "remote_paid_calls": 0
+      },
+      "samples": [
+        {
+          "case_id": "asset_probe_dustbin_legacy_900",
+          "split": "train",
+          "group_id": "asset:dustbin",
+          "task_context": "Place a dustbin on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "0608259009c614bfe1fa07b3733523a88d00bad0205a0012947105c7051f0f85",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_bottle_2700",
+          "split": "train",
+          "group_id": "asset:bottle",
+          "task_context": "Place a bottle on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_2700/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_2700/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_2700/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_2700/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_2700/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_2700/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_2700/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "28c1a0064754fa603f166c774ce7afa09495ea7f00c7cf57c6da265cc5992e1a",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_bottle_900",
+          "split": "train",
+          "group_id": "asset:bottle",
+          "task_context": "Place a bottle on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "9ae3bf7fb65ed18bd901b8b96f7d17f1427a39e4b7381b39506c00942d3d59b4",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_bowl_2700",
+          "split": "train",
+          "group_id": "asset:bowl",
+          "task_context": "Place a bowl on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_2700/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_2700/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_2700/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_2700/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_2700/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_2700/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_2700/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "369ab8ac7e27542f53e7d8384181f17ad6e8abfbf13f4634013e1faba6bad95a",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_bowl_900",
+          "split": "train",
+          "group_id": "asset:bowl",
+          "task_context": "Place a bowl on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_900/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_900/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_900/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_900/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_900/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_900/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_002_bowl_900/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "a5c7cd709055a5214b788b4557ef5be3cf228d28a9fae2e5a386525e55b81caa",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_cup_2700",
+          "split": "train",
+          "group_id": "asset:cup",
+          "task_context": "Place a cup on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "cd55450fa86e6b3611bcc92202030834b22fcf4b5f708e4ca59cae9dd1f690c5",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_cup_900",
+          "split": "train",
+          "group_id": "asset:cup",
+          "task_context": "Place a cup on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_900/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_900/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_900/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_900/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_900/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_900/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_900/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "aca07f6eb28d0c52d26701d2abf6d7adc172b80f0046dee902934db196f5bb72",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_teddy_bear_2700",
+          "split": "train",
+          "group_id": "asset:teddy_bear",
+          "task_context": "Place a teddy bear on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_2700/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_2700/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_2700/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_2700/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_2700/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_2700/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_2700/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "5ac520688be4d654275837010ff5f33cece06174b299b74a3e5c7ab8a1593726",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_teddy_bear_900",
+          "split": "train",
+          "group_id": "asset:teddy_bear",
+          "task_context": "Place a teddy bear on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_900/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_900/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_900/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_900/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_900/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_900/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_320_teddy_bear_900/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "09cef9a9b88b8719e723113fb8f5e17b19e1bf588768fa75067533dbb3b51200",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_dustbin_2700",
+          "split": "train",
+          "group_id": "asset:dustbin",
+          "task_context": "Place a dustbin on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_2700/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_2700/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_2700/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_2700/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_2700/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_2700/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_2700/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "8da36777cc51f88bbbe3a5b1afdb846baed1f16b591a5ca8f2acaa5b63fcc938",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_dustbin_900",
+          "split": "train",
+          "group_id": "asset:dustbin",
+          "task_context": "Place a dustbin on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_900/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_900/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_900/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_900/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_900/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_900/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_900/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "8dea9eeb30e84929b474347e75901977e643a470ce57d9e2d7c162639db6f825",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_panel_2700",
+          "split": "train",
+          "group_id": "asset:panel",
+          "task_context": "Place a panel on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_2700/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_2700/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_2700/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_2700/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_2700/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_2700/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_2700/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "419db59c9f24a04afe9b16c377ce30df7905b69d5518b9a0f2abf8effecd5dea",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "asset_probe_panel_900",
+          "split": "train",
+          "group_id": "asset:panel",
+          "task_context": "Place a panel on the table.",
+          "artifacts": [
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/observer_end.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/observer_mid.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/observer_start.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/preview_head.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/preview_world_left.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/preview_world_right.png",
+            "self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "ca112a7a2522ec7c9e7a83f81bd4ae8d7c74abe33ded621b9103b1e11e620878",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "sceneagent_apple_on_plate_accept",
+          "split": "dev",
+          "group_id": "sceneagent:apple_on_plate",
+          "task_context": "Place the apple on the plate.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_observer_camera.png",
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/initial_observer_camera.png",
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/rollout_report.json"
+          ],
+          "bundle_sha256": "31316b408a400d93710226c50046a2d638f81225a334f3e062ea856780bd3ca2",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_apple_left_front_accept",
+          "split": "dev",
+          "group_id": "sceneagent:apple_left_front",
+          "task_context": "Move the apple into the left-front target region.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/final_observer_camera.png",
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/rollout_report.json"
+          ],
+          "bundle_sha256": "5975ba6e9aec88cd34048bf8d388bd4fea7698babb42d6afd73a44d0d6997415",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_apple_plate_domain_randomized",
+          "split": "dev",
+          "group_id": "sceneagent:apple_on_plate",
+          "task_context": "Place the apple on the plate under domain randomization.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/final_observer_camera.png"
+          ],
+          "bundle_sha256": "14fa961f8b1b89e55731f016df79977b6f9b29d5b2109ca2911c04380493da6c",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_apple_plate_heldout",
+          "split": "dev",
+          "group_id": "sceneagent:apple_on_plate",
+          "task_context": "Place the apple on the plate at a held-out placement.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_000_eval_000_seed_6100/final_observer_camera.png"
+          ],
+          "bundle_sha256": "efe5aa781d795ae8a538b8d7209dedfed58ccc3a80a55ceb2fb3ad867660a6f9",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_action_repair_fail",
+          "split": "dev",
+          "group_id": "sceneagent:apple_on_plate",
+          "task_context": "Place the apple on the plate.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/scene_task_decoupling/action_repair_auto_mode_fail/final_observer_camera.png",
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/scene_task_decoupling/action_repair_auto_mode_fail/rollout_report.json"
+          ],
+          "bundle_sha256": "05268690925b157ccbded4e1d9a2d81f4eada2f4d22e8cc2ae01fd0d28710a0d",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_left_front_strict_fail",
+          "split": "dev",
+          "group_id": "sceneagent:apple_left_front",
+          "task_context": "Move the apple into the strict left-front target region.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/final_observer_camera.png",
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/rollout_report.json"
+          ],
+          "bundle_sha256": "e25cff40f440e67024fd99bf13ebeab00ad2d06beacd55ead5ed0663698fde23",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_apple_right_fail",
+          "split": "dev",
+          "group_id": "sceneagent:apple_right",
+          "task_context": "Move the apple to the right target region.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/scene_task_decoupling/apple_to_right_fail/final_observer_camera.png",
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/scene_task_decoupling/apple_to_right_fail/rollout_report.json"
+          ],
+          "bundle_sha256": "bceacc53d3e607e0e1420cb9441db5d5cd562ff598e0b1fbd6eda2baa302da15",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_original_apple_plate_fail",
+          "split": "dev",
+          "group_id": "sceneagent:apple_on_plate",
+          "task_context": "Place the apple on the plate.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/scene_task_decoupling/original_placement_apple_on_plate_fail/final_observer_camera.png",
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/scene_task_decoupling/original_placement_apple_on_plate_fail/rollout_report.json"
+          ],
+          "bundle_sha256": "6f4204a3930d74881cf77970210703f63c57b0e2b8ccfde3106bf1d36caddc99",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_smoke_apple_plate",
+          "split": "dev",
+          "group_id": "sceneagent:smoke_apple_plate",
+          "task_context": "Show the apple and plate assets loadably supported on the table.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/smoke_asset_apple_plate/observer_camera.png"
+          ],
+          "bundle_sha256": "66a57d0a78d58298fa2d0b010dba83095b2782d5f08c519f46b482b760cc03b6",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_smoke_laptop_knife",
+          "split": "dev",
+          "group_id": "sceneagent:smoke_laptop_knife",
+          "task_context": "Show the laptop and knife assets loadably supported on the table.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/smoke_asset_laptop_knife/observer_camera.png"
+          ],
+          "bundle_sha256": "9b0fa29f4f9fe298a41432395ab6a6c491cf7acea82ea29d291706cb23b5e7e1",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_smoke_vegetable_basket",
+          "split": "dev",
+          "group_id": "sceneagent:smoke_vegetable_basket",
+          "task_context": "Show the vegetable and basket assets loadably supported on the table.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/smoke_asset_vegetable_basket/observer_camera.png"
+          ],
+          "bundle_sha256": "b1ff217b0e308d2e4d68f859acc5721598d82c205a72678893294c0a0c3898f9",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "aspire_real_replay_can_on_plate_seed7",
+          "split": "dev",
+          "group_id": "aspire:can_on_plate",
+          "task_context": "Place a can on top of a plate.",
+          "artifacts": [
+            "self_improving/studies/ASPIRE/artifacts/real_replay_can_on_plate_seed7/observer_end.png",
+            "self_improving/studies/ASPIRE/artifacts/real_replay_can_on_plate_seed7/observer_mid.png",
+            "self_improving/studies/ASPIRE/artifacts/real_replay_can_on_plate_seed7/observer_start.png",
+            "self_improving/studies/ASPIRE/artifacts/real_replay_can_on_plate_seed7/preview_head.png",
+            "self_improving/studies/ASPIRE/artifacts/real_replay_can_on_plate_seed7/preview_world_left.png",
+            "self_improving/studies/ASPIRE/artifacts/real_replay_can_on_plate_seed7/preview_world_right.png",
+            "self_improving/studies/ASPIRE/artifacts/real_replay_can_on_plate_seed7/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "8fe0f7d3832f54054b6d42db2d38ea8ad0b04d72a06d53174751f6708167f339",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "sceneagent_official_open_laptop",
+          "split": "test",
+          "group_id": "sceneagent:open_laptop",
+          "task_context": "Open the laptop.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/official_rollout_open_laptop/final_observer_camera.png"
+          ],
+          "bundle_sha256": "79d574dd5ee68b8f13e7c8d7f89640f3185c1cdc0b7320e532b5c02418cb27f8",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_official_place_container_plate",
+          "split": "test",
+          "group_id": "sceneagent:container_plate",
+          "task_context": "Place the container on the plate.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/official_rollout_place_container_plate/final_observer_camera.png"
+          ],
+          "bundle_sha256": "720cbf04df73d26aa25822dd1c483b7c18a25eb71ed557017e715bdce5ba1c2c",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_official_place_mouse_pad",
+          "split": "test",
+          "group_id": "sceneagent:mouse_pad",
+          "task_context": "Place the mouse on the pad.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/official_rollout_place_mouse_pad/final_observer_camera.png"
+          ],
+          "bundle_sha256": "b79feea68fd4d5823689cdc6c6c757bdf0dbc53dc68493fe2627b9ac6b38273d",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "sceneagent_can_basket_heldout",
+          "split": "test",
+          "group_id": "sceneagent:can_basket",
+          "task_context": "Place the can in the basket at the held-out seed.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/sceneagent/assets/evidence/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_000_fixed_seed_7300/final_observer_camera.png"
+          ],
+          "bundle_sha256": "02a27d2514192dc43c9b98428520c02bd138cbd6d980743665959c5c2c6799c9",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_or_unavailable_never_semantic_gold"
+        },
+        {
+          "case_id": "openxsim_can_left_seed0",
+          "split": "test",
+          "group_id": "openxsim:red_can_left_of_basket",
+          "task_context": "Place a red can to the left of a basket.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/acceptance_100_v2/scenes/seed_000000/place_a_red_can_to_the_left_of_b21824b743/runtime/preview_head.png",
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/acceptance_100_v2/scenes/seed_000000/place_a_red_can_to_the_left_of_b21824b743/runtime/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "9a37c018ee4bdf1373543f126dc9d94a24ba7f339c5cacf6550a8e60d4056fea",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "openxsim_can_left_seed17",
+          "split": "test",
+          "group_id": "openxsim:red_can_left_of_basket",
+          "task_context": "Place a red can to the left of a basket.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/acceptance_100_v2/scenes/seed_000017/place_a_red_can_to_the_left_of_b21824b743/runtime/preview_head.png",
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/acceptance_100_v2/scenes/seed_000017/place_a_red_can_to_the_left_of_b21824b743/runtime/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "232a804414c3b2c8326e11d9ee36a24f54048668afad7cbca631ca4fbcb8e8bd",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "openxsim_can_left_seed99",
+          "split": "test",
+          "group_id": "openxsim:red_can_left_of_basket",
+          "task_context": "Place a red can to the left of a basket.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/acceptance_100_v2/scenes/seed_000099/place_a_red_can_to_the_left_of_b21824b743/runtime/preview_head.png",
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/acceptance_100_v2/scenes/seed_000099/place_a_red_can_to_the_left_of_b21824b743/runtime/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "f133646e4f72d65d9648a485be01ab51745772757441ade28c03d2ebe56fcd45",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "openxsim_can_left_representative",
+          "split": "test",
+          "group_id": "openxsim:red_can_left_of_basket",
+          "task_context": "Place a red can to the left of a basket.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime/preview_head.png",
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "a20b7b691978d0b070954174e9616b4b7d541df5c12a7ed639ad7b59cd84fbbc",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "openxsim_can_left_600_300",
+          "split": "test",
+          "group_id": "openxsim:red_can_left_of_basket",
+          "task_context": "Place a red can to the left of a basket.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_600_300/preview_head.png",
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_600_300/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "8bf4ffc35a736f3fe279160a208ccae4116cdc68dcd53da87bc9cd5e86a9aa5a",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "openxsim_can_left_upright",
+          "split": "test",
+          "group_id": "openxsim:red_can_left_of_basket",
+          "task_context": "Place a red can to the left of a basket.",
+          "artifacts": [
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/preview_head.png",
+            "apps/pearl_evidence_portal/public/reports/openxsim-v2/assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/runtime_validation_report.json"
+          ],
+          "bundle_sha256": "bc98e19b1ee6ed659b818d8057571757bbd982a376f42a552d59116c831d3547",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only"
+        },
+        {
+          "case_id": "usg_fixed_adversarial",
+          "split": "test",
+          "group_id": "usg:cabinet_basket",
+          "task_context": "Inspect the fixed cabinet beside the basket for visible support, contact, and penetration.",
+          "artifacts": [
+            "self_improving/studies/usg_env_quality_reproduction/media/frames/fixed_adversarial-initial.png",
+            "self_improving/studies/usg_env_quality_reproduction/media/frames/fixed_adversarial-final.png",
+            "self_improving/studies/usg_env_quality_reproduction/data/raw/rollout_trials.json"
+          ],
+          "bundle_sha256": "8b53089402af126559aa4e32073d17527afe9305ed4a1e2deb96bcf5b5c8f629",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only_and_not_visible_gold"
+        },
+        {
+          "case_id": "usg_released_adversarial",
+          "split": "test",
+          "group_id": "usg:cabinet_basket",
+          "task_context": "Inspect the released cabinet beside the basket for visible support, contact, and penetration.",
+          "artifacts": [
+            "self_improving/studies/usg_env_quality_reproduction/media/frames/released_adversarial-initial.png",
+            "self_improving/studies/usg_env_quality_reproduction/media/frames/released_adversarial-final.png",
+            "self_improving/studies/usg_env_quality_reproduction/data/raw/rollout_trials.json"
+          ],
+          "bundle_sha256": "14a4a52aa5ebf4e08fb948135eac3f0b4094ad7a0a40993fe4114273c2aeee95",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only_and_not_visible_gold"
+        },
+        {
+          "case_id": "usg_released_corrected_control",
+          "split": "test",
+          "group_id": "usg:cabinet_basket",
+          "task_context": "Inspect the corrected released cabinet control for visible support, contact, and penetration.",
+          "artifacts": [
+            "self_improving/studies/usg_env_quality_reproduction/media/frames/released_corrected_control-initial.png",
+            "self_improving/studies/usg_env_quality_reproduction/media/frames/released_corrected_control-final.png",
+            "self_improving/studies/usg_env_quality_reproduction/data/raw/rollout_trials.json"
+          ],
+          "bundle_sha256": "c0c3ac78d3d3bda83b3cd7adb345b73d78dbe4f4971071f991f6295c1a16cb46",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only_and_not_visible_gold"
+        },
+        {
+          "case_id": "usg_fixed_vs_released_comparison",
+          "split": "test",
+          "group_id": "usg:cabinet_basket",
+          "task_context": "Compare fixed and released cabinet renders; abstain on hidden physical state.",
+          "artifacts": [
+            "self_improving/studies/usg_env_quality_reproduction/media/frames/fixed-vs-released-initial.png",
+            "self_improving/studies/usg_env_quality_reproduction/media/frames/fixed-vs-released-final.png",
+            "self_improving/studies/usg_env_quality_reproduction/data/raw/rollout_metadata.json"
+          ],
+          "bundle_sha256": "76838409eeca8140b61b68f6d1a6984c3ddd1400af3274eb21e1ffc8f2c6594f",
+          "annotation_state": "pending_blinded_annotation",
+          "physical_label_role": "independent_gate_only_and_not_visible_gold"
+        }
+      ]
+    },
+    {
+      "experiment_id": "B_typed_failure_prompt_fallback",
+      "question": "Does typed failure routing improve safe prompt fallback over unchanged or generic retry?",
+      "hypothesis": "A typed router that distinguishes visible semantics, parser/asset/feasibility/runtime/evidence/dependency failures selects safer actions than a generic retry and improves robust completion only where recovery is admissible.",
+      "declared_sample_count": 36,
+      "split_policy": {
+        "train": "four English prompt families x three seeds",
+        "dev": "three held-out relation families x three seeds plus one task-API blocker",
+        "test": "one infeasible, one articulated, two bilingual families x three seeds plus two generation blockers",
+        "grouped_analysis": true,
+        "no_seed_leakage": "all seeds for one prompt family remain in one split and one bootstrap cluster"
+      },
+      "route_vocabulary": [
+        "accept_existing_compile",
+        "repair_visible_prompt",
+        "canonicalize_language_preserving_intent",
+        "reuse_asset",
+        "generate_asset_on_catalog_miss",
+        "repair_typed_placement_or_asset",
+        "replay_or_rematerialize_evidence",
+        "abstain_infeasible_geometry",
+        "abstain_unsupported_task_api",
+        "abstain_missing_capture_inputs",
+        "abstain_missing_multiview_and_geometry_inputs"
+      ],
+      "arms": [
+        {
+          "arm": "B0_retry_unchanged",
+          "context": "failure code only",
+          "fallback": "one byte-identical prompt retry"
+        },
+        {
+          "arm": "B1_generic_prompt_repair",
+          "context": "untyped failure summary; no gold route",
+          "fallback": "one generic preserve-intent repair prompt"
+        },
+        {
+          "arm": "B2_typed_route_and_prompt_repair",
+          "context": "typed failure, trusted state, asset availability, and A1 visible report when applicable; no gold route",
+          "fallback": "choose exactly one allowed route and optionally one revised prompt"
+        },
+        {
+          "arm": "B3_oracle_route_ceiling",
+          "context": "gold route exposed",
+          "fallback": "descriptive ceiling only; never deployable or promotion-eligible"
+        }
+      ],
+      "intent_preservation": {
+        "immutable_fields": [
+          "object categories",
+          "counts",
+          "relations",
+          "colors",
+          "articulation request",
+          "region constraints"
+        ],
+        "forbidden_repair": "relaxing or deleting an infeasible constraint and calling the changed task a success",
+        "verification": "canonical typed intent before/after must be identical; otherwise unsafe publication"
+      },
+      "outcome_definition": {
+        "robust_completion": [
+          "input intent is unchanged",
+          "compile and admission succeed",
+          "fresh replay evidence is bound to the exact resolved scene",
+          "authoritative static and physical validator status is pass",
+          "no blocker, abstention, or unsafe publication is hidden"
+        ],
+        "correct_noncompletion": "unrecoverable cases must return their exact typed abstain route and cannot count as robust completion",
+        "render_or_vlm_as_physics_evidence": false
+      },
+      "metrics": {
+        "primary": "group-weighted exact route accuracy across all 36 records",
+        "conditional_primary": "robust completion among recoverable baseline failures only; no superiority claim if fewer than 8 independent failing groups are observed",
+        "secondary": [
+          "clean-control non-regression",
+          "safe abstention rate",
+          "unsafe publication count",
+          "intent preservation",
+          "attempts, wall time, and GPU time"
+        ],
+        "statistics": {
+          "group_weighted_route_accuracy": "unweighted mean of each group_id's within-group exact-route accuracy",
+          "route_comparison": "paired exact McNemar B2 versus B1 over one strict binary per group_id; a group is correct only when every record in that group has the exact gold route",
+          "completion_comparison": "paired group-cluster bootstrap B2 minus B1; each sampled cluster contributes its within-group mean completion delta",
+          "bootstrap_resamples": 10000,
+          "bootstrap_seed": 20260831,
+          "confidence": 0.95
+        }
+      },
+      "success_threshold": {
+        "B2_minus_B1_route_accuracy": ">=0.15 and exact McNemar p<0.05",
+        "conditional_B2_minus_B1_robust_completion": ">=0.10 and bootstrap 95% CI lower bound >0",
+        "minimum_independent_recoverable_failure_groups": 8,
+        "clean_control_non_regression": "1.0",
+        "safe_abstention_on_unrecoverable": "1.0",
+        "intent_preservation": "1.0",
+        "unsafe_publication_count": 0,
+        "fallback_repeatability": "same typed input produces same route and prompt SHA in 3/3 repeats"
+      },
+      "budget": {
+        "max_attempts_per_case_arm": 2,
+        "max_prompt_rewrites_per_case_arm": 1,
+        "max_total_compile_attempts": 216,
+        "max_fresh_physical_replays": 72,
+        "max_runtime_steps_per_replay": 900,
+        "contact_window_steps": 120,
+        "max_vlm_invocations_for_visible_failures": 72,
+        "max_gpu_hours": 12.0,
+        "remote_paid_calls": 0
+      },
+      "samples": [
+        {
+          "case_id": "prompt_matrix:red_block_on_plate:seed_7",
+          "split": "train",
+          "group_id": "prompt:red_block_on_plate",
+          "task_context": "Place a red block on top of a plate.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/0",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:red_block_on_plate:seed_31",
+          "split": "train",
+          "group_id": "prompt:red_block_on_plate",
+          "task_context": "Place a red block on top of a plate.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/1",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:red_block_on_plate:seed_73",
+          "split": "train",
+          "group_id": "prompt:red_block_on_plate",
+          "task_context": "Place a red block on top of a plate.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/2",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:can_on_plate:seed_7",
+          "split": "train",
+          "group_id": "prompt:can_on_plate",
+          "task_context": "Place a can on top of a plate.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/3",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:can_on_plate:seed_31",
+          "split": "train",
+          "group_id": "prompt:can_on_plate",
+          "task_context": "Place a can on top of a plate.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/4",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:can_on_plate:seed_73",
+          "split": "train",
+          "group_id": "prompt:can_on_plate",
+          "task_context": "Place a can on top of a plate.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/5",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:apple_in_basket:seed_7",
+          "split": "train",
+          "group_id": "prompt:apple_in_basket",
+          "task_context": "Put an apple inside a basket.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/6",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:apple_in_basket:seed_31",
+          "split": "train",
+          "group_id": "prompt:apple_in_basket",
+          "task_context": "Put an apple inside a basket.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/7",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:apple_in_basket:seed_73",
+          "split": "train",
+          "group_id": "prompt:apple_in_basket",
+          "task_context": "Put an apple inside a basket.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/8",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:cup_in_basket:seed_7",
+          "split": "train",
+          "group_id": "prompt:cup_in_basket",
+          "task_context": "Put a cup inside a basket.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/9",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:cup_in_basket:seed_31",
+          "split": "train",
+          "group_id": "prompt:cup_in_basket",
+          "task_context": "Put a cup inside a basket.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/10",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:cup_in_basket:seed_73",
+          "split": "train",
+          "group_id": "prompt:cup_in_basket",
+          "task_context": "Put a cup inside a basket.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/11",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:red_can_left_of_basket:seed_7",
+          "split": "dev",
+          "group_id": "prompt:red_can_left_of_basket",
+          "task_context": "Place a red can to the left of a plastic basket near the center.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/12",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:red_can_left_of_basket:seed_31",
+          "split": "dev",
+          "group_id": "prompt:red_can_left_of_basket",
+          "task_context": "Place a red can to the left of a plastic basket near the center.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/13",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:red_can_left_of_basket:seed_73",
+          "split": "dev",
+          "group_id": "prompt:red_can_left_of_basket",
+          "task_context": "Place a red can to the left of a plastic basket near the center.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/14",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:blue_cup_front_of_block:seed_7",
+          "split": "dev",
+          "group_id": "prompt:blue_cup_front_of_block",
+          "task_context": "A blue cup is in front of a wooden block and both objects are near each other.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/15",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:blue_cup_front_of_block:seed_31",
+          "split": "dev",
+          "group_id": "prompt:blue_cup_front_of_block",
+          "task_context": "A blue cup is in front of a wooden block and both objects are near each other.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/16",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:blue_cup_front_of_block:seed_73",
+          "split": "dev",
+          "group_id": "prompt:blue_cup_front_of_block",
+          "task_context": "A blue cup is in front of a wooden block and both objects are near each other.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/17",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:apple_right_of_plate:seed_7",
+          "split": "dev",
+          "group_id": "prompt:apple_right_of_plate",
+          "task_context": "Put an apple to the right of a ceramic plate.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/18",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:apple_right_of_plate:seed_31",
+          "split": "dev",
+          "group_id": "prompt:apple_right_of_plate",
+          "task_context": "Put an apple to the right of a ceramic plate.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/19",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:apple_right_of_plate:seed_73",
+          "split": "dev",
+          "group_id": "prompt:apple_right_of_plate",
+          "task_context": "Put an apple to the right of a ceramic plate.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/20",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:infeasible_apple_plate_back_region:seed_7",
+          "split": "test",
+          "group_id": "prompt:infeasible_apple_plate_back_region",
+          "task_context": "Put an apple to the right of a ceramic plate in the back region.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/21",
+            "seed": 7
+          },
+          "baseline_observation": "expected_infeasible_rejection",
+          "recoverable": false,
+          "gold_route": "abstain_infeasible_geometry",
+          "clean_control": false
+        },
+        {
+          "case_id": "prompt_matrix:infeasible_apple_plate_back_region:seed_31",
+          "split": "test",
+          "group_id": "prompt:infeasible_apple_plate_back_region",
+          "task_context": "Put an apple to the right of a ceramic plate in the back region.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/22",
+            "seed": 31
+          },
+          "baseline_observation": "expected_infeasible_rejection",
+          "recoverable": false,
+          "gold_route": "abstain_infeasible_geometry",
+          "clean_control": false
+        },
+        {
+          "case_id": "prompt_matrix:infeasible_apple_plate_back_region:seed_73",
+          "split": "test",
+          "group_id": "prompt:infeasible_apple_plate_back_region",
+          "task_context": "Put an apple to the right of a ceramic plate in the back region.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/23",
+            "seed": 73
+          },
+          "baseline_observation": "expected_infeasible_rejection",
+          "recoverable": false,
+          "gold_route": "abstain_infeasible_geometry",
+          "clean_control": false
+        },
+        {
+          "case_id": "prompt_matrix:half_open_cabinet:seed_7",
+          "split": "test",
+          "group_id": "prompt:half_open_cabinet",
+          "task_context": "Place a half-open cabinet on the table.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/24",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:half_open_cabinet:seed_31",
+          "split": "test",
+          "group_id": "prompt:half_open_cabinet",
+          "task_context": "Place a half-open cabinet on the table.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/25",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:half_open_cabinet:seed_73",
+          "split": "test",
+          "group_id": "prompt:half_open_cabinet",
+          "task_context": "Place a half-open cabinet on the table.",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/26",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:zh_red_block_on_plate:seed_7",
+          "split": "test",
+          "group_id": "prompt:zh_red_block_on_plate",
+          "task_context": "把红色方块叠在盘子上。",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/27",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:zh_red_block_on_plate:seed_31",
+          "split": "test",
+          "group_id": "prompt:zh_red_block_on_plate",
+          "task_context": "把红色方块叠在盘子上。",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/28",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:zh_red_block_on_plate:seed_73",
+          "split": "test",
+          "group_id": "prompt:zh_red_block_on_plate",
+          "task_context": "把红色方块叠在盘子上。",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/29",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:zh_apple_in_basket:seed_7",
+          "split": "test",
+          "group_id": "prompt:zh_apple_in_basket",
+          "task_context": "把苹果放进篮子里。",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/30",
+            "seed": 7
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:zh_apple_in_basket:seed_31",
+          "split": "test",
+          "group_id": "prompt:zh_apple_in_basket",
+          "task_context": "把苹果放进篮子里。",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/31",
+            "seed": 31
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "prompt_matrix:zh_apple_in_basket:seed_73",
+          "split": "test",
+          "group_id": "prompt:zh_apple_in_basket",
+          "task_context": "把苹果放进篮子里。",
+          "artifacts": [
+            "tests/fixtures/prompt_matrix.json",
+            "docs/evidence/prompt-matrix-runtime-20260719.json"
+          ],
+          "bundle_sha256": "b915f42264525a1c1aa872ff56e30200c15570727b3c0298f1322b5bd1d1b302",
+          "source_record": {
+            "json_pointer": "/outcomes/32",
+            "seed": 73
+          },
+          "baseline_observation": "accepted_compile_control",
+          "recoverable": true,
+          "gold_route": "accept_existing_compile",
+          "clean_control": true
+        },
+        {
+          "case_id": "selection2env_drawer_mug_task_api_blocker",
+          "split": "dev",
+          "group_id": "fallback:drawer_mug",
+          "task_context": "Open the drawer and place the mug inside.",
+          "artifacts": [
+            "self_improving/alchedata/artifacts/selection2env/task_drawer_mug_blocker.json"
+          ],
+          "bundle_sha256": "f3568fbbc4406aa001ff3fb3fe82a1ce04b58cfbc7baea55c811dc04661af6aa",
+          "baseline_observation": "typed_blocker",
+          "recoverable": false,
+          "gold_route": "abstain_unsupported_task_api",
+          "clean_control": false
+        },
+        {
+          "case_id": "forge_drawer_mug_missing_capture",
+          "split": "test",
+          "group_id": "fallback:drawer_mug",
+          "task_context": "Open the drawer and place the mug inside using generate-on-miss only when source capture exists.",
+          "artifacts": [
+            "self_improving/alchedata/artifacts/generation_fallback/blocked_drawer_mug_video2sim_forge.json"
+          ],
+          "bundle_sha256": "2cde876f5294c853b1b93c9db227d328f077005b28fbc90d307dc2d4fdfa02c8",
+          "baseline_observation": "typed_blocker",
+          "recoverable": false,
+          "gold_route": "abstain_missing_capture_inputs",
+          "clean_control": false
+        },
+        {
+          "case_id": "neumatex_missing_material_inputs",
+          "split": "test",
+          "group_id": "fallback:material_sidecar",
+          "task_context": "Generate and validate a material sidecar only when accepted geometry and calibrated multiview inputs exist.",
+          "artifacts": [
+            "self_improving/alchedata/artifacts/generation_fallback/blocked_neumatex_material_sidecar.json"
+          ],
+          "bundle_sha256": "d42672685d1a76facdb1a74eaf43f7f9b3f20eff158831bfa37b070ff0623619",
+          "baseline_observation": "typed_blocker",
+          "recoverable": false,
+          "gold_route": "abstain_missing_multiview_and_geometry_inputs",
+          "clean_control": false
+        }
+      ]
+    }
+  ]
+}

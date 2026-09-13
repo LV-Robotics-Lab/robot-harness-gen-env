@@ -14,7 +14,6 @@ from typing import Any
 import h5py
 import numpy as np
 
-
 ROOT = Path(__file__).resolve().parents[1]
 KNOWN_ROOTS = (
     ROOT,
@@ -84,7 +83,9 @@ def inspect_episode(episode: dict[str, Any]) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify ACT dataset placement and trajectory diversity.")
+    parser = argparse.ArgumentParser(
+        description="Verify ACT dataset placement and trajectory diversity."
+    )
     parser.add_argument("--conversion", required=True)
     parser.add_argument("--loader", required=True)
     parser.add_argument("--out", required=True)
@@ -135,8 +136,10 @@ def main() -> int:
         "action_trajectory_count_met": (
             observed["unique_action_trajectory_count"] >= args.min_action_trajectories
         ),
-        "qpos_trajectory_count_met": observed["unique_qpos_trajectory_count"] >= args.min_qpos_trajectories,
-        "image_trajectory_count_met": observed["unique_image_trajectory_count"] >= args.min_image_trajectories,
+        "qpos_trajectory_count_met": observed["unique_qpos_trajectory_count"]
+        >= args.min_qpos_trajectories,
+        "image_trajectory_count_met": observed["unique_image_trajectory_count"]
+        >= args.min_image_trajectories,
         "all_episodes_have_pose_signatures": len(pose_signatures) == len(episodes),
     }
     passed = all(gates.values())
@@ -157,8 +160,9 @@ def main() -> int:
         },
         "episodes": episodes,
         "claim_boundary": (
-            "This gate proves byte-level diversity across successful synchronized ACT demonstrations and explicit "
-            "placement signatures. It does not prove policy learning or held-out task success."
+            "This gate proves byte-level diversity across successful synchr"
+            "onized ACT demonstrations and explicit placement signatures. I"
+            "t does not prove policy learning or held-out task success."
         ),
     }
     out_path = resolve_path(args.out)

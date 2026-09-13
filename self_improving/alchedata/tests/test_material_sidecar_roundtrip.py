@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from scripts.run_isaac_material_sidecar_roundtrip import (
     compare_foregrounds,
     extract_sidecar,
@@ -11,7 +10,9 @@ from scripts.run_isaac_material_sidecar_roundtrip import (
 
 
 def test_srgb_linear_endpoints() -> None:
-    np.testing.assert_allclose(srgb_to_linear(np.asarray([0.0, 1.0, 0.04045])), [0.0, 1.0, 0.0031308], atol=1e-7)
+    np.testing.assert_allclose(
+        srgb_to_linear(np.asarray([0.0, 1.0, 0.04045])), [0.0, 1.0, 0.0031308], atol=1e-7
+    )
 
 
 def test_extract_sidecar_and_identical_comparison() -> None:
@@ -27,4 +28,6 @@ def test_extract_sidecar_and_identical_comparison() -> None:
 
 
 def test_lab_reference_white() -> None:
-    np.testing.assert_allclose(rgb_to_lab(np.asarray([1.0, 1.0, 1.0])), [100.0, 0.0, 0.0], atol=2e-5)
+    np.testing.assert_allclose(
+        rgb_to_lab(np.asarray([1.0, 1.0, 1.0])), [100.0, 0.0, 0.0], atol=2e-5
+    )

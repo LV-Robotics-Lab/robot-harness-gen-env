@@ -12,10 +12,7 @@ def test_agenticsim_isaac_snapshot_matches_source() -> None:
     assert checked["runtime_summary"]["runtime_pass_count"] == 11
     assert checked["runtime_summary"]["runtime_blocked_count"] == 1
     assert checked["runtime_summary"]["strict_open_source_runtime_pass_count"] == 6
-    assert (
-        checked["runtime_summary"]["runtime_pass_without_open_source_closure_count"]
-        == 5
-    )
+    assert checked["runtime_summary"]["runtime_pass_without_open_source_closure_count"] == 5
     assert checked["runtime_summary"]["academic_use_runtime_accepted_count"] == 11
     assert checked["runtime_summary"]["academic_use_runtime_blocked_count"] == 1
     assert checked["runtime_summary"]["academic_use_license_advisory_count"] == 5

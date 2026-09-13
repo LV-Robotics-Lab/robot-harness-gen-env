@@ -6,8 +6,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from PIL import Image, ImageDraw
-
 from agenticsim.openxsim.anchors import (
     AnchorExtractionError,
     ColorLayoutAnchorProvider,
@@ -16,6 +14,7 @@ from agenticsim.openxsim.anchors import (
 )
 from agenticsim.openxsim.pipeline import OpenXSimPipeline
 from agenticsim.openxsim.text2env import compile_text
+from PIL import Image, ImageDraw
 
 
 def make_image(path: Path) -> Path:
@@ -108,7 +107,9 @@ def test_pluggable_vision_provider_contributes_semantics(tmp_path: Path) -> None
             return {
                 "confidence": 0.91,
                 "object_constraints": [{"instance_id": "red_block", "label": "block"}],
-                "spatial_constraints": [{"type": "left_of", "subject": "red_block", "object": "blue_zone"}],
+                "spatial_constraints": [
+                    {"type": "left_of", "subject": "red_block", "object": "blue_zone"}
+                ],
             }
 
     anchor = extract_anchor(
@@ -140,7 +141,10 @@ def test_offline_color_layout_provider_extracts_objects_and_relation(tmp_path: P
 
     constraints = {item["instance_id"]: item for item in anchor.object_constraints}
     assert set(constraints) == {"red_block", "blue_zone"}
-    assert constraints["red_block"]["normalized_center"][0] < constraints["blue_zone"]["normalized_center"][0]
+    assert (
+        constraints["red_block"]["normalized_center"][0]
+        < constraints["blue_zone"]["normalized_center"][0]
+    )
     assert anchor.spatial_constraints == (
         {"type": "left_of", "subject": "red_block", "object": "blue_zone", "confidence": 0.7},
     )

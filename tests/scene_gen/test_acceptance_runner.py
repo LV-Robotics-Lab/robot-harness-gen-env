@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-
 SCRIPT = Path(__file__).resolve().parents[2] / "script" / "run_100_seed_acceptance.py"
 SPEC = importlib.util.spec_from_file_location("run_100_seed_acceptance", SCRIPT)
 assert SPEC and SPEC.loader

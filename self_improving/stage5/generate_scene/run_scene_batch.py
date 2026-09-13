@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import subprocess
 import sys
 from pathlib import Path
@@ -14,13 +13,24 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.asset_grounding import slugify_prompt
-from generate_scene.schemas import read_json, write_json
-from generate_scene.tools import get_smoke_artifacts
+# Import follows the legacy source path bootstrap.
+from generate_scene.asset_grounding import slugify_prompt  # noqa: E402
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    write_json,
+)
+
+# Import follows the legacy source path bootstrap.
+from generate_scene.tools import get_smoke_artifacts  # noqa: E402
 
 
-def _placement_summary(scene_dir: Path) -> dict[str, Any]:
-    placement_path = scene_dir / "final_placement.json"
+def _placement_summary(scene_dir: Path, status: str) -> dict[str, Any]:
+    filename = (
+        "review_candidate_placement.json"
+        if status == "pending_visual_review"
+        else "final_placement.json"
+    )
+    placement_path = scene_dir / filename
     placement = read_json(placement_path)
     return {
         "scene_dir": str(scene_dir),
@@ -43,14 +53,58 @@ def _accepted(status: str, allow_pending_visual: bool) -> bool:
     return status == "pass" or (allow_pending_visual and status == "pending_visual_review")
 
 
+def _completed_for_acceptance(
+    *,
+    returncode: int,
+    status: str,
+    allow_pending_visual: bool,
+) -> bool:
+    expected_returncode = 2 if status == "pending_visual_review" else 0
+    return returncode == expected_returncode and _accepted(status, allow_pending_visual)
+
+
+def _aggregate_status(
+    accepted_scenes: list[dict[str, Any]],
+    requested_scenes: int,
+    *,
+    complete: bool,
+) -> str:
+    if len(accepted_scenes) < requested_scenes:
+        return "partial" if complete else "running"
+    if any(scene.get("status") == "pending_visual_review" for scene in accepted_scenes):
+        return "review_required"
+    return "pass"
+
+
+def _batch_exit_code(status: str) -> int:
+    if status == "pass":
+        return 0
+    if status == "review_required":
+        return 2
+    return 1
+
+
+def _scene_counts(accepted_scenes: list[dict[str, Any]]) -> dict[str, int]:
+    return {
+        "publishable_count": sum(scene.get("status") == "pass" for scene in accepted_scenes),
+        "review_required_count": sum(
+            scene.get("status") == "pending_visual_review" for scene in accepted_scenes
+        ),
+    }
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate a diverse batch of RoboTwin tabletop scenes.")
+    parser = argparse.ArgumentParser(
+        description="Generate a diverse batch of RoboTwin tabletop scenes."
+    )
     parser.add_argument("--prompt", required=True)
     parser.add_argument("--batch-name")
     parser.add_argument("--num-scenes", type=int, default=5)
     parser.add_argument("--max-candidates", type=int, default=8)
     parser.add_argument("--out-dir", required=True)
-    parser.add_argument("--master-catalog", default="asset_catalogs/robotwin_tabletop_assets_master.json")
+    parser.add_argument(
+        "--master-catalog", default="asset_catalogs/robotwin_tabletop_assets_master.json"
+    )
     parser.add_argument("--discover-assets-from-robotwin", action="store_true")
     parser.add_argument("--robotwin-root", default=str(Path.home() / "RoboTwin"))
     parser.add_argument("--model-provider", default="codex_reference")
@@ -63,9 +117,17 @@ def main() -> int:
     parser.add_argument("--fps", type=int, default=15)
     parser.add_argument("--smoke-timeout", type=int, default=420)
     parser.add_argument("--python-executable")
-    parser.add_argument("--visual-review-mode", choices=["required", "artifact_only", "moonshot", "openai"], default="required")
+    parser.add_argument(
+        "--visual-review-mode",
+        choices=["required", "artifact_only", "moonshot", "openai"],
+        default="required",
+    )
     parser.add_argument("--visual-repair-attempts", type=int, default=0)
-    parser.add_argument("--allow-pending-visual", action="store_true")
+    parser.add_argument(
+        "--allow-pending-visual",
+        action="store_true",
+        help="Collect pending review candidates; the batch remains review_required, not pass.",
+    )
     args = parser.parse_args()
 
     batch_name = args.batch_name or slugify_prompt(args.prompt)
@@ -130,7 +192,9 @@ def main() -> int:
         if args.python_executable:
             cmd.extend(["--python-executable", args.python_executable])
 
-        completed = subprocess.run(cmd, cwd=str(REPO_ROOT), text=True, capture_output=True, check=False)
+        completed = subprocess.run(
+            cmd, cwd=str(REPO_ROOT), text=True, capture_output=True, check=False
+        )
         summary_path = scene_dir / "scene_generation_summary.json"
         scene_summary = read_json(summary_path) if summary_path.exists() else {}
         status = str(scene_summary.get("status", "fail_no_summary"))
@@ -149,7 +213,11 @@ def main() -> int:
             candidate_record["artifacts"] = scene_summary.get("artifacts", {})
         candidates.append(candidate_record)
 
-        if completed.returncode == 0 and _accepted(status, args.allow_pending_visual):
+        if _completed_for_acceptance(
+            returncode=completed.returncode,
+            status=status,
+            allow_pending_visual=args.allow_pending_visual,
+        ):
             accepted_record = {
                 "accepted_index": len(accepted_scenes),
                 "candidate_index": candidate_idx,
@@ -158,7 +226,7 @@ def main() -> int:
                 "status": status,
                 "summary": str(summary_path),
                 "preview": get_smoke_artifacts(scene_dir / "smoke"),
-                "placement_summary": _placement_summary(scene_dir),
+                "placement_summary": _placement_summary(scene_dir, status),
             }
             accepted_scenes.append(accepted_record)
 
@@ -169,13 +237,18 @@ def main() -> int:
             "requested_scenes": args.num_scenes,
             "accepted_count": len(accepted_scenes),
             "candidate_count": len(candidates),
-            "status": "pass" if len(accepted_scenes) >= args.num_scenes else "running",
+            "status": _aggregate_status(
+                accepted_scenes,
+                args.num_scenes,
+                complete=False,
+            ),
+            **_scene_counts(accepted_scenes),
             "accepted_scenes": accepted_scenes,
             "candidates": candidates,
         }
         write_json(batch_summary_path, batch_summary)
 
-    status = "pass" if len(accepted_scenes) >= args.num_scenes else "partial"
+    status = _aggregate_status(accepted_scenes, args.num_scenes, complete=True)
     batch_summary = {
         "schema_version": "robotwin.tabletop_scene_batch.v0",
         "prompt": args.prompt,
@@ -184,12 +257,13 @@ def main() -> int:
         "accepted_count": len(accepted_scenes),
         "candidate_count": len(candidates),
         "status": status,
+        **_scene_counts(accepted_scenes),
         "accepted_scenes": accepted_scenes,
         "candidates": candidates,
     }
     write_json(batch_summary_path, batch_summary)
     print(f"{status.upper()} {batch_summary_path}")
-    return 0 if status == "pass" else 1
+    return _batch_exit_code(status)
 
 
 if __name__ == "__main__":

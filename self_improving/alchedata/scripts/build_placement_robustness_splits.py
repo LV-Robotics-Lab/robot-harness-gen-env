@@ -39,7 +39,9 @@ def object_by_id(placement: dict[str, Any], object_id: str) -> dict[str, Any]:
     raise KeyError(f"Placement has no object {object_id!r}")
 
 
-def region_xy_bounds(placement: dict[str, Any], obj: dict[str, Any], margin: float) -> tuple[tuple[float, float], tuple[float, float]]:
+def region_xy_bounds(
+    placement: dict[str, Any], obj: dict[str, Any], margin: float
+) -> tuple[tuple[float, float], tuple[float, float]]:
     region_name = obj.get("pose", {}).get("region")
     regions = placement.get("workspace", {}).get("spatial_regions", {})
     region = regions.get(region_name)
@@ -52,11 +54,15 @@ def region_xy_bounds(placement: dict[str, Any], obj: dict[str, Any], margin: flo
     return x_bounds, y_bounds
 
 
-def clipped_sample(rng: random.Random, center: float, radius: float, bounds: tuple[float, float]) -> float:
+def clipped_sample(
+    rng: random.Random, center: float, radius: float, bounds: tuple[float, float]
+) -> float:
     low = max(bounds[0], center - radius)
     high = min(bounds[1], center + radius)
     if low >= high:
-        raise ValueError(f"No sampling interval remains around {center} with radius {radius} inside {bounds}")
+        raise ValueError(
+            f"No sampling interval remains around {center} with radius {radius} inside {bounds}"
+        )
     return rng.uniform(low, high)
 
 
@@ -103,10 +109,18 @@ def sample_placement(
     target = object_by_id(result, target_id)
     source_x, source_y = region_xy_bounds(base, base_source, region_margin)
     target_x, target_y = region_xy_bounds(base, base_target, region_margin)
-    source["pose"]["xyz"][0] = clipped_sample(rng, float(base_source["pose"]["xyz"][0]), source_jitter[0], source_x)
-    source["pose"]["xyz"][1] = clipped_sample(rng, float(base_source["pose"]["xyz"][1]), source_jitter[1], source_y)
-    target["pose"]["xyz"][0] = clipped_sample(rng, float(base_target["pose"]["xyz"][0]), target_jitter[0], target_x)
-    target["pose"]["xyz"][1] = clipped_sample(rng, float(base_target["pose"]["xyz"][1]), target_jitter[1], target_y)
+    source["pose"]["xyz"][0] = clipped_sample(
+        rng, float(base_source["pose"]["xyz"][0]), source_jitter[0], source_x
+    )
+    source["pose"]["xyz"][1] = clipped_sample(
+        rng, float(base_source["pose"]["xyz"][1]), source_jitter[1], source_y
+    )
+    target["pose"]["xyz"][0] = clipped_sample(
+        rng, float(base_target["pose"]["xyz"][0]), target_jitter[0], target_x
+    )
+    target["pose"]["xyz"][1] = clipped_sample(
+        rng, float(base_target["pose"]["xyz"][1]), target_jitter[1], target_y
+    )
     return result
 
 
@@ -141,9 +155,14 @@ def build_split(
         vector = pose_vector(candidate, source_id, target_id)
         if xy_distance(candidate, source_id, target_id) < min_object_distance:
             return False
-        if any(vector_distance(vector, previous) < min_pose_distance for previous in accepted_vectors):
+        if any(
+            vector_distance(vector, previous) < min_pose_distance for previous in accepted_vectors
+        ):
             return False
-        if split == "eval" and any(vector_distance(vector, previous) < min_eval_train_distance for previous in train_vectors):
+        if split == "eval" and any(
+            vector_distance(vector, previous) < min_eval_train_distance
+            for previous in train_vectors
+        ):
             return False
         return True
 
@@ -201,7 +220,9 @@ def build_split(
         while len(splits[split]) < count:
             attempts += 1
             if attempts > 10000:
-                raise RuntimeError(f"Could not sample {count} valid {split} placements after {attempts} attempts")
+                raise RuntimeError(
+                    f"Could not sample {count} valid {split} placements after {attempts} attempts"
+                )
             candidate = sample_placement(
                 base,
                 rng,
@@ -256,8 +277,10 @@ def build_split(
             ),
         },
         "claim_boundary": (
-            "This manifest proves deterministic, explicit, disjoint object-placement splits inside declared placement regions. "
-            "It does not prove RoboTwin planner success, learned-policy robustness, or visual/physics domain randomization."
+            "This manifest proves deterministic, explicit, disjoint object-"
+            "placement splits inside declared placement regions. It does no"
+            "t prove RoboTwin planner success, learned-policy robustness, o"
+            "r visual/physics domain randomization."
         ),
     }
     if manifest["validation"]["unique_pose_signature_count"] != train_count + eval_count:
@@ -310,8 +333,12 @@ def main() -> int:
                 "status": manifest["status"],
                 "train_count": manifest["validation"]["train_count"],
                 "eval_count": manifest["validation"]["eval_count"],
-                "unique_pose_signature_count": manifest["validation"]["unique_pose_signature_count"],
-                "manifest": str(Path(args.out_dir).expanduser().resolve() / "placement_manifest.json"),
+                "unique_pose_signature_count": manifest["validation"][
+                    "unique_pose_signature_count"
+                ],
+                "manifest": str(
+                    Path(args.out_dir).expanduser().resolve() / "placement_manifest.json"
+                ),
             }
         )
     )

@@ -9,7 +9,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 EXTERNAL = ROOT / "external" / "robotwin-text2env-demo"
 CATALOG = EXTERNAL / "asset_catalogs" / "robotwin_tabletop_assets_master.json"
@@ -79,7 +78,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
+    path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+    )
 
 
 def normalized_artifact_path(value: str) -> str:
@@ -173,7 +174,9 @@ def pose_constraints(spec: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def task_binding_for(task_id: str, spec: dict[str, Any]) -> dict[str, str]:
-    by_semantic = {str(obj.get("semantic", "")).lower(): str(obj["id"]) for obj in spec.get("objects", [])}
+    by_semantic = {
+        str(obj.get("semantic", "")).lower(): str(obj["id"]) for obj in spec.get("objects", [])
+    }
     if task_id == "task_apple_plate":
         return {
             "template": "place_on",
@@ -306,8 +309,12 @@ def collect_artifacts(collect_name: str) -> dict[str, str]:
     return {
         "collect_report": str((collect_dir / "collect_report.json").relative_to(ROOT)),
         "collect_dataset_manifest": str((collect_dir / "dataset_manifest.json").relative_to(ROOT)),
-        "collect_object_states": str((collect_dir / "episode_000" / "object_states.jsonl").relative_to(ROOT)),
-        "collect_scene_info": str((collect_dir / "episode_000" / "scene_info.json").relative_to(ROOT)),
+        "collect_object_states": str(
+            (collect_dir / "episode_000" / "object_states.jsonl").relative_to(ROOT)
+        ),
+        "collect_scene_info": str(
+            (collect_dir / "episode_000" / "scene_info.json").relative_to(ROOT)
+        ),
     }
 
 
@@ -315,11 +322,21 @@ def generated_action_artifacts(task_id: str) -> dict[str, str]:
     if task_id != "task_apple_plate":
         return {}
     return {
-        "generated_action_repair_placement": "runs/probe_static_apple_plate_action_repair/final_placement.json",
-        "generated_action_rollout_report": "runs/generated_rollout_apple_plate_action_repair_pass/rollout_report.json",
-        "generated_action_rollout_events": "runs/generated_rollout_apple_plate_action_repair_pass/events.jsonl",
-        "generated_action_rollout_move_events": "runs/generated_rollout_apple_plate_action_repair_pass/move_events.jsonl",
-        "generated_action_rollout_observer_video": "runs/generated_rollout_apple_plate_action_repair_pass/observer_rollout_probe.mp4",
+        "generated_action_repair_placement": (
+            "runs/probe_static_apple_plate_action_repair/final_placement.json"
+        ),
+        "generated_action_rollout_report": (
+            "runs/generated_rollout_apple_plate_action_repair_pass/rollout_report.json"
+        ),
+        "generated_action_rollout_events": (
+            "runs/generated_rollout_apple_plate_action_repair_pass/events.jsonl"
+        ),
+        "generated_action_rollout_move_events": (
+            "runs/generated_rollout_apple_plate_action_repair_pass/move_events.jsonl"
+        ),
+        "generated_action_rollout_observer_video": (
+            "runs/generated_rollout_apple_plate_action_repair_pass/observer_rollout_probe.mp4"
+        ),
     }
 
 
@@ -328,9 +345,15 @@ def generated_action_status(task_id: str) -> dict[str, Any]:
         return {
             "status": "not_run_for_task",
             "scope": "generated_selection2env_play_once_action_repair",
-            "message": "No generated action-repair play_once is attached to this normalized task; apple/plate and can/basket side repairs are tracked in the generated action-repair summary.",
+            "message": (
+                "No generated action-repair play_once is attached to this norma"
+                "lized task; apple/plate and can/basket side repairs are tracke"
+                "d in the generated action-repair summary."
+            ),
         }
-    report = read_json(ROOT / "runs" / "generated_rollout_apple_plate_action_repair_pass" / "rollout_report.json")
+    report = read_json(
+        ROOT / "runs" / "generated_rollout_apple_plate_action_repair_pass" / "rollout_report.json"
+    )
     return {
         "status": report.get("status"),
         "probe_type": report.get("probe_type"),
@@ -347,9 +370,15 @@ def generated_collection_artifacts(task_id: str) -> dict[str, str]:
     if task_id != "task_apple_plate":
         return {}
     return {
-        "generated_rollout_collection_report": "runs/generated_collect_apple_plate_action_repair/collection_report.json",
-        "generated_rollout_collection_manifest": "runs/generated_collect_apple_plate_action_repair/dataset_manifest.json",
-        "generated_rollout_collection_events": "runs/generated_collect_apple_plate_action_repair/events.jsonl",
+        "generated_rollout_collection_report": (
+            "runs/generated_collect_apple_plate_action_repair/collection_report.json"
+        ),
+        "generated_rollout_collection_manifest": (
+            "runs/generated_collect_apple_plate_action_repair/dataset_manifest.json"
+        ),
+        "generated_rollout_collection_events": (
+            "runs/generated_collect_apple_plate_action_repair/events.jsonl"
+        ),
     }
 
 
@@ -358,9 +387,15 @@ def generated_collection_status(task_id: str) -> dict[str, Any]:
         return {
             "status": "not_run_for_task",
             "scope": "generated_selection2env_multi_episode_play_once_collection",
-            "message": "No generated rollout collection is attached to this normalized task; apple/plate and can/basket side repairs are tracked in the generated action-repair summary.",
+            "message": (
+                "No generated rollout collection is attached to this normalized"
+                " task; apple/plate and can/basket side repairs are tracked in "
+                "the generated action-repair summary."
+            ),
         }
-    report = read_json(ROOT / "runs" / "generated_collect_apple_plate_action_repair" / "collection_report.json")
+    report = read_json(
+        ROOT / "runs" / "generated_collect_apple_plate_action_repair" / "collection_report.json"
+    )
     return {
         "status": report.get("status"),
         "episode_count": report.get("episode_count"),
@@ -379,9 +414,15 @@ def generated_eval_artifacts(task_id: str) -> dict[str, str]:
     if task_id != "task_apple_plate":
         return {}
     return {
-        "generated_policy_evaluate_report": "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json",
-        "generated_policy_evaluate_run_state": "runs/act_eval_native_sync_rgb_chunk161_1200e_best/run_state.json",
-        "generated_policy_evaluate_events": "runs/act_eval_native_sync_rgb_chunk161_1200e_best/events.jsonl",
+        "generated_policy_evaluate_report": (
+            "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json"
+        ),
+        "generated_policy_evaluate_run_state": (
+            "runs/act_eval_native_sync_rgb_chunk161_1200e_best/run_state.json"
+        ),
+        "generated_policy_evaluate_events": (
+            "runs/act_eval_native_sync_rgb_chunk161_1200e_best/events.jsonl"
+        ),
         "generated_policy_diagnosis": "artifacts/diagnosis/native_act_closed_loop_diagnosis.json",
     }
 
@@ -391,9 +432,13 @@ def generated_eval_status(task_id: str) -> dict[str, Any]:
         return {
             "status": "not_run_for_task",
             "scope": "generated_selection2env_learned_act_evaluate",
-            "message": "The bounded learned-ACT /evaluate adapter currently covers only apple/plate.",
+            "message": (
+                "The bounded learned-ACT /evaluate adapter currently covers only apple/plate."
+            ),
         }
-    report = read_json(ROOT / "runs" / "act_eval_native_sync_rgb_chunk161_1200e_best" / "evaluate_report.json")
+    report = read_json(
+        ROOT / "runs" / "act_eval_native_sync_rgb_chunk161_1200e_best" / "evaluate_report.json"
+    )
     return {
         "status": report.get("status"),
         "episode_count": report.get("episode_count"),
@@ -414,17 +459,20 @@ def policy_gate_blocker(task_id: str) -> dict[str, str]:
         return {
             "code": "DEFAULT_ACT_PLACEMENT_ROBUSTNESS_FAILED",
             "message": (
-                "The retained ACT recovery branch scores 1/4 on varied-placement holdout. A separate privileged "
-                "pose-conditioned open-loop policy passes the bounded SceneAgent gate at 4/4 held-out, 4/4 declared "
-                "domain randomization, and 3/3 fixed-placement can/basket; this does not repair or promote ACT."
+                "The retained ACT recovery branch scores 1/4 on varied-placemen"
+                "t holdout. A separate privileged pose-conditioned open-loop po"
+                "licy passes the bounded SceneAgent gate at 4/4 held-out, 4/4 d"
+                "eclared domain randomization, and 3/3 fixed-placement can/bask"
+                "et; this does not repair or promote ACT."
             ),
             "owner": "Zheng Ye / Gaochen",
         }
     return {
         "code": "LEARNED_POLICY_TASK_COVERAGE_BOUNDARY",
         "message": (
-            "Generated collection and learned-policy /evaluate coverage are not attached to this normalized task. "
-            "This is a post-TODO policy-coverage boundary, not a selection2env completion blocker."
+            "Generated collection and learned-policy /evaluate coverage are"
+            " not attached to this normalized task. This is a post-TODO pol"
+            "icy-coverage boundary, not a selection2env completion blocker."
         ),
         "owner": "Zheng Ye / Gaochen",
     }
@@ -481,14 +529,18 @@ def build_supported(
         }
         alternate = task_program_input(
             task_id="task_apple_plate_to_left_front",
-            language_prompt="move the apple from the left rear pose into the left front reachable area",
+            language_prompt=(
+                "move the apple from the left rear pose into the left front reachable area"
+            ),
             scene_id=scene_id,
             placement_path=placement_path,
             binding=alternate_binding,
             variant="same_scene_alternate_region",
             execution_report="runs/scene_task_decoupling/apple_to_left_front/rollout_report.json",
         )
-        alternate_path = ARTIFACT_ROOT / "task_program_inputs" / "task_apple_plate_to_left_front.json"
+        alternate_path = (
+            ARTIFACT_ROOT / "task_program_inputs" / "task_apple_plate_to_left_front.json"
+        )
         write_json(alternate_path, alternate)
 
     run_state = {
@@ -529,7 +581,9 @@ def build_supported(
         "placement_regions": spec.get("workspace", {}).get("spatial_regions", {}),
         "support_surface": {
             "type": spec.get("workspace", {}).get("surface", "table"),
-            "frame": spec.get("workspace", {}).get("coordinate_convention", "robot_first_person_tabletop"),
+            "frame": spec.get("workspace", {}).get(
+                "coordinate_convention", "robot_first_person_tabletop"
+            ),
             "bounds": spec.get("workspace", {}).get("bounds", {}),
         },
         "pose_constraints": pose_constraints(spec),
@@ -546,8 +600,12 @@ def build_supported(
         },
         "robot_constraints": {
             "embodiment": "RoboTwin tabletop manipulator",
-            "workspace_reachability": "all objects must be inside named reachable regions before simulator smoke",
-            "action_interface": "RoboTwin task-program input; policy data is produced by /collect after smoke",
+            "workspace_reachability": (
+                "all objects must be inside named reachable regions before simulator smoke"
+            ),
+            "action_interface": (
+                "RoboTwin task-program input; policy data is produced by /collect after smoke"
+            ),
         },
         "success_verifier": {
             "type": "static_then_simulator_then_visual",
@@ -577,9 +635,16 @@ def build_supported(
             "catalog_candidate_search": str(query_path.relative_to(ROOT)),
             **(
                 {
-                    "alternate_task_program_input": "artifacts/task_program_inputs/task_apple_plate_to_left_front.json",
-                    "scene_task_decoupling_report": "artifacts/scene_task_decoupling/apple_plate_two_tasks.json",
-                    "scene_task_repair_failure": "runs/scene_task_decoupling/original_placement_apple_on_plate_fail/rollout_report.json",
+                    "alternate_task_program_input": (
+                        "artifacts/task_program_inputs/task_apple_plate_to_left_front.json"
+                    ),
+                    "scene_task_decoupling_report": (
+                        "artifacts/scene_task_decoupling/apple_plate_two_tasks.json"
+                    ),
+                    "scene_task_repair_failure": (
+                        "runs/scene_task_decoupling/original_placement_apple_on_plate_f"
+                        "ail/rollout_report.json"
+                    ),
                 }
                 if task_id == "task_apple_plate"
                 else {}
@@ -592,8 +657,12 @@ def build_supported(
             **generated_eval_artifacts(task_id),
         },
         "simulator_smoke": {
-            "asset_load_render": smoke_status(asset_smoke_name, "asset_load_render_without_robot_planner"),
-            "basetask_curobo": smoke_status(basetask_smoke_name, "robotwin_base_task_with_curobo_initialized"),
+            "asset_load_render": smoke_status(
+                asset_smoke_name, "asset_load_render_without_robot_planner"
+            ),
+            "basetask_curobo": smoke_status(
+                basetask_smoke_name, "robotwin_base_task_with_curobo_initialized"
+            ),
             "collect_dry_run": collect_status(collect_name),
             "generated_action_rollout": generated_action_status(task_id),
             "generated_rollout_collection": generated_collection_status(task_id),
@@ -601,9 +670,20 @@ def build_supported(
         },
         "blockers": [policy_gate_blocker(task_id)],
         "handoff": {
-            "collect_outputs": ["rollout logs", "scene/task manifest", "camera previews", "object state traces", "failure diagnosis"],
+            "collect_outputs": [
+                "rollout logs",
+                "scene/task manifest",
+                "camera previews",
+                "object state traces",
+                "failure diagnosis",
+            ],
             "train_reads": ["rollout dataset manifest", "policy config", "data requirement spec"],
-            "evaluate_reads": ["policy checkpoint", "eval task set", "verifier results", "failure trace clusters"],
+            "evaluate_reads": [
+                "policy checkpoint",
+                "eval task set",
+                "verifier results",
+                "failure trace clusters",
+            ],
         },
     }
 
@@ -612,14 +692,23 @@ def build_unsupported(catalogs: dict[str, dict[str, Any]]) -> dict[str, Any]:
     run_dir = ROOT / "runs" / UNSUPPORTED_CASE["run_dir"]
     summary = read_json(run_dir / "scene_generation_summary.json")
     search = catalog_search(UNSUPPORTED_CASE["task_text"], catalogs)
-    query_path = ARTIFACT_ROOT / "adapter_catalog" / "selection2env_queries" / f"{UNSUPPORTED_CASE['task_id']}.json"
+    query_path = (
+        ARTIFACT_ROOT
+        / "adapter_catalog"
+        / "selection2env_queries"
+        / f"{UNSUPPORTED_CASE['task_id']}.json"
+    )
     write_json(query_path, search)
     rejected_candidates = candidate_rows({"objects": []}, search)
     for candidate in rejected_candidates:
         if candidate["backend_asset_id"] == "036_cabinet":
-            candidate["reason"] = "cabinet/drawer candidate exists, but no verified drawer-open task API is available"
+            candidate["reason"] = (
+                "cabinet/drawer candidate exists, but no verified drawer-open task API is available"
+            )
         else:
-            candidate["reason"] = "catalog match is not a verified executable drawer-and-mug task binding"
+            candidate["reason"] = (
+                "catalog match is not a verified executable drawer-and-mug task binding"
+            )
     return {
         "schema_version": "alchedata.selection2env.v0",
         "task_id": UNSUPPORTED_CASE["task_id"],
@@ -630,9 +719,16 @@ def build_unsupported(catalogs: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "asset_candidates": rejected_candidates,
         "selected_assets": [],
         "placement_regions": {},
-        "support_surface": {"type": "unknown", "frame": "robot_first_person_tabletop", "bounds": {}},
+        "support_surface": {
+            "type": "unknown",
+            "frame": "robot_first_person_tabletop",
+            "bounds": {},
+        },
         "pose_constraints": [],
-        "camera_observation": {"required_views": ["head_camera", "observer_camera"], "visual_checks": ["unsupported task evidence"]},
+        "camera_observation": {
+            "required_views": ["head_camera", "observer_camera"],
+            "visual_checks": ["unsupported task evidence"],
+        },
         "robot_constraints": {
             "embodiment": "RoboTwin tabletop manipulator",
             "workspace_reachability": "not evaluated because the articulated task API is blocked",
@@ -641,26 +737,40 @@ def build_unsupported(catalogs: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "success_verifier": {
             "type": "blocker_record",
             "conditions": ["candidate assets and API blockers are explicitly recorded"],
-            "failure_modes": ["drawer articulation API unsupported", "interior-placement verifier unavailable", "no executable task-program input"],
+            "failure_modes": [
+                "drawer articulation API unsupported",
+                "interior-placement verifier unavailable",
+                "no executable task-program input",
+            ],
         },
         "artifacts": {
-            "scene_generation_summary": str((run_dir / "scene_generation_summary.json").relative_to(ROOT)),
+            "scene_generation_summary": str(
+                (run_dir / "scene_generation_summary.json").relative_to(ROOT)
+            ),
             "final_placement": str((run_dir / "final_placement.json").relative_to(ROOT)),
-            "static_validation": str((run_dir / "attempt_0_static_validation.json").relative_to(ROOT)),
+            "static_validation": str(
+                (run_dir / "attempt_0_static_validation.json").relative_to(ROOT)
+            ),
             "catalog_candidate_search": str(query_path.relative_to(ROOT)),
             "source_scene_status": summary.get("status"),
         },
         "blockers": [
             {
                 "code": "ARTICULATED_CONTAINER_TASK_API_UNSUPPORTED",
-                "message": "AgenticSim maps drawer to RoboTwin 036_cabinet, but drawer opening and interior placement are not verified by the task scaffold/API.",
+                "message": (
+                    "AgenticSim maps drawer to RoboTwin 036_cabinet, but drawer ope"
+                    "ning and interior placement are not verified by the task scaff"
+                    "old/API."
+                ),
                 "owner": "Zheng Ye / RoboTwin task adapter owner",
             }
         ],
         "handoff": {
             "collect_outputs": [],
             "train_reads": [],
-            "evaluate_reads": ["blocker can be used to prioritize asset acquisition or forge fallback"],
+            "evaluate_reads": [
+                "blocker can be used to prioritize asset acquisition or forge fallback"
+            ],
         },
     }
 
@@ -696,7 +806,9 @@ def main() -> int:
                 "path": str(AGENTICSIM_CATALOG.relative_to(ROOT)),
                 "source_commit": catalogs["agenticsim"].get("source", {}).get("source_commit"),
                 "entry_count": len(agenticsim_mappings),
-                "execution_eligible_count": sum(item["selection_eligible"] for item in agenticsim_mappings),
+                "execution_eligible_count": sum(
+                    item["selection_eligible"] for item in agenticsim_mappings
+                ),
                 "backend_mappings": agenticsim_mappings,
             },
             "articraft10k": {
@@ -711,12 +823,18 @@ def main() -> int:
             for task_id in [*[case[0] for case in SUPPORTED_CASES], UNSUPPORTED_CASE["task_id"]]
         ],
         "claim_boundary": (
-            "RoboTwin entries and AgenticSim aliases backed by those entries are selection-eligible. "
-            "Articraft metadata is searchable but remains ineligible without per-asset import evidence."
+            "RoboTwin entries and AgenticSim aliases backed by those entrie"
+            "s are selection-eligible. Articraft metadata is searchable but"
+            " remains ineligible without per-asset import evidence."
         ),
     }
-    write_json(ARTIFACT_ROOT / "adapter_catalog" / "selection2env_catalog_sources.json", source_audit)
-    write_json(ARTIFACT_ROOT / "selection2env_manifest.json", {"schema_version": "alchedata.selection2env_manifest.v0", "artifacts": artifacts})
+    write_json(
+        ARTIFACT_ROOT / "adapter_catalog" / "selection2env_catalog_sources.json", source_audit
+    )
+    write_json(
+        ARTIFACT_ROOT / "selection2env_manifest.json",
+        {"schema_version": "alchedata.selection2env_manifest.v0", "artifacts": artifacts},
+    )
     for artifact in artifacts:
         write_json(ARTIFACT_ROOT / "selection2env" / f"{artifact['task_id']}.json", artifact)
     print(f"wrote {len(artifacts)} selection2env artifacts under {ARTIFACT_ROOT.relative_to(ROOT)}")

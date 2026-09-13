@@ -1,0 +1,142 @@
+{
+  "schema_version": "vlm_fallback.visible_provider_preflight_evidence.v1",
+  "recorded_on": "2026-09-02",
+  "status": "provider_candidate_preflight_pass",
+  "claim": "The frozen local typed Qwen visible-provider candidate passed contract, attack, coverage, and adjacent runner checks without loading a real model or authorizing study execution.",
+  "files": [
+    {
+      "path": "self_improving/studies/vlm_fallback_prompt_optimization/visible_qwen_provider.py",
+      "sha256": "c8705c6c01c34a7a130194b1c4072fd398ca8a7c24e933b1d770574226d9f788",
+      "lines": 1141,
+      "bytes": 46185
+    },
+    {
+      "path": "self_improving/studies/vlm_fallback_prompt_optimization/test_visible_qwen_provider.py",
+      "sha256": "07a298516c70ca160f3937b8a4c8299400a636e7a067d13440db999e0d22eff8",
+      "lines": 2005,
+      "bytes": 70305
+    }
+  ],
+  "candidate": {
+    "provider": "LocalQwenVisibleProvider",
+    "production_eligible": false,
+    "supported_arms": {
+      "A1_typed_abstaining_critic_3b": "primary_local_vlm",
+      "A2_typed_abstaining_critic_7b": "confirmatory_model_size_ceiling"
+    },
+    "unsupported_baseline": {
+      "arm": "A0_current_critic_3b",
+      "behavior": "fail_fast_before_typed_backend",
+      "required_provider": "independent_frozen_baseline_provider"
+    },
+    "concrete_backend": {
+      "class": "TransformersQwenVisibleBackend",
+      "network": false,
+      "offline_environment": {
+        "HF_HUB_OFFLINE": "1",
+        "TRANSFORMERS_OFFLINE": "1",
+        "checked_before_dependency_import_or_discovery": true,
+        "checked_before_each_generation": true
+      },
+      "loader": {
+        "local_files_only": true,
+        "trust_remote_code": false
+      },
+      "bounds": {
+        "max_images": 6,
+        "max_image_bytes_each": 33554432,
+        "max_image_bytes_total": 67108864,
+        "max_image_width": 16384,
+        "max_image_height": 16384,
+        "max_decoded_image_pixels": 16000000,
+        "max_raw_response_bytes": 1048576
+      },
+      "runtime_identity": {
+        "scope": "live selected version, entrypoint, and configured-device facts",
+        "rechecked_at_integrity_seams": true,
+        "dependency_closure_complete": false
+      },
+      "cuda_metrics_scoped_to_configured_device": true,
+      "bitwise_gpu_parity_qualified": false
+    }
+  },
+  "verification": {
+    "provider_contract_and_coverage": {
+      "command": "python -m pytest -q self_improving/studies/vlm_fallback_prompt_optimization/test_visible_qwen_provider.py --cov=self_improving.studies.vlm_fallback_prompt_optimization.visible_qwen_provider --cov-branch --cov-report=term-missing --cov-fail-under=100",
+      "passed": 143,
+      "failed": 0,
+      "statements": 571,
+      "branches": 200,
+      "statement_and_branch_coverage_percent": 100
+    },
+    "runner_regression": {
+      "command": "python -m pytest -q self_improving/studies/vlm_fallback_prompt_optimization/test_runner.py",
+      "passed": 230,
+      "failed": 0
+    },
+    "adjacent_study_filtered": {
+      "command": "python -m pytest -q self_improving/studies/vlm_fallback_prompt_optimization --deselect self_improving/studies/vlm_fallback_prompt_optimization/test_protocol.py::test_frozen_spec_and_inventory_are_valid --deselect self_improving/studies/vlm_fallback_prompt_optimization/test_protocol.py::test_cli_validate_and_inventory",
+      "passed": 665,
+      "failed": 0,
+      "deselected": 2
+    },
+    "full_study_unfiltered": {
+      "command": "python -m pytest -q self_improving/studies/vlm_fallback_prompt_optimization",
+      "status": "failed_known_protected_evidence_gap",
+      "passed": 665,
+      "failed": 2,
+      "failures": [
+        "test_protocol.py::test_frozen_spec_and_inventory_are_valid",
+        "test_protocol.py::test_cli_validate_and_inventory"
+      ],
+      "cause": "The frozen inventory references protected PEARL image artifacts that are absent from this working tree; the unfiltered study suite is not green."
+    },
+    "static_gates": {
+      "ruff_check": {
+        "command": "python -m ruff check self_improving/studies/vlm_fallback_prompt_optimization/visible_qwen_provider.py self_improving/studies/vlm_fallback_prompt_optimization/test_visible_qwen_provider.py",
+        "status": "pass"
+      },
+      "ruff_format": {
+        "command": "python -m ruff format --check self_improving/studies/vlm_fallback_prompt_optimization/visible_qwen_provider.py self_improving/studies/vlm_fallback_prompt_optimization/test_visible_qwen_provider.py",
+        "status": "pass"
+      },
+      "diff_check": {
+        "command": "git diff --check",
+        "status": "pass"
+      }
+    }
+  },
+  "execution_observations": {
+    "model_loaded": false,
+    "inference_count": 0,
+    "gpu_used": false,
+    "network": false,
+    "annotation_state": "pending_blinded_annotation",
+    "execution_authorized": false
+  },
+  "study_authority_changes": {
+    "amendment": false,
+    "runner": false,
+    "experiment_spec": false,
+    "runner_source_manifest": false,
+    "run_log": false,
+    "sealed_test_annotation_manifest": false
+  },
+  "claim_boundaries": {
+    "provider_candidate_preflight": true,
+    "production_eligible": false,
+    "dependency_closure_complete": false,
+    "bitwise_gpu_parity_qualified": false,
+    "quality_claim": false,
+    "effectiveness_claim": false
+  },
+  "documentation": {
+    "markdown_path": "docs/evidence/vlm-visible-provider-preflight-20260902.md",
+    "reader_guide_path": "repo-docs/modules/vlm-visible-provider.md"
+  },
+  "privacy": {
+    "private_absolute_paths_present": false,
+    "credentials_present": false,
+    "session_or_remote_control_identifiers_present": false
+  }
+}

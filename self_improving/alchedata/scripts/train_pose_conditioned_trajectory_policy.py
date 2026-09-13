@@ -9,7 +9,6 @@ from pathlib import Path
 
 from pose_conditioned_trajectory_policy import load_demonstrations, train_checkpoint
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 

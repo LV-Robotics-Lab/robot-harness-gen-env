@@ -355,8 +355,17 @@ def extract_mentions(request: str) -> list[MentionGroup]:
                         )
                     )
     generic_patterns = (
-        r"\b(?:place|put|add|create|generate|stack)\s+(?:a|an|the|one)\s+(?P<object>[a-z][a-z0-9_-]*(?:\s+[a-z][a-z0-9_-]*){0,3}?)(?=\s+(?:on\s+top\s+of|inside|into|on|near|to\s+the|in\s+front\s+of|behind)|[.,]|$)",
-        r"\b(?:a|an|one)\s+(?P<object>[a-z][a-z0-9_-]*(?:\s+[a-z][a-z0-9_-]*){0,3}?)\s+(?:is\s+)?(?=on\s+top\s+of|inside|on\s+the\s+table|near|to\s+the|in\s+front\s+of|behind)",
+        (
+            "\\b(?:place|put|add|create|generate|stack)\\s+(?:a|an|the|one)\\s"
+            "+(?P<object>[a-z][a-z0-9_-]*(?:\\s+[a-z][a-z0-9_-]*){0,3}?)(?=\\"
+            "s+(?:on\\s+top\\s+of|inside|into|on|near|to\\s+the|in\\s+front\\s+o"
+            "f|behind)|[.,]|$)"
+        ),
+        (
+            "\\b(?:a|an|one)\\s+(?P<object>[a-z][a-z0-9_-]*(?:\\s+[a-z][a-z0-9"
+            "_-]*){0,3}?)\\s+(?:is\\s+)?(?=on\\s+top\\s+of|inside|on\\s+the\\s+ta"
+            "ble|near|to\\s+the|in\\s+front\\s+of|behind)"
+        ),
     )
     attribute_terms = {
         term

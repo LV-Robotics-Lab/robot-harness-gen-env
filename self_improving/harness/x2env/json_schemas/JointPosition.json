@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "value": {
+      "title": "Value",
+      "type": "number"
+    }
+  },
+  "required": [
+    "name",
+    "value"
+  ],
+  "title": "JointPosition",
+  "type": "object"
+}

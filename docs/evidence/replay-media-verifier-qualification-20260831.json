@@ -1,0 +1,138 @@
+{
+  "schema_version": "harness.replay_media_verifier_qualification.v1",
+  "recorded_date": "2026-08-31",
+  "purpose": "Qualify path-free, resource-bounded decoding of replay PNG and MP4 artifacts before typed promotion.",
+  "claim_boundary": "This qualifies the media verification boundary on the recorded delegated host; it is not a 900/120 replay qualification, physical validation receipt, or publication decision.",
+  "failed_approaches": [
+    {
+      "approach": "dynamic_ffmpeg_with_timeout",
+      "outcome": "rejected",
+      "reason": "Executable hashes do not bind the ELF loader, resolved DSO closure, loader cache/preload, or host resource boundary."
+    },
+    {
+      "approach": "in_process_pillow",
+      "outcome": "rejected",
+      "reason": "Global decompression-bomb policy and process-wide memory make the decoder unsafe for untrusted replay artifacts."
+    },
+    {
+      "approach": "migrate_from_nondelegated_session_scope",
+      "outcome": "rejected",
+      "reason": "Writing a child PID from the root-owned source scope into a user-owned target cgroup returned Permission denied."
+    },
+    {
+      "approach": "general_static_imageio_ffmpeg",
+      "outcome": "rejected",
+      "reason": "The binary attempted to reopen a random device and failed under the exact Landlock/seccomp policy; the policy was not widened."
+    },
+    {
+      "approach": "claim_exact_yuv420p_from_framemd5",
+      "outcome": "rejected",
+      "reason": "Decoded raw size proves an 8-bit 4:2:0 sample layout but cannot distinguish yuv420p, nv12, and yuvj420p."
+    }
+  ],
+  "toolchain": {
+    "source_url": "https://ffmpeg.org/releases/ffmpeg-7.0.2.tar.xz",
+    "source_tarball_sha256": "8646515b638a3ad303e23af6a3587734447cb8fc0a0c064ecdb8e95c4fd8b389",
+    "compiler": "Ubuntu GCC 13.3.0-6ubuntu2~24.04.1",
+    "linker": "GNU ld 2.42",
+    "configure_flags": [
+      "--disable-everything",
+      "--disable-autodetect",
+      "--disable-network",
+      "--disable-doc",
+      "--disable-debug",
+      "--disable-x86asm",
+      "--disable-ffprobe",
+      "--disable-avdevice",
+      "--disable-swresample",
+      "--enable-ffmpeg",
+      "--enable-protocol=fd",
+      "--enable-protocol=pipe",
+      "--enable-demuxer=mov",
+      "--enable-demuxer=image_png_pipe",
+      "--enable-decoder=h264",
+      "--enable-decoder=png",
+      "--enable-encoder=rawvideo",
+      "--enable-muxer=framemd5",
+      "--enable-parser=h264",
+      "--enable-filter=format",
+      "--enable-filter=scale",
+      "--enable-zlib",
+      "--pkg-config-flags=--static",
+      "--extra-ldflags=-static"
+    ],
+    "static_ffmpeg": {
+      "bytes": 4337384,
+      "sha256": "fe08d0f51873874056abe5be5eb1d1047a1cc3eb3da0c41907047be5581ef02e",
+      "static_elf": true,
+      "has_pt_interp": false,
+      "has_dynamic_section": false
+    }
+  },
+  "sandbox": {
+    "launcher": {
+      "bytes": 790240,
+      "sha256": "092597d14624759011d8c3f53d4f203ea6a345541bac1e2075b263247694d7ec"
+    },
+    "launcher_source": {
+      "bytes": 9524,
+      "sha256": "e819aaf36ade98ae01f42e3581205392bde55649fff7132f61b41d7ea776e54c"
+    },
+    "sandbox_identity_sha256": "dc03f7db9d671cfe23ea23e78698a05a56867f72eeb0941393c42350345fd223",
+    "verifier_identity_sha256": "aca09b208fb2bddab566b90d1327a6ffc4d029dec6f65e31018081b60d1bd699",
+    "input_transport": "held seekable regular-file fd",
+    "filesystem_policy": "Landlock exact executable access; media is not reopened by pathname",
+    "syscall_policy": "seccomp denies path opens, random-source opens, and networking",
+    "resource_policy": "per-run delegated cgroup v2 plus rlimits",
+    "failure_is_fail_closed": true
+  },
+  "input": {
+    "logical_root": "self_improving/studies/ASPIRE/artifacts/real_replay_can_on_plate_seed7",
+    "aggregate_sha256": "2146ba8ab8830d42eeb702913d45dcde7a71595cd281cd78e9fff81436503761",
+    "artifacts": {
+      "preview_head.png": {"bytes": 124155, "sha256": "1f6a509d3dbbab9061106ca1fdf0fbd0b62063c4eb79cc01647b8d28033eaaca"},
+      "preview_segmentation.png": {"bytes": 1455, "sha256": "4a0fb3fb6f635bd83b6912cc1767eb16663cdddd754f17bad59df0244f814d92"},
+      "preview_world_left.png": {"bytes": 505405, "sha256": "1ec2720b8a5bc8a8b8201538475fc982f25439f2969d58feb2f1fc5ae36fb097"},
+      "preview_world_right.png": {"bytes": 507616, "sha256": "3f019e47c64badcc6a3d96e5f65c7054687830137125e2eeda7ea1c503173d32"},
+      "observer_start.png": {"bytes": 107079, "sha256": "738693faf957f83a895a50c2dedf880495c03bd3dc045c53f341ae13a9e3d32e"},
+      "observer_mid.png": {"bytes": 106693, "sha256": "bb4cc281a42bcca937e9084b91030f19d04f2e1bf044e5ae4e879ca5e2045b97"},
+      "observer_end.png": {"bytes": 106653, "sha256": "c93468cf0c1e381f573e0e3c7b8760146d94fe2b2c7907241fa184b47d2b17ce"},
+      "observer_runtime.mp4": {"bytes": 61285, "sha256": "a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e"}
+    }
+  },
+  "observed": {
+    "video_frame_count": 120,
+    "decoded_unique_frame_count": 114,
+    "fps": 12,
+    "width": 320,
+    "height": 240,
+    "sample_aspect_ratio": "0/1",
+    "sample_aspect_ratio_defaulted_to_square": true,
+    "pixel_fact": "8bit-420",
+    "invocation_count": 8,
+    "max_memory_peak_bytes": 11485184,
+    "max_pids_peak": 22,
+    "cpu_usage_total_usec": 113549,
+    "oom_count": 0,
+    "oom_kill_count": 0,
+    "pids_max_count": 0
+  },
+  "negative_cases": {
+    "avi_renamed_mp4": "video_container_invalid",
+    "mpeg4_codec_mp4": "decode_failed",
+    "h264_yuv444": "video_pixel_format_unsupported",
+    "sample_aspect_ratio_2_1": "video_aspect_ratio_invalid",
+    "extra_stream": "decode_failed",
+    "structural_bitflip": "decode_failed",
+    "nondelegated_direct_sandbox": "cgroup_unavailable",
+    "nondelegated_verifier": "sandbox_unavailable",
+    "full_range_yuvj420p": "accepted_as_8bit-420_without_exact_layout_claim"
+  },
+  "verification": {
+    "python_3_13_delegated": "211 passed; media_sandbox and media_verifier statement/branch coverage 100%",
+    "python_3_11_delegated": "211 passed",
+    "wheel_isolated_install": "2 passed; native/media_sandbox.c present and byte-identical",
+    "ruff": "pass",
+    "diff_check": "pass"
+  }
+}

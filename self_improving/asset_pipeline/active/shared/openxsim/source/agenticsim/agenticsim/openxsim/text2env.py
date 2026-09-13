@@ -33,7 +33,9 @@ def _pose_from_placement(obj: dict[str, Any]) -> tuple[Pose, dict[str, Any]]:
             _midpoint(initial.get("ylim") or [0.0, 0.0]),
             _midpoint(initial.get("zlim") or [0.0, 0.0]),
         )
-        return Pose(position=position, orientation_wxyz=tuple(float(value) for value in quaternion)), dict(initial)
+        return Pose(
+            position=position, orientation_wxyz=tuple(float(value) for value in quaternion)
+        ), dict(initial)
     xyz = initial.get("xyz") or [0.0, 0.0, 0.0]
     return (
         Pose(

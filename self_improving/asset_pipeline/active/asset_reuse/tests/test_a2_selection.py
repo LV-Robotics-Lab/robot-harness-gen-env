@@ -1,0 +1,329 @@
+import json
+
+from agenticsim.openxsim.assets import AssetCandidate
+from lib import a2_selection as a2
+
+
+def cand(
+    fmt="usd", provider="nvidia_server", key="a/b.usd", size=100, license="unknown x"
+):
+    return AssetCandidate(
+        candidate_id=key,
+        name=key,
+        category="x",
+        download_url="https://x",
+        source_page="https://x",
+        format=fmt,
+        provider=provider,
+        license=license,
+        score=1.0,
+        metadata={"key": key, "size_bytes": size},
+    )
+
+
+G = {"max_size_bytes": 1000, "license_gate": False}
+
+
+def test_server_candidate_must_be_usd():
+    assert a2.gate(cand(fmt="usd"), G) is None
+    assert a2.gate(cand(fmt="glb"), G)[0] == a2.REJ_UNSUPPORTED
+
+
+def test_web_candidate_formats():
+    assert a2.gate(cand(fmt="glb", provider="github_tree"), G) is None
+    assert a2.gate(cand(fmt="usd", provider="github_tree"), G)[0] == a2.REJ_UNSUPPORTED
+
+
+def test_thumbs_oversize_license():
+    assert a2.gate(cand(key="a/.thumbs/x.usd"), G)[0] == a2.REJ_THUMBS
+    assert a2.gate(cand(size=2000), G)[0] == a2.REJ_OVERSIZE
+    assert a2.gate(cand(), {**G, "license_gate": True})[0] == a2.REJ_LICENSE
+
+
+def test_gate_candidates_records_every_rejection():
+    recs = a2.gate_candidates([cand(), cand(fmt="glb")], G)
+    assert [r["verdict"] for r in recs] == ["viable", "rejected"]
+    assert recs[1]["rejection"]["code"] == a2.REJ_UNSUPPORTED
+
+
+def test_allocate_new_category_gets_next_number(tmp_path):
+    lib = tmp_path / "library"
+    (lib / "301_cup").mkdir(parents=True)
+    (lib / "301_cup" / "model_data0.json").write_text("{}")
+    asset, model = a2.allocate_asset("pitcher", lib, tmp_path / "m.json")
+    assert (asset, model) == ("302_pitcher", 0)
+
+
+def test_allocate_same_category_appends_model(tmp_path):
+    lib = tmp_path / "library"
+    (lib / "301_cup").mkdir(parents=True)
+    (lib / "301_cup" / "model_data0.json").write_text("{}")
+    asset, model = a2.allocate_asset("cup", lib, tmp_path / "m.json")
+    assert (asset, model) == ("301_cup", 1)
+
+
+def test_allocate_sees_pending_manifest(tmp_path):
+    m = tmp_path / "m.json"
+    m.write_text(
+        json.dumps(
+            {
+                "groups": [
+                    {
+                        "name": "g",
+                        "prefix": "p",
+                        "items": [
+                            {
+                                "usd": "x.usd",
+                                "asset": "301_cup",
+                                "model": 0,
+                                "category": "cup",
+                                "aliases": ["cup"],
+                            }
+                        ],
+                    }
+                ]
+            }
+        )
+    )
+    assert a2.allocate_asset("bowl", tmp_path / "nolib", m) == ("302_bowl", 0)
+    assert a2.allocate_asset("cup", tmp_path / "nolib", m) == ("301_cup", 1)
+
+
+def test_manifest_group_and_append(tmp_path):
+    c = cand(key="Assets/Props/YCB/Axis_Aligned/019_pitcher_base.usd")
+    g = a2.build_manifest_group(
+        c, "302_pitcher", 0, {"category": "pitcher", "aliases": ["pitcher"]}
+    )
+    assert g["prefix"] == "Assets/Props/YCB/Axis_Aligned"
+    assert g["source"] == "nvidia_server"
+    assert g["items"][0] == {
+        "usd": "019_pitcher_base.usd",
+        "asset": "302_pitcher",
+        "model": 0,
+        "category": "pitcher",
+        "aliases": ["pitcher"],
+    }
+    p = a2.append_manifest(tmp_path / "acq.json", g)
+    a2.append_manifest(p, g)
+    assert len(json.loads(p.read_text())["groups"]) == 1
+
+
+def test_manifest_group_tolerates_github_candidate_without_key():
+    c = AssetCandidate(
+        candidate_id="github:KhronosGroup/glTF-Sample-Assets:Models/Lantern/glTF-Binary/Lantern.glb",
+        name="Lantern.glb",
+        category="lantern",
+        download_url="https://raw.test/Lantern.glb",
+        source_page="https://gh",
+        format="glb",
+        provider="github_tree",
+        license="CC0",
+        score=1.0,
+        metadata={"path": "Models/Lantern/glTF-Binary/Lantern.glb"},
+    )
+    g = a2.build_manifest_group(
+        c, "303_lantern", 0, {"category": "lantern", "aliases": ["lantern"]}
+    )
+    assert g["prefix"] == "Models/Lantern/glTF-Binary"
+    assert g["source"] == "github_tree"
+    assert g["items"][0]["usd"] == "Lantern.glb"
+
+
+def test_write_evidence_schema(tmp_path):
+    a2.write_evidence(
+        tmp_path / "e.json",
+        run_id="r1",
+        providers_snapshot={"x": 1},
+        categories=[{"query": {"category": "cup"}, "status": "reused_local"}],
+    )
+    d = json.loads((tmp_path / "e.json").read_text())
+    assert d["schema"] == "envgen.asset_selection_evidence.v1"
+    assert d["categories"][0]["status"] == "reused_local"
+
+
+def test_write_evidence_omits_categories_sha256_when_not_given(tmp_path):
+    a2.write_evidence(
+        tmp_path / "e.json", run_id="r1", providers_snapshot={}, categories=[]
+    )
+    d = json.loads((tmp_path / "e.json").read_text())
+    assert "categories_sha256" not in d
+
+
+def test_write_evidence_categories_sha256_stable_and_changes(tmp_path):
+    a2.write_evidence(
+        tmp_path / "e1.json",
+        run_id="r1",
+        providers_snapshot={},
+        categories=[],
+        categories_input=[{"category": "cup"}],
+    )
+    a2.write_evidence(
+        tmp_path / "e2.json",
+        run_id="r1",
+        providers_snapshot={},
+        categories=[],
+        categories_input=[{"category": "cup"}],
+    )
+    a2.write_evidence(
+        tmp_path / "e3.json",
+        run_id="r1",
+        providers_snapshot={},
+        categories=[],
+        categories_input=[{"category": "bowl"}],
+    )
+    d1 = json.loads((tmp_path / "e1.json").read_text())
+    d2 = json.loads((tmp_path / "e2.json").read_text())
+    d3 = json.loads((tmp_path / "e3.json").read_text())
+    assert "categories_sha256" in d1
+    assert d1["categories_sha256"] == d2["categories_sha256"]
+    assert d1["categories_sha256"] != d3["categories_sha256"]
+
+
+def test_manifest_group_carries_materials():
+    g = a2.build_manifest_group(
+        cand(),
+        "310_kettle",
+        0,
+        {"category": "kettle", "materials": ["metal"], "colors": ["white"]},
+    )
+    assert g["items"][0]["materials"] == ["metal"]
+    assert g["items"][0]["colors"] == ["white"]
+
+
+def test_validate_entries_flags_unknown_and_missing():
+    warns = a2.validate_entries(
+        [
+            {"category": "cup", "colour": ["red"]},
+            {"aliases": ["x"]},
+            {"category": "ok", "comment": "fine"},
+        ]
+    )
+    assert any("colour" in w for w in warns)
+    assert any("category" in w for w in warns)
+    assert len(warns) == 2
+
+
+def test_write_evidence_input_warnings(tmp_path):
+    p = tmp_path / "e.json"
+    a2.write_evidence(
+        p, run_id="r", providers_snapshot={}, categories=[], input_warnings=["w1"]
+    )
+    assert json.loads(p.read_text())["input_warnings"] == ["w1"]
+    p2 = tmp_path / "e2.json"
+    a2.write_evidence(p2, run_id="r", providers_snapshot={}, categories=[])
+    assert "input_warnings" not in json.loads(p2.read_text())
+
+
+def _mini_match_catalog(tmp_path):
+    cat = {
+        "entries": [
+            {
+                "asset_id": "010_ball_y",
+                "category": "ball",
+                "aliases": ["ball"],
+                "colors": ["yellow"],
+                "materials": [],
+                "available": True,
+                "asset_path": "/x/010",
+                "models": [{"model_id": 0, "visual_path": "/x/010/v.glb"}],
+            },
+            {
+                "asset_id": "011_ball_b",
+                "category": "ball",
+                "aliases": ["ball"],
+                "colors": ["blue"],
+                "materials": ["rubber"],
+                "available": True,
+                "asset_path": "/x/011",
+                "models": [{"model_id": 0}],
+            },
+            {
+                "asset_id": "020_cup",
+                "category": "cup",
+                "aliases": ["mug"],
+                "colors": [],
+                "materials": [],
+                "available": False,
+                "asset_path": "/x/020",
+                "models": [{"model_id": 0}],
+            },
+        ]
+    }
+    p = tmp_path / "cat.json"
+    p.write_text(json.dumps(cat))
+    return p
+
+
+def test_match_local_exact_similar_none(tmp_path):
+    p = _mini_match_catalog(tmp_path)
+    pay, unmet = a2.match_local(p, "ball", want_colors=["blue"])
+    assert pay["asset_id"] == "011_ball_b" and unmet == []
+    pay, unmet = a2.match_local(p, "ball", want_colors=["red"])
+    assert pay is not None and unmet and unmet[0]["kind"] == "mismatch"
+    # 池侧别名命中（mug→020_cup）；颜色未标注 → unverified 而非 mismatch
+    pay, unmet = a2.match_local(p, "mug", want_colors=["red"])
+    assert pay["asset_id"] == "020_cup" and unmet[0]["kind"] == "unverified"
+    pay, unmet = a2.match_local(p, "sofa")
+    assert pay is None and unmet is None
+
+
+def test_allocate_asset_profile_conflict_opens_new_slot(tmp_path):
+    lib = tmp_path / "library"
+    a = lib / "301_ball"
+    a.mkdir(parents=True)
+    (a / "model_data0.json").write_text("{}")
+    (a / "ledger.json").write_text(json.dumps({"profile": "cross_backend"}))
+    man = tmp_path / "m.json"
+    # 无 profile：旧行为——同类续 model 位
+    assert a2.allocate_asset("ball", lib, man) == ("301_ball", 1)
+    # 相同 profile：照常复用
+    assert a2.allocate_asset("ball", lib, man, profile="cross_backend") == (
+        "301_ball",
+        1,
+    )
+    # 冲突 profile：另开新资产位（2026-08-20 owner 决策 A——防漂移契约不动）
+    assert a2.allocate_asset("ball", lib, man, profile="sapien_only") == (
+        "302_ball",
+        0,
+    )
+
+
+def test_match_local_all_list_scores_and_threshold(tmp_path):
+    p = _mini_match_catalog(tmp_path)
+    # 全量列表：ball 两个候选都返回，attr_score 排序
+    cands = a2.match_local_all(p, "ball", want_colors=["blue"])
+    assert [c["asset"]["asset_id"] for c in cands] == ["011_ball_b", "010_ball_y"]
+    assert cands[0]["attr_score"] == 1.0 and cands[0]["unmet"] == []
+    assert cands[1]["attr_score"] == 0.0
+    # 视觉分在同 attr 档内重排
+    cands = a2.match_local_all(
+        p, "ball", visual_scores={"010_ball_y": 0.30, "011_ball_b": 0.20}
+    )
+    assert [c["asset"]["asset_id"] for c in cands] == ["010_ball_y", "011_ball_b"]
+    assert cands[0]["visual_sim"] == 0.3
+    # 门限只筛相似（unmet 非空）者；exact 豁免
+    cands = a2.match_local_all(
+        p,
+        "ball",
+        want_colors=["blue"],
+        visual_scores={"010_ball_y": 0.05, "011_ball_b": 0.05},
+        min_visual=0.18,
+    )
+    ids = [c["asset"]["asset_id"] for c in cands]
+    assert "011_ball_b" in ids  # exact 留下
+    assert "010_ball_y" not in ids  # similar 低于门限被筛
+    # 无视觉分（缺缩略图）不误杀
+    cands = a2.match_local_all(
+        p, "ball", want_colors=["blue"], visual_scores={}, min_visual=0.18
+    )
+    assert len(cands) == 2 and all(c["visual_sim"] is None for c in cands)
+    # limit 生效
+    assert len(a2.match_local_all(p, "ball", limit=1)) == 1
+
+
+def test_attr_score_values():
+    assert a2._attr_score([], 0) == 1.0
+    assert a2._attr_score([], 2) == 1.0
+    assert a2._attr_score([{"kind": "unverified"}], 1) == 0.5
+    assert a2._attr_score([{"kind": "mismatch"}], 2) == 0.5
+    assert a2._attr_score([{"kind": "mismatch"}, {"kind": "unverified"}], 2) == 0.25

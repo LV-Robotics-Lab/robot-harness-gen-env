@@ -12,12 +12,10 @@ import platform
 import shutil
 import socket
 import sys
-import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONTRACT = ROOT / "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json"
@@ -40,7 +38,9 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(row, sort_keys=True) + "\n" for row in rows), encoding="utf-8")
+    path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows), encoding="utf-8"
+    )
 
 
 def sha256_file(path: Path) -> str:
@@ -75,7 +75,8 @@ def relation_metrics(
     target_top = target_position[2] + target_size[2] / 2.0
     vertical_gap = abs(source_bottom - target_top)
     checks = {
-        "horizontal_center_distance": horizontal_distance <= verifier["horizontal_center_distance_max_m"],
+        "horizontal_center_distance": horizontal_distance
+        <= verifier["horizontal_center_distance_max_m"],
         "vertical_support_gap": vertical_gap <= verifier["source_bottom_to_target_top_abs_max_m"],
         "source_speed": source_speed_mps <= verifier["source_speed_max_mps"],
     }
@@ -100,7 +101,9 @@ def build_transfer_record(
     return {
         "schema_version": "alchedata.openxsim.isaac_transfer.v0",
         "command": "/transfer",
-        "status": "pass_task_semantic_transfer_with_declared_losses" if target_success else "fail_target_verifier",
+        "status": "pass_task_semantic_transfer_with_declared_losses"
+        if target_success
+        else "fail_target_verifier",
         "task_id": contract["task_id"],
         "same_normalized_task_contract": True,
         "task_contract": file_evidence(contract_path, ROOT),
@@ -116,22 +119,66 @@ def build_transfer_record(
             "target_verifier_success": target_success,
         },
         "mappings": [
-            {"field": "task relation", "source": "place_on(container, plate)", "target": "place_on(container_proxy, plate_proxy)", "fidelity": "exact_relation"},
-            {"field": "units and up axis", "source": "meters, Z-up", "target": "meters, Z-up", "fidelity": "exact"},
-            {"field": "container asset", "source": "RoboTwin rigid object", "target": "Isaac DynamicCuboid", "fidelity": "primitive_proxy"},
-            {"field": "plate asset", "source": "RoboTwin plate", "target": "Isaac FixedCuboid", "fidelity": "primitive_proxy"},
-            {"field": "success verifier", "source": "RoboTwin task check_success", "target": "geometric support and speed checks", "fidelity": "relation_equivalent_not_code_identical"},
-            {"field": "action interface", "source": "dual-arm scripted robot expert", "target": "scripted object-space trajectory", "fidelity": "not_transferred"},
-            {"field": "materials", "source": "RoboTwin task materials", "target": "constant primitive colors", "fidelity": "not_transferred"},
-            {"field": "robot embodiment", "source": "dual-arm robot", "target": "none", "fidelity": "not_transferred"}
+            {
+                "field": "task relation",
+                "source": "place_on(container, plate)",
+                "target": "place_on(container_proxy, plate_proxy)",
+                "fidelity": "exact_relation",
+            },
+            {
+                "field": "units and up axis",
+                "source": "meters, Z-up",
+                "target": "meters, Z-up",
+                "fidelity": "exact",
+            },
+            {
+                "field": "container asset",
+                "source": "RoboTwin rigid object",
+                "target": "Isaac DynamicCuboid",
+                "fidelity": "primitive_proxy",
+            },
+            {
+                "field": "plate asset",
+                "source": "RoboTwin plate",
+                "target": "Isaac FixedCuboid",
+                "fidelity": "primitive_proxy",
+            },
+            {
+                "field": "success verifier",
+                "source": "RoboTwin task check_success",
+                "target": "geometric support and speed checks",
+                "fidelity": "relation_equivalent_not_code_identical",
+            },
+            {
+                "field": "action interface",
+                "source": "dual-arm scripted robot expert",
+                "target": "scripted object-space trajectory",
+                "fidelity": "not_transferred",
+            },
+            {
+                "field": "materials",
+                "source": "RoboTwin task materials",
+                "target": "constant primitive colors",
+                "fidelity": "not_transferred",
+            },
+            {
+                "field": "robot embodiment",
+                "source": "dual-arm robot",
+                "target": "none",
+                "fidelity": "not_transferred",
+            },
         ],
         "declared_losses": [
             "asset geometry is represented by primitive proxies",
             "the robot embodiment and joint-action policy are not transferred",
             "materials and lighting are not matched",
-            "verifier semantics are matched at relation level but implementation code differs"
+            "verifier semantics are matched at relation level but implementation code differs",
         ],
-        "claim_boundary": "This is an executed task-semantic transfer with a target verifier, not policy transfer, asset identity, visual parity, or evidence that transfer improves learned-policy reuse."
+        "claim_boundary": (
+            "This is an executed task-semantic transfer with a target verif"
+            "ier, not policy transfer, asset identity, visual parity, or ev"
+            "idence that transfer improves learned-policy reuse."
+        ),
     }
 
 
@@ -270,7 +317,11 @@ def main() -> int:
                 "plate_size_m": target_size,
             },
             "gates": {"stage_export": True, "reset": True, "physics": True, "renderer": True},
-            "claim_boundary": "The target scene uses Isaac primitives and proves executable scene construction, not source-asset identity or material parity."
+            "claim_boundary": (
+                "The target scene uses Isaac primitives and proves executable s"
+                "cene construction, not source-asset identity or material parit"
+                "y."
+            ),
         }
         write_json(out_dir / "gen_env.json", gen_env)
         events.append({"at": utc_now(), "command": "/gen-env", "status": gen_env["status"]})
@@ -311,7 +362,13 @@ def main() -> int:
                 if was_playing:
                     timeline.play()
             frame_paths.append(frame_path)
-            frame_records.append({"frame_index": len(frame_paths) - 1, "simulation_step": step, "source_position_m": position})
+            frame_records.append(
+                {
+                    "frame_index": len(frame_paths) - 1,
+                    "simulation_step": step,
+                    "source_position_m": position,
+                }
+            )
 
         if 0 in sample_steps:
             capture(0)
@@ -321,7 +378,9 @@ def main() -> int:
                 position = [
                     source_start[0] + (source_goal[0] - source_start[0]) * fraction,
                     source_start[1] + (source_goal[1] - source_start[1]) * fraction,
-                    source_start[2] + (source_goal[2] - source_start[2]) * fraction + 0.35 * math.sin(math.pi * fraction),
+                    source_start[2]
+                    + (source_goal[2] - source_start[2]) * fraction
+                    + 0.35 * math.sin(math.pi * fraction),
                 ]
                 source.set_world_pose(position=np.asarray(position, dtype=np.float32))
                 source.set_linear_velocity(np.zeros(3, dtype=np.float32))
@@ -333,14 +392,16 @@ def main() -> int:
             world.step(render=True)
             position = [float(value) for value in source.get_world_pose()[0]]
             velocity = [float(value) for value in source.get_linear_velocity()]
-            traces.append({
-                "step": step,
-                "phase": phase,
-                "action": action,
-                "source_position_m": position,
-                "source_linear_velocity_mps": velocity,
-                "target_position_m": [float(value) for value in target.get_world_pose()[0]],
-            })
+            traces.append(
+                {
+                    "step": step,
+                    "phase": phase,
+                    "action": action,
+                    "source_position_m": position,
+                    "source_linear_velocity_mps": velocity,
+                    "target_position_m": [float(value) for value in target.get_world_pose()[0]],
+                }
+            )
             if step in sample_steps:
                 capture(step)
 
@@ -365,7 +426,9 @@ def main() -> int:
         collect = {
             "schema_version": "alchedata.openxsim.isaac_collect.v0",
             "command": "/collect",
-            "status": "pass_isaac_scripted_collection" if encode.get("ready") else "fail_video_encode",
+            "status": "pass_isaac_scripted_collection"
+            if encode.get("ready")
+            else "fail_video_encode",
             "task_id": contract["task_id"],
             "execution_type": "scripted_object_space_expert",
             "learned_policy": False,
@@ -383,7 +446,10 @@ def main() -> int:
                 "captures": frame_records,
                 "encode": encode,
             },
-            "claim_boundary": "This is a backend-native Isaac collection with a scripted object-space expert, not robot control or learned-policy evidence."
+            "claim_boundary": (
+                "This is a backend-native Isaac collection with a scripted obje"
+                "ct-space expert, not robot control or learned-policy evidence."
+            ),
         }
         write_json(out_dir / "collect.json", collect)
         events.append({"at": utc_now(), "command": "/collect", "status": collect["status"]})
@@ -391,14 +457,19 @@ def main() -> int:
         evaluate = {
             "schema_version": "alchedata.openxsim.isaac_evaluate.v0",
             "command": "/evaluate",
-            "status": "pass_isaac_task_verifier" if metrics["success"] else "fail_isaac_task_verifier",
+            "status": "pass_isaac_task_verifier"
+            if metrics["success"]
+            else "fail_isaac_task_verifier",
             "task_id": contract["task_id"],
             "learned_policy": False,
             "execution_complete": True,
             "task_success": metrics["success"],
             "verifier": contract["relation"]["success_verifier"],
             "metrics": metrics,
-            "claim_boundary": "The result verifies the normalized place_on relation for this scripted Isaac execution; it is not learned-policy quality."
+            "claim_boundary": (
+                "The result verifies the normalized place_on relation for this "
+                "scripted Isaac execution; it is not learned-policy quality."
+            ),
         }
         evaluate_path = out_dir / "evaluate.json"
         write_json(evaluate_path, evaluate)
@@ -411,20 +482,45 @@ def main() -> int:
             "task_id": contract["task_id"],
             "trace": file_evidence(trace_path, out_dir),
             "categories": {
-                "wrong_grasp_location": {"status": "not_applicable", "reason": "No gripper is present in the target execution."},
-                "object_knocked_over": {"status": "not_observed", "evidence": {"final_position_m": source_position}},
-                "arm_jitter": {"status": "not_applicable", "reason": "No robot arm is present in the target execution."},
-                "uncontrolled_gripper_open_close": {"status": "not_applicable", "reason": "No gripper is present in the target execution."},
-                "after_contact_failure": {"status": "not_observed" if metrics["success"] else "observed", "evidence": metrics},
-                "visual_material_mismatch": {"status": "known_transfer_loss", "evidence": "Primitive colors replace source materials."}
+                "wrong_grasp_location": {
+                    "status": "not_applicable",
+                    "reason": "No gripper is present in the target execution.",
+                },
+                "object_knocked_over": {
+                    "status": "not_observed",
+                    "evidence": {"final_position_m": source_position},
+                },
+                "arm_jitter": {
+                    "status": "not_applicable",
+                    "reason": "No robot arm is present in the target execution.",
+                },
+                "uncontrolled_gripper_open_close": {
+                    "status": "not_applicable",
+                    "reason": "No gripper is present in the target execution.",
+                },
+                "after_contact_failure": {
+                    "status": "not_observed" if metrics["success"] else "observed",
+                    "evidence": metrics,
+                },
+                "visual_material_mismatch": {
+                    "status": "known_transfer_loss",
+                    "evidence": "Primitive colors replace source materials.",
+                },
             },
-            "root_cause_hypothesis": None if metrics["success"] else "The final place_on relation failed a geometric or speed threshold.",
-            "claim_boundary": "Not-applicable categories are retained rather than reported as absent failure modes."
+            "root_cause_hypothesis": None
+            if metrics["success"]
+            else "The final place_on relation failed a geometric or speed threshold.",
+            "claim_boundary": (
+                "Not-applicable categories are retained rather than reported as"
+                " absent failure modes."
+            ),
         }
         write_json(out_dir / "diagnose.json", diagnose)
         events.append({"at": utc_now(), "command": "/diagnose", "status": diagnose["status"]})
 
-        transfer = build_transfer_record(contract_path, contract, source_report_path, evaluate_path, metrics["success"])
+        transfer = build_transfer_record(
+            contract_path, contract, source_report_path, evaluate_path, metrics["success"]
+        )
         write_json(out_dir / "transfer.json", transfer)
         events.append({"at": utc_now(), "command": "/transfer", "status": transfer["status"]})
         write_jsonl(out_dir / "events.jsonl", events)
@@ -436,19 +532,24 @@ def main() -> int:
             "/diagnose": diagnose["status"],
             "/transfer": transfer["status"],
         }
-        passed = all(status.startswith("pass_") or status == "no_failure_observed" for status in command_loop.values())
-        run_state.update({
-            "state": "completed" if passed else "failed",
-            "finished_at": utc_now(),
-            "commands": command_loop,
-            "task_success": metrics["success"],
-            "same_task_transfer": transfer["same_normalized_task_contract"],
-            "runtime": {
-                "hostname": socket.gethostname(),
-                "platform": platform.platform(),
-                "python": platform.python_version(),
-            },
-        })
+        passed = all(
+            status.startswith("pass_") or status == "no_failure_observed"
+            for status in command_loop.values()
+        )
+        run_state.update(
+            {
+                "state": "completed" if passed else "failed",
+                "finished_at": utc_now(),
+                "commands": command_loop,
+                "task_success": metrics["success"],
+                "same_task_transfer": transfer["same_normalized_task_contract"],
+                "runtime": {
+                    "hostname": socket.gethostname(),
+                    "platform": platform.platform(),
+                    "python": platform.python_version(),
+                },
+            }
+        )
         write_json(out_dir / "run_state.json", run_state)
         manifest = write_bundle_manifest(out_dir)
         summary = {
@@ -459,14 +560,20 @@ def main() -> int:
             "out_dir": str(out_dir),
         }
     except Exception as exc:
-        run_state.update({
-            "state": "failed",
-            "finished_at": utc_now(),
-            "error": f"{type(exc).__name__}: {exc}",
-            "traceback": traceback.format_exc(),
-        })
+        run_state.update(
+            {
+                "state": "failed",
+                "finished_at": utc_now(),
+                "error": f"{type(exc).__name__}: {exc}",
+                "traceback": traceback.format_exc(),
+            }
+        )
         write_json(out_dir / "run_state.json", run_state)
-        summary = {"status": "fail_isaac_command_bundle", "error": run_state["error"], "out_dir": str(out_dir)}
+        summary = {
+            "status": "fail_isaac_command_bundle",
+            "error": run_state["error"],
+            "out_dir": str(out_dir),
+        }
     finally:
         app.close()
 

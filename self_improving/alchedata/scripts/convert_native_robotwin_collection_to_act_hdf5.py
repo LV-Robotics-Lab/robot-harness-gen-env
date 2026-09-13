@@ -15,7 +15,6 @@ import h5py
 import numpy as np
 from PIL import Image
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -45,7 +44,8 @@ def source_episode_passed(episode: dict[str, Any]) -> bool:
     return (
         str(episode.get("status", "")).startswith("pass_")
         and episode.get("check_success") is True
-        and episode.get("native_synchronized_data", {}).get("status") == "pass_native_synchronized_recording"
+        and episode.get("native_synchronized_data", {}).get("status")
+        == "pass_native_synchronized_recording"
     )
 
 
@@ -151,7 +151,9 @@ def convert_episode(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Convert native synchronized RoboTwin rollout data to ACT HDF5.")
+    parser = argparse.ArgumentParser(
+        description="Convert native synchronized RoboTwin rollout data to ACT HDF5."
+    )
     parser.add_argument("--collection", action="append", required=True)
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--camera-width", type=int, default=96)
@@ -175,12 +177,19 @@ def main() -> int:
         "out_dir": str(out_dir),
         "episodes": [],
         "claim_boundary": (
-            "This adapter uses RoboTwin-native equal-length per-frame head RGB and 14-D joint state records. "
-            "It proves synchronized ACT-format demonstrations, not learned-policy task success."
+            "This adapter uses RoboTwin-native equal-length per-frame head "
+            "RGB and 14-D joint state records. It proves synchronized ACT-f"
+            "ormat demonstrations, not learned-policy task success."
         ),
         "native_jpeg_color_repair": {
-            "source_behavior": "RoboTwin pkl2hdf5.py passes RGB camera arrays directly to cv2.imencode, which assumes BGR.",
-            "adapter_behavior": "Decode the JPEG as RGB, then swap red and blue channels back to runtime head-camera RGB order.",
+            "source_behavior": (
+                "RoboTwin pkl2hdf5.py passes RGB camera arrays directly to cv2."
+                "imencode, which assumes BGR."
+            ),
+            "adapter_behavior": (
+                "Decode the JPEG as RGB, then swap red and blue channels back t"
+                "o runtime head-camera RGB order."
+            ),
         },
     }
     write_json(out_dir / "conversion_report.json", report)
@@ -199,19 +208,27 @@ def main() -> int:
             if converted["status"] == "pass_native_act_hdf5_episode":
                 next_episode += 1
 
-    pass_count = sum(1 for episode in report["episodes"] if episode["status"] == "pass_native_act_hdf5_episode")
-    skip_count = sum(1 for episode in report["episodes"] if episode["status"].startswith("skipped_"))
+    pass_count = sum(
+        1 for episode in report["episodes"] if episode["status"] == "pass_native_act_hdf5_episode"
+    )
+    skip_count = sum(
+        1 for episode in report["episodes"] if episode["status"].startswith("skipped_")
+    )
     fail_count = len(report["episodes"]) - pass_count - skip_count
     task_name = f"sim-native-generated_selection2env-demo_clean-{pass_count}"
     task_config = {
         "dataset_dir": str(out_dir / "data"),
         "num_episodes": pass_count,
-        "episode_len": max((episode.get("act_timestep_count", 0) for episode in report["episodes"]), default=0),
+        "episode_len": max(
+            (episode.get("act_timestep_count", 0) for episode in report["episodes"]), default=0
+        ),
         "camera_names": ["cam_high"],
     }
     report.update(
         {
-            "status": "pass_native_act_hdf5_adapter" if pass_count >= 2 and fail_count == 0 else "blocked_native_act_hdf5_adapter",
+            "status": "pass_native_act_hdf5_adapter"
+            if pass_count >= 2 and fail_count == 0
+            else "blocked_native_act_hdf5_adapter",
             "finished_at": datetime.now(timezone.utc).isoformat(),
             "pass_count": pass_count,
             "skip_count": skip_count,
@@ -219,12 +236,23 @@ def main() -> int:
             "act_sim_task_name": task_name,
             "act_sim_task_config": task_config,
             "act_sim_task_config_json": str(out_dir / "SIM_TASK_CONFIGS.generated.json"),
-            "next_step": "Run the RoboTwin ACT loader gate, train beyond one epoch, then evaluate held-out seeds using head-camera RGB.",
+            "next_step": (
+                "Run the RoboTwin ACT loader gate, train beyond one epoch, then"
+                " evaluate held-out seeds using head-camera RGB."
+            ),
         }
     )
     write_json(out_dir / "SIM_TASK_CONFIGS.generated.json", {task_name: task_config})
     write_json(out_dir / "conversion_report.json", report)
-    print(json.dumps({"status": report["status"], "pass_count": pass_count, "report": str(out_dir / "conversion_report.json")}))
+    print(
+        json.dumps(
+            {
+                "status": report["status"],
+                "pass_count": pass_count,
+                "report": str(out_dir / "conversion_report.json"),
+            }
+        )
+    )
     return 0 if report["status"].startswith("pass_") else 1
 
 

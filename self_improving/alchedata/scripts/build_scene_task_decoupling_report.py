@@ -16,7 +16,6 @@ from selection2env_contract import (
     workspace_path,
 )
 
-
 REMOTE_ROOT_MARKER = "/alchedata-self-improving-agents/"
 
 
@@ -50,7 +49,9 @@ def portable_evidence_path(value: str | Path) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify two executable task specs over one placement.")
+    parser = argparse.ArgumentParser(
+        description="Verify two executable task specs over one placement."
+    )
     parser.add_argument("--primary-task", required=True)
     parser.add_argument("--alternate-task", required=True)
     parser.add_argument("--primary-rollout", required=True)
@@ -86,14 +87,17 @@ def main() -> int:
             ),
         }
         images = {
-            name: portable_evidence_path(value)
-            for name, value in report.get("images", {}).items()
+            name: portable_evidence_path(value) for name, value in report.get("images", {}).items()
         }
         rollout_rows.append(
             {
                 "label": label,
                 "task_id": program["task_id"],
-                "task_program": str(primary_path.relative_to(ROOT) if label == "primary" else alternate_path.relative_to(ROOT)),
+                "task_program": str(
+                    primary_path.relative_to(ROOT)
+                    if label == "primary"
+                    else alternate_path.relative_to(ROOT)
+                ),
                 "rollout_report": str(report_path.relative_to(ROOT)),
                 "checks": checks,
                 "status": "pass" if all(checks.values()) else "fail",
@@ -131,9 +135,11 @@ def main() -> int:
         "pair_validation": pair,
         "rollouts": rollout_rows,
         "claim_boundary": (
-            "Both task programs reset from byte-identical placement JSON, begin from byte-identical observer pixels, "
-            "and pass RoboTwin generated play_once/check_success with continuous simulator-step videos. "
-            "This proves scene-task decoupling for one scene, not learned-policy cross-task generalization."
+            "Both task programs reset from byte-identical placement JSON, b"
+            "egin from byte-identical observer pixels, and pass RoboTwin ge"
+            "nerated play_once/check_success with continuous simulator-step"
+            " videos. This proves scene-task decoupling for one scene, not "
+            "learned-policy cross-task generalization."
         ),
     }
     write_json(workspace_path(args.out), result)

@@ -29,7 +29,7 @@
 | Is there at least one real boundary, failure, retry, validation, or caveat path when evidence exists? | Yes. | Step 4 给 `SceneSolveError` + 不可行 prompt 矩阵用例；Step 8 给具体的误报模式攻击测试列表。 | 在 sync 时若有新假阳性模式被锁，须回到对应 module 补行。 |
 | Are claims backed by `references/source-evidence.md`, tests, commands, configs, data, or artifacts? | Yes. | 每条主路径 claim 在 [证据底座](source-evidence.md) 表里有 evidence + confidence + caveat。 | 改动行为时同步回填证据表。 |
 | Does the review name one falsifying check and one likely reader follow-up? | Yes. | falsifying check：`python script/run_prompt_matrix.py --runtime` 应再出 pass。follow-up：CI 不跑真机 + digest 字段 + 自动缩放白名单三条。 | 若真机回放产物 path 变更，更新本行。 |
-| Does the evidence map prove at least two traversal passes and name adjacent paths checked but not traced? | Yes. | [证据底座](source-evidence.md#evidence-traversal-log) 有 Pass 1 + Pass 2 + Pass 3；第三轮覆盖 Harness schemas、catalog、snapshots、测试、打包与统一覆盖率入口。coverage note 继续列明批量 runner、rendered critic、demo 控制面等相邻路径，并把尚不存在的 Registry/handler/MCP 标成缺口。 | 扩范围时把同步过的相邻路径提到追踪。 |
+| Does the evidence map prove at least two traversal passes and name adjacent paths checked but not traced? | Yes. | [证据底座](source-evidence.md#evidence-traversal-log) 有 Pass 1–7；第三轮覆盖 Harness schema，第四轮覆盖 ASPIRE 对照，随后同步 resolver/recorder/Registry/compile，并用 mutation attacks 挑战 snapshot-use、CAS capture 与 qualification report。coverage note 继续列明批量 runner、rendered critic、demo 控制面等相邻路径。 | 扩范围时把同步过的相邻路径提到追踪。 |
 | What remains out of scope or partially verified? | 见 [残余风险](#残余风险) 表。 |
 
 ## 残余风险
@@ -41,6 +41,6 @@
 | `demo/app.py` 队列层只做摘要 | demo 复用同一 `scene_gen` 流水线；本指南只说它是薄编排，未给独立 module | demo 模块若扩大其队列/产物注册职责到值得单说，再加一个 demo 控制面专属模块页 |
 | `rendered_critic` 排除在详述之外 | VLM 判是可选 extra + 非物理证据；若它将来变成主流评判，会被误导性 | 在 [运行时门控](../modules/runtime-gates.md) 开场已显式说「渲染不是物理证据」；若 VLM 升为门控须立即改写本指南 |
 | Threading 后端动态注入 | 解析器 / grounding / solver 都没并发；本指南沉默 | 未发现证据表明该方向有改动；如引入，新增一个并发与哈希专属模块页 |
-| Harness 只有 PR1 schema tranche | 读者可能把 14 个 schema 误当成可调用的 compile/replay/validate，或把局部 `publishable` 自洽当成完整发布判定 | [Harness Schema Tranche](../modules/harness-schema-tranche.md) 明确列出 Registry、handler、invocation digest、artifact 内容校验、retry 和 MCP 尚未实现；PR2 落地时必须重走证据遍历并补执行路径 |
+| Harness 只有 compile 竖切，尚无完整 Text2Env spine | 读者可能把 catalog JSON snapshot-use 修复误读成 compile/replay/validate 全部可用、所有 asset payload 已冻结或完整发布判定已闭合 | [Harness Schema Tranche](../modules/harness-schema-tranche.md) 记录 `ef5e29e`/`910ccb1` 已锁住 catalog mutation，同时明确 asset admission 不回滚、外部 asset bytes 非 snapshot，以及仍缺 replay/validate、完整 run/media 复核、promotion transaction 和 MCP |
 
 证据状态：除特别标注外，本页基于当前源码已确认。

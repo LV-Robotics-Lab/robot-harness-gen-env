@@ -16,6 +16,8 @@ from typing import Any
 
 from flask import Flask, jsonify, request, send_from_directory
 
+from demo.harness_feed import HarnessEventFeedCorruptionError
+
 DEFAULT_SETTLE_STEPS = 900
 
 
@@ -151,7 +153,12 @@ class ScenePipeline:
             check=False,
         )
         log_path.write_text(
-            "$ " + " ".join(command) + "\n\nSTDOUT\n" + completed.stdout + "\nSTDERR\n" + completed.stderr,
+            "$ "
+            + " ".join(command)
+            + "\n\nSTDOUT\n"
+            + completed.stdout
+            + "\nSTDERR\n"
+            + completed.stderr,
             encoding="utf-8",
         )
         self._stage(
@@ -172,7 +179,9 @@ class ScenePipeline:
         compile_root = directory / "compile"
         runtime_root = directory / "runtime"
         try:
-            self.store.update(job_id, status="running", active_stage="compile", started_at=utc_now())
+            self.store.update(
+                job_id, status="running", active_stage="compile", started_at=utc_now()
+            )
             self._stage(job_id, "compile", "running", started_at=utc_now())
             self._command(
                 job_id=job_id,
@@ -194,7 +203,9 @@ class ScenePipeline:
                 ],
             )
             packages = sorted(
-                path for path in compile_root.iterdir() if path.is_dir() and path.name != "_failures"
+                path
+                for path in compile_root.iterdir()
+                if path.is_dir() and path.name != "_failures"
             )
             if len(packages) != 1 or not (packages[0] / "resolved_scene.json").is_file():
                 raise JobError("compiler did not produce exactly one resolved scene package")
@@ -300,7 +311,9 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
     robotwin_root = Path(os.environ.get("ROBOTWIN_ROOT", repo_root / "external" / "RoboTwin"))
     python = Path(os.environ.get("ROBOTWIN_PYTHON", sys.executable))
     catalog = Path(
-        os.environ.get("SCENE_ASSET_CATALOG", repo_root / "data" / "scene_gen" / "asset_catalog.json")
+        os.environ.get(
+            "SCENE_ASSET_CATALOG", repo_root / "data" / "scene_gen" / "asset_catalog.json"
+        )
     )
     jobs_root = Path(os.environ.get("SCENE_DEMO_JOBS_ROOT", repo_root / "data" / "demo_jobs"))
     vlm_model = os.environ.get("SCENE_VLM_MODEL", "Qwen/Qwen2.5-VL-3B-Instruct")
@@ -324,7 +337,9 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
-        response.headers["Cache-Control"] = "no-store" if request.path.startswith("/api/") else "public, max-age=300"
+        response.headers["Cache-Control"] = (
+            "no-store" if request.path.startswith("/api/") else "public, max-age=300"
+        )
         return response
 
     @app.get("/")
@@ -341,21 +356,134 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
         }
         return jsonify({"status": "ready" if all(paths.values()) else "not_ready", "paths": paths})
 
+    @app.get("/api/harness/events")
+    def harness_events():
+        feed = app.config.get("HARNESS_EVENT_FEED")
+        if feed is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_event_feed_unavailable",
+                            "message": "Harness event feed is not configured",
+                        }
+                    }
+                ),
+                503,
+            )
+        after_value = request.args.get("after")
+        if after_value is not None and not (
+            after_value.isascii()
+            and after_value.isdecimal()
+            and len(after_value) <= 19
+            and int(after_value) <= 2**63 - 1
+        ):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_event_query",
+                            "message": "after must be a nonnegative integer",
+                        }
+                    }
+                ),
+                400,
+            )
+        after_event_id = int(after_value) if after_value is not None else 0
+        limit_value = request.args.get("limit")
+        if limit_value is not None and not (
+            limit_value.isascii()
+            and limit_value.isdecimal()
+            and len(limit_value) <= 3
+            and 1 <= int(limit_value) <= 500
+        ):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_event_query",
+                            "message": "limit must be an integer from 1 to 500",
+                        }
+                    }
+                ),
+                400,
+            )
+        limit = int(limit_value) if limit_value is not None else 200
+        run_id_value = request.args.get("run_id")
+        run_id = None
+        invalid_run_id = False
+        if run_id_value is not None:
+            try:
+                run_id = uuid.UUID(run_id_value)
+            except ValueError:
+                invalid_run_id = True
+            else:
+                invalid_run_id = str(run_id) != run_id_value
+        if invalid_run_id:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_event_query",
+                            "message": "run_id must be a UUID",
+                        }
+                    }
+                ),
+                400,
+            )
+        try:
+            page = feed.page(
+                after_event_id=after_event_id,
+                run_id=run_id,
+                limit=limit,
+            )
+        except HarnessEventFeedCorruptionError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_event_feed_corrupt",
+                            "message": "Harness event history failed integrity checks",
+                        }
+                    }
+                ),
+                503,
+            )
+        return jsonify(page)
+
     @app.get("/api/jobs")
     def list_jobs():
-        return jsonify({"jobs": store.list(limit=min(50, max(1, request.args.get("limit", 20, type=int))))})
+        return jsonify(
+            {"jobs": store.list(limit=min(50, max(1, request.args.get("limit", 20, type=int))))}
+        )
 
     @app.post("/api/jobs")
     def create_job():
         payload = request.get_json(silent=True)
         if not isinstance(payload, dict):
-            return jsonify({"error": {"code": "invalid_json", "message": "JSON object required"}}), 400
+            return jsonify(
+                {"error": {"code": "invalid_json", "message": "JSON object required"}}
+            ), 400
         prompt = str(payload.get("prompt") or "").strip()
         seed = payload.get("seed", 0)
         if not 3 <= len(prompt) <= 2000:
-            return jsonify({"error": {"code": "invalid_prompt", "message": "Prompt must contain 3-2000 characters"}}), 400
+            return jsonify(
+                {
+                    "error": {
+                        "code": "invalid_prompt",
+                        "message": "Prompt must contain 3-2000 characters",
+                    }
+                }
+            ), 400
         if isinstance(seed, bool) or not isinstance(seed, int) or not 0 <= seed <= 2_147_483_647:
-            return jsonify({"error": {"code": "invalid_seed", "message": "Seed must be a non-negative 32-bit integer"}}), 400
+            return jsonify(
+                {
+                    "error": {
+                        "code": "invalid_seed",
+                        "message": "Seed must be a non-negative 32-bit integer",
+                    }
+                }
+            ), 400
         return jsonify(pipeline.submit(prompt, seed)), 202
 
     @app.get("/api/jobs/<job_id>")
@@ -373,10 +501,14 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
         except JobError as error:
             return jsonify({"error": {"code": "job_not_found", "message": str(error)}}), 404
         allowed = set((job.get("artifacts") or {}).values()) | {
-            str(value.get("log")) for value in (job.get("stages") or {}).values() if value.get("log")
+            str(value.get("log"))
+            for value in (job.get("stages") or {}).values()
+            if value.get("log")
         }
         if filename not in allowed:
-            return jsonify({"error": {"code": "artifact_not_found", "message": "Artifact is not registered"}}), 404
+            return jsonify(
+                {"error": {"code": "artifact_not_found", "message": "Artifact is not registered"}}
+            ), 404
         return send_from_directory(directory, filename, conditional=True)
 
     return app

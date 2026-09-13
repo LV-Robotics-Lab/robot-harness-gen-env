@@ -24,6 +24,85 @@ def _check(checks: list[dict[str, Any]], name: str, status: str, evidence: Any) 
     checks.append({"name": name, "status": status, "evidence": evidence})
 
 
+def _video_timeline_check(runtime_evidence: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
+    frame_count = runtime_evidence.get("video_frame_count", 0)
+    sample_indices = runtime_evidence.get("video_sample_step_indices", [])
+    valid_frame_count = type(frame_count) is int and frame_count >= 0
+    valid_indices = isinstance(sample_indices, list) and all(
+        type(index) is int for index in sample_indices
+    )
+    typed_indices = sample_indices if valid_indices else []
+    frame_count_matches = valid_frame_count and valid_indices and frame_count == len(typed_indices)
+    strictly_increasing = valid_indices and all(
+        current < following for current, following in zip(typed_indices, typed_indices[1:])
+    )
+    has_video = valid_frame_count and frame_count > 0
+    simulation_step_count = runtime_evidence.get("simulation_step_count")
+    base_simulation_step_count = runtime_evidence.get("base_simulation_step_count")
+    settle_extra_steps = runtime_evidence.get("settle_extra_steps", 0)
+    valid_simulation_step_count = type(simulation_step_count) is int and simulation_step_count > 0
+    valid_settle_extra_steps = type(settle_extra_steps) is int and settle_extra_steps >= 0
+    valid_base_simulation_step_count = (
+        type(base_simulation_step_count) is int and base_simulation_step_count > 0
+    )
+    timeline_counts_declared = any(
+        field in runtime_evidence
+        for field in (
+            "base_simulation_step_count",
+            "simulation_step_count",
+            "settle_extra_steps",
+        )
+    )
+    step_counts_consistent = (not has_video and not timeline_counts_declared) or (
+        valid_simulation_step_count
+        and valid_settle_extra_steps
+        and (
+            (base_simulation_step_count is None and settle_extra_steps == 0)
+            or (
+                valid_base_simulation_step_count
+                and simulation_step_count == base_simulation_step_count + settle_extra_steps
+            )
+        )
+    )
+    if has_video:
+        indices_in_range = (
+            valid_indices
+            and valid_simulation_step_count
+            and all(0 <= index < simulation_step_count for index in typed_indices)
+        )
+        final_index_matches = (
+            valid_indices
+            and valid_simulation_step_count
+            and bool(typed_indices)
+            and typed_indices[-1] == simulation_step_count - 1
+        )
+    else:
+        indices_in_range = valid_indices and not typed_indices
+        final_index_matches = valid_indices and not typed_indices
+    passed = (
+        valid_frame_count
+        and valid_indices
+        and frame_count_matches
+        and strictly_increasing
+        and step_counts_consistent
+        and indices_in_range
+        and final_index_matches
+    )
+    return passed, {
+        "frames": frame_count,
+        "sample_step_indices": sample_indices,
+        "base_simulation_step_count": base_simulation_step_count,
+        "simulation_step_count": simulation_step_count,
+        "settle_extra_steps": settle_extra_steps,
+        "frame_count_matches_indices": frame_count_matches,
+        "indices_are_integers": valid_indices,
+        "indices_strictly_increasing": strictly_increasing,
+        "step_counts_consistent": step_counts_consistent,
+        "indices_in_simulation_range": indices_in_range,
+        "final_index_matches_simulation_end": final_index_matches,
+    }
+
+
 def _aabb(item: Any) -> tuple[float, float, float, float]:
     footprint = footprint_2d(item.dimensions_m, item.pose.yaw_rad, item.footprint_shape)
     x, y, _ = item.pose.position_m
@@ -185,7 +264,8 @@ def validate_resolved_scene(
     supports = {
         relation.source: relation
         for relation in resolved.relations
-        if relation.relation in {
+        if relation.relation
+        in {
             RelationType.ON_TABLE,
             RelationType.ON_TOP_OF,
             RelationType.INSIDE,
@@ -195,8 +275,18 @@ def validate_resolved_scene(
     y_bounds = resolved.workspace.y_bounds_m
     for item in resolved.objects:
         box = _aabb(item)
-        in_bounds = box[0] >= x_bounds[0] and box[1] <= x_bounds[1] and box[2] >= y_bounds[0] and box[3] <= y_bounds[1]
-        _check(checks, f"workspace_bounds:{item.object_id}", "pass" if in_bounds else "fail", {"aabb": box})
+        in_bounds = (
+            box[0] >= x_bounds[0]
+            and box[1] <= x_bounds[1]
+            and box[2] >= y_bounds[0]
+            and box[3] <= y_bounds[1]
+        )
+        _check(
+            checks,
+            f"workspace_bounds:{item.object_id}",
+            "pass" if in_bounds else "fail",
+            {"aabb": box},
+        )
         support = supports[item.object_id]
         bottom, _ = _vertical_bounds(item)
         on_table = (
@@ -233,7 +323,7 @@ def validate_resolved_scene(
     }
     for index, first in enumerate(ordered):
         first_box = _aabb3(first)
-        for second in ordered[index + 1:]:
+        for second in ordered[index + 1 :]:
             second_box = _aabb3(second)
             separated = (
                 first_box[1] + 0.005 <= second_box[0]
@@ -258,7 +348,9 @@ def validate_resolved_scene(
         if relation.relation == RelationType.ON_TABLE:
             _check(checks, f"relation:on_table:{relation.source}", "pass", {"target": "table"})
             continue
-        passed, evidence = _relation_pass(relation, objects[relation.source], objects[relation.target])
+        passed, evidence = _relation_pass(
+            relation, objects[relation.source], objects[relation.target]
+        )
         _check(
             checks,
             f"relation:{relation.relation.value}:{relation.source}:{relation.target}",
@@ -280,10 +372,41 @@ def validate_resolved_scene(
         _check(checks, "package_manifest", package_report["status"], package_report)
 
     if runtime_evidence is None:
-        _check(checks, "runtime_evidence", "fail" if require_runtime else "not_run", {"required": require_runtime})
+        _check(
+            checks,
+            "runtime_evidence",
+            "fail" if require_runtime else "not_run",
+            {"required": require_runtime},
+        )
     else:
+        evidence_scene_id = runtime_evidence.get("scene_id")
+        expected_digest = resolved.digest()
+        evidence_digest = runtime_evidence.get("resolved_scene_sha256")
+        _check(
+            checks,
+            "runtime_scene_identity",
+            "pass" if evidence_scene_id == resolved.scene_id else "fail",
+            {
+                "expected_scene_id": resolved.scene_id,
+                "evidence_scene_id": evidence_scene_id,
+            },
+        )
+        _check(
+            checks,
+            "runtime_resolved_scene_binding",
+            "pass" if evidence_digest == expected_digest else "fail",
+            {
+                "expected_sha256": expected_digest,
+                "evidence_sha256": evidence_digest,
+            },
+        )
         runtime_status = runtime_evidence.get("status") == "pass"
-        _check(checks, "runtime_status", "pass" if runtime_status else "fail", runtime_evidence.get("error"))
+        _check(
+            checks,
+            "runtime_status",
+            "pass" if runtime_status else "fail",
+            runtime_evidence.get("error"),
+        )
         _check(
             checks,
             "robot_initial_collision",
@@ -291,6 +414,13 @@ def validate_resolved_scene(
             runtime_evidence.get("robot_initial_collision_count"),
         )
         video_frame_count = runtime_evidence.get("video_frame_count", 0)
+        timeline_passed, timeline_evidence = _video_timeline_check(runtime_evidence)
+        _check(
+            checks,
+            "observer_video_timeline",
+            "pass" if timeline_passed else "fail",
+            timeline_evidence,
+        )
         if isinstance(video_frame_count, int) and video_frame_count > 0:
             unique_video_frame_count = runtime_evidence.get("unique_video_frame_count")
             minimum_unique_frames = min(video_frame_count, 30)
@@ -337,8 +467,7 @@ def validate_resolved_scene(
                 f"translation_drift:{item.object_id}",
                 (
                     "pass"
-                    if isinstance(drift, (int, float))
-                    and drift <= max_translation_drift_m
+                    if isinstance(drift, (int, float)) and drift <= max_translation_drift_m
                     else "fail"
                 )
                 if exact_pose_required
@@ -350,8 +479,7 @@ def validate_resolved_scene(
                 f"rotation_drift:{item.object_id}",
                 (
                     "pass"
-                    if isinstance(rotation, (int, float))
-                    and rotation <= max_rotation_drift_deg
+                    if isinstance(rotation, (int, float)) and rotation <= max_rotation_drift_deg
                     else "fail"
                 )
                 if exact_pose_required
@@ -438,8 +566,7 @@ def validate_resolved_scene(
                     checks,
                     f"no_unexpected_support_contact:{item.object_id}",
                     "pass"
-                    if unexpected_contact_fraction == 0.0
-                    and unexpected_contact_targets == []
+                    if unexpected_contact_fraction == 0.0 and unexpected_contact_targets == []
                     else "fail",
                     {
                         "contact_fraction": unexpected_contact_fraction,
@@ -476,7 +603,9 @@ def validate_resolved_scene(
             _check(
                 checks,
                 f"head_visibility:{item.object_id}",
-                "pass" if isinstance(visibility, int) and visibility >= min_visible_pixels else "fail",
+                "pass"
+                if isinstance(visibility, int) and visibility >= min_visible_pixels
+                else "fail",
                 {"pixels": visibility, "threshold": min_visible_pixels},
             )
             if item.articulation_qpos:
@@ -505,8 +634,7 @@ def validate_resolved_scene(
                     checks,
                     f"runtime_relation:{key}",
                     "pass"
-                    if isinstance(relation_evidence, dict)
-                    and relation_evidence.get("pass") is True
+                    if isinstance(relation_evidence, dict) and relation_evidence.get("pass") is True
                     else "fail",
                     relation_evidence,
                 )
@@ -526,7 +654,9 @@ def validate_resolved_scene(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate a ResolvedSceneSpec and optional runtime evidence.")
+    parser = argparse.ArgumentParser(
+        description="Validate a ResolvedSceneSpec and optional runtime evidence."
+    )
     parser.add_argument("--resolved-scene", required=True)
     parser.add_argument("--asset-catalog")
     parser.add_argument("--package-root")
@@ -534,9 +664,15 @@ def main() -> int:
     parser.add_argument("--require-runtime", action="store_true")
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
-    resolved = ResolvedSceneSpec.model_validate_json(Path(args.resolved_scene).read_text(encoding="utf-8"))
+    resolved = ResolvedSceneSpec.model_validate_json(
+        Path(args.resolved_scene).read_text(encoding="utf-8")
+    )
     catalog = load_catalog(Path(args.asset_catalog)) if args.asset_catalog else None
-    runtime = json.loads(Path(args.runtime_evidence).read_text(encoding="utf-8")) if args.runtime_evidence else None
+    runtime = (
+        json.loads(Path(args.runtime_evidence).read_text(encoding="utf-8"))
+        if args.runtime_evidence
+        else None
+    )
     report = validate_resolved_scene(
         resolved,
         catalog=catalog,
@@ -547,7 +683,9 @@ def main() -> int:
     path = Path(args.out)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"{report['status'].upper()} fail={report['fail_count']} not_run={report['not_run_count']}")
+    print(
+        f"{report['status'].upper()} fail={report['fail_count']} not_run={report['not_run_count']}"
+    )
     return 0 if report["status"] == "pass" else 2
 
 

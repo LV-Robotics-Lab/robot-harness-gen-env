@@ -6,9 +6,9 @@
 | --- | --- | --- | --- |
 | `scene_gen/` | 编译器核心库：契约、解析、grounding、求解、builder、validator、绘制代理、acceptance。 | `schema.py`、`parser.py`、`grounding.py`、`solver.py`、`builder.py`、`validator.py`、`scene_gen/envs/generated_scene.py` | 主流程每一阶段都住在这里；CLI 与 demo 只是薄入口 |
 | `script/` | CLI 入口：编译、回放、批量验收、矩阵、可选渲染评判、stage-5 报告。 | `generate_scene.py`、`run_scene_runtime.py`、`run_100_seed_acceptance.py`、`run_prompt_matrix.py` | 编排 `scene_gen`；流水线逻辑加进 `scene_gen`，不要加在这里 |
-| `demo/` | Flask 控制面，把 GPU 任务队列入队并按 id 暴露已注册产物。 | `app.py` | 复用同一 `scene_gen` 流水线；不是新流水线，只加队列 + 路由 |
+| `demo/` | 稳定 GPU job 控制面与只读 Harness 事件投影。 | `app.py`、`harness_feed.py`、`static/` | 旧 Workbench compile 写入口已退役；新平台实验使用 x2env，不从此处另建编排 |
 | `tests/` | pytest 套件 + committed fixture；为每个误报模式留攻击测试。 | `tests/scene_gen/test_<module>.py`、`tests/fixtures/{asset_catalog,golden_prompts,prompt_matrix}.json` | 锁住契约与失败分支；套件无需 RoboTwin checkout 即可跑 |
-| `self_improving/` | Harness 对外契约、平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `harness/schemas/`、`harness/schema_catalog.py`、`registry.py`、`source_inventory.json`、`asset_pipeline/active/runtime_config.py`、各命名模块 | Harness 只引用权威载荷，平台消费稳定核心；都不能降低 `scene_gen` 门控 |
+| `self_improving/` | Harness 对外契约、平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `harness/schemas/`、`harness/schema_catalog.py`、`harness/registry.py`、`harness/package_store.py`、`harness/handlers/text2env_compile.py`、`source_inventory.json`、各命名模块 | Harness 只引用权威载荷，平台消费稳定核心；都不能降低 `scene_gen` 门控 |
 | `apps/pearl_evidence_portal/` | PEARL Self-Improving Agents 的独立证据门户、构建脚本、测试与已裁剪的浏览器报告子集。 | `app/page.tsx`、`scripts/build-hosted-report-subsets.mjs`、`tests/rendered-html.test.mjs` | 只呈现已有证据；不产出或修改核心验收结论 |
 | `external/` | 独立项目的 Git submodule。 | `OpenReal2Sim`、`digital-cousins` | 各自保留提交历史和发布周期；主仓只钉 commit |
 
@@ -44,11 +44,20 @@
 | `run_rendered_critic.py` | 可选 VLM 渲染评判 CLI，对应 `scene_gen/rendered_critic.py`。 | `--resolved-scene`、`--image` x N、`--out` | 相邻路径，非物理证据 |
 | `build_stage5_report.py` | 构建 stage-5 验收报告。 | — | 把运行时报告再聚合成 stage-5 视图，非主编译路径 |
 
+Canonical C13 已从 active tree 撤下历史 `run_compile_acceptance.py` 与离线 Qwen
+`run_replay_vlm_assessment.py` 入口；可从 `d08aaa1` Git 历史恢复，不再作为新运行配方。
+它们的旧深模块与历史测试仍保留；这不是旧资格系统全部退役。稳定核心的 compile/runtime/critic
+入口不变，新的平台实验只从 `x2env` 进入，由 managed Codex 提供视觉建议。
+`run_qualified_replay.py` 薄 bootstrap 随后也已撤下（最后字节在 `33a7d6f`），历史深模块测试改为直接调用，
+不再维护另一个旧 launcher；深模块与旧资格资源尚有消费者，继续单独清理。
+
 ## `demo/`
 
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
-| `demo/app.py` | Flask 控制面：text2env 编译 + 运行时 + VLM 评审端点 + 任务存储 + 已注册资产服务。 | `app`、各 endpoint、由环境变量配置 `ROBOTWIN_ROOT`/`ROBOTWIN_PYTHON`/`SCENE_ASSET_CATALOG`/`SCENE_DEMO_JOBS_ROOT` | 仓库 README「Browser Demo」配方；流水线逻辑仍来自 `scene_gen` |
+| `demo/app.py` | 稳定 text2env job 与可选只读事件流。 | `create_app`、`/api/jobs`、`GET /api/harness/events`、`HARNESS_EVENT_FEED` | 旧 compile/audit/scene/static-preview 路由返回 404；HARNESS_WORKBENCH 不再作为执行或事件权威 |
+| `demo/harness_feed.py` | 把 `SQLiteEventJournal` 的 `EventPage` 投影成浏览器可消费、可恢复的全局 cursor 页。 | `HarnessEventFeed.page`、`HarnessEventFeedCorruptionError` | 只读 seam；保留 run/Skill/Event 信封与 artifact metadata，不增加任意路径读取 |
+| `demo/static/` | 无构建步骤的稳定任务面板、Event Timeline 和运行活动板。 | `loadHarnessEvents`、`workbench_run_board.js` | 只投影已提交活动；旧 compile 写按钮及其审计/预览控件已下线，未替换为新 dispatch |
 | `demo/__init__.py` | 包标记使 `demo` 可被导入。 | — | `python -m demo.app` |
 
 ## `tests/`
@@ -72,22 +81,68 @@
 | `tests/fixtures/prompt_matrix.json` | 11 例中英 prompt × 3 seed，含 1 例预期 solver 拒绝。 | `infeasible_apple_plate_back_region`（`expect: reject`、`expected_failure_stage: solver`） | 被 `run_prompt_matrix.py` 与 `test_prompt_matrix.py` 用 |
 | `tests/demo/` | Flask API 测试，无真实 GPU；见下小节。 |—| 改 `demo/app.py` 先跑；`pytest -q tests/demo` |
 
-## `self_improving/harness/`
+## `self_improving/harness/x2env/`（当前收敛路径）
+
+当前接口与边界详见 [canonical x2env](modules/canonical-x2env.md)；下表是实际代码入口，
+组件测试不等于冻结矩阵或真实物理资格通过。
+
+| 代码 | 职责 | 验证入口 |
+| --- | --- | --- |
+| `cli.py`、`deployment.py`、`harness.py` | 唯一用户入口、可信部署、单工作流生命周期与内部操作 | `test_cli.py`、`test_deployment.py`、`test_harness_lifecycle.py` |
+| `contracts.py`、`input.py`、`codex.py`、`design_plan.py`、`grounding.py` | 多模态输入、共享SceneIR、受管理建议与有界设计补全 | contracts/input/codex/grounding 测试；真实失败见进度RESULTS |
+| `store.py`、`artifacts.py`、`capabilities.py`、`skill_execution.py` | SQLite/CAS、三个公开Skills的唯一注册与执行绑定 | Store/Registry/Skill公开边界测试 |
+| `source_router.py`、`resolver.py`、`web_resolver.py`、`reconstruction_resolver.py` | 固定来源顺序、真实本地/联网/重建适配 | 各resolver与原provider边界测试 |
+| `assets.py`、`asset_revision.py`、`local_color_execution.py` | 不可变资产版本、受控颜色修复与历史视觉调用审计 | Registry/revision/local-color测试；真实闭环尚待验 |
+| `compile.py`、`replay.py`、`genesis_runtime.py`、`genesis_child.py` | 场景编译、真实Genesis子进程与双profile回放 | compile/replay/runtime/assessment测试 |
+| `observation.py`、`diagnosis.py`、`revision.py`、`completion.py` | 新鲜观测、建议/物理诊断、预算、最终证据闭包 | observation/diagnosis/revision/completion攻击测试 |
+| `package.py`、`package_loader.py`、`delivery.py`、`publisher.py` | 包内入口、复制运行、用户产物与受控发布 | package/delivery/publisher测试；三次资格copy-run尚待验 |
+
+`self_improving/harness/` 下仍保留稳定工具依赖的 runtime_assets/capability/events、CAS、event
+journal、资产staging/repair与Python类型；这些不是另一个canonical controller。
+
+## 旧 Harness 图（固定历史，不是当前调用入口）
+
+下表保留旧切片的设计与验证索引。旧执行/资格图、独立Store、媒体sandbox及snapshot adapter
+已在收敛中退役，可分别从 `f35ea18`、`8da345a`、`e2f909c` 恢复；其中仍被消费的Python类型和
+稳定底层保留。旧文件名与计数只属于所标历史，不应据此重建第二套执行流程。
 
 | 重要代码 | 功能 | 关键符号 | 验证 |
 | --- | --- | --- | --- |
-| `schemas/base.py`、`schemas/common.py` | 严格 frozen 基类、Skill 标识/SemVer/SHA-256 原语，以及 Descriptor、Invocation、RunState、Event、ArtifactRef、Blocker、Qualification。 | `HarnessModel`、`SkillDescriptor`、`Invocation`、`RunState`、`derive_mcp_tool_name` | `tests/self_improving/harness/test_common_schemas.py`；详见 [Harness Schema Tranche](modules/harness-schema-tranche.md) |
+| `schemas/base.py`、`schemas/common.py` | 严格 frozen 基类、Skill 标识/SemVer/SHA-256 原语，以及 v1/v2 Descriptor、Invocation、RunState、Event、ArtifactRef、Blocker、Qualification。 | `HarnessModel`、`SkillDescriptor`、`SkillDescriptorV2`、`ExecutionReproducibility`、`Invocation`、`RunState` | `test_common_schemas.py`、`test_descriptor_reproducibility.py`；v1 只允许 bitwise deterministic，v2 可声明 evidence-invariant repeatability |
 | `schemas/text2env.py` | compile/replay/validate 六个输入输出，以及对现有哈希绑定包的不可变引用；不复制 `scene_gen` 载荷。 | `EnvironmentPackage`、`Text2EnvCompileInput`、`Text2EnvReplayInput`、`Text2EnvValidateOutput` | `tests/self_improving/harness/test_text2env_schemas.py`；语句和分支覆盖均强制 100% |
-| `schema_catalog.py`、`json_schemas/` | 14 个公开 `$id` 到模型的不可变目录，以及可审阅的 JSON Schema 快照和漂移检测。 | `SCHEMA_MODELS`、`schema_documents`、`export_schema_snapshots` | `python script/export_harness_schemas.py --check`、`tests/self_improving/harness/test_schema_catalog.py`、[PR1 实现报告](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md) |
+| `schemas/text2env_validate_v2.py`、`validate_v2.py` | validate v2 的十二项 CAS-only evidence 输入、决定输出与首层 byte authority；固定一个 CAS，raw ref 全验后才去重，不作物理决定。 | `Text2EnvValidateV2Input`、`Text2EnvValidateV2Output`、`StrictValidateV2CasReader` | `test_validate_v2.py`；两模块 statement/branch 100%。当前只有切片 1，不可注册或晋升 |
+| `schema_catalog.py`、`json_schemas/` | PR1 的 14 个公开 `$id` 加 descriptor v2、validate v2 input/output，共 17 份可审阅 JSON Schema snapshot。 | `SCHEMA_MODELS`、`schema_documents`、`export_schema_snapshots` | `python script/export_harness_schemas.py --check`、`test_schema_catalog.py`；v1 snapshot 前后字节身份相同 |
+| `artifacts.py`、`events.py`、`event_journal.py`、`registry.py` | 本地摘要复核、callback 事件记录、SQLite append-only 持久主账、通用 exact-version Skill 注册/调用；handler 的 `RunContext` 携带 Invocation 已冻结的同一组只读依赖。 | `LocalArtifactStore`、`RunRecorder`、`SQLiteEventJournal`、`SkillRegistry` | 对应 `tests/self_improving/harness/` 测试；安全/回归边界见 [Harness Schema Tranche](modules/harness-schema-tranche.md) |
+| `package_store.py` | 按 manifest 把 package members 发布到 CAS，并在隔离 staging 中重物化、复核后逐目录晋升。 | `PackageStore`、`PublishedPackage`、`PackageStoreError` | `tests/self_improving/harness/test_package_store.py`；它解决 package bytes 重建，不解决完整 run/media receipt |
+| `runtime_events.py`、`runtime_capability.py`、`runtime_executor.py`、`runtime_assets.py` | 用专用事件 FD、双 capability 探测和 CAS 资产快照监督隔离的 RoboTwin replay；运行前后复验完整 loader 树，并把 executor 字节与超时/输出上限等策略编入无路径依赖身份。 | `RuntimeEventCodec`、`RuntimeExecutorIdentity`、`describe_runtime_capability`、`SubprocessRoboTwinRuntimeExecutor`、`RuntimeAssetStore` | 对应四组 Harness 测试；真实 2-step can-on-plate smoke 只证明接线，不能替代 900/120 validation |
+| `media_sandbox.py`、`native/media_sandbox.c`、`media_verifier.py` | 在 delegated cgroup、Landlock/seccomp/rlimit 中用静态 FFmpeg 从 held FD 完整解码 replay PNG/MP4；复核帧数、fps、尺寸、SAR、互异帧并记录资源指标，缺沙箱不降级。 | `MediaSandbox`、`NativeCgroupSandbox`、`ReplayMediaVerifier`、`SubprocessReplayMediaVerifier` | `test_media_sandbox.py`、`test_media_verifier.py`；真实历史录像 120/114 frames，但这不是物理 gate 或正式 replay qualification |
+| `handlers/text2env_replay.py`、`replay_dependencies.py` | replay adapter 精确绑定 capability、executor、handler config、media verifier、input-specific runtime assets 五项 Invocation 依赖；输出经 evidence/media consumer 复核后才晋升 typed artifacts。 | `Text2EnvReplayHandler`、`Text2EnvReplayDependencyResolver`、`build_text2env_replay_wiring`、`text2env_replay_descriptor` | descriptor 已用 v2 evidence-invariant repeatability；固定 loader/generator/application 有完整攻击测试，但尚未生成 pass bundle或完成真实 900/120 replay |
+| `qualify_replay.py`、`replay_qualification.py`、`replay_application.py` | 固定案例的 candidate-kernel 资格生成、完整 CAS evidence closure 深验证与 production-only 注册装配；验证对象本身不是发布权限。 | `generate_replay_qualification`、`verify_replay_qualification_bundle`、`create_replay_application`、`EvidenceInvariantRegistrationPolicy` | 5 个核心模块 2,306 statements / 510 branches 全覆盖；仅测试固定证据形状，未生成 checked-in bundle、未运行真实 900/120 |
+| `handlers/text2env_compile.py`、`text2env_compile_dependencies.py` | 显式组装后的 compile adapter：从 CAS catalog 调权威 `compile_scene`、发事件、收集制品、复核 package，并记录可变依赖。 | `Text2EnvCompileHandler`、`Text2EnvCompileDependencyResolver`、`text2env_compile_descriptor` | `test_text2env_compile_handler.py`；`ef5e29e`/`910ccb1` 锁住 catalog mutation，外部 asset payload 本身仍非执行 snapshot |
+| `application.py`、`compile_cli.py` | 固定 production compile 装配、持久状态与命令行入口；可复用生成资产进入显式的持久资产库，而不是一次运行的 state root。 | `CompileApplicationSettings.asset_library_root`、`DEFAULT_PRODUCTION_ASSET_LIBRARY_ROOT`、`--asset-library-root` | `test_application.py`、`test_compile_cli.py`；干净检出 45 项通过，实验/qualification 必须使用 scratch 资产库 |
+| `run_receipts.py` | 把一个 terminal run 的资格、Invocation、RunState、事件 transcript、输入与输出 artifact 复制成单一目标 CAS 可独立回读的收据 closure；CAS 内容身份允许输入/输出显示名不同，但不允许 bytes/media/schema 冲突。 | `PortableRunReceiptPublisher`、`load_portable_run_receipt` | `test_run_receipts.py`，当前 45 passed；收据完整不等于 replay/validate 或物理通过 |
+| `system2/context.py`、`planner.py`、`dispatcher.py`、`domain.py`、`history.py` | 把 LLM planner 的 CAS prompt/decision 绑定到精确 compile Skill，重算 compile 语义，发布 canonical `TrustedToolReceipt`，并以完整 history authority 驱动可审计状态增量。 | `System2Planner`、`System2Dispatcher`、`TrustedToolReceipt`、`System2ToolResult`、`PlannerHistoryAuthority` | 四实现模块 261 项定向测试、statement/branch 100%；只派生 catalog/package 非物理事实，blocked/failed 无 delta，证据见 `docs/evidence/system2-compile-dispatch-20260831.md` |
+| `qualification.py` | 严格加载一份预制 pass bundle，核 receipt/report/manifest、manifest 已列实现文件及 source-tree 摘要，再发布 CAS snapshot。 | `load_qualification_bundle`、`QualificationReportV1`、`ImplementationManifestV1` | `test_qualification.py`；截至 `ab03859` 无 Registry callsite，不执行资格案例，也不是 promotion transaction |
+| `run_store.py` | 以 SQLite 保存 immutable Invocation 与 terminal RunState，并在读写时对账 event journal。 | `SQLiteRunStore`、`RunStoreConflictError`、`RunStoreCorruptionError` | `test_run_store.py`；截至 `ab03859` 未接入 Registry、无 resume、不会重验 artifact bytes 或导出完整 EvaluationRun identity |
 
-这批代码只完成 schema tranche；`SkillRegistry`、Text2Env handler 和 MCP adapter 尚未实现。契约文档仍是 `Status: Proposed`，不能从目录存在推断为已 Accepted。当前专项测试为 21 个；实现与验证明细见 [PR1 报告](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
+PR1 只完成 schema tranche；后续已增加通用 `SkillRegistry`、PackageStore、compile adapter、静态
+qualification bundle verifier 与 RunStore adapter，但
+固定 `ab03859` 当时 replay/validate、自动 composition 和 MCP adapter 尚未实现。后续已加入独立
+validate handler，以及 replay 的 event/capability/executor/immutable-asset/media-verification 底座；
+A040 又接出精确消费五项 Invocation 依赖的 replay handler/resolver 候选，但固定 production
+qualification/application、新的 900/120 handler receipt 与 descriptor 确定性语义仍未闭合，不能把
+这个候选写成端到端 Skill 已晋升。契约文档仍是 `Status: Proposed`，不能
+从这些构件推断三个 Skill 已接通、输入冻结、资产晋升具事务性、EvaluationRun 身份闭合或 RFC 已
+Accepted。
+PR1 的 21 个专项测试是历史基线；当前验证边界见模块页与
+[PR1 报告](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
 
 ## `self_improving/asset_pipeline/`
 
 | 重要代码 | 功能 | 关键符号 / 配置 | 验证 |
 | --- | --- | --- | --- |
 | `active/runtime_config.py` | 把仓库、RoboTwin、shadow、catalog、override、运行解释器统一成可迁移默认值和环境变量。 | `ASSET_PIPELINE_ROOT`、`GEN_ENV_ROOT`、`ROBOTWIN_ROOT`、`ROBOTWIN_SHADOW_ROOT`、`ASSET_CATALOG`、`ASSET_OVERRIDES` | `active/1_asset_reuse/tests/test_runtime_config.py` |
-| `active/1_asset_reuse/` | 资产发现、采购、转换、实测属性、ledger、catalog 接入与物理验收。 | `acquire_batch.py`、`measure_asset_attributes.py`、`s9_build_shadow_root.py` | 模块内 264 passed、1 skipped |
+| `active/1_asset_reuse/` | 资产发现、采购、转换、实测属性、ledger、catalog 接入与物理验收；v3 gate 解析完整 loader closure，并由共享 writer 边界在发布前复核 files/provenance/receipt。 | `lib/ledger.py`、`lib/ledger_writes.py`、`migrate_v3.py`、`backfill_upstream.py` | asset-reuse 基础环境 `902 passed, 2 skipped`，真实 SAPIEN 对应节点另 `2 passed`；最终公共 S13b→S11 用真实 loader/native modules 完成 `SWEEP 1/1`。跨 Harness `164 passed`；边界是 cooperative POSIX/Linux pre/post snapshot，不是 opened-FD/同用户防伪。既有 162 份 ledger 的数据债务仍 open，见 `docs/evidence/asset-ledger-v3-integrity-20260831.*` |
 | `active/web/` | 本地资产流水线 Web Studio。 | `app.py` | 11 passed |
 | `active/shared/openxsim/` | 跨仿真 IR、adapter、导入/导出与 conformance。 | `agenticsim.openxsim` | 56 passed |
 | `receipts/` | 外部资产的选择、ledger/model metadata 与全文件摘要；不含 mesh/texture/render。 | `asset_library_manifest.json`、`asset_library_301_361.sha256` | JSON 解析、manifest 摘要回读 |
@@ -97,7 +152,8 @@
 
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
-| `tests/demo/test_app.py` | Flask 控制面 API 单元测试；不启用真实 GPU 运行时。 |—| 改 `demo/app.py` 先跑这里；`pytest -q tests/demo` |
+| `tests/demo/test_app.py`、`test_harness_feed.py`、`test_retired_workbench.py`、`test_workbench_browser.py` | 稳定任务、显式只读 feed、退役路由缺席与实际 Chrome 活动板测试。 |—| 旧 qualified Workbench 专属测试随实现退役；新测试禁止旧配置恢复写入口或事件权威 |
+| `tests/demo/test_workbench_browser.py` | 真 Flask + 本机 headless Chrome 的事件、提交、审计与按需 SceneSpec 预览端到端门。 |—| 覆盖不自动请求、成功投影、非成功不提供按钮、迟到 abort、XSS/locator、响应漂移/额外字段及关闭后重读；`pytest -q tests/demo` 当前 232 passed（47 Chrome） |
 
 ## 覆盖范围
 

@@ -21,7 +21,6 @@ from typing import Any, Iterable, Mapping, Protocol
 
 from .ir import AssetBundle, AssetRepresentation
 
-
 SUPPORTED_ASSET_EXTENSIONS = {
     ".obj": "obj",
     ".stl": "stl",
@@ -60,7 +59,9 @@ class AssetCandidate:
     def from_dict(cls, data: Mapping[str, Any], *, provider: str = "catalog") -> "AssetCandidate":
         url = str(data.get("download_url") or data.get("url") or "")
         name = str(data.get("name") or Path(urllib.parse.urlparse(url).path).name or "asset")
-        candidate_id = str(data.get("candidate_id") or hashlib.sha256(url.encode("utf-8")).hexdigest()[:16])
+        candidate_id = str(
+            data.get("candidate_id") or hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+        )
         fmt = str(data.get("format") or detect_format_from_name(name))
         return cls(
             candidate_id=candidate_id,
@@ -95,7 +96,9 @@ class AssetSearchProvider(Protocol):
 
 
 def detect_format_from_name(name: str) -> str:
-    return SUPPORTED_ASSET_EXTENSIONS.get(Path(name).suffix.lower(), Path(name).suffix.lower().lstrip("."))
+    return SUPPORTED_ASSET_EXTENSIONS.get(
+        Path(name).suffix.lower(), Path(name).suffix.lower().lstrip(".")
+    )
 
 
 def _query_tokens(query: str) -> set[str]:
@@ -105,10 +108,17 @@ def _query_tokens(query: str) -> set[str]:
 def _relevance(query: str, candidate: AssetCandidate) -> float:
     tokens = _query_tokens(query)
     haystack = " ".join(
-        [candidate.name, candidate.category, candidate.source_page, json.dumps(candidate.metadata, sort_keys=True)]
+        [
+            candidate.name,
+            candidate.category,
+            candidate.source_page,
+            json.dumps(candidate.metadata, sort_keys=True),
+        ]
     ).lower()
     matches = sum(1 for token in tokens if token in haystack)
-    format_bonus = 0.2 if candidate.format.lower() in set(SUPPORTED_ASSET_EXTENSIONS.values()) else 0.0
+    format_bonus = (
+        0.2 if candidate.format.lower() in set(SUPPORTED_ASSET_EXTENSIONS.values()) else 0.0
+    )
     provenance_bonus = 0.1 if candidate.source_page and candidate.download_url else 0.0
     return candidate.score + matches + format_bonus + provenance_bonus
 
@@ -118,7 +128,9 @@ class CatalogSearchProvider:
 
     name = "json_catalog"
 
-    def __init__(self, catalog: str | Path | Iterable[Mapping[str, Any]], *, timeout_s: float = 20.0):
+    def __init__(
+        self, catalog: str | Path | Iterable[Mapping[str, Any]], *, timeout_s: float = 20.0
+    ):
         self.catalog = catalog
         self.timeout_s = timeout_s
 
@@ -127,7 +139,9 @@ class CatalogSearchProvider:
             return list(self.catalog)
         value = str(self.catalog)
         if urllib.parse.urlparse(value).scheme in {"http", "https"}:
-            request = urllib.request.Request(value, headers={"User-Agent": "AgenticSim-AssetScout/1.0"})
+            request = urllib.request.Request(
+                value, headers={"User-Agent": "AgenticSim-AssetScout/1.0"}
+            )
             try:
                 with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
                     payload = json.load(response)
@@ -140,7 +154,12 @@ class CatalogSearchProvider:
                 raise AssetScoutError(f"catalog read failed for {value}: {exc}") from exc
         if isinstance(payload, dict):
             container = payload
-            payload = container.get("assets") or container.get("items") or container.get("candidates") or []
+            payload = (
+                container.get("assets")
+                or container.get("items")
+                or container.get("candidates")
+                or []
+            )
             if not payload and container.get("selected"):
                 payload = [container["selected"]]
         if not isinstance(payload, list):
@@ -177,7 +196,9 @@ class GitHubTreeSearchProvider:
 
     def search(self, query: str, limit: int = 20) -> list[AssetCandidate]:
         encoded_branch = urllib.parse.quote(self.branch, safe="")
-        url = f"https://api.github.com/repos/{self.repository}/git/trees/{encoded_branch}?recursive=1"
+        url = (
+            f"https://api.github.com/repos/{self.repository}/git/trees/{encoded_branch}?recursive=1"
+        )
         headers = {
             "Accept": "application/vnd.github+json",
             "User-Agent": "AgenticSim-AssetScout/1.0",
@@ -190,9 +211,13 @@ class GitHubTreeSearchProvider:
             with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
                 payload = json.load(response)
         except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
-            raise AssetScoutError(f"GitHub tree search failed for {self.repository}: {exc}") from exc
+            raise AssetScoutError(
+                f"GitHub tree search failed for {self.repository}: {exc}"
+            ) from exc
         if payload.get("truncated"):
-            raise AssetScoutError(f"GitHub tree for {self.repository} was truncated; refuse incomplete search")
+            raise AssetScoutError(
+                f"GitHub tree for {self.repository} was truncated; refuse incomplete search"
+            )
         tokens = _query_tokens(query)
         candidates: list[AssetCandidate] = []
         for item in payload.get("tree", []):
@@ -209,8 +234,17 @@ class GitHubTreeSearchProvider:
                 candidate_id=f"github:{self.repository}:{path}",
                 name=Path(path).name,
                 category=Path(path).parent.name or "object",
-                download_url=f"https://raw.githubusercontent.com/{self.repository}/{encoded_branch}/{quoted_path}",
-                source_page=f"https://github.com/{self.repository}/blob/{encoded_branch}/{quoted_path}",
+                download_url=(
+                    "https://raw.githubusercontent.com/"
+                    f"{self.repository}"
+                    "/"
+                    f"{encoded_branch}"
+                    "/"
+                    f"{quoted_path}"
+                ),
+                source_page=(
+                    f"https://github.com/{self.repository}/blob/{encoded_branch}/{quoted_path}"
+                ),
                 format=fmt,
                 provider=self.name,
                 license=self.license,
@@ -286,7 +320,9 @@ class GitHubRepositoryDiscoveryProvider:
             if not re.fullmatch(r"[^/\s]+/[^/\s]+", full_name):
                 continue
             encoded_branch = urllib.parse.quote(branch, safe="")
-            tree_url = f"https://api.github.com/repos/{full_name}/git/trees/{encoded_branch}?recursive=1"
+            tree_url = (
+                f"https://api.github.com/repos/{full_name}/git/trees/{encoded_branch}?recursive=1"
+            )
             try:
                 tree = self._json(tree_url)
                 if tree.get("truncated"):
@@ -300,7 +336,9 @@ class GitHubRepositoryDiscoveryProvider:
             for item in tree.get("tree") or []:
                 path = str(item.get("path") or "")
                 fmt = detect_format_from_name(path)
-                if item.get("type") != "blob" or fmt not in set(SUPPORTED_ASSET_EXTENSIONS.values()):
+                if item.get("type") != "blob" or fmt not in set(
+                    SUPPORTED_ASSET_EXTENSIONS.values()
+                ):
                     continue
                 token_matches = sum(1 for token in tokens if token in path.lower())
                 if tokens and not token_matches:
@@ -311,8 +349,17 @@ class GitHubRepositoryDiscoveryProvider:
                         candidate_id=f"github:{full_name}:{path}",
                         name=Path(path).name,
                         category=Path(path).parent.name or "object",
-                        download_url=f"https://raw.githubusercontent.com/{full_name}/{encoded_branch}/{quoted_path}",
-                        source_page=f"https://github.com/{full_name}/blob/{encoded_branch}/{quoted_path}",
+                        download_url=(
+                            "https://raw.githubusercontent.com/"
+                            f"{full_name}"
+                            "/"
+                            f"{encoded_branch}"
+                            "/"
+                            f"{quoted_path}"
+                        ),
+                        source_page=(
+                            f"https://github.com/{full_name}/blob/{encoded_branch}/{quoted_path}"
+                        ),
                         format=fmt,
                         provider=self.name,
                         license=license_name,
@@ -329,8 +376,12 @@ class GitHubRepositoryDiscoveryProvider:
                     )
                 )
         if not candidates and self.last_errors:
-            raise AssetScoutError(f"discovered repositories could not be searched: {self.last_errors}")
-        return sorted(candidates, key=lambda item: (-_relevance(query, item), item.candidate_id))[:limit]
+            raise AssetScoutError(
+                f"discovered repositories could not be searched: {self.last_errors}"
+            )
+        return sorted(candidates, key=lambda item: (-_relevance(query, item), item.candidate_id))[
+            :limit
+        ]
 
 
 class AssetScout:
@@ -354,7 +405,11 @@ class AssetScout:
                     self.last_errors.append(
                         {
                             "provider": provider.name,
-                            "error": f"{error.get('repository', 'provider')}: {error.get('error', 'unknown error')}",
+                            "error": (
+                                f"{error.get('repository', 'provider')}"
+                                ": "
+                                f"{error.get('error', 'unknown error')}"
+                            ),
                         }
                     )
             except Exception as exc:
@@ -401,32 +456,46 @@ def download_candidate(
     key = hashlib.sha256(candidate.download_url.encode("utf-8")).hexdigest()[:20]
     target_dir = cache / key
     target_dir.mkdir(parents=True, exist_ok=True)
-    target = target_dir / _safe_filename(candidate.download_url, fallback=f"asset.{candidate.format}")
+    target = target_dir / _safe_filename(
+        candidate.download_url, fallback=f"asset.{candidate.format}"
+    )
     provenance = target_dir / "provenance.json"
     if target.is_file() and provenance.is_file():
         payload = json.loads(provenance.read_text(encoding="utf-8"))
         current_sha = _sha256(target)
-        if payload.get("sha256") == current_sha and int(payload.get("size_bytes", -1)) == target.stat().st_size:
+        if (
+            payload.get("sha256") == current_sha
+            and int(payload.get("size_bytes", -1)) == target.stat().st_size
+        ):
             return DownloadedAsset(
                 candidate=candidate,
                 path=str(target),
                 sha256=current_sha,
                 size_bytes=target.stat().st_size,
                 media_type=str(payload.get("media_type") or "application/octet-stream"),
-                detected_format=str(payload.get("detected_format") or detect_format_from_name(target.name)),
+                detected_format=str(
+                    payload.get("detected_format") or detect_format_from_name(target.name)
+                ),
                 provenance_path=str(provenance),
                 cache_hit=True,
             )
 
-    request = urllib.request.Request(candidate.download_url, headers={"User-Agent": "AgenticSim-AssetScout/1.0"})
+    request = urllib.request.Request(
+        candidate.download_url, headers={"User-Agent": "AgenticSim-AssetScout/1.0"}
+    )
     temporary = target.with_suffix(target.suffix + ".part")
     size = 0
     media_type = "application/octet-stream"
     try:
-        with urllib.request.urlopen(request, timeout=timeout_s) as response, temporary.open("wb") as stream:
+        with (
+            urllib.request.urlopen(request, timeout=timeout_s) as response,
+            temporary.open("wb") as stream,
+        ):
             content_length = int(response.headers.get("Content-Length") or 0)
             if content_length > max_bytes:
-                raise AssetScoutError(f"asset exceeds max_bytes before download: {content_length} > {max_bytes}")
+                raise AssetScoutError(
+                    f"asset exceeds max_bytes before download: {content_length} > {max_bytes}"
+                )
             media_type = response.headers.get_content_type() or media_type
             while True:
                 chunk = response.read(1024 * 1024)
@@ -434,7 +503,9 @@ def download_candidate(
                     break
                 size += len(chunk)
                 if size > max_bytes:
-                    raise AssetScoutError(f"asset exceeds max_bytes during download: {size} > {max_bytes}")
+                    raise AssetScoutError(
+                        f"asset exceeds max_bytes during download: {size} > {max_bytes}"
+                    )
                 stream.write(chunk)
     except Exception:
         temporary.unlink(missing_ok=True)
@@ -451,10 +522,14 @@ def download_candidate(
         "path": str(target),
         "sha256": _sha256(target),
         "size_bytes": target.stat().st_size,
-        "media_type": media_type or mimetypes.guess_type(target.name)[0] or "application/octet-stream",
+        "media_type": media_type
+        or mimetypes.guess_type(target.name)[0]
+        or "application/octet-stream",
         "detected_format": detected,
     }
-    provenance.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    provenance.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return DownloadedAsset(
         candidate=candidate,
         path=str(target),
@@ -508,7 +583,9 @@ def _parse_obj(path: Path) -> tuple[list[tuple[float, float, float]], list[tuple
     return vertices, faces
 
 
-def _bounds(vertices: list[tuple[float, float, float]]) -> tuple[list[float], list[float], list[float]]:
+def _bounds(
+    vertices: list[tuple[float, float, float]],
+) -> tuple[list[float], list[float], list[float]]:
     minimum = [min(vertex[axis] for vertex in vertices) for axis in range(3)]
     maximum = [max(vertex[axis] for vertex in vertices) for axis in range(3)]
     extent = [maximum[axis] - minimum[axis] for axis in range(3)]
@@ -535,14 +612,15 @@ def _write_obj(
     target.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _normalize_obj(source: Path, target: Path, *, target_max_extent_m: float = 1.0) -> dict[str, Any]:
+def _normalize_obj(
+    source: Path, target: Path, *, target_max_extent_m: float = 1.0
+) -> dict[str, Any]:
     vertices, faces = _parse_obj(source)
     minimum, maximum, extent = _bounds(vertices)
     center = [(minimum[axis] + maximum[axis]) / 2.0 for axis in range(3)]
     scale = target_max_extent_m / max(extent)
     normalized = [
-        tuple((vertex[axis] - center[axis]) * scale for axis in range(3))
-        for vertex in vertices
+        tuple((vertex[axis] - center[axis]) * scale for axis in range(3)) for vertex in vertices
     ]
     normalized_minimum, normalized_maximum, normalized_extent = _bounds(normalized)
     material_path = target.parent / "default_material.mtl"
@@ -601,7 +679,9 @@ def _write_box_collision_proxy(target: Path, bounds: Mapping[str, Any]) -> None:
 def _articulation_audit(path: Path, source_format: str) -> dict[str, Any]:
     if source_format not in {"urdf", "mjcf"}:
         return {
-            "status": "rigid_mesh_no_joint_schema" if source_format in {"obj", "stl", "ply", "glb", "gltf"} else "not_checked",
+            "status": "rigid_mesh_no_joint_schema"
+            if source_format in {"obj", "stl", "ply", "glb", "gltf"}
+            else "not_checked",
             "articulated": False,
             "joint_count": 0,
             "joint_types": [],
@@ -616,7 +696,10 @@ def _articulation_audit(path: Path, source_format: str) -> dict[str, Any]:
         movable = [value for value in joint_types if value != "fixed"]
     else:
         joints = root.findall(".//joint") + root.findall(".//freejoint")
-        joint_types = [joint.tag if joint.tag == "freejoint" else str(joint.get("type") or "hinge") for joint in joints]
+        joint_types = [
+            joint.tag if joint.tag == "freejoint" else str(joint.get("type") or "hinge")
+            for joint in joints
+        ]
         movable = joint_types
     return {
         "status": "parsed",
@@ -634,14 +717,14 @@ def _obj_to_usda(source: Path, target: Path) -> None:
     indices = ", ".join(str(index) for face in faces for index in face)
     target.write_text(
         "#usda 1.0\n"
-        "(\n    defaultPrim = \"Asset\"\n    metersPerUnit = 1\n    upAxis = \"Z\"\n)\n\n"
-        "def Xform \"Asset\"\n{\n"
-        "    def Mesh \"Mesh\"\n    {\n"
+        '(\n    defaultPrim = "Asset"\n    metersPerUnit = 1\n    upAxis = "Z"\n)\n\n'
+        'def Xform "Asset"\n{\n'
+        '    def Mesh "Mesh"\n    {\n'
         f"        point3f[] points = [{points}]\n"
         f"        int[] faceVertexCounts = [{counts}]\n"
         f"        int[] faceVertexIndices = [{indices}]\n"
         "        color3f[] primvars:displayColor = [(0.65, 0.68, 0.72)]\n"
-        "        uniform token subdivisionScheme = \"none\"\n"
+        '        uniform token subdivisionScheme = "none"\n'
         "    }\n}\n",
         encoding="utf-8",
     )
@@ -649,10 +732,7 @@ def _obj_to_usda(source: Path, target: Path) -> None:
 
 def _xml_escape(value: str) -> str:
     return (
-        value.replace("&", "&amp;")
-        .replace('"', "&quot;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
+        value.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
     )
 
 
@@ -668,25 +748,38 @@ def _write_mesh_wrapper(
     collision_relative = os.path.relpath(collision_source, target.parent)
     if format == "mjcf":
         target.write_text(
-            "<mujoco model=\"asset\">\n"
-            "  <asset>\n"
-            f"    <mesh name=\"{_xml_escape(asset_id)}_visual\" file=\"{_xml_escape(visual_relative)}\"/>\n"
-            f"    <mesh name=\"{_xml_escape(asset_id)}_collision\" file=\"{_xml_escape(collision_relative)}\"/>\n"
-            "  </asset>\n"
-            f"  <worldbody><body name=\"{_xml_escape(asset_id)}\">\n"
-            f"    <geom type=\"mesh\" mesh=\"{_xml_escape(asset_id)}_visual\" contype=\"0\" conaffinity=\"0\" rgba=\"0.65 0.68 0.72 1\"/>\n"
-            f"    <geom type=\"mesh\" mesh=\"{_xml_escape(asset_id)}_collision\" density=\"1000\"/>\n"
-            "  </body></worldbody>\n"
-            "</mujoco>\n",
+            (
+                '<mujoco model="asset">\n  <asset>\n    <mesh name="'
+                f"{_xml_escape(asset_id)}"
+                '_visual" file="'
+                f"{_xml_escape(visual_relative)}"
+                '"/>\n    <mesh name="'
+                f"{_xml_escape(asset_id)}"
+                '_collision" file="'
+                f"{_xml_escape(collision_relative)}"
+                '"/>\n  </asset>\n  <worldbody><body name="'
+                f"{_xml_escape(asset_id)}"
+                '">\n    <geom type="mesh" mesh="'
+                f"{_xml_escape(asset_id)}"
+                '_visual" contype="0" conaffinity="0" rgba="0.65 0.68 0.72 1"/>'
+                '\n    <geom type="mesh" mesh="'
+                f"{_xml_escape(asset_id)}"
+                '_collision" density="1000"/>\n  </body></worldbody>\n</mujoco>\n'
+            ),
             encoding="utf-8",
         )
     elif format == "urdf":
         target.write_text(
-            f"<robot name=\"{_xml_escape(asset_id)}\">\n"
-            "  <link name=\"base\">\n"
-            f"    <visual><geometry><mesh filename=\"{_xml_escape(visual_relative)}\"/></geometry></visual>\n"
-            f"    <collision><geometry><mesh filename=\"{_xml_escape(collision_relative)}\"/></geometry></collision>\n"
-            "  </link>\n</robot>\n",
+            (
+                '<robot name="'
+                f"{_xml_escape(asset_id)}"
+                '">\n  <link name="base">\n    <visual><geometry><mesh filename="'
+                f"{_xml_escape(visual_relative)}"
+                '"/></geometry></visual>\n    <collision><geometry><mesh filenam'
+                'e="'
+                f"{_xml_escape(collision_relative)}"
+                '"/></geometry></collision>\n  </link>\n</robot>\n'
+            ),
             encoding="utf-8",
         )
     else:
@@ -709,10 +802,21 @@ def compile_downloaded_asset(
     source_format = downloaded.detected_format.lower()
     if source_format == "zip":
         extracted = _safe_extract_zip(source, output / "extracted")
-        supported = [item for item in extracted if detect_format_from_name(item.name) in set(SUPPORTED_ASSET_EXTENSIONS.values()) - {"zip"}]
+        supported = [
+            item
+            for item in extracted
+            if detect_format_from_name(item.name)
+            in set(SUPPORTED_ASSET_EXTENSIONS.values()) - {"zip"}
+        ]
         if not supported:
             raise AssetScoutError("downloaded archive contains no supported asset files")
-        source = sorted(supported, key=lambda item: (item.suffix.lower() not in {".urdf", ".obj", ".usd", ".usda"}, str(item)))[0]
+        source = sorted(
+            supported,
+            key=lambda item: (
+                item.suffix.lower() not in {".urdf", ".obj", ".usd", ".usda"},
+                str(item),
+            ),
+        )[0]
         source_format = detect_format_from_name(source.name)
 
     source_copy = output / f"source{source.suffix.lower()}"
@@ -832,7 +936,9 @@ def compile_downloaded_asset(
         elif requested == "metasim_object":
             target = output / "metasim_object.json"
             known_paths = {
-                "mesh_path": str(visual_source) if source_format in {"obj", "stl", "ply", "glb", "gltf"} else None,
+                "mesh_path": str(visual_source)
+                if source_format in {"obj", "stl", "ply", "glb", "gltf"}
+                else None,
                 "usd_path": str(source_copy) if source_format in {"usd", "usda", "usdc"} else None,
                 "urdf_path": str(source_copy) if source_format == "urdf" else generated.get("urdf"),
                 "mjcf_path": str(source_copy) if source_format == "mjcf" else generated.get("mjcf"),
@@ -897,7 +1003,8 @@ def compile_downloaded_asset(
         "provenance_path": downloaded.provenance_path,
     }
     (output / "conversion.json").write_text(
-        json.dumps(conversion, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(conversion, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
     )
     bundle = AssetBundle(
         asset_id=asset_id,
@@ -919,7 +1026,12 @@ def compile_downloaded_asset(
             "runtime_import_required": True,
         },
         articulation=articulation_audit,
-        tags=("downloaded", "provenance_recorded", "validated", "normalized" if source_format == "obj" else "normalization_pending"),
+        tags=(
+            "downloaded",
+            "provenance_recorded",
+            "validated",
+            "normalized" if source_format == "obj" else "normalization_pending",
+        ),
     )
     bundle.validate()
     return bundle

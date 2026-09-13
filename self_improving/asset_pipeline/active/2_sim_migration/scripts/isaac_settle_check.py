@@ -21,7 +21,7 @@ never simulates (20-step displacement = 0.0). This harness produces a real
 
 Evidence (poses, displacement, tilt, applied-schema lists proving the body is
 NOT a bare static reference) goes to --out-dir; a facts.json compatible with
-1_asset_reuse/scripts/ledger/writeback_verification.py is written alongside.
+asset_reuse/scripts/ledger/writeback_verification.py is written alongside.
 
 Usage (driver, env-gen-yuxin python):
   isaac_settle_check.py [--cases can box] [--out-dir DIR] [--run-id ID]
@@ -97,7 +97,7 @@ def compile_scene(resolved_scene: Path, out_dir: Path) -> dict:
     import importlib.util
 
     sys.path.insert(0, str(DEV / "shared/openxsim/source/agenticsim"))
-    sys.path.insert(0, str(DEV / "1_asset_reuse"))  # `lib` pkg (ledger)
+    sys.path.insert(0, str(DEV / "asset_reuse"))  # `lib` pkg (ledger)
 
     spec = importlib.util.spec_from_file_location(
         "usd_enrich_settle", str(DEV / "2_sim_migration/lib/usd_enrich.py")

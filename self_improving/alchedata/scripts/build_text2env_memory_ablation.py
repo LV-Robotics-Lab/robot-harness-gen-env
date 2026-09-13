@@ -31,15 +31,26 @@ def main() -> int:
     memory = read_json(memory_path)
 
     require(no["status"] == yes["status"] == "completed", "Both controller arms must complete")
-    require(no["mode"] == "no-memory" and yes["mode"] == "read-memory", "Controller modes are wrong")
+    require(
+        no["mode"] == "no-memory" and yes["mode"] == "read-memory", "Controller modes are wrong"
+    )
     require(no["fixed_protocol"] == yes["fixed_protocol"], "Fixed protocols differ")
-    require(no["default_adapter"] == yes["default_adapter"] == "swap_red_blue", "Default adapters differ")
+    require(
+        no["default_adapter"] == yes["default_adapter"] == "swap_red_blue",
+        "Default adapters differ",
+    )
     require(no["selected_adapter"] == "swap_red_blue", "No-memory arm did not use the default")
     require(yes["selected_adapter"] == "identity", "Memory arm did not select the recommendation")
     require(yes["selection"]["memory_sha256"] == sha256_file(memory_path), "Memory hash mismatch")
-    require(memory["source_failure"]["controller_sha256"] == sha256_file(no_path), "Memory source hash mismatch")
+    require(
+        memory["source_failure"]["controller_sha256"] == sha256_file(no_path),
+        "Memory source hash mismatch",
+    )
     require(no["execution_count"] == yes["execution_count"] == 3, "Both arms must execute 3/3")
-    require(no["success_count"] == 0 and yes["success_count"] == 3, "Expected observed 0/3 versus 3/3 outcome")
+    require(
+        no["success_count"] == 0 and yes["success_count"] == 3,
+        "Expected observed 0/3 versus 3/3 outcome",
+    )
 
     result = {
         "schema_version": "alchedata.text2env_memory_ablation.v0",
@@ -47,7 +58,9 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "experiment": {
             "fixed_protocol": no["fixed_protocol"],
-            "intervention": "availability of one matching structured failure memory to the adapter selector",
+            "intervention": (
+                "availability of one matching structured failure memory to the adapter selector"
+            ),
             "default_adapter": no["default_adapter"],
             "no_memory_selected_adapter": no["selected_adapter"],
             "memory_selected_adapter": yes["selected_adapter"],
@@ -71,12 +84,16 @@ def main() -> int:
             "memory_evaluator_report_sha256": yes["evaluator_report_sha256"],
         },
         "causal_result": (
-            "Within this fixed checkpoint, fixed placement, three-seed protocol, making the matching failure memory "
-            "available changed the controller's RGB adapter selection and increased measured success from 0/3 to 3/3."
+            "Within this fixed checkpoint, fixed placement, three-seed prot"
+            "ocol, making the matching failure memory available changed the"
+            " controller's RGB adapter selection and increased measured suc"
+            "cess from 0/3 to 3/3."
         ),
         "claim_boundary": (
-            "This is a one-memory, one-decision harness ablation. It does not establish general long-term memory, "
-            "retrieval quality, policy-weight improvement, placement robustness, or transfer to other failure classes."
+            "This is a one-memory, one-decision harness ablation. It does n"
+            "ot establish general long-term memory, retrieval quality, poli"
+            "cy-weight improvement, placement robustness, or transfer to ot"
+            "her failure classes."
         ),
     }
     out_path = Path(args.out).expanduser().resolve()

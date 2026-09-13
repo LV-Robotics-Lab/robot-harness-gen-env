@@ -10,7 +10,6 @@ from pathlib import Path
 
 from pose_conditioned_trajectory_policy import sha256_file, write_json
 
-
 EXPECTED_ARCHIVE_SHA256 = "54ede0fb5b783e0faa2bc98720d3affd6ca3bb9280b225b48c1aafaf31473070"
 EXPECTED_ARCHIVE_SIZE = 10_970_687_027
 
@@ -23,7 +22,9 @@ def build_receipt(archive: Path, seen_dir: Path, out_path: Path, subset_count: i
     archive_size = archive.stat().st_size
     archive_sha256 = sha256_file(archive)
     if archive_size != EXPECTED_ARCHIVE_SIZE:
-        raise ValueError(f"Archive size mismatch: expected {EXPECTED_ARCHIVE_SIZE}, found {archive_size}")
+        raise ValueError(
+            f"Archive size mismatch: expected {EXPECTED_ARCHIVE_SIZE}, found {archive_size}"
+        )
     if archive_sha256 != EXPECTED_ARCHIVE_SHA256:
         raise ValueError(f"Archive SHA-256 mismatch: {archive_sha256}")
 
@@ -33,8 +34,7 @@ def build_receipt(archive: Path, seen_dir: Path, out_path: Path, subset_count: i
         raise FileNotFoundError(f"Operational background subset is incomplete: {missing[:5]}")
     extracted_size = sum(path.stat().st_size for path in expected_files)
     subset_digest_payload = "".join(
-        f"{path.name}\t{path.stat().st_size}\t{sha256_file(path)}\n"
-        for path in expected_files
+        f"{path.name}\t{path.stat().st_size}\t{sha256_file(path)}\n" for path in expected_files
     ).encode("utf-8")
     import hashlib
 
@@ -60,14 +60,16 @@ def build_receipt(archive: Path, seen_dir: Path, out_path: Path, subset_count: i
             "size_bytes": extracted_size,
             "manifest_sha256": hashlib.sha256(subset_digest_payload).hexdigest(),
             "runtime_contract": (
-                "RoboTwin counts files in assets/background_texture/seen and samples integer ids in [0, count). "
-                "A contiguous 0-based subset therefore exercises the unmodified random_background loader."
+                "RoboTwin counts files in assets/background_texture/seen and sa"
+                "mples integer ids in [0, count). A contiguous 0-based subset t"
+                "herefore exercises the unmodified random_background loader."
             ),
         },
         "claim_boundary": (
-            "The full official archive is downloaded and hash-verified. Exactly the declared contiguous official "
-            "seen subset is extracted for this bounded evaluation; the result is not a claim that every archive "
-            "texture was exercised."
+            "The full official archive is downloaded and hash-verified. Exa"
+            "ctly the declared contiguous official seen subset is extracted"
+            " for this bounded evaluation; the result is not a claim that e"
+            "very archive texture was exercised."
         ),
     }
     write_json(out_path, receipt)
@@ -81,8 +83,14 @@ def main() -> int:
     parser.add_argument("--out", required=True)
     parser.add_argument("--subset-count", type=int, default=256)
     args = parser.parse_args()
-    receipt = build_receipt(Path(args.archive), Path(args.seen_dir), Path(args.out), args.subset_count)
-    print(json.dumps({"status": receipt["status"], **receipt["archive"], **receipt["operational_subset"]}))
+    receipt = build_receipt(
+        Path(args.archive), Path(args.seen_dir), Path(args.out), args.subset_count
+    )
+    print(
+        json.dumps(
+            {"status": receipt["status"], **receipt["archive"], **receipt["operational_subset"]}
+        )
+    )
     return 0
 
 

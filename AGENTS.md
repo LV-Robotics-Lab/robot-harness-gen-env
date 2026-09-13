@@ -29,7 +29,7 @@
 | `.github/` | CI 工作流定义（见 `.github/AGENTS.md`） |
 | `repo-docs/` | 仓库行为讲解（中文）：一条真实路径、代码地图、概念模块、证据底座（见 `repo-docs/README.md`） |
 | `self_improving/` | Self-Improving 平台编排、历史 stage、资产管线、迁移工具和机读来源清单 |
-| `apps/` | 平台的独立呈现层；当前包含保留完整来源历史的 PEARL evidence portal |
+| `apps/` | 平台的独立呈现层保留目录；当前 HEAD 没有 active app，PEARL portal 仅保留 Git/来源清单历史 |
 | `external/` | 独立生命周期的 OpenReal2Sim 与 digital-cousins 子模块 |
 
 ## Repo docs
@@ -41,6 +41,24 @@ Repo-docs sync triggers（在最终回复前先跑 sync gate）：仓库问题�
 若所需 guide 工作更宽且对当前答案不为必需，且平台支持真 tracked handoff，委派给后台 `repo-docs` sync agent；handoff 须含 trigger、稳定事实或变更源区、候选指南页、要跑的验证、以及预期的 `repo-docs/change-log.md` 更新。若无后台 agent，按已检视源回答并视情况提及 pending docs gap。涉及行为的代码/配置/数据/脚本/测试改动时，除非用户明说不碰文档，否则完成前与指南比对。
 
 This repo's `repo-docs/` guide is reader-facing Chinese documentation. When updating reader-facing guide pages, use `repo-docs-zh` when available; keep Chinese reader handles in the prose and preserve exact source identifiers for lookup.
+
+## Golden E2E workstream
+
+When working on x2env Skills, Codex orchestration, MCP adaptation, asset-debt repair, or the
+Genesis golden line, read `self_improving/golden_e2e_progress/README.md` first and update its live
+task, TODO, decision, and result ledgers before reporting progress.
+
+For the current matrix v2 implementation walkthrough, runtime evidence, or push decision, read
+`self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md`.
+For user setup and public CLI recipes, read `repo-docs/walkthroughs/canonical-x2env-user-guide.md`.
+For Python/CLI API, testing, backend/asset integration, or the next development plan, start at
+`repo-docs/canonical-x2env.md` and follow its task-specific guide.
+
+When incorporating behavior from Bingsheng, Gujie, or Yuxin, also read
+`docs/integration-provenance/README.md` and update `docs/integration-provenance/LEDGER.md` in the
+same feature commit. Keep origin ownership, third-party upstream ownership, integration ownership,
+recorded git author identities, fixed source refs, and runtime verification as separate fields. Do not infer
+a natural-person identity mapping from a branch, directory, or git email alone.
 
 ## For AI Agents（给 AI agent 的提示）
 
@@ -111,6 +129,14 @@ Keep core changes scoped to `/gen-env` and platform changes scoped to named
 modules under `self_improving/`. Preserve upstream attribution and avoid
 rewriting published history. External projects belong in submodules, not copied
 vendor trees.
+
+## OpenAI Safety Escalation
+
+- If OpenAI reports that a cybersecurity-related request requires additional
+  safety protection or refuses it on that basis, stop that request immediately
+  and tell the user.
+- Do not retry, rephrase, split, delegate, or otherwise attempt to bypass that
+  safety protection. Wait for explicit user direction before doing more work.
 
 ## Agent skills
 

@@ -30,7 +30,9 @@ def import_compile_manifest(path: str | Path) -> EnvironmentPackage:
     result = CompileResult.read(path)
     package_path = Path(result.package_path)
     if not package_path.is_file():
-        raise EnvironmentImportError(f"compile manifest package snapshot is missing: {package_path}")
+        raise EnvironmentImportError(
+            f"compile manifest package snapshot is missing: {package_path}"
+        )
     package = EnvironmentPackage.read_json(package_path)
     if package.digest() != result.package_digest:
         raise EnvironmentImportError("compile manifest package digest does not match its snapshot")
@@ -53,7 +55,9 @@ def _valid_identifier(value: str, prefix: str) -> str:
     return value
 
 
-def _task_from_contract(contract: dict[str, Any] | None, *, backend: str) -> tuple[TaskSpec, list[str]]:
+def _task_from_contract(
+    contract: dict[str, Any] | None, *, backend: str
+) -> tuple[TaskSpec, list[str]]:
     if contract:
         return (
             TaskSpec(
@@ -63,7 +67,8 @@ def _task_from_contract(contract: dict[str, Any] | None, *, backend: str) -> tup
                 action=dict(contract.get("action") or {}),
                 observation=dict(contract.get("observation") or {}),
                 plan=(),
-                success=tuple(dict(item) for item in contract.get("success", [])) or ({"type": "unbound"},),
+                success=tuple(dict(item) for item in contract.get("success", []))
+                or ({"type": "unbound"},),
                 termination=tuple(dict(item) for item in contract.get("termination", [])),
                 metadata={"task_contract_embedded": True, "source_backend": backend},
             ),
@@ -219,7 +224,8 @@ def import_mjcf(path: str | Path, *, package_id: str | None = None) -> Environme
             action=dict(contract.get("action") or {}),
             observation=dict(contract.get("observation") or {}),
             plan=(),
-            success=tuple(dict(item) for item in contract.get("success", [])) or ({"type": "unbound"},),
+            success=tuple(dict(item) for item in contract.get("success", []))
+            or ({"type": "unbound"},),
             termination=tuple(dict(item) for item in contract.get("termination", [])),
             metadata={"task_contract_embedded": True},
         )
@@ -271,7 +277,9 @@ def import_sapien_scene(path: str | Path) -> EnvironmentPackage:
     objects: list[SceneObject] = []
     for index, item in enumerate(data.get("objects") or []):
         if item.get("kind") == "missing":
-            raise EnvironmentImportError(f"SAPIEN source contains unresolved object: {item.get('name')}")
+            raise EnvironmentImportError(
+                f"SAPIEN source contains unresolved object: {item.get('name')}"
+            )
         name = _valid_identifier(str(item.get("name") or f"object_{index}"), "sapien")
         asset_id = _valid_identifier(f"{name}_asset", "asset")
         kind = str(item.get("kind") or "")
@@ -280,8 +288,12 @@ def import_sapien_scene(path: str | Path) -> EnvironmentPackage:
                 format="primitive_box",
                 uri="primitive://box",
                 metadata={
-                    "half_size_m": [float(value) for value in item.get("half_size_m") or [0.05, 0.05, 0.05]],
-                    "color_rgb": [float(value) for value in item.get("color_rgb") or [0.8, 0.8, 0.8]],
+                    "half_size_m": [
+                        float(value) for value in item.get("half_size_m") or [0.05, 0.05, 0.05]
+                    ],
+                    "color_rgb": [
+                        float(value) for value in item.get("color_rgb") or [0.8, 0.8, 0.8]
+                    ],
                 },
             )
         else:
@@ -304,9 +316,12 @@ def import_sapien_scene(path: str | Path) -> EnvironmentPackage:
                 instance_id=name,
                 asset_id=asset_id,
                 pose=Pose(
-                    position=tuple(float(value) for value in item.get("position") or [0.0, 0.0, 0.0]),
+                    position=tuple(
+                        float(value) for value in item.get("position") or [0.0, 0.0, 0.0]
+                    ),
                     orientation_wxyz=tuple(
-                        float(value) for value in item.get("orientation_wxyz") or [1.0, 0.0, 0.0, 0.0]
+                        float(value)
+                        for value in item.get("orientation_wxyz") or [1.0, 0.0, 0.0, 0.0]
                     ),
                 ),
                 static=bool(item.get("static", False)),
@@ -354,7 +369,9 @@ def import_metasim_scenario(path: str | Path) -> EnvironmentPackage:
             )
         elif class_name == "RigidObjCfg":
             path_fields = ("usd_path", "urdf_path", "mjcf_path", "mesh_path")
-            selected = next(((field, item.get(field)) for field in path_fields if item.get(field)), None)
+            selected = next(
+                ((field, item.get(field)) for field in path_fields if item.get(field)), None
+            )
             if selected is None:
                 raise EnvironmentImportError(f"MetaSim rigid object has no asset path: {name}")
             field, value = selected
@@ -363,9 +380,11 @@ def import_metasim_scenario(path: str | Path) -> EnvironmentPackage:
                 asset_path = (source.parent / asset_path).resolve()
             if not asset_path.is_file():
                 raise EnvironmentImportError(f"MetaSim asset is missing for {name}: {asset_path}")
-            fmt = {"usd_path": asset_path.suffix.lstrip("."), "urdf_path": "urdf", "mjcf_path": "mjcf"}.get(
-                field, asset_path.suffix.lstrip(".")
-            )
+            fmt = {
+                "usd_path": asset_path.suffix.lstrip("."),
+                "urdf_path": "urdf",
+                "mjcf_path": "mjcf",
+            }.get(field, asset_path.suffix.lstrip("."))
             representation = AssetRepresentation(format=fmt, uri=str(asset_path), backend="metasim")
         else:
             raise EnvironmentImportError(f"unsupported MetaSim object class: {class_name!r}")
@@ -383,9 +402,12 @@ def import_metasim_scenario(path: str | Path) -> EnvironmentPackage:
                 instance_id=name,
                 asset_id=asset_id,
                 pose=Pose(
-                    position=tuple(float(value) for value in item.get("default_position") or [0.0, 0.0, 0.0]),
+                    position=tuple(
+                        float(value) for value in item.get("default_position") or [0.0, 0.0, 0.0]
+                    ),
                     orientation_wxyz=tuple(
-                        float(value) for value in item.get("default_orientation") or [1.0, 0.0, 0.0, 0.0]
+                        float(value)
+                        for value in item.get("default_orientation") or [1.0, 0.0, 0.0, 0.0]
                     ),
                 ),
                 static=bool(item.get("fix_base_link", False)),
@@ -430,8 +452,10 @@ def _usda_child_blocks(scope: str) -> list[tuple[str, str, str]]:
     return results
 
 
-def _usda_vector(block: str, attribute: str, length: int, default: tuple[float, ...]) -> tuple[float, ...]:
-    match = re.search(rf'\b{re.escape(attribute)}\s*=\s*\(([^)]+)\)', block)
+def _usda_vector(
+    block: str, attribute: str, length: int, default: tuple[float, ...]
+) -> tuple[float, ...]:
+    match = re.search(rf"\b{re.escape(attribute)}\s*=\s*\(([^)]+)\)", block)
     return _floats(match.group(1).replace(",", " ") if match else None, length, default)
 
 
@@ -455,19 +479,27 @@ def import_isaac_usda(path: str | Path) -> EnvironmentPackage:
         asset_id = _valid_identifier(f"{name}_asset", "asset")
         position = _usda_vector(block, "double3 xformOp:translate", 3, (0.0, 0.0, 0.0))
         scale = _usda_vector(block, "double3 xformOp:scale", 3, (1.0, 1.0, 1.0))
-        orientation_match = re.search(r"quatd xformOp:orient\s*=\s*\(([^,]+),\s*\(([^)]+)\)\)", block)
+        orientation_match = re.search(
+            r"quatd xformOp:orient\s*=\s*\(([^,]+),\s*\(([^)]+)\)\)", block
+        )
         orientation = (
-            (float(orientation_match.group(1)),) + _floats(orientation_match.group(2).replace(",", " "), 3, (0, 0, 0))
+            (float(orientation_match.group(1)),)
+            + _floats(orientation_match.group(2).replace(",", " "), 3, (0, 0, 0))
             if orientation_match
             else (1.0, 0.0, 0.0, 0.0)
         )
         if prim_type == "Cube":
             color_match = re.search(r"primvars:displayColor\s*=\s*\[\(([^)]+)\)\]", block)
-            color = _floats(color_match.group(1).replace(",", " ") if color_match else None, 3, (0.8, 0.8, 0.8))
+            color = _floats(
+                color_match.group(1).replace(",", " ") if color_match else None, 3, (0.8, 0.8, 0.8)
+            )
             representation = AssetRepresentation(
                 format="primitive_box",
                 uri="primitive://box",
-                metadata={"half_size_m": [value / 2.0 for value in scale], "color_rgb": list(color)},
+                metadata={
+                    "half_size_m": [value / 2.0 for value in scale],
+                    "color_rgb": list(color),
+                },
             )
             object_scale = (1.0, 1.0, 1.0)
         else:
@@ -509,11 +541,16 @@ def import_isaac_usda(path: str | Path) -> EnvironmentPackage:
         assets=assets,
         gravity=(0.0, 0.0, -9.81),
         contract=None,
-        metadata={"source_schema": "usda_subset", "imported_prim_types": [type_ for type_, _, _ in _usda_child_blocks(scope)]},
+        metadata={
+            "source_schema": "usda_subset",
+            "imported_prim_types": [type_ for type_, _, _ in _usda_child_blocks(scope)],
+        },
     )
 
 
-def import_environment(path: str | Path, *, source_backend: str | None = None) -> EnvironmentPackage:
+def import_environment(
+    path: str | Path, *, source_backend: str | None = None
+) -> EnvironmentPackage:
     """Dispatch a compile manifest or a supported native environment."""
 
     source = Path(path).expanduser().resolve()

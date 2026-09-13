@@ -7,7 +7,6 @@ from pathlib import Path
 from scripts.build_placement_robustness_splits import build_split
 from scripts.placement_manifest_utils import load_placement_cases
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "runs" / "probe_static_apple_plate_action_repair" / "final_placement.json"
 
@@ -46,7 +45,9 @@ class PlacementRobustnessSplitTest(unittest.TestCase):
             _, eval_cases = load_placement_cases(out_dir / "placement_manifest.json", "eval")
             self.assertEqual([case["seed"] for case in train_cases], [100, 101, 102, 103])
             self.assertEqual([case["seed"] for case in eval_cases], [200, 201])
-            self.assertTrue(all(case["placement_path"].is_file() for case in train_cases + eval_cases))
+            self.assertTrue(
+                all(case["placement_path"].is_file() for case in train_cases + eval_cases)
+            )
 
     def test_same_seed_produces_same_pose_entries(self) -> None:
         with tempfile.TemporaryDirectory() as first, tempfile.TemporaryDirectory() as second:

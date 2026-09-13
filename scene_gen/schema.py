@@ -298,7 +298,10 @@ class ResolvedPose(StrictModel):
 
     @model_validator(mode="after")
     def normalized_quaternion(self) -> "ResolvedPose":
-        if not all(math.isfinite(value) for value in (*self.position_m, *self.orientation_wxyz, self.yaw_rad)):
+        if not all(
+            math.isfinite(value)
+            for value in (*self.position_m, *self.orientation_wxyz, self.yaw_rad)
+        ):
             raise SceneSpecError("resolved pose values must be finite")
         norm = math.sqrt(sum(value * value for value in self.orientation_wxyz))
         if abs(norm - 1.0) > 1e-6:
@@ -405,9 +408,7 @@ class ResolvedObject(StrictModel):
         if any(value is not None for value in surface_fields) and not all(
             value is not None for value in surface_fields
         ):
-            raise SceneSpecError(
-                f"support surface metadata is incomplete for {self.object_id}"
-            )
+            raise SceneSpecError(f"support surface metadata is incomplete for {self.object_id}")
         if self.support_surface_dimensions_m is not None:
             width, depth = self.support_surface_dimensions_m
             if width <= 0.0 or depth <= 0.0:
@@ -415,13 +416,9 @@ class ResolvedObject(StrictModel):
                     f"support surface dimensions must be positive for {self.object_id}"
                 )
             if width > self.dimensions_m[0] or depth > self.dimensions_m[1]:
-                raise SceneSpecError(
-                    f"support surface exceeds footprint for {self.object_id}"
-                )
+                raise SceneSpecError(f"support surface exceeds footprint for {self.object_id}")
             if self.support_surface_z_offset_m > self.dimensions_m[2]:
-                raise SceneSpecError(
-                    f"support surface exceeds height for {self.object_id}"
-                )
+                raise SceneSpecError(f"support surface exceeds height for {self.object_id}")
         if self.interior_floor_z_offset_m is not None:
             if self.interior_dimensions_m is None:
                 raise SceneSpecError(
@@ -431,9 +428,7 @@ class ResolvedObject(StrictModel):
                 self.interior_floor_z_offset_m + self.interior_dimensions_m[2]
                 > self.dimensions_m[2] + 1e-9
             ):
-                raise SceneSpecError(
-                    f"interior exceeds object height for {self.object_id}"
-                )
+                raise SceneSpecError(f"interior exceeds object height for {self.object_id}")
         derived_fields = (
             self.derived_from_asset_id,
             self.derived_from_model_id,
@@ -441,9 +436,7 @@ class ResolvedObject(StrictModel):
         )
         if self.asset_provenance == "derived_scaled_proxy":
             if any(value is None for value in derived_fields):
-                raise SceneSpecError(
-                    f"derived asset lineage is incomplete for {self.object_id}"
-                )
+                raise SceneSpecError(f"derived asset lineage is incomplete for {self.object_id}")
         elif any(value is not None for value in derived_fields):
             raise SceneSpecError(
                 f"non-derived object cannot carry scale lineage for {self.object_id}"

@@ -1,5 +1,17 @@
 # Robot Harness Gen-Env and Self-Improving Platform
 
+For the current multimodal Genesis workflow, start with the
+[Canonical x2env documentation](repo-docs/canonical-x2env.md):
+[user guide](repo-docs/walkthroughs/canonical-x2env-user-guide.md),
+[Python/CLI API](repo-docs/canonical-x2env-api.md),
+[deployment and integration](repo-docs/canonical-x2env-integration.md),
+[testing](repo-docs/canonical-x2env-testing.md), and
+[development roadmap](repo-docs/canonical-x2env-roadmap.md).
+Matrix v2 verified four simple input cases with local assets and one isolated package replay.
+Web/reconstruction deployment, complex scenes, robot policies and data collection have separate
+unfulfilled verification requirements. The following `/gen-env` instructions describe the retained
+RoboTwin/SAPIEN compiler, not the Genesis CLI.
+
 `/gen-env` compiles bounded natural-language requests into deterministic,
 RoboTwin-loadable scene packages and validates them in SAPIEN before they can
 enter the Robot Harness command loop.
@@ -36,7 +48,7 @@ self_improving/validation_evidence/
                                    compact recovered simulator acceptance records
 self_improving/workspace_archives/
                                    full-file manifests and Release archive pointers
-apps/pearl_evidence_portal/        PEARL evidence portal and hosted subset
+apps/                              reserved presentation root; no active app at current HEAD
 external/OpenReal2Sim/             independent Git submodule
 external/digital-cousins/          independent Git submodule
 external/MetaSim/                  pinned validation dependency submodule
@@ -238,8 +250,9 @@ python -m demo.app --host 0.0.0.0 --port 8765
 The demo queues GPU work, accepts text and a seed, and exposes only registered
 screenshots, video, manifests, and validation evidence from each job.
 
-The current lab-network deployment is available at
-[`http://100.64.0.6:8765`](http://100.64.0.6:8765).
+The address recorded for a previous lab-only deployment (`http://100.64.0.6:8765`)
+is historical, not a public endpoint. Its current availability is unverified;
+use the launch command above for your own deployment.
 
 ## Optional Rendered Critic
 

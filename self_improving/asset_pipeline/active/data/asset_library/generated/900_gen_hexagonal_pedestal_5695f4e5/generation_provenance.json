@@ -1,0 +1,35 @@
+{
+  "asset_id": "900_gen_hexagonal_pedestal_5695f4e5",
+  "dimensions_m": [
+    0.09,
+    0.09,
+    0.075
+  ],
+  "files": {
+    "collision": {
+      "path": "collision/textured0.obj",
+      "sha256": "73628bac5120cd41520410d7e6404aa04fd377a126c18af1a75361c7775704c9"
+    },
+    "material": {
+      "path": "visual/material.mtl",
+      "sha256": "b2f39d95affbd58fa63ad649dd579a22737de7dab61ec40cabe60562a4321f61"
+    },
+    "metadata": {
+      "path": "model_data0.json",
+      "sha256": "b2cbc51850dae042e07041fade5c0f13a5cdfecf723f74f0a7d4b4968b54f643"
+    },
+    "visual": {
+      "path": "visual/textured0.obj",
+      "sha256": "a3517e0da28a2e44bb33981c0f91f3b92d2e4bee3a20a1d3a1d041d6d6176495"
+    }
+  },
+  "generated_license": "project_generated_academic_artifact",
+  "generation_kind": "procedural_proxy",
+  "generator": "scene_gen.procedural_proxy.v3",
+  "geometry_family": "hexagonal_prism",
+  "geometry_fidelity": "semantic_shape_when_recognized_otherwise_bounded_proxy",
+  "requested_color": "purple",
+  "requested_material": null,
+  "schema_version": "robotwin.generated_asset_provenance.v1",
+  "semantic_category": "hexagonal_pedestal"
+}

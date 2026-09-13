@@ -1,0 +1,64 @@
+{
+  "schema_version": "robot_harness.replay_fixed_qualified_cli_evidence.v1",
+  "date": "2026-09-02",
+  "commit": "8ea46f850688acf41bfea5a20b59b99d2c092f03",
+  "skill_ref": "text2env.replay@1.0.0",
+  "case_id": "can-on-plate-seed-7-900-120-120-12",
+  "qualification": {
+    "implementation_sha256": "3ad6aff715baade429e2315d6a1f53ccc432affe57610a1a3653ef51587a0379",
+    "report_sha256": "0690d305a794b23b3b701379540394f998c06a34d43eb019fc05cdf521dbef53",
+    "runtime_capability_sha256": "ee3a155c4077d9bbe0abe97b3b9df45c90c4bb409d397beee196a87251b4f511",
+    "invocation_digest": "7bed94e1b63e083d1719513db3b8a2cf8de7de8990cbbc80f2c4df7fd270569d",
+    "environment_package_id": "96e995144468707f0f6e169341ce13e2330b1f42a8acaf73d9c126925e4be3ee"
+  },
+  "clean_checkout_verification": {
+    "qualification_and_cli_tests_passed": 65,
+    "full_suite_passed": 2477,
+    "full_suite_skipped": 19,
+    "failed": 0
+  },
+  "attempts": [
+    {
+      "run_id": "618756a5-5c4e-4c53-b6a1-846571a8e87c",
+      "exit_code": 10,
+      "status": "blocked",
+      "attempt": 1,
+      "event_count": 4,
+      "artifact_count": 29,
+      "blocker_code": "HARN_DEPENDENCY_UNAVAILABLE",
+      "runtime_failure_code": "capability_mismatch",
+      "observed_runtime_capability_sha256": "e8a44adfb51ab48e61e1365c66910b020e4f2e4fcd06f300bf9c21bab675f543",
+      "qualified_path_value_sha256": "33f0a9ae5571020617b6eb14e9ee827833f8fa0534cdfcaa36141b3461ea7185",
+      "observed_path_value_sha256": "b8f77299ded6453cbff7246f66f38793656c0a40b5ff2e249f0909eb0893a0db"
+    },
+    {
+      "run_id": "0000f972-15e7-4ada-aec6-707e8973acde",
+      "exit_code": 0,
+      "status": "succeeded",
+      "attempt": 1,
+      "event_count": 19,
+      "artifact_count": 43,
+      "blocker_code": null,
+      "runtime_evidence_sha256": "1c74e310fff651ef7ca562f8e57b66fdf6f4e2c7a0e14abc8d2c878435351f1f",
+      "runtime_validation_report_sha256": "01e85c898631343c46df50ecb2fb26dd0b4e9c2e424424553004f19b2ef09d75",
+      "observer_video_sha256": "a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e",
+      "simulation_step_count": 900,
+      "total_physics_step_count": 900,
+      "contact_window_steps": 120,
+      "video_frame_count": 120,
+      "unique_video_frame_count": 100,
+      "validation_status": "pass",
+      "validation_fail_count": 0,
+      "validation_not_run_count": 0
+    }
+  ],
+  "claims": {
+    "fixed_qualified_case_only": true,
+    "durable_terminal_state_verified": true,
+    "committed_private_absolute_paths": false,
+    "deployment_local": true,
+    "portable_receipt": false,
+    "validate_decision": false,
+    "publishable": false
+  }
+}

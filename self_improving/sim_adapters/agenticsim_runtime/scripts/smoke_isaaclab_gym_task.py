@@ -13,8 +13,12 @@ import time
 from pathlib import Path
 from typing import Any
 
-from _isaac_gui import apply_camera_view, capture_active_viewport, parse_vector3, run_coroutine_with_timeout
-
+from _isaac_gui import (
+    apply_camera_view,
+    capture_active_viewport,
+    parse_vector3,
+    run_coroutine_with_timeout,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LOCAL_ASSET_ROOT = ROOT / "assets" / "vendor" / "isaacsim_5_1_minimal"
@@ -39,7 +43,9 @@ def _jsonify(value: Any) -> Any:
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = path.with_name(f"{path.name}.tmp")
-    tmp_path.write_text(json.dumps(_jsonify(payload), indent=2, ensure_ascii=False, sort_keys=True) + "\n")
+    tmp_path.write_text(
+        json.dumps(_jsonify(payload), indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    )
     tmp_path.replace(path)
 
 
@@ -140,8 +146,7 @@ def _translate_bounds(
     runtime_root: tuple[float, float, float],
 ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
     offset = tuple(
-        runtime - authored
-        for authored, runtime in zip(authored_root, runtime_root, strict=True)
+        runtime - authored for authored, runtime in zip(authored_root, runtime_root, strict=True)
     )
     return (
         tuple(value + delta for value, delta in zip(minimum, offset, strict=True)),
@@ -237,7 +242,10 @@ def main() -> int:
         action="append",
         default=[],
         metavar="DOTTED.PATH=VALUE",
-        help="Override an existing environment config field after task parsing; VALUE accepts JSON or a raw string.",
+        help=(
+            "Override an existing environment config field after task par"
+            "sing; VALUE accepts JSON or a raw string."
+        ),
     )
     parser.add_argument("--width", type=int, default=960)
     parser.add_argument("--height", type=int, default=540)
@@ -247,7 +255,10 @@ def main() -> int:
         "--asset-root",
         type=Path,
         default=DEFAULT_LOCAL_ASSET_ROOT if DEFAULT_LOCAL_ASSET_ROOT.is_dir() else None,
-        help="Local IsaacSim asset root mirroring /Assets/Isaac/5.1, used before IsaacLab tasks import assets.",
+        help=(
+            "Local IsaacSim asset root mirroring /Assets/Isaac/5.1, used "
+            "before IsaacLab tasks import assets."
+        ),
     )
     args = parser.parse_args()
 
@@ -271,14 +282,15 @@ def main() -> int:
         "pythonpath": [str(path) for path in args.pythonpath],
         "steps_requested": int(args.steps),
         "num_envs": int(args.num_envs),
-            "device": args.device,
-            "screenshot": str(args.screenshot),
-            "asset_root": str(args.asset_root) if args.asset_root else "",
-            "env_cfg_overrides_requested": list(args.env_cfg_set),
-        }
+        "device": args.device,
+        "screenshot": str(args.screenshot),
+        "asset_root": str(args.asset_root) if args.asset_root else "",
+        "env_cfg_overrides_requested": list(args.env_cfg_set),
+    }
 
     simulation_app = None
     env = None
+
     def checkpoint(status: str, **values: Any) -> None:
         report.update({"status": status, "elapsed_s": round(time.time() - started, 3), **values})
         _write_json(args.output, report)
@@ -316,7 +328,9 @@ def main() -> int:
         imported_modules = []
         for module_name in args.register_module:
             module = importlib.import_module(module_name)
-            imported_modules.append({"module": module_name, "file": getattr(module, "__file__", "")})
+            imported_modules.append(
+                {"module": module_name, "file": getattr(module, "__file__", "")}
+            )
         checkpoint("modules_imported", imported_modules=imported_modules)
 
         env_cfg = parse_env_cfg(
@@ -346,15 +360,16 @@ def main() -> int:
         if args.frame_prim:
             framed_prim = _describe_prim_geometry(env, args.frame_prim)
             if not framed_prim.get("ready"):
-                raise RuntimeError(f"Cannot frame prim {args.frame_prim!r}: {framed_prim.get('reason')}")
+                raise RuntimeError(
+                    f"Cannot frame prim {args.frame_prim!r}: {framed_prim.get('reason')}"
+                )
             minimum = tuple(framed_prim["minimum"])
             maximum = tuple(framed_prim["maximum"])
             if args.frame_asset:
                 scene = getattr(env.unwrapped, "scene", None)
                 asset = scene[args.frame_asset]
                 root_position = tuple(
-                    float(value)
-                    for value in asset.data.root_pos_w[0].detach().cpu().tolist()
+                    float(value) for value in asset.data.root_pos_w[0].detach().cpu().tolist()
                 )
                 framed_asset = {"name": args.frame_asset, "root_position": root_position}
                 minimum, maximum = _translate_bounds(
@@ -452,7 +467,9 @@ def main() -> int:
                 "error_type": type(exc).__name__,
                 "error_message": str(exc),
                 "screenshot_ready": bool(args.screenshot.is_file()),
-                "screenshot_size_bytes": args.screenshot.stat().st_size if args.screenshot.is_file() else 0,
+                "screenshot_size_bytes": args.screenshot.stat().st_size
+                if args.screenshot.is_file()
+                else 0,
             }
         )
         _write_json(args.output, report)

@@ -1,0 +1,72 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sha256",
+        "size_bytes",
+        "media_type"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Controller approval reserved against the workflow head, not a SceneIR revision.",
+  "properties": {
+    "approval": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "base_revision": {
+      "minimum": 0,
+      "title": "Base Revision",
+      "type": "integer"
+    },
+    "cost": {
+      "maximum": 2,
+      "minimum": 1,
+      "title": "Cost",
+      "type": "integer"
+    },
+    "failure_fingerprint": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Failure Fingerprint",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "scene",
+        "asset",
+        "scene_asset"
+      ],
+      "title": "Kind",
+      "type": "string"
+    }
+  },
+  "required": [
+    "kind",
+    "cost",
+    "failure_fingerprint",
+    "approval",
+    "base_revision"
+  ],
+  "title": "RepairReservation",
+  "type": "object"
+}
