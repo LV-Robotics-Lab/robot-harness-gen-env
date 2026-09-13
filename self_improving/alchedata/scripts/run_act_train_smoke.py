@@ -14,7 +14,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = ROOT / "runs" / "act_train_smoke_generated"
 DEFAULT_CONFIG = ROOT / "runs" / "act_hdf5_generated_smoke" / "SIM_TASK_CONFIGS.generated.json"
@@ -74,8 +73,11 @@ def main() -> int:
         "out_dir": str(out_dir),
         "num_epochs": args.num_epochs,
         "claim_boundary": (
-            f"Bounded {args.num_epochs}-epoch ACT training on generated HDF5 data. This proves import, data loading, "
-            "loss computation, optimization, and checkpoint writing; policy quality requires separate evaluation."
+            "Bounded "
+            f"{args.num_epochs}"
+            "-epoch ACT training on generated HDF5 data. This proves import"
+            ", data loading, loss computation, optimization, and checkpoint"
+            " writing; policy quality requires separate evaluation."
         ),
     }
     write_json(report_path, report)

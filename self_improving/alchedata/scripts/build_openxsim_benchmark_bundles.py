@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 OUT_ROOT = ROOT / "artifacts" / "openxsim_benchmarks"
 WORKSPACE_ROOTS = (
@@ -220,8 +219,9 @@ def build_bundle(task_name: str, report_path: Path) -> dict[str, Any]:
         },
         "next_data_requirement": report["next_data_requirement"],
         "claim_boundary": (
-            "This bundle unifies an official RoboTwin scripted-expert rollout across PEARL command artifacts. "
-            "Its /evaluate stage is the official task success verifier, not learned-policy evaluation."
+            "This bundle unifies an official RoboTwin scripted-expert rollo"
+            "ut across PEARL command artifacts. Its /evaluate stage is the "
+            "official task success verifier, not learned-policy evaluation."
         ),
     }
     write_json(out_dir / "benchmark_manifest.json", bundle)
@@ -239,13 +239,16 @@ def main() -> int:
                 "benchmark_id": bundle["benchmark_id"],
                 "task_name": bundle["task_name"],
                 "status": bundle["status"],
-                "manifest": f"artifacts/openxsim_benchmarks/{bundle['task_name']}/benchmark_manifest.json",
+                "manifest": (
+                    f"artifacts/openxsim_benchmarks/{bundle['task_name']}/benchmark_manifest.json"
+                ),
             }
             for bundle in bundles
         ],
         "claim_boundary": (
-            "Three official RoboTwin scripted benchmark bundles with unified command-loop artifacts; "
-            "not three learned-policy evaluations."
+            "Three official RoboTwin scripted benchmark bundles with unifie"
+            "d command-loop artifacts; not three learned-policy evaluations"
+            "."
         ),
     }
     write_json(OUT_ROOT / "manifest.json", manifest)

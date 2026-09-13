@@ -10,7 +10,6 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AGENTICSIM_ROOT = ROOT / "fixtures" / "retired_agenticsim"
 ARCHIVED_SOURCE_COMMIT = "6d952560870b0a9b71f707f0476d28425bfab256"
@@ -114,11 +113,14 @@ def build_snapshot(agenticsim_root: Path = DEFAULT_AGENTICSIM_ROOT) -> dict[str,
         "runtime_baseline": runtime["baseline"],
         "current_runtime_rows": current_rows,
         "claim_boundary": (
-            "The snapshot pins AgenticSim catalog and runtime evidence by commit and file hash. Under the local "
-            "noncommercial academic-use policy, every technical runtime pass is admitted and license findings remain "
-            "provenance advisories. Strict open-source closure stays separately reported. The snapshot proves the "
-            "recorded RTX baseline and named bounded candidate smokes, not learned policy quality or a complete PEARL "
-            "command loop over Isaac Sim."
+            "The snapshot pins AgenticSim catalog and runtime evidence by c"
+            "ommit and file hash. Under the local noncommercial academic-us"
+            "e policy, every technical runtime pass is admitted and license"
+            " findings remain provenance advisories. Strict open-source clo"
+            "sure stays separately reported. The snapshot proves the record"
+            "ed RTX baseline and named bounded candidate smokes, not learne"
+            "d policy quality or a complete PEARL command loop over Isaac S"
+            "im."
         ),
     }
 

@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "artifacts" / "generation_fallback"
 
@@ -36,7 +35,9 @@ def build_video2sim_probe() -> dict[str, Any]:
             "status": "blocked_missing_inputs",
             "inputs": {
                 "source_task": "open the drawer and place the mug inside",
-                "blocked_selection2env_artifact": "artifacts/selection2env/task_drawer_mug_blocker.json",
+                "blocked_selection2env_artifact": (
+                    "artifacts/selection2env/task_drawer_mug_blocker.json"
+                ),
                 "capture_source": None,
                 "reference_video": None,
                 "rgbd_capture": None,
@@ -57,23 +58,34 @@ def build_video2sim_probe() -> dict[str, Any]:
                 {
                     "name": "selection2env_blocker_exists",
                     "status": "pass",
-                    "evidence": "artifacts/selection2env/task_drawer_mug_blocker.json records missing drawer/mug assets",
+                    "evidence": (
+                        "artifacts/selection2env/task_drawer_mug_blocker.json records m"
+                        "issing drawer/mug assets"
+                    ),
                 },
                 {
                     "name": "capture_source_available",
                     "status": "fail",
-                    "evidence": "No RGB-D capture, reference video, masks, or object prompt package is present in this workspace",
+                    "evidence": (
+                        "No RGB-D capture, reference video, masks, or object prompt pac"
+                        "kage is present in this workspace"
+                    ),
                 },
                 {
                     "name": "sapien_import_smoke",
                     "status": "not_run",
-                    "evidence": "Forge output is absent, so there is no mesh/URDF to import or smoke-test",
+                    "evidence": (
+                        "Forge output is absent, so there is no mesh/URDF to import or smoke-test"
+                    ),
                 },
             ],
             "import_gate_matrix": {
                 gate: {
                     "status": "blocked_missing_forge_artifact",
-                    "evidence": "No generated mesh, URDF, scene, pose, physics, or material artifact exists for this gate",
+                    "evidence": (
+                        "No generated mesh, URDF, scene, pose, physics, or material art"
+                        "ifact exists for this gate"
+                    ),
                 }
                 for gate in (
                     "import",
@@ -88,17 +100,32 @@ def build_video2sim_probe() -> dict[str, Any]:
             "blockers": [
                 {
                     "code": "FORGE_CAPTURE_SOURCE_MISSING",
-                    "message": "video2sim-forge-style dry run needs a reference video or RGB-D capture with object prompts/masks before mesh/URDF generation can be probed",
+                    "message": (
+                        "video2sim-forge-style dry run needs a reference video or RGB-D"
+                        " capture with object prompts/masks before mesh/URDF generation"
+                        " can be probed"
+                    ),
                     "owner": "Zheng Ye",
                 },
                 {
                     "code": "FORGE_IMPORT_ARTIFACT_MISSING",
-                    "message": "No generated mesh, URDF, world-frame pose, or physics metadata exists for a RoboTwin/SAPIEN import gate",
+                    "message": (
+                        "No generated mesh, URDF, world-frame pose, or physics metadata"
+                        " exists for a RoboTwin/SAPIEN import gate"
+                    ),
                     "owner": "Zheng Ye / Boris",
                 },
             ],
-            "next_step": "Attach one drawer/mug RGB-D or reference-video package, then run forge output through scale, collision, support, material, SAPIEN import, and verifier gates.",
-            "claim_boundary": "This is a machine-readable blocker for the missing-asset forge fallback. It does not claim video2sim-forge execution or generated asset validity.",
+            "next_step": (
+                "Attach one drawer/mug RGB-D or reference-video package, then r"
+                "un forge output through scale, collision, support, material, S"
+                "APIEN import, and verifier gates."
+            ),
+            "claim_boundary": (
+                "This is a machine-readable blocker for the missing-asset forge"
+                " fallback. It does not claim video2sim-forge execution or gene"
+                "rated asset validity."
+            ),
         }
     )
     return probe
@@ -130,17 +157,26 @@ def build_neumatex_probe() -> dict[str, Any]:
                 {
                     "name": "material_input_views_available",
                     "status": "fail",
-                    "evidence": "No calibrated multi-view image set or rendered material capture package is present in this workspace",
+                    "evidence": (
+                        "No calibrated multi-view image set or rendered material captur"
+                        "e package is present in this workspace"
+                    ),
                 },
                 {
                     "name": "geometry_asset_gate",
                     "status": "fail",
-                    "evidence": "No accepted forged/generated asset is ready for material-sidecar binding beyond sampled Articraft URDF import probes",
+                    "evidence": (
+                        "No accepted forged/generated asset is ready for material-sidec"
+                        "ar binding beyond sampled Articraft URDF import probes"
+                    ),
                 },
                 {
                     "name": "renderer_binding_smoke",
                     "status": "not_run",
-                    "evidence": "Material sidecar output is absent, so SAPIEN/RoboTwin render binding cannot be smoke-tested",
+                    "evidence": (
+                        "Material sidecar output is absent, so SAPIEN/RoboTwin render b"
+                        "inding cannot be smoke-tested"
+                    ),
                 },
             ],
             "import_gate_matrix": {
@@ -154,7 +190,9 @@ def build_neumatex_probe() -> dict[str, Any]:
                 },
                 "collision": {
                     "status": "blocked_missing_geometry_input",
-                    "evidence": "No accepted generated geometry is selected for collision validation",
+                    "evidence": (
+                        "No accepted generated geometry is selected for collision validation"
+                    ),
                 },
                 "support": {
                     "status": "blocked_missing_geometry_input",
@@ -162,7 +200,9 @@ def build_neumatex_probe() -> dict[str, Any]:
                 },
                 "material": {
                     "status": "blocked_missing_multiview_input",
-                    "evidence": "No calibrated multi-view images or extracted material sidecar exist",
+                    "evidence": (
+                        "No calibrated multi-view images or extracted material sidecar exist"
+                    ),
                 },
                 "render": {
                     "status": "blocked_missing_renderer_binding",
@@ -176,17 +216,31 @@ def build_neumatex_probe() -> dict[str, Any]:
             "blockers": [
                 {
                     "code": "MATERIAL_MULTIVIEW_INPUT_MISSING",
-                    "message": "NeuMaTeX-style extraction needs calibrated multi-view images or rendered captures before material fields can be produced",
+                    "message": (
+                        "NeuMaTeX-style extraction needs calibrated multi-view images o"
+                        "r rendered captures before material fields can be produced"
+                    ),
                     "owner": "Zheng Ye",
                 },
                 {
                     "code": "MATERIAL_RENDER_BINDING_MISSING",
-                    "message": "No texture/material sidecar has been bound to a RoboTwin/SAPIEN asset for render verification",
+                    "message": (
+                        "No texture/material sidecar has been bound to a RoboTwin/SAPIE"
+                        "N asset for render verification"
+                    ),
                     "owner": "Zheng Ye / Boris",
                 },
             ],
-            "next_step": "Pick one accepted generated or Articraft asset, provide calibrated multi-view or rendered captures, extract a material sidecar, and run SAPIEN render/visual checks.",
-            "claim_boundary": "This is a machine-readable blocker for the material sidecar route. It does not claim NeuMaTeX execution or material fidelity.",
+            "next_step": (
+                "Pick one accepted generated or Articraft asset, provide calibr"
+                "ated multi-view or rendered captures, extract a material sidec"
+                "ar, and run SAPIEN render/visual checks."
+            ),
+            "claim_boundary": (
+                "This is a machine-readable blocker for the material sidecar ro"
+                "ute. It does not claim NeuMaTeX execution or material fidelity"
+                "."
+            ),
         }
     )
     return probe
@@ -203,7 +257,11 @@ def main() -> int:
         "probes": [
             f"artifacts/generation_fallback/{probe['fallback_id']}.json" for probe in probes
         ],
-        "claim_boundary": "Records typed /gen-env fallback blockers for Open X Sim acceptance. It does not claim forge or material extraction execution.",
+        "claim_boundary": (
+            "Records typed /gen-env fallback blockers for Open X Sim accept"
+            "ance. It does not claim forge or material extraction execution"
+            "."
+        ),
     }
     write_json(OUT_DIR / "fallback_blocker_summary.json", summary)
     print(json.dumps({"status": summary["status"], "probes": len(probes)}, ensure_ascii=False))

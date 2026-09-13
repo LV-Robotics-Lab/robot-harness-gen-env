@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from scripts.build_failure_score_correlation import (
     average_ranks,
     correlation,

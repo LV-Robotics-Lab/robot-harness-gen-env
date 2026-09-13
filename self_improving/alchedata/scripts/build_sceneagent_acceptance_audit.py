@@ -14,7 +14,6 @@ from typing import Any
 from selection2env_contract import ROOT, validate_scene_task_pair
 from video_evidence import probe_video
 
-
 EXPECTED_SELECTION_FIELDS = {
     "task_text",
     "asset_candidates",
@@ -305,7 +304,10 @@ def build() -> dict[str, Any]:
         ),
         item(
             5,
-            "Candidates, placement, reproducible code diff, commands, logs, images, and continuous videos",
+            (
+                "Candidates, placement, reproducible code diff, commands, logs,"
+                " images, and continuous videos"
+            ),
             {
                 "accepted_candidates": accepted_candidates,
                 "rejected_candidates": rejected_candidates,
@@ -317,11 +319,26 @@ def build() -> dict[str, Any]:
                 "external_sources.lock.json",
                 source_lock["patch"],
                 "docs/sceneagent_reproduction_commands.md",
-                "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/process_stdout.log",
-                "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/process_stderr.log",
-                "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/process_stdout.log",
-                "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/process_stderr.log",
-                "runs/scene_task_decoupling/original_placement_apple_on_plate_fail/final_observer_camera.png",
+                (
+                    "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_"
+                    "plate/process_stdout.log"
+                ),
+                (
+                    "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_"
+                    "plate/process_stderr.log"
+                ),
+                (
+                    "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_"
+                    "left_front/process_stdout.log"
+                ),
+                (
+                    "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_"
+                    "left_front/process_stderr.log"
+                ),
+                (
+                    "runs/scene_task_decoupling/original_placement_apple_on_plate_f"
+                    "ail/final_observer_camera.png"
+                ),
             ],
         ),
         item(
@@ -368,8 +385,14 @@ def build() -> dict[str, Any]:
             },
             [
                 "artifacts/scene_task_decoupling/apple_plate_two_tasks.json",
-                "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/rollout_report.json",
-                "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/rollout_report.json",
+                (
+                    "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_"
+                    "plate/rollout_report.json"
+                ),
+                (
+                    "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_"
+                    "left_front/rollout_report.json"
+                ),
             ],
         ),
     ]
@@ -382,7 +405,10 @@ def build() -> dict[str, Any]:
         "status": "pass_all_8_sceneagent_acceptance_items",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "todo_id": "task_self_improving_sceneagent_selection2env_20260701",
-        "todo_scope": "selection2env over existing RoboTwin, AgenticSim aliases, and catalog-gated Articraft metadata",
+        "todo_scope": (
+            "selection2env over existing RoboTwin, AgenticSim aliases, and "
+            "catalog-gated Articraft metadata"
+        ),
         "acceptance_item_count": len(audit_items),
         "pass_count": sum(row["status"] == "pass" for row in audit_items),
         "items": audit_items,
@@ -398,7 +424,12 @@ def build() -> dict[str, Any]:
             ),
         },
         "runtime": read_json(ROOT / "artifacts/runtime/robotwin_5090_env.json"),
-        "claim_boundary": "This audit completes the eight dashboard acceptance items. generation2env execution, default upstream ACT wrapper compatibility, visual/language-conditioned closed-loop control, and broad Articraft physical validation remain outside this TODO.",
+        "claim_boundary": (
+            "This audit completes the eight dashboard acceptance items. gen"
+            "eration2env execution, default upstream ACT wrapper compatibil"
+            "ity, visual/language-conditioned closed-loop control, and broa"
+            "d Articraft physical validation remain outside this TODO."
+        ),
     }
 
 

@@ -9,7 +9,6 @@ import subprocess
 from pathlib import Path
 
 import jsonschema
-
 from embodied_harness import validate_embodied_harness_package
 from openxsim_command_loop import validate_openxsim_package
 from selection2env_contract import validate_scene_task_pair, validate_task_program_references
@@ -45,7 +44,9 @@ RUN_EXPECTATIONS = {
     "runs/probe_static_apple_plate/pipeline_summary.json": "pass_static_only",
     "runs/probe_static_laptop_knife/pipeline_summary.json": "pass_static_only",
     "runs/probe_static_vegetable_basket/pipeline_summary.json": "pass_static_only",
-    "runs/probe_static_drawer_mug_unified/scene_generation_summary.json": "pass_static_scene_module",
+    (
+        "runs/probe_static_drawer_mug_unified/scene_generation_summary.json"
+    ): "pass_static_scene_module",
 }
 
 SMOKE_EXPECTATIONS = {
@@ -114,7 +115,9 @@ REQUIRED_DENSE_DIAGNOSIS_CATEGORIES = {
 
 ARTICRAFT_ARCHIVE_PROBES = {
     "runs/articraft_archive_probe_weight_bench/probe_report.json": {
-        "asset_id": "rec_adjustable_weight_bench_with_hinged_backrest_008247976e6d499d8bcbd1304f26c972",
+        "asset_id": (
+            "rec_adjustable_weight_bench_with_hinged_backrest_008247976e6d499d8bcbd1304f26c972"
+        ),
         "status": "pass_articraft_archive_sapien_smoke",
         "collision_gate": "pass",
     },
@@ -1900,7 +1903,10 @@ def main() -> int:
 
     require(
         len({item["scene_id"] for item in artifacts}) == len(artifacts),
-        "selection2env artifacts must not fake scene-task decoupling by reusing a nominal scene id across different placements",
+        (
+            "selection2env artifacts must not fake scene-task decoupling by"
+            " reusing a nominal scene id across different placements"
+        ),
     )
 
     task_program_paths = sorted((ROOT / "artifacts" / "task_program_inputs").glob("*.json"))
@@ -2019,45 +2025,105 @@ def main() -> int:
 
     print("PASS workspace verification")
     print(
-        f"docs={len(REQUIRED_DOCS)} static_runs={len(RUN_EXPECTATIONS)} "
-        f"asset_smoke_runs={len(SMOKE_EXPECTATIONS)} basetask_smoke_runs={len(BASETASK_SMOKE_EXPECTATIONS)} "
-        f"collect_dry_runs={len(COLLECT_DRYRUN_EXPECTATIONS)} "
-        f"fresh_collect_dry_runs={len(FINAL_ACCEPTANCE_COLLECT_EXPECTATIONS)} "
-        f"official_rollouts={len(OFFICIAL_ROLLOUT_EXPECTATIONS)} "
-        f"generated_rollouts={len(GENERATED_ROLLOUT_EXPECTATIONS)} "
-        f"generated_collections={len(GENERATED_COLLECTION_EXPECTATIONS)} "
-        f"articraft_assets={articraft_manifest.get('asset_count')} "
-        f"articraft_archive_passes={articraft_archive_passes} "
-        f"articraft_collision_blockers={articraft_collision_blockers} "
-        f"act_hdf5={act_conversion.get('pass_count')} "
-        f"act_train={act_train.get('status')} "
-        f"act_eval={act_eval.get('status')} "
-        f"act_eval_success={act_eval.get('success_count')}/{act_eval.get('episode_count')} "
-        f"native_act_data={native_conversion.get('pass_count')} "
-        f"native_act_replay={native_replay.get('task_success')} "
-        f"native_act_train={native_train.get('status')} "
-        f"native_act_eval_success={native_eval.get('success_count')}/{native_eval.get('episode_count')} "
-        f"act_placement_eval_success={final_eval.get('success_count')}/{final_eval.get('episode_count')} "
-        f"act_placement_promotion={robustness.get('policy_promotion')} "
-        f"sceneagent_acceptance={sceneagent_acceptance.get('pass_count')}/8 "
-        f"scene_task_videos={'+'.join(str(row['video_capture']['frame_count']) for row in decoupling.get('rollouts', []))} "
-        f"sceneagent_policy=4/4+4/4+3/3 "
-        f"text2env_empirics={len(empirical_audit.get('gates', {}))}/5 "
-        f"memory_ablation={memory_outcomes.get('no_memory_success_count')}/3->{memory_outcomes.get('memory_success_count')}/3 "
-        f"isaac_command_bundle={isaac_bundle.get('file_count')}/34 "
-        f"core_causal_gates={core_gates.get('status')} "
-        f"policy_probe={policy_probe.get('status')} "
-        f"openxsim_bundles={openxsim_manifest.get('benchmark_count')} "
-        f"gen_env_contracts={len(gen_env_contract_reports)} "
-        f"fallback_blockers={len(fallback_reports)} "
-        f"literature_sources={literature_review.get('source_count')} "
-        f"literature_matrix={literature_review.get('matrix_rows')}x{literature_review.get('matrix_capabilities')} "
-        f"openxsim_commands={openxsim_package.get('commands')} "
-        f"openxsim_adapters={openxsim_package.get('adapters')} "
-        f"openxsim_acceptance={openxsim_package.get('acceptance_items')}/8 "
-        f"harness_acceptance={harness_package.get('acceptance_items')}/6 "
-        f"harness_priority={harness_package.get('priority_claim')} "
-        f"artifacts={len(artifacts)}"
+        (
+            "docs="
+            f"{len(REQUIRED_DOCS)}"
+            " static_runs="
+            f"{len(RUN_EXPECTATIONS)}"
+            " asset_smoke_runs="
+            f"{len(SMOKE_EXPECTATIONS)}"
+            " basetask_smoke_runs="
+            f"{len(BASETASK_SMOKE_EXPECTATIONS)}"
+            " collect_dry_runs="
+            f"{len(COLLECT_DRYRUN_EXPECTATIONS)}"
+            " fresh_collect_dry_runs="
+            f"{len(FINAL_ACCEPTANCE_COLLECT_EXPECTATIONS)}"
+            " official_rollouts="
+            f"{len(OFFICIAL_ROLLOUT_EXPECTATIONS)}"
+            " generated_rollouts="
+            f"{len(GENERATED_ROLLOUT_EXPECTATIONS)}"
+            " generated_collections="
+            f"{len(GENERATED_COLLECTION_EXPECTATIONS)}"
+            " articraft_assets="
+            f"{articraft_manifest.get('asset_count')}"
+            " articraft_archive_passes="
+            f"{articraft_archive_passes}"
+            " articraft_collision_blockers="
+            f"{articraft_collision_blockers}"
+            " act_hdf5="
+            f"{act_conversion.get('pass_count')}"
+            " act_train="
+            f"{act_train.get('status')}"
+            " act_eval="
+            f"{act_eval.get('status')}"
+            " act_eval_success="
+            f"{act_eval.get('success_count')}"
+            "/"
+            f"{act_eval.get('episode_count')}"
+            " native_act_data="
+            f"{native_conversion.get('pass_count')}"
+            " native_act_replay="
+            f"{native_replay.get('task_success')}"
+            " native_act_train="
+            f"{native_train.get('status')}"
+            " native_act_eval_success="
+            f"{native_eval.get('success_count')}"
+            "/"
+            f"{native_eval.get('episode_count')}"
+            " act_placement_eval_success="
+            f"{final_eval.get('success_count')}"
+            "/"
+            f"{final_eval.get('episode_count')}"
+            " act_placement_promotion="
+            f"{robustness.get('policy_promotion')}"
+            " sceneagent_acceptance="
+            f"{sceneagent_acceptance.get('pass_count')}"
+            "/8 scene_task_videos="
+            f"""{
+                "+".join(
+                    (
+                        str(row["video_capture"]["frame_count"])
+                        for row in decoupling.get("rollouts", [])
+                    )
+                )
+            }"""
+            " sceneagent_policy=4/4+4/4+3/3 text2env_empirics="
+            f"{len(empirical_audit.get('gates', {}))}"
+            "/5 memory_ablation="
+            f"{memory_outcomes.get('no_memory_success_count')}"
+            "/3->"
+            f"{memory_outcomes.get('memory_success_count')}"
+            "/3 isaac_command_bundle="
+            f"{isaac_bundle.get('file_count')}"
+            "/34 core_causal_gates="
+            f"{core_gates.get('status')}"
+            " policy_probe="
+            f"{policy_probe.get('status')}"
+            " openxsim_bundles="
+            f"{openxsim_manifest.get('benchmark_count')}"
+            " gen_env_contracts="
+            f"{len(gen_env_contract_reports)}"
+            " fallback_blockers="
+            f"{len(fallback_reports)}"
+            " literature_sources="
+            f"{literature_review.get('source_count')}"
+            " literature_matrix="
+            f"{literature_review.get('matrix_rows')}"
+            "x"
+            f"{literature_review.get('matrix_capabilities')}"
+            " openxsim_commands="
+            f"{openxsim_package.get('commands')}"
+            " openxsim_adapters="
+            f"{openxsim_package.get('adapters')}"
+            " openxsim_acceptance="
+            f"{openxsim_package.get('acceptance_items')}"
+            "/8 harness_acceptance="
+            f"{harness_package.get('acceptance_items')}"
+            "/6 harness_priority="
+            f"{harness_package.get('priority_claim')}"
+            " artifacts="
+            f"{len(artifacts)}"
+        )
     )
     print("sim_supported=" + ",".join(item["task_id"] for item in supported))
     print("unsupported=" + ",".join(item["task_id"] for item in unsupported))

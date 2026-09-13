@@ -277,8 +277,10 @@ def build_split(
             ),
         },
         "claim_boundary": (
-            "This manifest proves deterministic, explicit, disjoint object-placement splits inside declared placement regions. "
-            "It does not prove RoboTwin planner success, learned-policy robustness, or visual/physics domain randomization."
+            "This manifest proves deterministic, explicit, disjoint object-"
+            "placement splits inside declared placement regions. It does no"
+            "t prove RoboTwin planner success, learned-policy robustness, o"
+            "r visual/physics domain randomization."
         ),
     }
     if manifest["validation"]["unique_pose_signature_count"] != train_count + eval_count:

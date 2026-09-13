@@ -116,15 +116,24 @@ def main() -> int:
         "unique_pose_signature_count": len(set(signatures)),
         "score_name": "nearest_training_pose_distance_z4",
         "score_formula": (
-            "minimum Euclidean distance from the case [source_x, source_y, target_x, target_y] to any training "
-            "placement after per-coordinate standardization by the training-set mean and population standard deviation"
+            "minimum Euclidean distance from the case [source_x, source_y, "
+            "target_x, target_y] to any training placement after per-coordi"
+            "nate standardization by the training-set mean and population s"
+            "tandard deviation"
         ),
         "score_direction": "higher_predeclared_score_means_higher_predicted_failure_risk",
-        "outcome_definition": "failure = 1 when execution completes and RoboTwin policy_success is false; else 0",
+        "outcome_definition": (
+            "failure = 1 when execution completes and RoboTwin policy_success is false; else 0"
+        ),
         "analysis": {
-            "primary": "Pearson correlation between continuous failure score and binary failure outcome (point-biserial)",
+            "primary": (
+                "Pearson correlation between continuous failure score and binar"
+                "y failure outcome (point-biserial)"
+            ),
             "secondary": "Spearman rank correlation",
-            "uncertainty": "exact label-permutation two-sided p-value when both outcome classes are present",
+            "uncertainty": (
+                "exact label-permutation two-sided p-value when both outcome classes are present"
+            ),
             "retention": "all twelve cases retained regardless of score or outcome",
             "positive_effect_required": False,
         },
@@ -145,8 +154,10 @@ def main() -> int:
         "case_scores_sha256": hashlib.sha256(score_payload).hexdigest(),
         "cases": cases,
         "claim_boundary": (
-            "This protocol tests one geometric distance heuristic against one ACT checkpoint. A correlation, including "
-            "a positive one, would not prove causality or transfer to other policies, tasks, or simulators."
+            "This protocol tests one geometric distance heuristic against o"
+            "ne ACT checkpoint. A correlation, including a positive one, wo"
+            "uld not prove causality or transfer to other policies, tasks, "
+            "or simulators."
         ),
     }
     write_json(out_dir / "protocol.json", protocol)

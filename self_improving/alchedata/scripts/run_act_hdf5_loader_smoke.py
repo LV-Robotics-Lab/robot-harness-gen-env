@@ -11,7 +11,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -61,8 +60,9 @@ def main() -> int:
         "config": str(config_path),
         "robotwin_root": str(robotwin_root),
         "claim_boundary": (
-            "RoboTwin ACT utility smoke only: imports ACT utils, computes norm stats, and reads one dataset item. "
-            "It does not run ACT train.py, checkpointing, or evaluation."
+            "RoboTwin ACT utility smoke only: imports ACT utils, computes n"
+            "orm stats, and reads one dataset item. It does not run ACT tra"
+            "in.py, checkpointing, or evaluation."
         ),
     }
     write_json(out_path, report)

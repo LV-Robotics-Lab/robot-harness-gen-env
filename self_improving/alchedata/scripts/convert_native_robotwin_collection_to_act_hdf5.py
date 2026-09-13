@@ -15,7 +15,6 @@ import h5py
 import numpy as np
 from PIL import Image
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -178,12 +177,19 @@ def main() -> int:
         "out_dir": str(out_dir),
         "episodes": [],
         "claim_boundary": (
-            "This adapter uses RoboTwin-native equal-length per-frame head RGB and 14-D joint state records. "
-            "It proves synchronized ACT-format demonstrations, not learned-policy task success."
+            "This adapter uses RoboTwin-native equal-length per-frame head "
+            "RGB and 14-D joint state records. It proves synchronized ACT-f"
+            "ormat demonstrations, not learned-policy task success."
         ),
         "native_jpeg_color_repair": {
-            "source_behavior": "RoboTwin pkl2hdf5.py passes RGB camera arrays directly to cv2.imencode, which assumes BGR.",
-            "adapter_behavior": "Decode the JPEG as RGB, then swap red and blue channels back to runtime head-camera RGB order.",
+            "source_behavior": (
+                "RoboTwin pkl2hdf5.py passes RGB camera arrays directly to cv2."
+                "imencode, which assumes BGR."
+            ),
+            "adapter_behavior": (
+                "Decode the JPEG as RGB, then swap red and blue channels back t"
+                "o runtime head-camera RGB order."
+            ),
         },
     }
     write_json(out_dir / "conversion_report.json", report)
@@ -230,7 +236,10 @@ def main() -> int:
             "act_sim_task_name": task_name,
             "act_sim_task_config": task_config,
             "act_sim_task_config_json": str(out_dir / "SIM_TASK_CONFIGS.generated.json"),
-            "next_step": "Run the RoboTwin ACT loader gate, train beyond one epoch, then evaluate held-out seeds using head-camera RGB.",
+            "next_step": (
+                "Run the RoboTwin ACT loader gate, train beyond one epoch, then"
+                " evaluate held-out seeds using head-camera RGB."
+            ),
         }
     )
     write_json(out_dir / "SIM_TASK_CONFIGS.generated.json", {task_name: task_config})

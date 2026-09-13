@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from scripts.run_isaac_material_sidecar_roundtrip import (
     compare_foregrounds,
     extract_sidecar,

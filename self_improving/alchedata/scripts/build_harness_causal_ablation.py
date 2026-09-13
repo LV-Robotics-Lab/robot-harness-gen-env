@@ -10,7 +10,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -127,12 +126,18 @@ def build_ablation(
     decision = "accept" if promotion_pass else "reject"
     return {
         "schema_version": "alchedata.harness_causal_ablation.v0",
-        "status": f"pass_matched_harness_ablation_candidate_{'promoted' if promotion_pass else 'rejected'}",
+        "status": (
+            "pass_matched_harness_ablation_candidate_"
+            f"{('promoted' if promotion_pass else 'rejected')}"
+        ),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "claim_class": "COMPUTED",
         "confidence": "HIGH",
         "experiment": {
-            "hypothesis": "Correcting the runtime RGB adapter improves task success without changing the learned policy or task protocol.",
+            "hypothesis": (
+                "Correcting the runtime RGB adapter improves task success witho"
+                "ut changing the learned policy or task protocol."
+            ),
             "fixed_variables": baseline_protocol,
             "intervention": {
                 "harness_surface": "observations.runtime_color_adapter",
@@ -179,11 +184,23 @@ def build_ablation(
             },
         },
         "causal_result": (
-            "Within this fixed-placement, fixed-checkpoint, three-seed protocol, the corrected RGB harness adapter caused the measured success increase."
+            (
+                "Within this fixed-placement, fixed-checkpoint, three-seed prot"
+                "ocol, the corrected RGB harness adapter caused the measured su"
+                "ccess increase."
+            )
             if promotion_pass
-            else "The matched experiment completed, but the corrected RGB harness adapter did not meet the predeclared promotion threshold."
+            else (
+                "The matched experiment completed, but the corrected RGB harnes"
+                "s adapter did not meet the predeclared promotion threshold."
+            )
         ),
-        "claim_boundary": "This ablation attributes the measured difference within the matched fixed-scene protocol. It does not establish placement robustness, cross-task generalization, domain-randomized robustness, or real-robot benefit.",
+        "claim_boundary": (
+            "This ablation attributes the measured difference within the ma"
+            "tched fixed-scene protocol. It does not establish placement ro"
+            "bustness, cross-task generalization, domain-randomized robustn"
+            "ess, or real-robot benefit."
+        ),
     }
 
 

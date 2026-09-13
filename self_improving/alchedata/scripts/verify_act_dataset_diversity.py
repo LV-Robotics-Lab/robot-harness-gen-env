@@ -14,7 +14,6 @@ from typing import Any
 import h5py
 import numpy as np
 
-
 ROOT = Path(__file__).resolve().parents[1]
 KNOWN_ROOTS = (
     ROOT,
@@ -161,8 +160,9 @@ def main() -> int:
         },
         "episodes": episodes,
         "claim_boundary": (
-            "This gate proves byte-level diversity across successful synchronized ACT demonstrations and explicit "
-            "placement signatures. It does not prove policy learning or held-out task success."
+            "This gate proves byte-level diversity across successful synchr"
+            "onized ACT demonstrations and explicit placement signatures. I"
+            "t does not prove policy learning or held-out task success."
         ),
     }
     out_path = resolve_path(args.out)

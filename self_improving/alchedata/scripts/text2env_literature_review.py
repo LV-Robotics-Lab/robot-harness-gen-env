@@ -8,7 +8,6 @@ from pathlib import Path
 
 import jsonschema
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_REGISTRY = Path("artifacts/literature_review/text2env_primary_sources.json")
 METHOD_MATRIX = Path("artifacts/literature_review/text2env_method_matrix.json")

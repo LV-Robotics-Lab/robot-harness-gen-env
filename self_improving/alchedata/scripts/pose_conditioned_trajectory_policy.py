@@ -11,7 +11,6 @@ from typing import Any, Iterable
 
 import numpy as np
 
-
 GRIPPER_INDICES = (6, 13)
 
 
@@ -94,7 +93,12 @@ def phase_slices(actions: np.ndarray, gripper_index: int) -> list[slice]:
     transitions = gripper_transitions(actions, gripper_index)
     if len(transitions) < 2:
         raise ValueError(
-            f"Expected at least two gripper transitions at index {gripper_index}; found {transitions}"
+            (
+                "Expected at least two gripper transitions at index "
+                f"{gripper_index}"
+                "; found "
+                f"{transitions}"
+            )
         )
     first, second = transitions[:2]
     if not (0 < first < second < len(actions)):
@@ -348,9 +352,11 @@ def train_checkpoint(
         "cross_validation": cv,
         "available_predictors": ["affine", "rbf", "blend", "nearest"],
         "claim_boundary": (
-            "This checkpoint is learned from successful RoboTwin demonstrations, but it is privileged and open-loop: "
-            "it conditions once on simulator source/target XY poses and emits a full joint trajectory. It is not a "
-            "vision policy, language-conditioned policy, closed-loop controller, or broad task-generalization result."
+            "This checkpoint is learned from successful RoboTwin demonstrat"
+            "ions, but it is privileged and open-loop: it conditions once o"
+            "n simulator source/target XY poses and emits a full joint traj"
+            "ectory. It is not a vision policy, language-conditioned policy"
+            ", closed-loop controller, or broad task-generalization result."
         ),
     }
     write_json(metadata_path, metadata)

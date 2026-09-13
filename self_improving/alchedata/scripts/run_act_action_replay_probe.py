@@ -15,7 +15,6 @@ from typing import Any
 import h5py
 import imageio.v2 as imageio
 import numpy as np
-
 from run_generated_act_eval_smoke import (
     build_task_class,
     pose_record,
@@ -29,7 +28,6 @@ from run_generated_selection2env_rollout_probe import (
     read_json,
     write_json,
 )
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -87,8 +85,9 @@ def main() -> int:
         "scheduled_action_count": int(action_limit),
         "task_binding": binding,
         "claim_boundary": (
-            "This probe replays converted expert qpos actions from a fresh deterministic task reset. "
-            "Task success supports action ordering and semantics; it does not test learned-policy inference."
+            "This probe replays converted expert qpos actions from a fresh "
+            "deterministic task reset. Task success supports action orderin"
+            "g and semantics; it does not test learned-policy inference."
         ),
     }
     write_json(report_path, report)

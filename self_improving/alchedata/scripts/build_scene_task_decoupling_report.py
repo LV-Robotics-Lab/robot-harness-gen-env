@@ -16,7 +16,6 @@ from selection2env_contract import (
     workspace_path,
 )
 
-
 REMOTE_ROOT_MARKER = "/alchedata-self-improving-agents/"
 
 
@@ -136,9 +135,11 @@ def main() -> int:
         "pair_validation": pair,
         "rollouts": rollout_rows,
         "claim_boundary": (
-            "Both task programs reset from byte-identical placement JSON, begin from byte-identical observer pixels, "
-            "and pass RoboTwin generated play_once/check_success with continuous simulator-step videos. "
-            "This proves scene-task decoupling for one scene, not learned-policy cross-task generalization."
+            "Both task programs reset from byte-identical placement JSON, b"
+            "egin from byte-identical observer pixels, and pass RoboTwin ge"
+            "nerated play_once/check_success with continuous simulator-step"
+            " videos. This proves scene-task decoupling for one scene, not "
+            "learned-policy cross-task generalization."
         ),
     }
     write_json(workspace_path(args.out), result)

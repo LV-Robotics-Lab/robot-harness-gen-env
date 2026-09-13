@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from scripts.report_delivery import sync_bundle, verify_bundle, write_manifest
 
 

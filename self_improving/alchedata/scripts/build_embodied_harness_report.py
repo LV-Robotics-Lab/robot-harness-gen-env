@@ -20,9 +20,11 @@ from embodied_harness import (
     validate_embodied_harness_package,
 )
 
-
 DASHBOARD_HARNESS_ASSET = Path(
-    "/Users/boris/workspace/BorisGuo6.github.io/dashboard/assets/self-improving-embodied-harness-loop-20260707.png"
+    (
+        "/Users/boris/workspace/BorisGuo6.github.io/dashboard/assets/se"
+        "lf-improving-embodied-harness-loop-20260707.png"
+    )
 )
 IMAGE_SOURCES = {
     "embodied_harness_loop.png": DASHBOARD_HARNESS_ASSET,
@@ -59,32 +61,89 @@ def build_html(
 ) -> str:
     claim = spec["paper_claim"]
     acceptance_rows = "".join(
-        f'<tr><td class="number">{item["id"]:02d}</td><td>{esc(item["requirement"])}</td><td>{badge(item["status"])}</td><td><code>{esc(item["evidence"][0])}</code></td></tr>'
+        (
+            '<tr><td class="number">'
+            f"{item['id']:02d}"
+            "</td><td>"
+            f"{esc(item['requirement'])}"
+            "</td><td>"
+            f"{badge(item['status'])}"
+            "</td><td><code>"
+            f"{esc(item['evidence'][0])}"
+            "</code></td></tr>"
+        )
         for item in audit["items"]
     )
     thesis = "".join(f"<p>{esc(paragraph)}</p>" for paragraph in claim["thesis"])
     loop_rows = "".join(
-        f"""
-        <article class="loop-step">
-          <span class="step-number">{row["order"]:02d}</span>
-          <div><h3>{esc(row["sketch_term"])}</h3><p>{esc(row["pearl_term"])}</p><small>{esc(row["gate"])}</small></div>
-        </article>"""
+        (
+            '\n        <article class="loop-step">\n          <span class="st'
+            'ep-number">'
+            f"{row['order']:02d}"
+            "</span>\n          <div><h3>"
+            f"{esc(row['sketch_term'])}"
+            "</h3><p>"
+            f"{esc(row['pearl_term'])}"
+            "</p><small>"
+            f"{esc(row['gate'])}"
+            "</small></div>\n        </article>"
+        )
         for row in spec["loop_steps"]
     )
     surface_rows = "".join(
-        f"<tr><td><strong>{esc(row['surface'].replace('_', ' '))}</strong></td><td>{esc(row['contract'])}</td><td>{' · '.join(esc(value) for value in row['artifacts'])}</td></tr>"
+        (
+            "<tr><td><strong>"
+            f"{esc(row['surface'].replace('_', ' '))}"
+            "</strong></td><td>"
+            f"{esc(row['contract'])}"
+            "</td><td>"
+            f"{' · '.join((esc(value) for value in row['artifacts']))}"
+            "</td></tr>"
+        )
         for row in spec["embodied_surfaces"]
     )
     novelty_rows = "".join(
-        f"<tr><td><strong>{esc(row['comparison'])}</strong></td><td>{esc(row['overlap'])}</td><td>{esc(row['pearl_hypothesis'])}</td><td>{esc(row['implemented_evidence'])}</td><td>{esc(row['missing_evidence'])}</td></tr>"
+        (
+            "<tr><td><strong>"
+            f"{esc(row['comparison'])}"
+            "</strong></td><td>"
+            f"{esc(row['overlap'])}"
+            "</td><td>"
+            f"{esc(row['pearl_hypothesis'])}"
+            "</td><td>"
+            f"{esc(row['implemented_evidence'])}"
+            "</td><td>"
+            f"{esc(row['missing_evidence'])}"
+            "</td></tr>"
+        )
         for row in spec["novelty_table"]
     )
     route_rows = "".join(
-        f"<tr><td><code>{esc(row['command'])}</code></td><td>{' · '.join(esc(value.replace('_', ' ')) for value in row['harness_surfaces'])}</td><td>{' · '.join(esc(value) for value in row['required_fields'])}</td><td>{esc(row['promotion_gate'])}</td><td><code>{esc(row['evidence'])}</code></td></tr>"
+        (
+            "<tr><td><code>"
+            f"{esc(row['command'])}"
+            "</code></td><td>"
+            f"{' · '.join((esc(value.replace('_', ' ')) for value in row['harness_surfaces']))}"
+            "</td><td>"
+            f"{' · '.join((esc(value) for value in row['required_fields']))}"
+            "</td><td>"
+            f"{esc(row['promotion_gate'])}"
+            "</td><td><code>"
+            f"{esc(row['evidence'])}"
+            "</code></td></tr>"
+        )
         for row in spec["command_routing"]
     )
     proof_rows = "".join(
-        f"<tr><td>{esc(row['claim'])}</td><td>{badge(row['status'])}</td><td>{esc(row['required_next_evidence'])}</td></tr>"
+        (
+            "<tr><td>"
+            f"{esc(row['claim'])}"
+            "</td><td>"
+            f"{badge(row['status'])}"
+            "</td><td>"
+            f"{esc(row['required_next_evidence'])}"
+            "</td></tr>"
+        )
         for row in spec["proof_obligations"]
     )
     figure_brief = "".join(f"<li>{esc(value)}</li>" for value in spec["figure"]["brief"])
@@ -93,29 +152,72 @@ def build_html(
     cross_sim = empirical["gates"]["same_task_cross_sim_execution"]
     policy_gates = policy["gates"]
     evidence_cards = "".join(
-        f'<article class="result-card"><header><h3>{esc(title)}</h3><span class="status pass">proven bounded</span></header><strong>{esc(result)}</strong><p>{esc(boundary)}</p><a href="{esc(link)}">Machine evidence</a></article>'
+        (
+            '<article class="result-card"><header><h3>'
+            f"{esc(title)}"
+            '</h3><span class="status pass">proven bounded</span></header><'
+            "strong>"
+            f"{esc(result)}"
+            "</strong><p>"
+            f"{esc(boundary)}"
+            '</p><a href="'
+            f"{esc(link)}"
+            '">Machine evidence</a></article>'
+        )
         for title, result, boundary, link in (
             (
                 "Fixed-checkpoint harness edit",
-                f"{causal_outcomes['baseline_success_count']}/3 baseline -> {causal_outcomes['candidate_success_count']}/3 candidate",
-                "Only observations.runtime_color_adapter changes; checkpoint, dataset stats, seeds, placement, actions, and verifier are fixed.",
+                (
+                    f"{causal_outcomes['baseline_success_count']}"
+                    "/3 baseline -> "
+                    f"{causal_outcomes['candidate_success_count']}"
+                    "/3 candidate"
+                ),
+                (
+                    "Only observations.runtime_color_adapter changes; checkpoint, d"
+                    "ataset stats, seeds, placement, actions, and verifier are fixe"
+                    "d."
+                ),
                 "assets/evidence/fixed_checkpoint_rgb_ablation_v1.json",
             ),
             (
                 "Memory-mediated correction",
-                f"{memory_gate['no_memory_success_count']}/3 no-memory -> {memory_gate['memory_success_count']}/3 memory",
-                "Versioned failure memory selects the accepted identity adapter under the same fixed evaluation protocol.",
+                (
+                    f"{memory_gate['no_memory_success_count']}"
+                    "/3 no-memory -> "
+                    f"{memory_gate['memory_success_count']}"
+                    "/3 memory"
+                ),
+                (
+                    "Versioned failure memory selects the accepted identity adapter"
+                    " under the same fixed evaluation protocol."
+                ),
                 "assets/evidence/memory_ablation_rgb_adapter_v1.json",
             ),
             (
                 "Second-simulator command parity",
-                f"{cross_sim['command_count']} commands · {cross_sim['trace_steps']} steps · target verifier pass",
-                "Task semantics transfer through primitive proxies; robot embodiment, policy, source assets, and materials do not.",
+                (
+                    f"{cross_sim['command_count']}"
+                    " commands · "
+                    f"{cross_sim['trace_steps']}"
+                    " steps · target verifier pass"
+                ),
+                (
+                    "Task semantics transfer through primitive proxies; robot embod"
+                    "iment, policy, source assets, and materials do not."
+                ),
                 "assets/evidence/text2env_empirical_audit_v1.json",
             ),
             (
                 "Bounded learned-policy promotion",
-                f"{policy_gates['heldout_varied_placement']['success_count']}/4 held-out · {policy_gates['declared_domain_randomization']['success_count']}/4 randomized · {policy_gates['cross_task_learned_policy']['success_count']}/3 second task",
+                (
+                    f"{policy_gates['heldout_varied_placement']['success_count']}"
+                    "/4 held-out · "
+                    f"{policy_gates['declared_domain_randomization']['success_count']}"
+                    "/4 randomized · "
+                    f"{policy_gates['cross_task_learned_policy']['success_count']}"
+                    "/3 second task"
+                ),
                 policy["claim_boundary"],
                 "assets/evidence/pose_conditioned_policy_promotion_v1.json",
             ),
@@ -170,7 +272,7 @@ def build_html(
   </main>
 </body>
 </html>
-"""
+"""  # noqa: E501 - Preserve the embedded report HTML/CSS bytes.
 
 
 def write_manifest(output_dir: Path) -> dict:

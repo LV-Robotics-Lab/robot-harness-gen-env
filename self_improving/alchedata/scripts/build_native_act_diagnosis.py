@@ -15,7 +15,6 @@ import h5py
 import numpy as np
 from PIL import Image
 
-
 ROOT = Path(__file__).resolve().parents[1]
 KNOWN_ROOTS = (
     ROOT,
@@ -258,9 +257,11 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "task_id": collection.get("task_id"),
         "claim_boundary": (
-            "Native synchronized collection, ACT conversion/loading/training, expert-action replay, and learned-policy "
-            "evaluation are proven for one fixed apple/plate placement. Seeds change reset RNG only; placement and "
-            "domain randomization remain fixed, so this is not cross-placement, cross-task, or robustness proof."
+            "Native synchronized collection, ACT conversion/loading/trainin"
+            "g, expert-action replay, and learned-policy evaluation are pro"
+            "ven for one fixed apple/plate placement. Seeds change reset RN"
+            "G only; placement and domain randomization remain fixed, so th"
+            "is is not cross-placement, cross-task, or robustness proof."
         ),
         "collection": {
             "report": workspace_path(paths["collection"]),
@@ -315,32 +316,49 @@ def main() -> int:
                 "rank": 2,
                 "hypothesis": "The native-to-ACT action ordering or 14-D qpos semantics are wrong.",
                 "verdict": "falsified",
-                "evidence": "A fresh reset matches the source initial qpos exactly and all 161 expert actions replay to task success.",
+                "evidence": (
+                    "A fresh reset matches the source initial qpos exactly and all "
+                    "161 expert actions replay to task success."
+                ),
             },
             {
                 "rank": 3,
-                "hypothesis": "The native JPEG channel order does not match runtime head-camera RGB.",
+                "hypothesis": (
+                    "The native JPEG channel order does not match runtime head-camera RGB."
+                ),
                 "verdict": "confirmed_and_fixed",
-                "evidence": "Swapping decoded red/blue channels lowers MSE against the runtime RGB reference.",
+                "evidence": (
+                    "Swapping decoded red/blue channels lowers MSE against the runt"
+                    "ime RGB reference."
+                ),
             },
             {
                 "rank": 4,
-                "hypothesis": "A 20-action chunk with full-chunk replanning preserves enough temporal progress.",
+                "hypothesis": (
+                    "A 20-action chunk with full-chunk replanning preserves enough "
+                    "temporal progress."
+                ),
                 "verdict": "falsified_for_this_dataset",
-                "evidence": "Chunk 20 reaches only a narrow expert-index range and scores 0/3, while chunk 161 scores 3/3 under otherwise matched settings.",
+                "evidence": (
+                    "Chunk 20 reaches only a narrow expert-index range and scores 0"
+                    "/3, while chunk 161 scores 3/3 under otherwise matched setting"
+                    "s."
+                ),
             },
         ],
         "conclusion": {
             "fixed_scene_closed_loop": "pass" if fixed_scene_success else "fail",
             "failure_to_fix": (
-                "RoboTwin-native synchronized recording plus RGB repair made the data executable; full-episode chunking "
-                "removed the temporal-progress stall on the one unique fixed-scene trajectory."
+                "RoboTwin-native synchronized recording plus RGB repair made th"
+                "e data executable; full-episode chunking removed the temporal-"
+                "progress stall on the one unique fixed-scene trajectory."
             ),
             "policy_promotion": "blocked_robustness_not_tested",
             "next_data_requirement": (
-                "Collect non-identical successful demonstrations across varied source/target poses and declared domain "
-                "randomization, verify trajectory/image uniqueness, then evaluate on held-out placements and at least "
-                "one additional task before promotion."
+                "Collect non-identical successful demonstrations across varied "
+                "source/target poses and declared domain randomization, verify "
+                "trajectory/image uniqueness, then evaluate on held-out placeme"
+                "nts and at least one additional task before promotion."
             ),
         },
     }

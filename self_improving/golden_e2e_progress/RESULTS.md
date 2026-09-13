@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C13 Alchedata lint 收尾
+
+- 保原字符串值拆分长literal，临时formatter每文件先后AST相同才写；三个嵌入HTML/CSS模板
+  只在closing literal逐处说明E501例外，不设文件/目录宽忽略，模板bytes不变。
+- import整理并移除三处未使用stdlib import，unused placement_manifest改名但保原计算。
+  64文件以Python3.11语法重新解析；除import和已说明unused名外AST逐项一致，未改算法、
+  报告文字、表达式顺序或成功阈值。主线程35 passed/3 skipped/0.30s，范围Ruff清零。
+  临时格式工具只在/var/tmp，不进入业务代码或发行包；全仓其他范围lint仍待最后汇总。
+
 ## 2026-09-13 S01 请求绑定 schema：进入资产阶段后暴露颜色 transport 错误
 
 - 固定 `b487e32a36949ba25578d6374d40f16762e04d07`，同冻结S01/seed11/local-only与原policy。

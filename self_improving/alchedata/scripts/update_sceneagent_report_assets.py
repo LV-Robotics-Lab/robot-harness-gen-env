@@ -9,7 +9,6 @@ from pathlib import Path
 
 from report_delivery import BUNDLES, write_manifest
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "reports" / "sceneagent_selection2env"
 EVIDENCE_PATHS = (

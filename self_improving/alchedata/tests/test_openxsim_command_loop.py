@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from scripts.openxsim_command_loop import (
     ADAPTER_MATRIX,
     COMMAND_REGISTRY,

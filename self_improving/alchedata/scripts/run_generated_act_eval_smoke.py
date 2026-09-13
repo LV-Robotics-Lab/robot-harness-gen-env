@@ -19,8 +19,17 @@ from typing import Any
 import imageio.v2 as imageio
 import numpy as np
 import torch
+from harness_observation_adapter import (
+    RUNTIME_COLOR_ADAPTERS,
+    apply_runtime_color_adapter,
+    color_adapter_reason,
+)
 from PIL import Image
-
+from placement_manifest_utils import (
+    fixed_placement_cases,
+    load_placement_cases,
+    passed_training_placement_signatures,
+)
 from run_generated_selection2env_rollout_probe import (
     apply_domain_randomization,
     infer_task_binding,
@@ -30,17 +39,6 @@ from run_generated_selection2env_rollout_probe import (
     requested_domain_randomization,
     write_json,
 )
-from placement_manifest_utils import (
-    fixed_placement_cases,
-    load_placement_cases,
-    passed_training_placement_signatures,
-)
-from harness_observation_adapter import (
-    RUNTIME_COLOR_ADAPTERS,
-    apply_runtime_color_adapter,
-    color_adapter_reason,
-)
-
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PLACEMENT = (
@@ -409,7 +407,10 @@ def diagnose_episode(
         },
         "visual_material_mismatch": {
             "status": "not_measured",
-            "evidence": "No calibrated material reference or material-sidecar render gate is available for this task.",
+            "evidence": (
+                "No calibrated material reference or material-sidecar render ga"
+                "te is available for this task."
+            ),
         },
         "target_relation_not_satisfied": {
             "status": "not_observed" if success else "observed",
@@ -697,7 +698,7 @@ def main() -> int:
     checkpoint_dir = Path(args.checkpoint_dir).expanduser().resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     if args.placement_manifest:
-        placement_manifest, placement_cases = load_placement_cases(
+        _placement_manifest, placement_cases = load_placement_cases(
             Path(args.placement_manifest),
             args.placement_split,
             args.seeds,
@@ -707,7 +708,7 @@ def main() -> int:
         args.seeds = args.seeds or [4]
         placement_path = Path(args.placement).expanduser().resolve()
         placement_cases = fixed_placement_cases(placement_path, args.seeds)
-        placement_manifest = None
+        _placement_manifest = None
     args.seeds = [case["seed"] for case in placement_cases]
     first_placement = read_json(placement_cases[0]["placement_path"])
     binding = infer_task_binding(args.task_id, first_placement)
@@ -773,7 +774,10 @@ def main() -> int:
             "source_reason": (
                 "The native synchronized converter maps RoboTwin head_camera RGB to cam_high."
                 if args.runtime_camera_source == "head_camera"
-                else "The sparse generated ACT smoke converter stores observer frames under cam_high."
+                else (
+                    "The sparse generated ACT smoke converter stores observer frame"
+                    "s under cam_high."
+                )
             ),
             "runtime_color_adapter": args.runtime_color_adapter,
             "color_reason": color_adapter_reason(args.runtime_color_adapter),
@@ -788,24 +792,38 @@ def main() -> int:
             "action_selection": (
                 f"execute_full_{args.chunk_size}_action_chunk_before_replan"
                 if args.action_execution == "full-chunk"
-                else f"execute_first_{args.execution_horizon}_of_{args.chunk_size}_actions_before_replan"
+                else (
+                    "execute_first_"
+                    f"{args.execution_horizon}"
+                    "_of_"
+                    f"{args.chunk_size}"
+                    "_actions_before_replan"
+                )
                 if args.action_execution == "chunk-prefix"
                 else f"receding_horizon_first_action_from_each_{args.chunk_size}_action_chunk"
             ),
             "seed_boundary": (
                 f"Seeds are held out from {len(training_seeds)} source collection seeds. "
                 + (
-                    f"The {len(placement_cases)} explicit evaluation placements are signature-disjoint from passed training placements."
+                    (
+                        "The "
+                        f"{len(placement_cases)}"
+                        " explicit evaluation placements are signature-disjoint from pa"
+                        "ssed training placements."
+                    )
                     if all_eval_placements_held_out
                     else "Placement holdout is not established by signature."
                 )
             ),
         },
         "claim_boundary": (
-            f"This is a bounded learned-policy evaluation: it loads {args.checkpoint_name}, performs ACT inference from the "
-            "generated task observation, sends predicted qpos actions through RoboTwin take_action, and records the "
-            "success verifier. Infrastructure completion is separate from policy task success and does not establish "
-            "robust policy quality."
+            "This is a bounded learned-policy evaluation: it loads "
+            f"{args.checkpoint_name}"
+            ", performs ACT inference from the generated task observation, "
+            "sends predicted qpos actions through RoboTwin take_action, and"
+            " records the success verifier. Infrastructure completion is se"
+            "parate from policy task success and does not establish robust "
+            "policy quality."
         ),
         "episodes": [],
     }
@@ -871,11 +889,21 @@ def main() -> int:
             "policy_success_rate": success_count / episode_count if episode_count else 0.0,
             "policy_result": "task_success_observed" if success_count else "zero_task_success",
             "next_data_requirement": (
-                "Held-out placement success was observed; add visual/physics domain randomization and another task before promotion."
+                (
+                    "Held-out placement success was observed; add visual/physics do"
+                    "main randomization and another task before promotion."
+                )
                 if success_count == episode_count and all_eval_placements_held_out
-                else "Task success was observed; expand placement and domain randomization before making a robustness claim."
+                else (
+                    "Task success was observed; expand placement and domain randomi"
+                    "zation before making a robustness claim."
+                )
                 if success_count
-                else "Inspect full-chunk action traces and failure media, then add synchronized demonstrations or tune training before rerunning held-out seeds."
+                else (
+                    "Inspect full-chunk action traces and failure media, then add s"
+                    "ynchronized demonstrations or tune training before rerunning h"
+                    "eld-out seeds."
+                )
             ),
         }
     )

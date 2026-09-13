@@ -22,12 +22,12 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
+from scripts.rollout_video_recorder import RolloutVideoRecorder  # noqa: E402
 from scripts.selection2env_contract import (  # noqa: E402
     normalize_task_binding,
     sha256_file,
     workspace_path,
 )
-from scripts.rollout_video_recorder import RolloutVideoRecorder  # noqa: E402
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -102,8 +102,10 @@ def joint_path_record(task: Any) -> dict[str, Any]:
         "left_joint_path_len": len(left_path),
         "right_joint_path_len": len(right_path),
         "claim_boundary": (
-            "Planner joint paths captured after generated play_once; this is trajectory source data for a policy-data adapter, "
-            "not learned-policy training or synchronized per-frame teleoperation data."
+            "Planner joint paths captured after generated play_once; this i"
+            "s trajectory source data for a policy-data adapter, not learne"
+            "d-policy training or synchronized per-frame teleoperation data"
+            "."
         ),
     }
 
@@ -516,7 +518,10 @@ def main() -> int:
         "domain_randomization": domain_randomization,
         "status": "started",
         "limitations": [
-            "This probe executes a generated selection2env play_once template against a generated placement.",
+            (
+                "This probe executes a generated selection2env play_once templa"
+                "te against a generated placement."
+            ),
             "It is an action-stack smoke test, not learned-policy training or evaluation.",
             "It does not prove robustness across randomization, embodiments, or held-out tasks.",
         ],
@@ -703,7 +708,16 @@ def main() -> int:
                                 break
                             except Exception as exc:  # noqa: BLE001
                                 grasp_errors.append(
-                                    f"arm={arm_candidate} pre={pre_grasp_dis} contact={contact_point_id}: {exc!r}"
+                                    (
+                                        "arm="
+                                        f"{arm_candidate}"
+                                        " pre="
+                                        f"{pre_grasp_dis}"
+                                        " contact="
+                                        f"{contact_point_id}"
+                                        ": "
+                                        f"{exc!r}"
+                                    )
                                 )
                         if grasp_action is not None:
                             break
@@ -786,7 +800,11 @@ def main() -> int:
                 else task_binding["target_region"]
             )
             self.info["info"] = {
-                "{source}": f"{specs_by_id[task_binding['source_id']]['asset_id']}/base{specs_by_id[task_binding['source_id']].get('model_id', 0)}",
+                "{source}": (
+                    f"{specs_by_id[task_binding['source_id']]['asset_id']}"
+                    "/base"
+                    f"{specs_by_id[task_binding['source_id']].get('model_id', 0)}"
+                ),
                 "{target}": target_description,
                 "{arm}": str(self.arm_tag),
                 "{template}": task_binding["template"],
@@ -1034,8 +1052,10 @@ def main() -> int:
                 "video_exists": native_video.exists(),
                 "video_size_bytes": native_video.stat().st_size if native_video.exists() else 0,
                 "claim_boundary": (
-                    "RoboTwin native per-step recorder output from generated play_once. This records synchronized "
-                    "camera and full joint-action observations at save_freq, but is not yet ACT training-format proof."
+                    "RoboTwin native per-step recorder output from generated play_o"
+                    "nce. This records synchronized camera and full joint-action ob"
+                    "servations at save_freq, but is not yet ACT training-format pr"
+                    "oof."
                 ),
             }
             task.remove_data_cache()
@@ -1074,9 +1094,15 @@ def main() -> int:
                 "policy_trace": str(out_dir / "policy_trace.json"),
                 "native_synchronized_data": native_data,
                 "next_data_requirement": (
-                    "Use this generated play_once template to record full multi-episode demonstrations before /train."
+                    (
+                        "Use this generated play_once template to record full multi-epi"
+                        "sode demonstrations before /train."
+                    )
                     if success
-                    else "Repair generated play_once target pose, grasp contact point, or asset pose before claiming /collect success."
+                    else (
+                        "Repair generated play_once target pose, grasp contact point, o"
+                        "r asset pose before claiming /collect success."
+                    )
                 ),
                 "failure_diagnosis": {
                     "status": "no_failure_observed" if success else "failure_observed",

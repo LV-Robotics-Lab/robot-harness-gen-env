@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 import time
 import urllib.error
 import urllib.parse
@@ -15,7 +14,6 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATASET = "camvsl/Articraft-10K"
@@ -185,7 +183,10 @@ def main() -> int:
         "asset_count": len(entries),
         "archive_format": "tar.gz",
         "asset_format_in_archive": "URDF",
-        "claim_boundary": "Searchable Hugging Face metadata manifest only; archives are not downloaded and RoboTwin/SAPIEN import is not claimed.",
+        "claim_boundary": (
+            "Searchable Hugging Face metadata manifest only; archives are n"
+            "ot downloaded and RoboTwin/SAPIEN import is not claimed."
+        ),
         "top_tokens": [
             {"token": token, "count": count} for token, count in token_counts.most_common(50)
         ],
@@ -198,7 +199,10 @@ def main() -> int:
         "manifest": "artifacts/adapter_catalog/articraft10k_manifest.json",
         "query_limit": args.query_limit,
         "queries": search_examples,
-        "claim_boundary": "String/token search over manifest metadata only; not a physics import or task success claim.",
+        "claim_boundary": (
+            "String/token search over manifest metadata only; not a physics"
+            " import or task success claim."
+        ),
     }
     probe = {
         "schema_version": "alchedata.adapter_catalog_probe.v0",
@@ -217,7 +221,10 @@ def main() -> int:
         "manifest": "artifacts/adapter_catalog/articraft10k_manifest.json",
         "search_examples": "artifacts/adapter_catalog/articraft10k_search_examples.json",
         "previous_local_mount_status": "metadata_not_found_on_host",
-        "claim_boundary": "Metadata is parsed from the public Hugging Face dataset API; full archive mount/import remains pending.",
+        "claim_boundary": (
+            "Metadata is parsed from the public Hugging Face dataset API; f"
+            "ull archive mount/import remains pending."
+        ),
     }
 
     write_json(out_dir / "articraft10k_manifest.json", manifest)

@@ -12,12 +12,10 @@ import platform
 import shutil
 import socket
 import sys
-import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONTRACT = ROOT / "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json"
@@ -176,7 +174,11 @@ def build_transfer_record(
             "materials and lighting are not matched",
             "verifier semantics are matched at relation level but implementation code differs",
         ],
-        "claim_boundary": "This is an executed task-semantic transfer with a target verifier, not policy transfer, asset identity, visual parity, or evidence that transfer improves learned-policy reuse.",
+        "claim_boundary": (
+            "This is an executed task-semantic transfer with a target verif"
+            "ier, not policy transfer, asset identity, visual parity, or ev"
+            "idence that transfer improves learned-policy reuse."
+        ),
     }
 
 
@@ -315,7 +317,11 @@ def main() -> int:
                 "plate_size_m": target_size,
             },
             "gates": {"stage_export": True, "reset": True, "physics": True, "renderer": True},
-            "claim_boundary": "The target scene uses Isaac primitives and proves executable scene construction, not source-asset identity or material parity.",
+            "claim_boundary": (
+                "The target scene uses Isaac primitives and proves executable s"
+                "cene construction, not source-asset identity or material parit"
+                "y."
+            ),
         }
         write_json(out_dir / "gen_env.json", gen_env)
         events.append({"at": utc_now(), "command": "/gen-env", "status": gen_env["status"]})
@@ -440,7 +446,10 @@ def main() -> int:
                 "captures": frame_records,
                 "encode": encode,
             },
-            "claim_boundary": "This is a backend-native Isaac collection with a scripted object-space expert, not robot control or learned-policy evidence.",
+            "claim_boundary": (
+                "This is a backend-native Isaac collection with a scripted obje"
+                "ct-space expert, not robot control or learned-policy evidence."
+            ),
         }
         write_json(out_dir / "collect.json", collect)
         events.append({"at": utc_now(), "command": "/collect", "status": collect["status"]})
@@ -457,7 +466,10 @@ def main() -> int:
             "task_success": metrics["success"],
             "verifier": contract["relation"]["success_verifier"],
             "metrics": metrics,
-            "claim_boundary": "The result verifies the normalized place_on relation for this scripted Isaac execution; it is not learned-policy quality.",
+            "claim_boundary": (
+                "The result verifies the normalized place_on relation for this "
+                "scripted Isaac execution; it is not learned-policy quality."
+            ),
         }
         evaluate_path = out_dir / "evaluate.json"
         write_json(evaluate_path, evaluate)
@@ -498,7 +510,10 @@ def main() -> int:
             "root_cause_hypothesis": None
             if metrics["success"]
             else "The final place_on relation failed a geometric or speed threshold.",
-            "claim_boundary": "Not-applicable categories are retained rather than reported as absent failure modes.",
+            "claim_boundary": (
+                "Not-applicable categories are retained rather than reported as"
+                " absent failure modes."
+            ),
         }
         write_json(out_dir / "diagnose.json", diagnose)
         events.append({"at": utc_now(), "command": "/diagnose", "status": diagnose["status"]})

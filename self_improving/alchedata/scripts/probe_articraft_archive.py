@@ -19,7 +19,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "artifacts" / "adapter_catalog" / "articraft10k_manifest.json"
 DEFAULT_OUT_DIR = ROOT / "runs" / "articraft_archive_probe_weight_bench"

@@ -9,7 +9,6 @@ from pathlib import Path
 
 import jsonschema
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = Path("artifacts/embodied_harness/embodied_harness_spec.json")
 AUDIT = Path("artifacts/embodied_harness/embodied_harness_acceptance_audit.json")

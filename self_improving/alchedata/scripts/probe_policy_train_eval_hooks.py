@@ -13,7 +13,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = ROOT / "runs" / "policy_train_eval_entrypoint_probe"
 GENERATED_COLLECTIONS = [
@@ -186,9 +185,11 @@ def main() -> int:
             "cwd": os.getcwd(),
         },
         "claim_boundary": (
-            "This probes whether current generated collection artifacts are wired to RoboTwin policy train/eval entrypoints. "
-            "The ACT HDF5 adapter and loader smoke are checked separately; full train/eval is expected to fail until ACT "
-            "task config, dependencies, env registration, and checkpoint wiring exist."
+            "This probes whether current generated collection artifacts are"
+            " wired to RoboTwin policy train/eval entrypoints. The ACT HDF5"
+            " adapter and loader smoke are checked separately; full train/e"
+            "val is expected to fail until ACT task config, dependencies, e"
+            "nv registration, and checkpoint wiring exist."
         ),
     }
     write_json(out_dir / "probe_report.json", report)

@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-ALCHEDATA-LINT — 保值字符串与导入维护
+
+- origin_owner / upstream_owner：Alchedata原固定来源作者；integration_owner：Bingsheng Harness workstream。
+- source_ref：`6dd34bc` 初次格式切片；target_paths：Alchedata scripts/tests。
+- integration_method：保值literal拆分、import整理及unused名称；三处原HTML模板精确E501例外。
+- verification：64份非import/unused名AST完全一致，35 passed/3 skipped，Ruff范围通过。
+- runtime_verification：无仿真或新报告发布；recorded_git_authors：原作者与本次维护提交分开。
+
 ## INT-CANONICAL-C05-FIXED-ARRAY — 严格输出数组兼容
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：OpenAI Codex/JSON Schema。

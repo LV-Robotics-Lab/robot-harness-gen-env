@@ -14,7 +14,6 @@ from typing import Any
 
 import imageio.v2 as imageio
 import numpy as np
-
 from placement_manifest_utils import fixed_placement_cases, load_placement_cases
 from pose_conditioned_trajectory_policy import (
     PoseConditionedTrajectoryPolicy,
@@ -38,7 +37,6 @@ from run_generated_selection2env_rollout_probe import (
     read_json,
     requested_domain_randomization,
 )
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -351,9 +349,13 @@ def main() -> int:
         for index, placement_case in enumerate(placement_cases):
             placement = read_json(placement_case["placement_path"])
             episode_binding = infer_task_binding(args.task_id, placement)
-            episode_dir = (
-                out_dir
-                / f"episode_{index:03d}_{placement_case['placement_id']}_seed_{placement_case['seed']}"
+            episode_dir = out_dir / (
+                "episode_"
+                f"{index:03d}"
+                "_"
+                f"{placement_case['placement_id']}"
+                "_seed_"
+                f"{placement_case['seed']}"
             )
             episode, events = run_episode(
                 task_class,

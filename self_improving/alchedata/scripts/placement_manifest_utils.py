@@ -35,7 +35,14 @@ def load_placement_cases(
         entries = [entries_by_id[placement_id] for placement_id in placement_ids]
     if seed_overrides is not None and len(seed_overrides) != len(entries):
         raise ValueError(
-            f"Seed override count {len(seed_overrides)} does not match placement count {len(entries)} for split {split!r}"
+            (
+                "Seed override count "
+                f"{len(seed_overrides)}"
+                " does not match placement count "
+                f"{len(entries)}"
+                " for split "
+                f"{split!r}"
+            )
         )
 
     cases: list[dict[str, Any]] = []

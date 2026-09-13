@@ -14,7 +14,6 @@ import h5py
 import numpy as np
 from PIL import Image
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_COLLECTIONS = [
     ROOT / "runs" / "generated_collect_apple_plate_action_repair" / "collection_report.json",
@@ -139,8 +138,9 @@ def convert_episode(
         root.attrs["source_episode_report"] = str(resolve_path(episode["report"]))
         root.attrs["source_policy_trace"] = str(trace_path)
         root.attrs["claim_boundary"] = (
-            "ACT-compatible smoke dataset from generated planner joint paths and sparse observer frames; "
-            "not synchronized teleoperation data or a learned-policy-quality dataset."
+            "ACT-compatible smoke dataset from generated planner joint path"
+            "s and sparse observer frames; not synchronized teleoperation d"
+            "ata or a learned-policy-quality dataset."
         )
         obs = root.create_group("observations")
         obs.create_dataset("qpos", data=qpos)
@@ -196,8 +196,11 @@ def main() -> int:
         "collections": [],
         "episodes": [],
         "claim_boundary": (
-            "This is a data-format adapter smoke for RoboTwin ACT. It converts generated planner joint paths into HDF5 files "
-            "that ACT utilities can read. It does not claim high-quality policy data, synchronized camera trajectories, /train success, or /evaluate success."
+            "This is a data-format adapter smoke for RoboTwin ACT. It conve"
+            "rts generated planner joint paths into HDF5 files that ACT uti"
+            "lities can read. It does not claim high-quality policy data, s"
+            "ynchronized camera trajectories, /train success, or /evaluate "
+            "success."
         ),
     }
     write_json(out_dir / "conversion_report.json", report)
@@ -252,7 +255,10 @@ def main() -> int:
             "act_sim_task_name": sim_task_name,
             "act_sim_task_config": sim_task_config[sim_task_name],
             "act_sim_task_config_json": str(out_dir / "SIM_TASK_CONFIGS.generated.json"),
-            "next_step": "Merge or point ACT SIM_TASK_CONFIGS at this config, then run a one-epoch train import/data-loader smoke.",
+            "next_step": (
+                "Merge or point ACT SIM_TASK_CONFIGS at this config, then run a"
+                " one-epoch train import/data-loader smoke."
+            ),
         }
     )
     write_json(out_dir / "SIM_TASK_CONFIGS.generated.json", sim_task_config)

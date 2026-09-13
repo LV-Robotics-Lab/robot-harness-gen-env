@@ -236,7 +236,9 @@ def build_audit(
             "same_task_cross_sim_execution": {
                 **cross_sim,
                 "status": "pass",
-                "task_contract": "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json",
+                "task_contract": (
+                    "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json"
+                ),
                 "isaac_bundle": "runs/isaac_openxsim_place_container_plate_v1",
             },
             "memory_ablation": {
@@ -265,9 +267,11 @@ def build_audit(
             },
         },
         "claim_boundary": (
-            "These gates add executed empirical evidence to the literature review. They do not reproduce the cited "
-            "methods, establish state of the art, validate a visual language policy, or turn the negative failure-score "
-            "correlation into a usable prioritization signal."
+            "These gates add executed empirical evidence to the literature "
+            "review. They do not reproduce the cited methods, establish sta"
+            "te of the art, validate a visual language policy, or turn the "
+            "negative failure-score correlation into a usable prioritizatio"
+            "n signal."
         ),
     }
     write_json(out_path, audit)

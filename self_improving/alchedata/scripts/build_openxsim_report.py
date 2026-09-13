@@ -24,7 +24,6 @@ from openxsim_command_loop import (
     validate_openxsim_package,
 )
 
-
 BENCHMARK_ORDER = ("open_laptop", "place_mouse_pad", "place_container_plate")
 DEFAULT_AGENTICSIM_ROOT = ROOT.parent / "AgenticSim"
 SOURCE_PAGES = (
@@ -128,33 +127,79 @@ def build_html(
     )
 
     command_rows = "".join(
-        f"""
-        <article class="command-row">
-          <header><h3>{esc(command["command"])}</h3><div><span>{esc(command["owner"])}</span><small>support: {esc(command["support_owner"])}</small></div></header>
-          <div class="command-grid">
-            <section><h4>Inputs</h4><ul>{list_items(command["inputs"])}</ul></section>
-            <section><h4>Outputs</h4><ul>{list_items(command["outputs"])}</ul></section>
-            <section><h4>Failure codes</h4><div class="codes">{"".join(f"<code>{esc(code)}</code>" for code in command["failure_codes"])}</div></section>
-            <section><h4>Current evidence</h4><ul>{list_items(command["current_evidence"])}</ul></section>
-          </div>
-          <p class="boundary-text"><span class="tag">[KNOWN]</span><span class="tag">[CONFIDENCE: HIGH]</span>{esc(command["claim_boundary"])}</p>
-        </article>"""
+        (
+            '\n        <article class="command-row">\n          <header><h3>'
+            f"{esc(command['command'])}"
+            "</h3><div><span>"
+            f"{esc(command['owner'])}"
+            "</span><small>support: "
+            f"{esc(command['support_owner'])}"
+            '</small></div></header>\n          <div class="command-grid">\n '
+            "           <section><h4>Inputs</h4><ul>"
+            f"{list_items(command['inputs'])}"
+            "</ul></section>\n            <section><h4>Outputs</h4><ul>"
+            f"{list_items(command['outputs'])}"
+            "</ul></section>\n            <section><h4>Failure codes</h4><di"
+            'v class="codes">'
+            f"{''.join((f'<code>{esc(code)}</code>' for code in command['failure_codes']))}"
+            "</div></section>\n            <section><h4>Current evidence</h4"
+            "><ul>"
+            f"{list_items(command['current_evidence'])}"
+            '</ul></section>\n          </div>\n          <p class="boundary-'
+            'text"><span class="tag">[KNOWN]</span><span class="tag">[CONFI'
+            "DENCE: HIGH]</span>"
+            f"{esc(command['claim_boundary'])}"
+            "</p>\n        </article>"
+        )
         for command in registry["commands"]
     )
 
     unique_video_by_id = {row["video_id"]: row for row in video_uniqueness["videos"]}
     benchmark_rows = "".join(
-        f"""
-        <article class="benchmark">
-          <header><div><h3>{esc(bundle["task_name"])}</h3><span>{esc(bundle["benchmark_id"])}</span></div><span class="status pass" title="{esc(bundle["status"])}">pass</span></header>
-          <div class="frame-pair">
-            <figure><img src="assets/benchmark_frames/{esc(bundle["task_name"])}_initial.png" alt="{esc(bundle["task_name"])} initial observer frame"><figcaption>Initial observer frame</figcaption></figure>
-            <figure><img src="assets/benchmark_frames/{esc(bundle["task_name"])}_final.png" alt="{esc(bundle["task_name"])} final observer frame"><figcaption>Final observer frame</figcaption></figure>
-          </div>
-          <video controls preload="metadata" poster="assets/benchmark_frames/{esc(bundle["task_name"])}_final.png" src="assets/benchmark_videos/{esc(bundle["task_name"])}.mp4"></video>
-          <dl><div><dt>Loop</dt><dd>/gen-env → /collect → /diagnose → /evaluate</dd></div><div><dt>Video</dt><dd>{esc(bundle["video_capture"]["frame_count"])} decoded frames · {esc(unique_video_by_id[bundle["task_name"]]["unique_decoded_frame_hash_count"])} unique · {esc(bundle["video_capture"]["fps"])} fps · {esc(bundle["video_capture"]["duration_sec"])} s</dd></div><div><dt>Capture</dt><dd>continuous simulator-step sampling · stride {esc(bundle["video_capture"]["capture_stride_sim_steps"])}</dd></div><div><dt>Verifier</dt><dd>official RoboTwin check_success = true</dd></div><div><dt>Policy</dt><dd>scripted expert; learned_policy=false</dd></div></dl>
-          <p>{esc(bundle["next_data_requirement"])}</p>
-        </article>"""
+        (
+            '\n        <article class="benchmark">\n          <header><div><h'
+            "3>"
+            f"{esc(bundle['task_name'])}"
+            "</h3><span>"
+            f"{esc(bundle['benchmark_id'])}"
+            '</span></div><span class="status pass" title="'
+            f"{esc(bundle['status'])}"
+            '">pass</span></header>\n          <div class="frame-pair">\n    '
+            '        <figure><img src="assets/benchmark_frames/'
+            f"{esc(bundle['task_name'])}"
+            '_initial.png" alt="'
+            f"{esc(bundle['task_name'])}"
+            ' initial observer frame"><figcaption>Initial observer frame</f'
+            'igcaption></figure>\n            <figure><img src="assets/bench'
+            "mark_frames/"
+            f"{esc(bundle['task_name'])}"
+            '_final.png" alt="'
+            f"{esc(bundle['task_name'])}"
+            ' final observer frame"><figcaption>Final observer frame</figca'
+            "ption></figure>\n          </div>\n          <video controls pre"
+            'load="metadata" poster="assets/benchmark_frames/'
+            f"{esc(bundle['task_name'])}"
+            '_final.png" src="assets/benchmark_videos/'
+            f"{esc(bundle['task_name'])}"
+            '.mp4"></video>\n          <dl><div><dt>Loop</dt><dd>/gen-env → '
+            "/collect → /diagnose → /evaluate</dd></div><div><dt>Video</dt>"
+            "<dd>"
+            f"{esc(bundle['video_capture']['frame_count'])}"
+            " decoded frames · "
+            f"{esc(unique_video_by_id[bundle['task_name']]['unique_decoded_frame_hash_count'])}"
+            " unique · "
+            f"{esc(bundle['video_capture']['fps'])}"
+            " fps · "
+            f"{esc(bundle['video_capture']['duration_sec'])}"
+            " s</dd></div><div><dt>Capture</dt><dd>continuous simulator-ste"
+            "p sampling · stride "
+            f"{esc(bundle['video_capture']['capture_stride_sim_steps'])}"
+            "</dd></div><div><dt>Verifier</dt><dd>official RoboTwin check_s"
+            "uccess = true</dd></div><div><dt>Policy</dt><dd>scripted exper"
+            "t; learned_policy=false</dd></div></dl>\n          <p>"
+            f"{esc(bundle['next_data_requirement'])}"
+            "</p>\n        </article>"
+        )
         for bundle in benchmarks
     )
 
@@ -210,13 +255,33 @@ def build_html(
         canonical_slug = row.get("canonical_slug", slug)
         card_classes = f"candidate {card_class}".rstrip()
         candidate_rows.append(
-            f"""
-        <article class="{esc(card_classes)}">
-          <header><div><h3>{esc(label)}</h3><span><a href="https://github.com/{esc(canonical_slug)}">{esc(canonical_slug)}</a></span></div>{badge}</header>
-          {visual}
-          <dl><div><dt>Task</dt><dd><code>{esc(row["task"])}</code></dd></div><div><dt>Commit</dt><dd><code>{esc(row["head_oid"][:12])}</code></dd></div><div><dt>Steps</dt><dd>{esc(row["steps_completed"])} / {esc(row["steps_requested"])}</dd></div><div><dt>Provenance</dt><dd>{esc(license_label)}</dd></div></dl>
-          <ul>{"".join(f"<li>{esc(detail)}</li>" for detail in details)}</ul>
-        </article>"""
+            (
+                '\n        <article class="'
+                f"{esc(card_classes)}"
+                '">\n          <header><div><h3>'
+                f"{esc(label)}"
+                '</h3><span><a href="https://github.com/'
+                f"{esc(canonical_slug)}"
+                '">'
+                f"{esc(canonical_slug)}"
+                "</a></span></div>"
+                f"{badge}"
+                "</header>\n          "
+                f"{visual}"
+                "\n          <dl><div><dt>Task</dt><dd><code>"
+                f"{esc(row['task'])}"
+                "</code></dd></div><div><dt>Commit</dt><dd><code>"
+                f"{esc(row['head_oid'][:12])}"
+                "</code></dd></div><div><dt>Steps</dt><dd>"
+                f"{esc(row['steps_completed'])}"
+                " / "
+                f"{esc(row['steps_requested'])}"
+                "</dd></div><div><dt>Provenance</dt><dd>"
+                f"{esc(license_label)}"
+                "</dd></div></dl>\n          <ul>"
+                f"{''.join((f'<li>{esc(detail)}</li>' for detail in details))}"
+                "</ul>\n        </article>"
+            )
         )
     candidate_rows_html = "".join(candidate_rows)
     catalog_summary = agenticsim_isaac["catalog_summary"]
@@ -241,20 +306,42 @@ def build_html(
     adapter_headers = "".join(f"<th>{esc(label)}</th>" for _, label in adapter_columns)
 
     source_rows = "".join(
-        f"""
-        <figure class="source-shot">
-          <a href="{esc(url)}" target="_blank" rel="noreferrer"><img src="assets/source_pages/{source_id}.png" alt="{esc(label)} official source page"></a>
-          <figcaption><strong>{esc(label)}</strong><span>Official source snapshot · HTTP 200 · 2026-07-13</span></figcaption>
-        </figure>"""
+        (
+            '\n        <figure class="source-shot">\n          <a href="'
+            f"{esc(url)}"
+            '" target="_blank" rel="noreferrer"><img src="assets/source_pag'
+            "es/"
+            f"{source_id}"
+            '.png" alt="'
+            f"{esc(label)}"
+            ' official source page"></a>\n          <figcaption><strong>'
+            f"{esc(label)}"
+            "</strong><span>Official source snapshot · HTTP 200 · 2026-07-1"
+            "3</span></figcaption>\n        </figure>"
+        )
         for source_id, label, url in SOURCE_PAGES
     )
 
     owner_rows = "".join(
-        f"<tr><td><strong>{esc(owner)}</strong></td><td>{' · '.join(esc(value) for value in values)}</td></tr>"
+        (
+            "<tr><td><strong>"
+            f"{esc(owner)}"
+            "</strong></td><td>"
+            f"{' · '.join((esc(value) for value in values))}"
+            "</td></tr>"
+        )
         for owner, values in registry["owner_split"].items()
     )
     isaac_command_rows = "".join(
-        f"<tr><td><code>{esc(row['command'])}</code></td><td>{status_badge(row['status'], 'pass')}</td><td>{esc(row['claim_boundary'])}</td></tr>"
+        (
+            "<tr><td><code>"
+            f"{esc(row['command'])}"
+            "</code></td><td>"
+            f"{status_badge(row['status'], 'pass')}"
+            "</td><td>"
+            f"{esc(row['claim_boundary'])}"
+            "</td></tr>"
+        )
         for row in isaac_command["commands"]
     )
     isaac_collect = isaac_command["collect"]
@@ -328,7 +415,7 @@ def build_html(
   </main>
 </body>
 </html>
-"""
+"""  # noqa: E501 - Preserve the embedded report HTML/CSS bytes.
 
 
 def copy_if_distinct(source: Path, destination: Path) -> None:

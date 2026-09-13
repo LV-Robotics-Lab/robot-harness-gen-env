@@ -8,7 +8,6 @@ import hashlib
 import json
 import os
 import platform
-import shutil
 import socket
 import sys
 import traceback
@@ -117,8 +116,9 @@ def extract_sidecar(
             "formula": "clip(1.15 - 0.42 * highlight_ratio, 0.18, 0.90)",
         },
         "claim_boundary": (
-            "This is a deterministic observation heuristic for a bounded roundtrip, not intrinsic decomposition, "
-            "BRDF identification, relighting invariance, or a NeuMaTeX reproduction."
+            "This is a deterministic observation heuristic for a bounded ro"
+            "undtrip, not intrinsic decomposition, BRDF identification, rel"
+            "ighting invariance, or a NeuMaTeX reproduction."
         ),
     }
     return sidecar, crop_rgb, mask
@@ -152,7 +152,9 @@ def compare_foregrounds(
         "source_cie_lab": source_lab.tolist(),
         "rendered_cie_lab": target_lab.tolist(),
         "cie76_delta_e": float(np.linalg.norm(source_lab - target_lab)),
-        "comparison_scope": "robust median foreground color; geometry, framing, and lighting are not pixel-aligned",
+        "comparison_scope": (
+            "robust median foreground color; geometry, framing, and lighting are not pixel-aligned"
+        ),
     }
     return metrics, target_mask
 

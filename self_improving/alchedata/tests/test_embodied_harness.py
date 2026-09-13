@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from scripts.embodied_harness import (
     REQUIRED_COMPARISONS,
     REQUIRED_LOOP_TERMS,

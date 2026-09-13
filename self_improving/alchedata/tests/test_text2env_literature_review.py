@@ -1,10 +1,10 @@
 from scripts.text2env_literature_review import (
+    METHOD_MATRIX,
     REQUIRED_CAPABILITIES,
     REQUIRED_CATEGORIES,
+    SOURCE_REGISTRY,
     read_json,
     validate_review_package,
-    METHOD_MATRIX,
-    SOURCE_REGISTRY,
 )
 
 

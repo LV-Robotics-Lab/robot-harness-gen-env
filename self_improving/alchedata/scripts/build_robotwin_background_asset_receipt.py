@@ -10,7 +10,6 @@ from pathlib import Path
 
 from pose_conditioned_trajectory_policy import sha256_file, write_json
 
-
 EXPECTED_ARCHIVE_SHA256 = "54ede0fb5b783e0faa2bc98720d3affd6ca3bb9280b225b48c1aafaf31473070"
 EXPECTED_ARCHIVE_SIZE = 10_970_687_027
 
@@ -61,14 +60,16 @@ def build_receipt(archive: Path, seen_dir: Path, out_path: Path, subset_count: i
             "size_bytes": extracted_size,
             "manifest_sha256": hashlib.sha256(subset_digest_payload).hexdigest(),
             "runtime_contract": (
-                "RoboTwin counts files in assets/background_texture/seen and samples integer ids in [0, count). "
-                "A contiguous 0-based subset therefore exercises the unmodified random_background loader."
+                "RoboTwin counts files in assets/background_texture/seen and sa"
+                "mples integer ids in [0, count). A contiguous 0-based subset t"
+                "herefore exercises the unmodified random_background loader."
             ),
         },
         "claim_boundary": (
-            "The full official archive is downloaded and hash-verified. Exactly the declared contiguous official "
-            "seen subset is extracted for this bounded evaluation; the result is not a claim that every archive "
-            "texture was exercised."
+            "The full official archive is downloaded and hash-verified. Exa"
+            "ctly the declared contiguous official seen subset is extracted"
+            " for this bounded evaluation; the result is not a claim that e"
+            "very archive texture was exercised."
         ),
     }
     write_json(out_path, receipt)

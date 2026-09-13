@@ -15,7 +15,6 @@ import imageio.v2 as imageio
 import numpy as np
 from PIL import Image
 
-
 TABLE_Z = 0.741
 
 
@@ -95,7 +94,10 @@ def main() -> int:
         "notes": [
             "This smoke uses official RoboTwin object assets and SAPIEN rendering.",
             "It intentionally bypasses Robot/Base_Task planner initialization.",
-            "It validates asset load, physics scene insertion, render capture, and pose trace evidence.",
+            (
+                "It validates asset load, physics scene insertion, render captu"
+                "re, and pose trace evidence."
+            ),
             "It is not a CuRobo planner or manipulation policy smoke.",
         ],
     }

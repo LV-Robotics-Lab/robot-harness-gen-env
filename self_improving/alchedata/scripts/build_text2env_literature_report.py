@@ -19,7 +19,6 @@ from text2env_literature_review import (
     validate_review_package,
 )
 
-
 LEVEL_LABELS = {"none": "-", "low": "L", "medium": "M", "high": "H"}
 CAPABILITY_LABELS = {
     "task_generation": "Task gen",
@@ -117,58 +116,105 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
     )
 
     gallery_cards = "".join(
-        f"""
-        <figure class="source-shot">
-          <img src="assets/source_pages/{esc(filename)}" alt="{esc(source_by_id[source_id]["name"])} official source page screenshot">
-          <figcaption>
-            <strong>{esc(source_by_id[source_id]["name"])}</strong>
-            <span>Captured 2026-07-14 · primary URL rechecked 2026-07-15</span>
-          </figcaption>
-        </figure>"""
+        (
+            '\n        <figure class="source-shot">\n          <img src="asse'
+            "ts/source_pages/"
+            f"{esc(filename)}"
+            '" alt="'
+            f"{esc(source_by_id[source_id]['name'])}"
+            ' official source page screenshot">\n          <figcaption>\n    '
+            "        <strong>"
+            f"{esc(source_by_id[source_id]['name'])}"
+            "</strong>\n            <span>Captured 2026-07-14 · primary URL "
+            "rechecked 2026-07-15</span>\n          </figcaption>\n        </"
+            "figure>"
+        )
         for source_id, filename in SOURCE_SCREENSHOTS.items()
     )
 
     candidate_by_id = {project["project_id"]: project for project in candidate["projects"]}
     candidate_rows = "".join(
-        f"""
-        <tr>
-          <td><strong>{esc(project["name"])}</strong><br><span class="muted">{esc(project["resume_relation"])}</span></td>
-          <td>{candidate_links(project)}</td>
-          <td><code>{esc(project["relevance_bucket"])}</code></td>
-          <td>{esc(project["verified_scope"])}</td>
-          <td><strong>{esc(project["disposition"].replace("_", " "))}</strong><br><span class="muted">{esc(project["boundary"])}</span></td>
-        </tr>"""
+        (
+            "\n        <tr>\n          <td><strong>"
+            f"{esc(project['name'])}"
+            '</strong><br><span class="muted">'
+            f"{esc(project['resume_relation'])}"
+            "</span></td>\n          <td>"
+            f"{candidate_links(project)}"
+            "</td>\n          <td><code>"
+            f"{esc(project['relevance_bucket'])}"
+            "</code></td>\n          <td>"
+            f"{esc(project['verified_scope'])}"
+            "</td>\n          <td><strong>"
+            f"{esc(project['disposition'].replace('_', ' '))}"
+            '</strong><br><span class="muted">'
+            f"{esc(project['boundary'])}"
+            "</span></td>\n        </tr>"
+        )
         for project in candidate["projects"]
     )
     candidate_gallery_cards = "".join(
-        f"""
-        <figure class="source-shot">
-          <img src="assets/source_pages/{esc(filename)}" alt="{esc(candidate_by_id[project_id]["name"])} official source page screenshot">
-          <figcaption>
-            <strong>{esc(candidate_by_id[project_id]["name"])}</strong>
-            <span>Captured 2026-07-14 · primary URL rechecked 2026-07-15</span>
-          </figcaption>
-        </figure>"""
+        (
+            '\n        <figure class="source-shot">\n          <img src="asse'
+            "ts/source_pages/"
+            f"{esc(filename)}"
+            '" alt="'
+            f"{esc(candidate_by_id[project_id]['name'])}"
+            ' official source page screenshot">\n          <figcaption>\n    '
+            "        <strong>"
+            f"{esc(candidate_by_id[project_id]['name'])}"
+            "</strong>\n            <span>Captured 2026-07-14 · primary URL "
+            "rechecked 2026-07-15</span>\n          </figcaption>\n        </"
+            "figure>"
+        )
         for project_id, filename in CANDIDATE_APPENDIX_SCREENSHOTS.items()
     )
 
     source_rows = "".join(
-        f"""
-        <details class="source-row">
-          <summary>
-            <span><strong>{esc(source["name"])}</strong><small>{source["year"]} · {esc(source["source_kind"].replace("_", " "))}</small></span>
-            <span class="tier {esc(source["interface_relation"]["adoption_tier"].lower())}">{esc(source["interface_relation"]["adoption_tier"])}</span>
-          </summary>
-          <div class="source-body">
-            <div><span class="label">Primary links</span><p>{source_links(source)}</p></div>
-            <div><span class="label">Input → output</span><p>{esc(source["input"])}<br><strong>→</strong> {esc(source["output"])}</p></div>
-            <div><span class="label">Environment / assets</span><p>{esc(source["environment_assets"])}</p></div>
-            <div><span class="label">Open status</span><p>{esc(source["open_status"]["code_status"])} · {esc(source["open_status"]["license"])}</p></div>
-            <div><span class="label">Reproducibility</span><p><strong>{esc(source["reproducibility"]["level"])}</strong><br>{esc(source["reproducibility"]["evidence"][0])}</p></div>
-            <div><span class="label">RoboTwin / AgenticSim</span><p>{esc(source["interface_relation"]["robotwin"])}<br>{esc(source["interface_relation"]["agenticsim"])}</p></div>
-            <div class="wide"><span class="label">Required gates</span><p>{" · ".join(esc(gate) for gate in source["interface_relation"]["required_gates"])}</p></div>
-          </div>
-        </details>"""
+        (
+            '\n        <details class="source-row">\n          <summary>\n    '
+            "        <span><strong>"
+            f"{esc(source['name'])}"
+            "</strong><small>"
+            f"{source['year']}"
+            " · "
+            f"{esc(source['source_kind'].replace('_', ' '))}"
+            '</small></span>\n            <span class="tier '
+            f"{esc(source['interface_relation']['adoption_tier'].lower())}"
+            '">'
+            f"{esc(source['interface_relation']['adoption_tier'])}"
+            '</span>\n          </summary>\n          <div class="source-body'
+            '">\n            <div><span class="label">Primary links</span><p'
+            ">"
+            f"{source_links(source)}"
+            '</p></div>\n            <div><span class="label">Input → output'
+            "</span><p>"
+            f"{esc(source['input'])}"
+            "<br><strong>→</strong> "
+            f"{esc(source['output'])}"
+            '</p></div>\n            <div><span class="label">Environment / '
+            "assets</span><p>"
+            f"{esc(source['environment_assets'])}"
+            '</p></div>\n            <div><span class="label">Open status</s'
+            "pan><p>"
+            f"{esc(source['open_status']['code_status'])}"
+            " · "
+            f"{esc(source['open_status']['license'])}"
+            '</p></div>\n            <div><span class="label">Reproducibilit'
+            "y</span><p><strong>"
+            f"{esc(source['reproducibility']['level'])}"
+            "</strong><br>"
+            f"{esc(source['reproducibility']['evidence'][0])}"
+            '</p></div>\n            <div><span class="label">RoboTwin / Age'
+            "nticSim</span><p>"
+            f"{esc(source['interface_relation']['robotwin'])}"
+            "<br>"
+            f"{esc(source['interface_relation']['agenticsim'])}"
+            '</p></div>\n            <div class="wide"><span class="label">R'
+            "equired gates</span><p>"
+            f"{' · '.join((esc(gate) for gate in source['interface_relation']['required_gates']))}"
+            "</p></div>\n          </div>\n        </details>"
+        )
         for source in registry["sources"]
     )
 
@@ -179,7 +225,15 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
         "<tr>"
         f"<td><strong>{esc(source_by_id[row['source_id']]['name'])}</strong></td>"
         + "".join(
-            f'<td><span class="level {esc(row["scores"][name])}" title="{esc(row["scores"][name])}">{LEVEL_LABELS[row["scores"][name]]}</span></td>'
+            (
+                '<td><span class="level '
+                f"{esc(row['scores'][name])}"
+                '" title="'
+                f"{esc(row['scores'][name])}"
+                '">'
+                f"{LEVEL_LABELS[row['scores'][name]]}"
+                "</span></td>"
+            )
             for name in matrix["capabilities"]
         )
         + "</tr>"
@@ -187,16 +241,22 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
     )
 
     shortlist_columns = "".join(
-        f"""
-        <section class="tier-column">
-          <h3>{tier}</h3>
-          {
-            "".join(
-                f'<article><strong>{esc(item["decision"])}</strong><span class="disposition">{esc(item["current_status"].replace("_", " "))}</span><p>{esc(item["evidence"])}</p></article>'
-                for item in audit["shortlist"][tier]
-            )
-        }
-        </section>"""
+        (
+            '\n        <section class="tier-column">\n          <h3>'
+            f"{tier}"
+            "</h3>\n          "
+            f"""{
+                "".join(
+                    (
+                        f"<article><strong>{esc(item['decision'])}</strong>"
+                        f'<span class="disposition">{esc(item["current_status"].replace("_", " "))}'
+                        f"</span><p>{esc(item['evidence'])}</p></article>"
+                        for item in audit["shortlist"][tier]
+                    )
+                )
+            }"""
+            "\n        </section>"
+        )
         for tier in ("P0", "P1", "P2")
     )
 
@@ -205,7 +265,13 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
         for field in audit["handoff"]["zheng_ye_produces"]["required_fields"]
     )
     handoff_rows = "".join(
-        f"<tr><td><code>{esc(command)}</code></td><td>{' · '.join(esc(value) for value in values)}</td></tr>"
+        (
+            "<tr><td><code>"
+            f"{esc(command)}"
+            "</code></td><td>"
+            f"{' · '.join((esc(value) for value in values))}"
+            "</td></tr>"
+        )
         for command, values in audit["handoff"]["gaochen_consumes"].items()
     )
     blocker_rows = "".join(
@@ -218,7 +284,15 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
         for value in innovation["distinct_hypothesis_dimensions"]
     )
     experiment_rows = "".join(
-        f"<tr><td>{esc(item['experiment'])}</td><td>{status_badge(item['status'])}</td><td>{esc(item['evidence'])}</td></tr>"
+        (
+            "<tr><td>"
+            f"{esc(item['experiment'])}"
+            "</td><td>"
+            f"{status_badge(item['status'])}"
+            "</td><td>"
+            f"{esc(item['evidence'])}"
+            "</td></tr>"
+        )
         for item in innovation["next_experiments"]
     )
     empirical_gates = empirical["gates"]
@@ -229,32 +303,76 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
     policy = empirical_gates["robust_policy_result"]
     empirical_rows = "".join(
         (
-            f'<article class="empirical"><header><h3>{esc(title)}</h3><span class="status pass">pass</span></header>'
-            f'<strong>{esc(result)}</strong><p>{esc(boundary)}</p><a href="{esc(link)}">Machine evidence</a></article>'
+            '<article class="empirical"><header><h3>'
+            f"{esc(title)}"
+            '</h3><span class="status pass">pass</span></header><strong>'
+            f"{esc(result)}"
+            "</strong><p>"
+            f"{esc(boundary)}"
+            '</p><a href="'
+            f"{esc(link)}"
+            '">Machine evidence</a></article>'
         )
         for title, result, boundary, link in (
             (
                 "Task-semantic cross-sim",
-                f"{cross_sim['command_count']} commands · {cross_sim['trace_steps']} trace steps · {cross_sim['unique_video_frames']}/{cross_sim['video_frames']} unique frames",
-                "RoboTwin task semantics are mapped into an Isaac primitive-proxy scene; robot embodiment and learned policy are not transferred.",
+                (
+                    f"{cross_sim['command_count']}"
+                    " commands · "
+                    f"{cross_sim['trace_steps']}"
+                    " trace steps · "
+                    f"{cross_sim['unique_video_frames']}"
+                    "/"
+                    f"{cross_sim['video_frames']}"
+                    " unique frames"
+                ),
+                (
+                    "RoboTwin task semantics are mapped into an Isaac primitive-pro"
+                    "xy scene; robot embodiment and learned policy are not transfer"
+                    "red."
+                ),
                 "assets/empirics/text2env_empirical_audit_v1.json",
             ),
             (
                 "Matched memory ablation",
-                f"{memory['no_memory_success_count']}/3 no-memory → {memory['memory_success_count']}/3 memory",
-                "Checkpoint, placement, seeds, actions, and evaluator are fixed; memory changes only the runtime color-adapter selection.",
+                (
+                    f"{memory['no_memory_success_count']}"
+                    "/3 no-memory → "
+                    f"{memory['memory_success_count']}"
+                    "/3 memory"
+                ),
+                (
+                    "Checkpoint, placement, seeds, actions, and evaluator are fixed"
+                    "; memory changes only the runtime color-adapter selection."
+                ),
                 "assets/empirics/memory_ablation_rgb_adapter_v1.json",
             ),
             (
                 "Material sidecar roundtrip",
                 f"RGB MAE {material['rgb_mae']:.5f} · CIE76 ΔE {material['cie76_delta_e']:.4f}",
-                f"{material['source_foreground_pixels']} source and {material['rendered_foreground_pixels']} rendered foreground pixels; this is not intrinsic BRDF recovery.",
+                (
+                    f"{material['source_foreground_pixels']}"
+                    " source and "
+                    f"{material['rendered_foreground_pixels']}"
+                    " rendered foreground pixels; this is not intrinsic BRDF recove"
+                    "ry."
+                ),
                 "assets/empirics/material_roundtrip/roundtrip_report.json",
             ),
             (
                 "Failure-score correlation",
-                f"n={correlation['sample_count']} · r={correlation['metrics']['point_biserial_pearson_r']:.4f} · exact p={correlation['metrics']['exact_two_sided_label_permutation_p']:.4f}",
-                "The predeclared score did not predict more failures; the null/negative result is retained.",
+                (
+                    "n="
+                    f"{correlation['sample_count']}"
+                    " · r="
+                    f"{correlation['metrics']['point_biserial_pearson_r']:.4f}"
+                    " · exact p="
+                    f"{correlation['metrics']['exact_two_sided_label_permutation_p']:.4f}"
+                ),
+                (
+                    "The predeclared score did not predict more failures; the null/"
+                    "negative result is retained."
+                ),
                 "assets/empirics/failure_score_correlation_v1.json",
             ),
             (
@@ -345,7 +463,7 @@ def build_html(registry: dict, matrix: dict, audit: dict, empirical: dict, candi
   </main>
 </body>
 </html>
-"""
+"""  # noqa: E501 - Preserve the embedded report HTML/CSS bytes.
 
 
 def write_manifest(output_dir: Path) -> dict:

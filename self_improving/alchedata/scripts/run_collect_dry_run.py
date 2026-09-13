@@ -150,7 +150,10 @@ def main() -> int:
         "steps": args.steps,
         "capture_every": args.capture_every,
         "limitations": [
-            "This dry-run loads the selected scene in RoboTwin Base_Task and records observations/object states.",
+            (
+                "This dry-run loads the selected scene in RoboTwin Base_Task an"
+                "d records observations/object states."
+            ),
             "It does not execute a generated manipulation play_once policy.",
             "It does not claim task success, policy success rate, or train/eval completion.",
         ],

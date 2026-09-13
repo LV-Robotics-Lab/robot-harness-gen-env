@@ -187,10 +187,13 @@ def build_verified_split(
             ),
         },
         "claim_boundary": (
-            "All selected placements passed the generated scripted RoboTwin task verifier before use. "
-            "When both splits are emitted, the eval split is signature-disjoint from the emitted train split. "
-            "An eval-only manifest must still be checked against the actual training collection signatures. "
-            "Scripted feasibility selection does not constitute learned-policy evaluation or visual/physics domain robustness."
+            "All selected placements passed the generated scripted RoboTwin"
+            " task verifier before use. When both splits are emitted, the e"
+            "val split is signature-disjoint from the emitted train split. "
+            "An eval-only manifest must still be checked against the actual"
+            " training collection signatures. Scripted feasibility selectio"
+            "n does not constitute learned-policy evaluation or visual/phys"
+            "ics domain robustness."
         ),
     }
     if manifest["validation"]["train_eval_signature_overlap"]:

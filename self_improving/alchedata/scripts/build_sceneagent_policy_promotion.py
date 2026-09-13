@@ -12,7 +12,6 @@ from typing import Any
 from pose_conditioned_trajectory_policy import read_json, sha256_file, write_json
 from video_evidence import probe_video
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REMOTE_ROOT_MARKER = "/alchedata-self-improving-agents/"
 
@@ -273,12 +272,18 @@ def build_promotion(
         "rollback_state": {
             "action": "restore_parent_act_checkpoint_and_negative_result",
             "parent_evaluate_report": str(parent_act_path.relative_to(ROOT)),
-            "trigger": "candidate verifier regression, evidence hash mismatch, or use outside declared policy boundary",
+            "trigger": (
+                "candidate verifier regression, evidence hash mismatch, or use "
+                "outside declared policy boundary"
+            ),
         },
         "claim_boundary": (
-            "Promotion is limited to a privileged, initial-pose-conditioned, open-loop learned trajectory baseline in "
-            "the generated RoboTwin apple/plate task, plus fixed-placement seed holdout on can/basket. It does not "
-            "promote ACT, establish visual robustness, prove language-conditioned control, or establish broad task transfer."
+            "Promotion is limited to a privileged, initial-pose-conditioned"
+            ", open-loop learned trajectory baseline in the generated RoboT"
+            "win apple/plate task, plus fixed-placement seed holdout on can"
+            "/basket. It does not promote ACT, establish visual robustness,"
+            " prove language-conditioned control, or establish broad task t"
+            "ransfer."
         ),
         "parent_diagnosis_status": diagnosis.get("status"),
     }

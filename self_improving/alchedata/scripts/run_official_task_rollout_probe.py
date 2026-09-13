@@ -204,8 +204,14 @@ def main() -> int:
         "out_dir": str(out_dir),
         "status": "started",
         "limitations": [
-            "This probe runs an official RoboTwin task class play_once(), not a generated selection2env play_once().",
-            "It tests the action/planner stack and produces rollout evidence for PEARL command-loop smoke.",
+            (
+                "This probe runs an official RoboTwin task class play_once(), n"
+                "ot a generated selection2env play_once()."
+            ),
+            (
+                "It tests the action/planner stack and produces rollout evidenc"
+                "e for PEARL command-loop smoke."
+            ),
             "It does not train or evaluate a learned policy.",
         ],
     }
@@ -347,9 +353,15 @@ def main() -> int:
                     "task_success": success,
                 },
                 "next_data_requirement": (
-                    "Promote from official RoboTwin task smoke to generated selection2env play_once and policy /train-/evaluate integration."
+                    (
+                        "Promote from official RoboTwin task smoke to generated selecti"
+                        "on2env play_once and policy /train-/evaluate integration."
+                    )
                     if success
-                    else "Inspect move_events.jsonl, final camera frames, and object state deltas before adding this task to train/evaluate."
+                    else (
+                        "Inspect move_events.jsonl, final camera frames, and object sta"
+                        "te deltas before adding this task to train/evaluate."
+                    )
                 ),
                 "initial_entities": initial_entities,
                 "final_entities": final_entities,

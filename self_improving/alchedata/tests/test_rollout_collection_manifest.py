@@ -10,7 +10,6 @@ from pathlib import Path
 
 from scripts.build_placement_robustness_splits import build_split
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "runs" / "probe_static_apple_plate_action_repair" / "final_placement.json"
 COLLECTOR = ROOT / "scripts" / "run_generated_rollout_collection.py"

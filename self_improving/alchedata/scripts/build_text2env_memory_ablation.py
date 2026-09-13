@@ -58,7 +58,9 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "experiment": {
             "fixed_protocol": no["fixed_protocol"],
-            "intervention": "availability of one matching structured failure memory to the adapter selector",
+            "intervention": (
+                "availability of one matching structured failure memory to the adapter selector"
+            ),
             "default_adapter": no["default_adapter"],
             "no_memory_selected_adapter": no["selected_adapter"],
             "memory_selected_adapter": yes["selected_adapter"],
@@ -82,12 +84,16 @@ def main() -> int:
             "memory_evaluator_report_sha256": yes["evaluator_report_sha256"],
         },
         "causal_result": (
-            "Within this fixed checkpoint, fixed placement, three-seed protocol, making the matching failure memory "
-            "available changed the controller's RGB adapter selection and increased measured success from 0/3 to 3/3."
+            "Within this fixed checkpoint, fixed placement, three-seed prot"
+            "ocol, making the matching failure memory available changed the"
+            " controller's RGB adapter selection and increased measured suc"
+            "cess from 0/3 to 3/3."
         ),
         "claim_boundary": (
-            "This is a one-memory, one-decision harness ablation. It does not establish general long-term memory, "
-            "retrieval quality, policy-weight improvement, placement robustness, or transfer to other failure classes."
+            "This is a one-memory, one-decision harness ablation. It does n"
+            "ot establish general long-term memory, retrieval quality, poli"
+            "cy-weight improvement, placement robustness, or transfer to ot"
+            "her failure classes."
         ),
     }
     out_path = Path(args.out).expanduser().resolve()

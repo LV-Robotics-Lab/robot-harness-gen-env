@@ -13,7 +13,6 @@ from typing import Any
 
 from placement_manifest_utils import fixed_placement_cases, load_placement_cases
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -95,7 +94,10 @@ def main() -> int:
     parser.add_argument(
         "--placement-id",
         action="append",
-        help="Select a manifest placement ID. Repeat to collect a reproducible subset in the given order.",
+        help=(
+            "Select a manifest placement ID. Repeat to collect a reproducib"
+            "le subset in the given order."
+        ),
     )
     parser.add_argument("--task-id", required=True)
     parser.add_argument("--out-dir", required=True)
@@ -195,8 +197,14 @@ def main() -> int:
         },
         "limitations": [
             "This collection repeats generated selection2env play_once action-stack episodes.",
-            "It is demonstration/evidence collection before policy training, not a learned policy dataset quality claim.",
-            "It does not prove held-out robustness, randomization coverage, or /train-/evaluate completion.",
+            (
+                "It is demonstration/evidence collection before policy training"
+                ", not a learned policy dataset quality claim."
+            ),
+            (
+                "It does not prove held-out robustness, randomization coverage,"
+                " or /train-/evaluate completion."
+            ),
         ],
     }
     write_json(out_dir / "collection_report.json", base_report)
@@ -333,11 +341,16 @@ def main() -> int:
         ),
         "episodes": episodes,
         "claim_boundary": (
-            "Generated play_once demonstration collection with explicit per-episode placements and RoboTwin-native "
-            "synchronized camera/qpos records; "
-            "learned policy /train and /evaluate are not run."
+            (
+                "Generated play_once demonstration collection with explicit per"
+                "-episode placements and RoboTwin-native synchronized camera/qp"
+                "os records; learned policy /train and /evaluate are not run."
+            )
             if args.record_native_data
-            else "Generated play_once demonstration collection only; learned policy /train and /evaluate are not run."
+            else (
+                "Generated play_once demonstration collection only; learned pol"
+                "icy /train and /evaluate are not run."
+            )
         ),
     }
     write_json(out_dir / "dataset_manifest.json", dataset_manifest)
