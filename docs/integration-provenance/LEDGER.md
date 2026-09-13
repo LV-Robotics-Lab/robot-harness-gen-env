@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C10-UNIFORM-COLOR — 显式替换颜色层
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `31eecd0` 受限属性/布局修订；无第三方实现复制。
+- `target_paths`：x2env/asset_revision.py、revision.py 及对应公开 seam 测试。
+- `integration_method`：显式 opt-in，先校验旧纹理/顶点色引用，保几何生成不可变 child，回执记录修改。
+- `verification`：contract_pass；51 项测试，真实 GLB 解码/重载，不代表模型复核或 Genesis pass。
+- `recorded_git_authors`：本提交元数据；上游资产/许可与固定来源身份不因改色改变。
+
 ## INT-CANONICAL-C11-GROUNDED-LAYOUT — 生成设计后的布局链
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

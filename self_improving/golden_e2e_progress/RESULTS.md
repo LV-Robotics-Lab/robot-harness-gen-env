@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 C10 显式统一颜色替换
+
+- AssetPatch 新增可选 `color_mode=uniform_replace`，必须伴随 base_color；默认继续拒绝纹理或顶点颜色
+  覆盖。先校验旧 texture/image/UV/accessor 引用，再移除 baseColorTexture/COLOR_0 的颜色贡献。
+  material/texture 扩展仍拒绝，损坏父资源不能通过删除操作被掩盖。
+- 保留父版本、几何摘要、GLB 二进制与 UV 资源、URDF/碰撞/物性；新版本回执逐成员记录移除层数。
+  纹理及顶点色 GLB 的正向测试实际重新加载 child 核颜色，但不是 Genesis 或视觉意图验收。
+- controller revision 白名单新增显式模式，公开修订测试先 RED（unsupported_asset_patch）后 GREEN；
+  属性修订/场景修订/diagnosis 合并 51 passed（1.49s），ruff 通过。
+- diagnosis 的严格模型 schema 在调用时从类型生成，无单独 committed AssetPatch snapshot；
+  本片未改变 public compile/replay/validate 合同。local 失配到新提案/新版本/新视觉复核仍待接通。
+
 ## 2026-09-13 S02 显式设计开发运行：模型超时
 
 - 固定 clean `109b0c53f8dce987eed6b21b9c675f5afbce9b9f`，冻结原图、text=null、seed23、local-only；

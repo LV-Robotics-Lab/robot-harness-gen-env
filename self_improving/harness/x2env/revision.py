@@ -54,7 +54,9 @@ def apply_revision(
             or asset_by_id[patch.entity_id].version_sha256 != patch.parent_version
         ):
             raise ValueError("asset_revision_base_mismatch")
-        if set(patch.patch.model_dump(exclude_none=True)) - {"base_color", "mass", "friction"}:
+        if set(patch.patch.model_dump(exclude_none=True)) - {
+            "base_color", "color_mode", "mass", "friction"
+        }:
             raise ValueError("unsupported_asset_patch")
     document = scene.model_dump(mode="json")
     entities = {entity["id"]: entity for entity in document["entities"]}

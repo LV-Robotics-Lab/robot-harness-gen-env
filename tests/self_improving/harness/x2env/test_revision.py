@@ -92,7 +92,8 @@ def test_layout_revision_changes_scene_bytes_and_stops_repeated_failure(tmp_path
         )
 
 
-def test_asset_revision_consumes_the_same_budget_and_preserves_old_bytes(tmp_path):
+@pytest.mark.parametrize("uniform_color", [False, True])
+def test_asset_revision_consumes_the_same_budget_and_preserves_old_bytes(tmp_path, uniform_color):
     from self_improving.harness.x2env.asset_revision import AssetPatch
     from self_improving.harness.x2env.diagnosis import SuggestedAssetPatch
     from self_improving.harness.x2env.revision import apply_revision
@@ -120,7 +121,11 @@ def test_asset_revision_consumes_the_same_budget_and_preserves_old_bytes(tmp_pat
             SuggestedAssetPatch(
                 entity_id="box",
                 parent_version=version.version_sha256,
-                patch=AssetPatch(friction=0.4),
+                patch=(
+                    AssetPatch(base_color=(1, 0.2, 0.5, 1), color_mode="uniform_replace")
+                    if uniform_color
+                    else AssetPatch(friction=0.4)
+                ),
             ),
         ),
     )

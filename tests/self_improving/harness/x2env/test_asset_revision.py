@@ -162,11 +162,22 @@ def test_existing_pbr_material_can_be_revised_without_changing_geometry(tmp_path
     assert registry.inspect(parent.version_sha256) == parent
 
 
-def fixture(tmp_path, vertex_color=False):
+def fixture(tmp_path, vertex_color=False, textured=False):
     store = Store(tmp_path / "state")
     registry = AssetRegistry(store)
     source = tmp_path / "source.glb"
-    source.write_bytes(trimesh.creation.box().export(file_type="glb"))
+    mesh = trimesh.creation.box()
+    if textured:
+        import numpy as np
+        from PIL import Image
+
+        mesh.visual = trimesh.visual.TextureVisuals(
+            uv=np.zeros((len(mesh.vertices), 2)),
+            material=trimesh.visual.material.PBRMaterial(
+                baseColorTexture=Image.new("RGBA", (2, 2), (0, 255, 0, 255))
+            ),
+        )
+    source.write_bytes(mesh.export(file_type="glb"))
     root = tmp_path / "normalized"
     report = normalize_mesh(
         source,
@@ -192,6 +203,112 @@ def fixture(tmp_path, vertex_color=False):
         receipt=proof,
     )
     return store, registry, version
+
+
+@pytest.mark.parametrize("layer", ["texture", "vertex"])
+def test_uniform_color_replacement_removes_layers_but_preserves_geometry(tmp_path, layer):
+    from io import BytesIO
+
+    import numpy as np
+
+    from self_improving.harness.x2env.asset_revision import AssetPatch, AssetRevision
+
+    store, registry, parent = fixture(
+        tmp_path, textured=layer == "texture", vertex_color=layer == "vertex"
+    )
+    original = {m.path: store.read_artifact(m.artifact) for m in parent.files}
+    with pytest.raises(ValueError, match="unsupported_asset_patch"):
+        default = AssetPatch(base_color=(1.0, 0.0, 0.5, 1.0))
+        AssetRevision(registry, store).revise(
+            parent.version_sha256,
+            default,
+            approval=approval_for(store, parent.version_sha256, default),
+            output_root=tmp_path / "default",
+        )
+    patch = AssetPatch(base_color=(1.0, 0.0, 0.5, 1.0), color_mode="uniform_replace")
+    child = AssetRevision(registry, store).revise(
+        parent.version_sha256,
+        patch,
+        approval=approval_for(store, parent.version_sha256, patch),
+        output_root=tmp_path / "child",
+    )
+    raw = store.read_artifact(next(m.artifact for m in child.files if m.path == "visual.glb"))
+    loaded = trimesh.load(BytesIO(raw), file_type="glb", force="scene", process=False)
+    for mesh in loaded.geometry.values():
+        colors = np.asarray(mesh.visual.to_color().vertex_colors).reshape(-1, 4)
+        np.testing.assert_allclose(colors, np.tile([255, 0, 128, 255], (len(colors), 1)), atol=1)
+    assert child.geometry_sha256 == parent.geometry_sha256
+    assert registry.inspect(parent.version_sha256) == parent
+    current = {m.path: store.read_artifact(m.artifact) for m in child.files}
+    for name in ("physics.json", "collision.obj", "asset.urdf"):
+        assert current[name] == original[name]
+
+    def bin_chunk(value):
+        size = struct.unpack_from("<I", value, 12)[0]
+        return value[20 + size :]
+
+    assert bin_chunk(current["visual.glb"]) == bin_chunk(original["visual.glb"])
+    receipt = json.loads(store.read_artifact(child.receipt))
+    row = receipt["color_replacement"][0]
+    assert row["baseColorTexture"] == (1 if layer == "texture" else 0)
+    assert row["COLOR_0"] == (1 if layer == "vertex" else 0)
+
+
+def test_color_mode_requires_explicit_color(tmp_path):
+    from self_improving.harness.x2env.asset_revision import AssetPatch
+
+    with pytest.raises(ValueError, match="requires base_color"):
+        AssetPatch(color_mode="uniform_replace")
+
+
+@pytest.mark.parametrize("fault", ["texture", "image", "image_bytes", "uv", "vertex", "extension"])
+def test_uniform_replacement_cannot_launder_invalid_parent_color_layers(tmp_path, fault):
+    from self_improving.harness.x2env.asset_revision import AssetPatch, AssetRevision
+
+    store, registry, parent = fixture(
+        tmp_path, textured=fault != "vertex", vertex_color=fault == "vertex"
+    )
+
+    def mutate(contents):
+        raw = contents["visual.glb"]
+        size = struct.unpack_from("<I", raw, 12)[0]
+        doc = json.loads(raw[20 : 20 + size])
+        tail = bytearray(raw[20 + size :])
+        primitive = doc["meshes"][0]["primitives"][0]
+        if fault == "texture":
+            doc["materials"][0]["pbrMetallicRoughness"]["baseColorTexture"]["index"] = 999
+        elif fault == "image":
+            doc["textures"][0]["source"] = 999
+        elif fault == "image_bytes":
+            view = doc["bufferViews"][doc["images"][0]["bufferView"]]
+            start = 8 + view.get("byteOffset", 0)
+            tail[start : start + view["byteLength"]] = b"x" * view["byteLength"]
+        elif fault == "uv":
+            primitive["attributes"]["TEXCOORD_0"] = 999
+        elif fault == "vertex":
+            primitive["attributes"]["COLOR_0"] = 999
+        else:
+            doc["materials"][0]["extensions"] = {"KHR_materials_unlit": {}}
+        encoded = json.dumps(doc).encode()
+        encoded += b" " * ((-len(encoded)) % 4)
+        contents["visual.glb"] = (
+            struct.pack(
+                "<4sIIII", b"glTF", 2, 20 + len(encoded) + len(tail), len(encoded), 0x4E4F534A
+            )
+            + encoded
+            + tail
+        )
+
+    parent_ref = persisted_attack(store, parent, mutate)
+    patch = AssetPatch(base_color=(1.0, 0.0, 0.5, 1.0), color_mode="uniform_replace")
+    with pytest.raises(ValueError):
+        AssetRevision(registry, store).revise(
+            parent_ref,
+            patch,
+            approval=approval_for(store, parent_ref, patch),
+            output_root=tmp_path / "child",
+        )
+    assert not (tmp_path / "child").exists()
 
 
 def test_mass_and_friction_revision_preserves_parent_and_updates_inertia(tmp_path):

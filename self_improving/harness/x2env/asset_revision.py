@@ -6,7 +6,7 @@ import math
 import struct
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Annotated, Protocol
+from typing import Annotated, Literal, Protocol
 
 from pydantic import Field, model_validator
 
@@ -23,6 +23,7 @@ Unit = Annotated[float, Field(ge=0, le=1)]
 
 class AssetPatch(Model):
     base_color: tuple[Unit, Unit, Unit, Unit] | None = None
+    color_mode: Literal["uniform_replace"] | None = None
     mass: float | None = Field(default=None, gt=0)
     friction: float | None = Field(default=None, ge=0)
     roughness: Unit | None = None
@@ -33,9 +34,123 @@ class AssetPatch(Model):
 
     @model_validator(mode="after")
     def nonempty(self):
+        if self.color_mode is not None and self.base_color is None:
+            raise ValueError("color_mode requires base_color")
         if not self.model_dump(exclude_none=True):
             raise ValueError("asset patch must change at least one field")
         return self
+
+
+def _validate_color_layers(document, tail, contents, member):
+    """Validate layers before removal: replacement cannot launder dangling color inputs."""
+    import base64
+    from io import BytesIO
+
+    from PIL import Image
+
+    def at(group, index):
+        values = document.get(group, [])
+        if type(index) is not int or not 0 <= index < len(values):
+            raise ValueError("asset_patch_invalid_color_reference")
+        return values[index]
+
+    def uri_bytes(uri):
+        if uri.startswith("data:"):
+            if ";base64," not in uri:
+                raise ValueError("asset_patch_invalid_color_reference")
+            return base64.b64decode(uri.split(",", 1)[1], validate=True)
+        path = Path(uri)
+        if path.is_absolute() or ".." in path.parts or "\\" in uri:
+            raise ValueError("asset_patch_invalid_color_reference")
+        name = str(Path(member).parent / path)
+        if name not in contents:
+            raise ValueError("asset_patch_invalid_color_reference")
+        return contents[name]
+
+    def view_bytes(index):
+        view = at("bufferViews", index)
+        buffer = at("buffers", view.get("buffer"))
+        if "uri" in buffer:
+            raw = uri_bytes(buffer["uri"])
+        else:
+            if view["buffer"] != 0 or len(tail) < 8:
+                raise ValueError("asset_patch_invalid_color_reference")
+            size, kind = struct.unpack_from("<II", tail)
+            if kind != 0x004E4942 or size != len(tail) - 8:
+                raise ValueError("asset_patch_invalid_color_reference")
+            raw = tail[8:]
+        offset, size = view.get("byteOffset", 0), view.get("byteLength")
+        declared = buffer.get("byteLength")
+        if (
+            type(declared) is not int
+            or not 0 <= declared <= len(raw)
+            or type(offset) is not int
+            or type(size) is not int
+            or offset < 0
+            or size <= 0
+            or offset + size > declared
+        ):
+            raise ValueError("asset_patch_invalid_color_reference")
+        return raw[offset : offset + size]
+
+    def accessor(index, types):
+        value = at("accessors", index)
+        if value.get("type") not in types or value.get("sparse"):
+            raise ValueError("asset_patch_invalid_color_reference")
+        components = {"VEC2": 2, "VEC3": 3, "VEC4": 4}[value["type"]]
+        unit = {5121: 1, 5123: 2, 5126: 4}.get(value.get("componentType"))
+        count, offset = value.get("count"), value.get("byteOffset", 0)
+        raw = view_bytes(value.get("bufferView"))
+        view = at("bufferViews", value["bufferView"])
+        stride = view.get("byteStride", components * unit if unit else 0)
+        if (
+            unit is None
+            or type(count) is not int
+            or count <= 0
+            or type(offset) is not int
+            or offset < 0
+            or type(stride) is not int
+            or stride < components * unit
+            or offset + (count - 1) * stride + components * unit > len(raw)
+        ):
+            raise ValueError("asset_patch_invalid_color_reference")
+        return count
+
+    for material in document.get("materials", []):
+        texture_info = material.get("pbrMetallicRoughness", {}).get("baseColorTexture")
+        if texture_info is None:
+            continue
+        if texture_info.get("extensions"):
+            raise ValueError("unsupported_asset_patch_color_texture")
+        texture = at("textures", texture_info.get("index"))
+        if texture.get("extensions"):
+            raise ValueError("unsupported_asset_patch_color_texture")
+        if "sampler" in texture:
+            at("samplers", texture["sampler"])
+        image = at("images", texture.get("source"))
+        data = uri_bytes(image["uri"]) if "uri" in image else view_bytes(image.get("bufferView"))
+        try:
+            with Image.open(BytesIO(data)) as decoded:
+                decoded.verify()
+        except OSError as exc:
+            raise ValueError("asset_patch_invalid_color_image") from exc
+    for mesh in document.get("meshes", []):
+        for primitive in mesh.get("primitives", []):
+            attrs = primitive.get("attributes", {})
+            count = at("accessors", attrs.get("POSITION")).get("count")
+            if "COLOR_0" in attrs and accessor(attrs["COLOR_0"], {"VEC3", "VEC4"}) != count:
+                raise ValueError("asset_patch_invalid_color_reference")
+            if "material" in primitive:
+                material = at("materials", primitive["material"])
+                texture = material.get("pbrMetallicRoughness", {}).get("baseColorTexture")
+                if texture is not None:
+                    coord = texture.get("texCoord", 0)
+                    if (
+                        type(coord) is not int
+                        or coord < 0
+                        or accessor(attrs.get(f"TEXCOORD_{coord}"), {"VEC2"}) != count
+                    ):
+                        raise ValueError("asset_patch_invalid_color_reference")
 
 
 class AssetRevision:
@@ -47,7 +162,7 @@ class AssetRevision:
     ):
         patch = AssetPatch.model_validate_json(patch.model_dump_json())
         changes = patch.model_dump(mode="json", exclude_none=True)
-        if set(changes) - {"base_color", "mass", "friction"}:
+        if set(changes) - {"base_color", "color_mode", "mass", "friction"}:
             raise ValueError("unsupported_asset_patch")
         approved = json.loads(self.store.read_artifact(approval))
         if (
@@ -132,6 +247,7 @@ class AssetRevision:
         if physics_changed:
             physics["parameter_basis"] = "controller_supplied_revision_not_measured"
             contents["physics.json"] = json.dumps(physics, sort_keys=True).encode()
+        color_replacements = []
         if patch.base_color is not None:
             visuals = tree.findall(".//visual/geometry/mesh")
             names = {
@@ -147,24 +263,46 @@ class AssetRevision:
                 if version != 2 or size != len(data) or kind != 0x4E4F534A:
                     raise ValueError("asset_patch_invalid_glb")
                 document = json.loads(data[20 : 20 + json_size])
-                if any(
-                    "COLOR_0" in primitive.get("attributes", {})
-                    for mesh in document.get("meshes", [])
-                    for primitive in mesh.get("primitives", [])
+                replaced = {"member": name, "baseColorTexture": 0, "COLOR_0": 0}
+                if patch.color_mode == "uniform_replace":
+                    _validate_color_layers(document, data[20 + json_size :], contents, name)
+                if (
+                    any(
+                        "COLOR_0" in primitive.get("attributes", {})
+                        for mesh in document.get("meshes", [])
+                        for primitive in mesh.get("primitives", [])
+                    )
+                    and patch.color_mode is None
                 ):
                     raise ValueError("unsupported_asset_patch_vertex_color")
                 materials = document.setdefault("materials", [])
                 if any(
-                    "baseColorTexture" in material.get("pbrMetallicRoughness", {})
+                    (
+                        "baseColorTexture" in material.get("pbrMetallicRoughness", {})
+                        and patch.color_mode is None
+                    )
                     or material.get("extensions")
                     for material in materials
                 ):
                     raise ValueError("unsupported_asset_patch_color_texture")
+                if patch.color_mode == "uniform_replace":
+                    for material in materials:
+                        pbr = material.get("pbrMetallicRoughness", {})
+                        if "baseColorTexture" in pbr:
+                            del pbr["baseColorTexture"]
+                            replaced["baseColorTexture"] += 1
+                    for mesh in document.get("meshes", []):
+                        for primitive in mesh.get("primitives", []):
+                            attributes = primitive.get("attributes", {})
+                            if "COLOR_0" in attributes:
+                                del attributes["COLOR_0"]
+                                replaced["COLOR_0"] += 1
+                    color_replacements.append(replaced)
                 if all(
                     material.get("pbrMetallicRoughness", {}).get("baseColorFactor", [1, 1, 1, 1])
                     == list(patch.base_color)
                     for material in materials or [{}]
-                ):
+                ) and not (replaced["baseColorTexture"] or replaced["COLOR_0"]):
                     continue
                 if not materials:
                     materials.append({})
@@ -203,6 +341,7 @@ class AssetRevision:
             "patch": changes,
             "approval": approval.model_dump(),
             "basis": "supplied_not_measured",
+            "color_replacement": color_replacements,
         }
         report["checks"] = {
             **report.get("checks", {}),
@@ -229,6 +368,7 @@ class AssetRevision:
                     "approval_trust": "delegated_to_harness",
                     "physical_evaluated": False,
                     "visual_intent_evaluated": False,
+                    "color_replacement": color_replacements,
                 },
                 sort_keys=True,
             ).encode(),
