@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-LOCAL-PENDING — 来源路由保留待修订候选
+
+- `origin_owner`：Yuxin 原检索/视觉；`integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `aa6b5b6` 分类器及原 Yuxin source adapter 已固定链。
+- `target_paths`：x2env/resolver.py、source_router.py 与两项公开测试文件。
+- `integration_method`：保原失败+partial+搜索记录，合法 pending 在 local 停住；不先跳 web 或重复查询。
+- `verification`：contract_pass；主线程最后相关组 26 passed，无真实模型/GPU；后续 controller 执行待接。
+- `recorded_git_authors`：本提交元数据；没有给父 mismatch 或未部署来源授予能力。
+
 ## INT-CANONICAL-C05-STRUCTURAL-DESIGN — 结构默认值与几何推导
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；不是 Gujie 原米制重建能力。

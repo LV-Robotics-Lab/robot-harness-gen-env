@@ -19,6 +19,7 @@ from .asset_advisory import AssetVisualAssessment, VisualCandidate
 from .asset_preview import AssetPreviewProof
 from .compile import ResolvedAsset, ResolvedAssetSet
 from .contracts import ArtifactRef, Model, SceneIR, Source
+from .local_color_advisory import ColorRepairCandidate, classify_color_repair
 
 
 class ResolutionResult(Model):
@@ -28,6 +29,7 @@ class ResolutionResult(Model):
     error_code: str | None = None
     next_source: Source | None = None
     required_resources: tuple[str, ...] = ()
+    pending_color_repairs: tuple[ColorRepairCandidate, ...] = ()
 
 
 class LocalAssetResolver:
@@ -78,6 +80,7 @@ class LocalAssetResolver:
             )
         records, assets, unresolved = [], [], []
         catalog_searches = []
+        searched_entities, pending = [], []
         error, resources = None, ()
         selected = {e.id for e in scene.entities if e.role == "foreground"}
         if entity_ids is not None:
@@ -98,6 +101,7 @@ class LocalAssetResolver:
                     error = "resolver_timeout"
                     unresolved.append(entity.id)
                     continue
+                searched_entities.append(entity.id)
                 search = RegistryLocalCatalog(self.store, self.registry).search(
                     entity, output_root=root / "catalogs" / entity.id, limit=8, timeout=budget
                 )
@@ -228,6 +232,14 @@ class LocalAssetResolver:
                         continue
                     if advisory.verdicts[0].verdict != "match":
                         entry["error_code"] = "visual_mismatch"
+                        if entity.color and advisory.verdicts[0].verdict == "mismatch":
+                            candidate = classify_color_repair(
+                                self.store, scene_ir, entity, version, proof, advisory
+                            )
+                            if candidate is not None:
+                                pending.append(candidate)
+                                entry["status"] = "pending_color_repair"
+                                break
                         continue
                     assets.append(
                         ResolvedAsset(
@@ -265,6 +277,14 @@ class LocalAssetResolver:
             status = "blocked"
         else:
             status = "succeeded"
+        if pending:
+            error = (
+                error
+                if error
+                and error not in {"source_adapter_not_connected", "local_assets_unresolved"}
+                else "local_color_repair_pending"
+            )
+            resources = () if error == "local_color_repair_pending" else resources
         resolved = ResolvedAssetSet(scene_ir=scene_ir, assets=tuple(assets))
         payload = {
             "status": status,
@@ -277,6 +297,8 @@ class LocalAssetResolver:
             "unresolved_entities": unresolved,
             "candidates": records,
             "catalog_searches": catalog_searches,
+            "searched_entities": searched_entities,
+            "pending_color_repairs": [p.model_dump(mode="json") for p in pending],
             "next_source": next_source,
             "required_resources": resources,
             "wall_seconds": time.monotonic() - started,
@@ -292,4 +314,5 @@ class LocalAssetResolver:
             error_code=error,
             next_source=next_source,
             required_resources=resources,
+            pending_color_repairs=tuple(pending),
         )

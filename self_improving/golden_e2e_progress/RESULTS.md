@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C06 本地颜色待修订进入来源路由
+
+- LocalAssetResolver 在现有检索/preview/原 a6_verify 调用后生成 typed pending_color_repairs；
+  原候选不变成 accepted，每实体最多一项待修订，保留全部已查询记录、部分成功和普通缺失实体。
+- SourceRouter 重核原场景、版本、视觉与 receipt 后暂停在 local，不越级 web；记录 canonical next_source
+  及 searched_entities。待修订不是外部资源，主线程新增该语义 RED→GREEN。
+- 四组子 agent 73 passed；主线程相关七组 82 passed 后，最后 resolver/router 26 passed（1.25s）。
+  pending 续点尚需 controller 执行新版本并恢复剩余来源；未宣称 local 改色或来源真实通过。
+
 ## 2026-09-13 C05 结构设计默认值与 on 高度接线
 
 - 同一 classify_design_unknowns 被 interpret 准入和 grounding 复核共同消费；支持实际实体的单轴路径，

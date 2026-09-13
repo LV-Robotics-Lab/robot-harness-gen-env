@@ -8,6 +8,7 @@ from .artifacts import artifact_closure
 from .assets import AssetRegistry
 from .compile import ResolvedAssetSet
 from .contracts import SceneIR
+from .local_color_advisory import classify_color_repair
 from .resolver import ResolutionResult
 
 
@@ -35,6 +36,7 @@ class SourceRouter:
         required = {e.id: e for e in scene.entities if e.role == "foreground"}
         assets, records = {}, []
         error = None
+        pending, searched_entities, next_source = (), {}, None
         registry = AssetRegistry(self.store)
         for source in ("local", "web", "reconstruction"):
             missing = tuple(e for e in required if e not in assets)
@@ -52,6 +54,7 @@ class SourceRouter:
             if resolver is None:
                 error = record["error_code"] = "source_adapter_not_connected"
                 continue
+            has_pending = False
             try:
                 result = resolver.resolve(
                     scene_ir,
@@ -61,6 +64,7 @@ class SourceRouter:
                     timeout=remaining,
                     entity_ids=missing,
                 )
+                has_pending = bool(result.pending_color_repairs)
                 result = ResolutionResult.model_validate_json(result.model_dump_json())
                 artifact_closure(self.store, (result.receipt,))
                 record["result"] = result.model_dump(mode="json")
@@ -82,12 +86,53 @@ class SourceRouter:
                     if version.category != required[asset.entity_id].category:
                         raise ValueError("source_category_mismatch")
                     checked.append(asset)
+                if result.pending_color_repairs:
+                    candidates = result.pending_color_repairs
+                    payload = json.loads(self.store.read_artifact(result.receipt))
+                    searched = payload.get("searched_entities")
+                    if (
+                        source != "local"
+                        or result.status != "blocked"
+                        or payload.get("pending_color_repairs")
+                        != [p.model_dump(mode="json") for p in candidates]
+                        or not isinstance(searched, list)
+                        or any(not isinstance(e, str) for e in searched)
+                        or len(set(searched)) != len(searched)
+                        or not set(searched) <= set(missing)
+                        or len({p.entity_id for p in candidates}) != len(candidates)
+                    ):
+                        raise ValueError("unbound_pending_color_repair")
+                    for candidate in candidates:
+                        if (
+                            candidate.scene_ir != scene_ir
+                            or candidate.entity_id not in searched
+                            or candidate.entity_id in {a.entity_id for a in checked}
+                            or classify_color_repair(
+                                self.store,
+                                scene_ir,
+                                required[candidate.entity_id],
+                                registry.inspect(candidate.parent_version),
+                                candidate.preview_proof,
+                                candidate.assessment,
+                            )
+                            != candidate
+                        ):
+                            raise ValueError("unbound_pending_color_repair")
                 if time.monotonic() - start >= timeout:
                     raise ValueError("resolver_timeout")
                 assets.update({a.entity_id: a for a in checked})
                 error = result.error_code
+                if result.pending_color_repairs:
+                    pending = result.pending_color_repairs
+                    searched_entities[source] = searched
+                    next_source = next(
+                        (s for s in ("web", "reconstruction") if s in allowed_sources), None
+                    )
+                    break
             except (ValueError, OSError, KeyError, TypeError, RuntimeError) as exc:
                 error = record["error_code"] = str(exc)
+                if has_pending:
+                    break
         missing = tuple(e for e in required if e not in assets)
         status = "blocked" if missing else "succeeded"
         error = (error or "sources_exhausted") if missing else None
@@ -101,6 +146,9 @@ class SourceRouter:
                 "resolved": resolved.model_dump(mode="json"),
                 "sources": records,
                 "unresolved_entities": missing,
+                "pending_color_repairs": [p.model_dump(mode="json") for p in pending],
+                "searched_entities": searched_entities,
+                "next_source": next_source,
                 "selection_order": "canonical_plan_section_5",
                 "cousin_status": "not_implemented",
                 "wall_seconds": time.monotonic() - start,
@@ -113,5 +161,7 @@ class SourceRouter:
             resolved=resolved,
             receipt=self.store.write_artifact(data, "application/json"),
             error_code=error,
-            required_resources=(error,) if error else (),
+            required_resources=(error,) if error and not pending else (),
+            pending_color_repairs=pending,
+            next_source=next_source,
         )

@@ -264,3 +264,97 @@ def test_candidate_budget_is_eight_once_each(tmp_path):
     assert result.status == "blocked"
     assert len(backend.calls) == 8
     assert len({c.candidate_id for c in backend.calls}) == 8
+
+
+def color_resolution_inputs(tmp_path, detail_updates=None):
+    """Original a6-shaped visual double, with pending, accepted and missing entities."""
+    from tests.self_improving.harness.x2env.test_local_color_advisory import color_inputs
+
+    store, registry, scene, _, version, proof, advisory = color_inputs(tmp_path, detail_updates)
+    payload = json.loads(store.read_artifact(scene))
+    plain = dict(payload["entities"][0], id="accepted", color=None)
+    missing = dict(plain, id="mouse", category="mouse")
+    payload["entities"].extend([plain, missing])
+    scene = store.write_artifact(json.dumps(payload).encode(), "application/json")
+
+    class Backend(VisualDouble):
+        def assess_asset_candidates(self, candidates, **kwargs):
+            if candidates[0].want_color:
+                self.calls.append(candidates)
+                return advisory
+            return super().assess_asset_candidates(candidates, **kwargs)
+
+    backend = Backend(store)
+    return store, registry, scene, version, proof, backend
+
+
+def test_local_color_pending_preserves_partial_and_all_single_searches(tmp_path):
+    from self_improving.harness.x2env.resolver import LocalAssetResolver
+
+    store, registry, scene, version, proof, backend = color_resolution_inputs(tmp_path)
+    result = LocalAssetResolver(store, registry, backend, lambda v, timeout: proof).resolve(
+        scene,
+        allowed_sources=("local", "web"),
+        allow_cousin=False,
+        output_root=tmp_path / "pending",
+    )
+    assert result.status == "blocked" and result.error_code == "local_color_repair_pending"
+    assert [a.entity_id for a in result.resolved.assets] == ["accepted"]
+    assert [p.entity_id for p in result.pending_color_repairs] == ["box"]
+    assert result.pending_color_repairs[0].parent_version == version.version_sha256
+    receipt = json.loads(store.read_artifact(result.receipt))
+    assert receipt["searched_entities"] == ["box", "accepted", "mouse"]
+    assert len(receipt["catalog_searches"]) == 3 and len(backend.calls) == 2
+    assert receipt["unresolved_entities"] == ["box", "mouse"]
+    assert receipt["pending_color_repairs"] == [
+        result.pending_color_repairs[0].model_dump(mode="json")
+    ]
+
+
+@pytest.mark.parametrize("check", ["unknown", "mismatch"])
+def test_local_material_problem_is_not_color_repair(tmp_path, check):
+    from self_improving.harness.x2env.resolver import LocalAssetResolver
+
+    store, registry, scene, _, proof, backend = color_resolution_inputs(
+        tmp_path, {"attribute_check": {"color": "mismatch", "material": check}}
+    )
+    result = LocalAssetResolver(store, registry, backend, lambda v, timeout: proof).resolve(
+        scene,
+        allowed_sources=("local",),
+        allow_cousin=False,
+        output_root=tmp_path / "reject",
+    )
+    assert result.pending_color_repairs == ()
+    assert [a.entity_id for a in result.resolved.assets] == ["accepted"]
+
+
+def test_local_keeps_multiple_entity_repairs_but_stops_each_candidate_scan(tmp_path):
+    from self_improving.harness.x2env.resolver import LocalAssetResolver
+
+    store, registry, scene, version, proof, backend = color_resolution_inputs(tmp_path)
+    # A second immutable version shares the asset name but has different source evidence.
+    report = json.loads(store.read_artifact(version.normalization_report))
+    registry.register(
+        "box",
+        "box",
+        tmp_path / "normalized",
+        "asset.urdf",
+        files=tuple(f["path"] for f in report["files"]),
+        normalization_report=version.normalization_report,
+        license=version.license,
+        source=version.source,
+        receipt=store.write_artifact(b"second registration test double", "text/plain"),
+    )
+    payload = json.loads(store.read_artifact(scene))
+    payload["entities"][1]["color"] = "pink"
+    scene = store.write_artifact(json.dumps(payload).encode(), "application/json")
+    result = LocalAssetResolver(store, registry, backend, lambda v, timeout: proof).resolve(
+        scene,
+        allowed_sources=("local",),
+        allow_cousin=False,
+        output_root=tmp_path / "multiple",
+    )
+    assert [p.entity_id for p in result.pending_color_repairs] == ["box", "accepted"]
+    assert len(backend.calls) == 2 and not result.resolved.assets
+    receipt = json.loads(store.read_artifact(result.receipt))
+    assert receipt["searched_entities"] == ["box", "accepted", "mouse"]

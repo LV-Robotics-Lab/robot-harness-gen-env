@@ -11,7 +11,7 @@
 - S04 fixed109b0c5 真实开发运行 blocked/clarification_required（72.51s），未进入web；结构defaults/on-z
   通用分类与精确单轴field处理正在实现，原proposal/失败不变。三次有界transport对照不能确定S02超时根因。
 
-- 本地纯颜色失配 classifier/managed proposal seam 已完成（59 项相关测试）；路由待修订结果和controller复核接线中。
+- 本地纯颜色 classifier/managed proposal 和路由 pending 已接通测试；controller 新版本执行及剩余来源续行仍在接线。
 
 - Store/Harness/完成门的修订预留已接通测试；前置 local asset.revise 的独立新版本链仍在实施。
 
