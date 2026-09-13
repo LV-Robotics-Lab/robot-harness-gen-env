@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .contracts import InputMedia, RequestConstraints, X2EnvRequest
 from .deployment import build_harness, load_deployment
+from .preflight import check_deployment
 
 
 class Parser(argparse.ArgumentParser):
@@ -19,9 +20,11 @@ def _parser():
     parser = Parser(prog="x2env")
     parser.add_argument("--deployment", type=Path)
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("submit", "status", "resume", "package"):
+    for name in ("check", "submit", "status", "resume", "package"):
         command = commands.add_parser(name)
         command.add_argument("--deployment", type=Path, default=argparse.SUPPRESS)
+        if name == "check":
+            continue
         if name == "submit":
             text = command.add_mutually_exclusive_group()
             text.add_argument("--text")
@@ -62,6 +65,11 @@ def main(argv=None):
             raise ValueError("--deployment is required")
         stage = "deployment"
         config = load_deployment(args.deployment)
+        if args.command == "check":
+            report = check_deployment(config)
+            report["command_wall_seconds"] = time.monotonic() - started
+            print(json.dumps(report, sort_keys=True, allow_nan=False))
+            return 0 if report["ok"] else 1
 
         def remaining():
             value = int(config.timeout_seconds - (time.monotonic() - started))

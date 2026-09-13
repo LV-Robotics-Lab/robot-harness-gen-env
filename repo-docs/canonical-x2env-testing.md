@@ -5,6 +5,10 @@
 源码与文档门、真实模型/Genesis 案例和复制包运行；它们回答不同问题，不能互相替代。
 本文提供操作配方，不表示在本次文档更新中重新执行过昂贵仿真。
 
+部署排错先运行 `python -m self_improving.harness.x2env.cli check --deployment /absolute/deployment.json`。
+轻量检查不加载外部模型、不创建状态；`not_configured` 不表示该来源可执行。
+检查契约测试为 `tests/self_improving/harness/x2env/test_preflight.py`，包含配置漂移及符号链接误报攻击。
+
 ## 安装测试环境
 
 在仓库根、独立虚拟环境中执行。`dev` 包含 pytest、pytest-cov、ruff、markdown-it-py；

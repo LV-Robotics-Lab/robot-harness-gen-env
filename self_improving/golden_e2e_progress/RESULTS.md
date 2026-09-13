@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 P0/P1 部署检查切片
+
+- 当前执行计划：CANONICAL_P0_P1_PLAN_20260913.md。实际入口未配置 web/reconstruction，check 约0.0012秒。
+- 24项配置/CLI测试通过（0.53秒），ruff通过。新增 symbolic pinned config 反例先失败、复用 PinnedFile.read 后通过。
+- 前轮 x2env 日志 `/var/tmp/x2env-p1-20260913/x2env-tests.log` 到100%无失败文本；缺独立exit记录，不声称已审核全套通过。
+- 清理旧 ignored `active/1_asset_reuse/` 的3.8MiB缓存（仅pycache/.coverage，可重建），未删除资产或源码。
+- dashboard 三入口仍404，无可用task id；未伪报更新。
+
 ## 2026-09-13 根目录收敛与迁移后真实核验
 
 - 用户后续授权撤除历史兼容地址：14 项实体迁移、259 个链接撤除（含 worktrees 内链接）。

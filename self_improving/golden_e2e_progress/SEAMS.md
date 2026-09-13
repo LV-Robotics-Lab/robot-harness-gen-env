@@ -1,5 +1,9 @@
 # canonical x2env 公共测试 seams
 
+P0/P1 使用既有 CLI/Deployment 与外部 adapter seam；公开 `check_deployment`/CLI `check`
+只读报告配置存在性和 pinned JSON 完整性，不创建 Store 或执行模型。与执行相同的 PinnedFile
+读取规则必须拒绝符号链接、过大文件和漂移；不把 path present 宣称为 backend 已验证。
+
 状态：accepted_matrix_v1_frozen。替代旧父子Golden/MCP/planner的active测试合同；
 历史证据不升级为canonical资格。批准来源为实施计划第4、8–12节。
 

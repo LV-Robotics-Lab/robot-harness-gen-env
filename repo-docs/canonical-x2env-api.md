@@ -5,6 +5,13 @@
 [matrix v2 审计](../self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)。
 API 支持某种输入格式，不表示该格式下任意场景、资产来源和物理关系都已验证成功。
 
+公开 CLI 新增 `check --deployment /absolute/deployment.json`，返回
+`x2env.deployment_check.v1`：各组件的 `configured/not_configured/misconfigured`、检查项和
+`missing` 字段路径。退出码 0 表示已配置项的轻量检查通过，1 表示配置无效或检查失败。
+可选来源未配置不会使 `ok` 变 false；因此必须同时查看 `components`，不能把 `ok` 当作 E2E。
+该命令不创建 Store，不读密钥内容，不运行模型/Genesis。仅 pinned JSON 执行大小、链接和 SHA
+检查；模型/Genesis 路径只检查存在性，重建 Git/模型/解释器身份仍由实际 adapter 执行时核验。
+
 ## Python 调用入口
 
 使用具体模块导入；包的 `__init__.py` 当前没有重导出 `Harness` 或 `X2EnvRequest`。
