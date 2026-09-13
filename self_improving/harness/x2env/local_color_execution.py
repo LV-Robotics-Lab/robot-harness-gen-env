@@ -17,7 +17,7 @@ from .artifacts import artifact_closure
 from .asset_advisory import AssetVisualAssessment, VisualCandidate
 from .asset_preview import AssetPreviewProof
 from .asset_revision import AssetPatch, AssetRevision
-from .assets import AssetVersion
+from .assets import AssetRegistry, AssetVersion
 from .compile import ResolvedAsset
 from .contracts import ArtifactRef, InputBundle, Model, RepairReservation, SceneIR
 from .local_color_advisory import (
@@ -345,6 +345,276 @@ def _executed(records, sha):
         )
         for p in records
     )
+
+
+def verify_color_repair_approval(
+    store, *, workflow_id: str, operation_id: str
+) -> tuple[ColorRepairCandidate, ColorRepairProposalResult, RepairReservation]:
+    """Audit a reserved attempt, including failures without an execution result.
+
+    Historical executable identity comes from the committed proposal and its transport,
+    not a newly installed executable. This function grants no execution authority.
+    """
+    snapshot = store.status(workflow_id)
+    matches = [
+        (i, op)
+        for i, op in enumerate(snapshot.operations)
+        if op.operation_id == operation_id and op.capability == "asset.revise"
+    ]
+    if len(matches) != 1 or matches[0][1].repair_reservation is None:
+        raise ValueError("color_history_missing_reservation")
+    index, operation = matches[0]
+    reservation = operation.repair_reservation
+    artifact_closure(store, (reservation.approval,))
+
+    def read(ref):
+        return json.loads(store.read_artifact(ref))
+
+    approved = read(reservation.approval)
+    candidate_ref = ArtifactRef.model_validate(approved["candidate"])
+    proposal_ref = ArtifactRef.model_validate(approved["proposal"])
+    candidate = ColorRepairCandidate.model_validate_json(store.read_artifact(candidate_ref))
+    proposal = ColorRepairProposalResult.model_validate_json(store.read_artifact(proposal_ref))
+    if (
+        reservation.kind != "asset"
+        or reservation.cost != 1
+        or reservation.failure_fingerprint != color_failure_fingerprint(candidate)
+        or proposal.candidate != candidate
+        or proposal.status != "completed"
+        or proposal.error_code is not None
+        or proposal.proposal is None
+        or proposal.proposal.declared_color != candidate.requested_color
+        or not any(
+            op.capability == "codex.asset_color"
+            and op.status == "succeeded"
+            and op.result
+            and proposal_ref in op.result.outputs
+            for op in snapshot.operations[:index]
+        )
+    ):
+        raise ValueError("color_history_reservation_mismatch")
+    bundle = InputBundle.model_validate_json(store.read_artifact(snapshot.input_bundle))
+    scene = SceneIR.model_validate_json(store.read_artifact(candidate.scene_ir))
+    entity = next((e for e in scene.entities if e.id == candidate.entity_id), None)
+    if (
+        scene.input_sha256 != bundle.request_sha256
+        or bundle.seed != snapshot.request.seed
+        or entity is None
+        or classify_color_repair(
+            store,
+            candidate.scene_ir,
+            entity,
+            candidate.version,
+            candidate.preview_proof,
+            candidate.assessment,
+        )
+        != candidate
+    ):
+        raise ValueError("color_history_candidate_mismatch")
+    patch = AssetPatch(base_color=proposal.proposal.rgba, color_mode="uniform_replace")
+    expected_approval = {
+        "authority": "harness_controller",
+        "approved": True,
+        "parent_version": candidate.parent_version,
+        "patch": patch.model_dump(mode="json", exclude_none=True),
+        "workflow_id": workflow_id,
+        "base_revision": reservation.base_revision,
+        "input_bundle": snapshot.input_bundle.model_dump(),
+        "scene_ir": candidate.scene_ir.model_dump(),
+        "candidate": candidate_ref.model_dump(),
+        "proposal": proposal_ref.model_dump(),
+        "cost": 1,
+        "failure_fingerprint": reservation.failure_fingerprint,
+    }
+    if (
+        approved != expected_approval
+        or approved.get("approved") is not True
+        or type(approved.get("cost")) is not int
+        or type(approved.get("base_revision")) is not int
+    ):
+        raise ValueError("color_history_approval_mismatch")
+    artifact_closure(store, (proposal_ref, proposal.receipt, *proposal.evidence))
+    proposal_receipt = read(proposal.receipt)
+    sha = proposal_receipt.get("executable_sha256")
+    expected_proposal = {
+        "schema_version": "x2env.local_color_proposal.v1",
+        "status": "completed",
+        "error_code": None,
+        "candidate": candidate.model_dump(mode="json"),
+        "proposal": proposal.proposal.model_dump(mode="json"),
+        "authority": "advisory_only",
+        "physical_evaluated": False,
+        "external_agent_executed": True,
+        "evidence": [ref.model_dump() for ref in proposal.evidence if ref != proposal.receipt],
+    }
+    if (
+        any(proposal_receipt.get(k) != v for k, v in expected_proposal.items())
+        or proposal_receipt.get("external_agent_executed") is not True
+        or proposal_receipt.get("physical_evaluated") is not False
+        or not isinstance(sha, str)
+        or len(sha) != 64
+        or any(c not in "0123456789abcdef" for c in sha)
+    ):
+        raise ValueError("color_history_proposal_binding_mismatch")
+    records = [read(ref) for ref in proposal.evidence if ref.media_type == "application/json"]
+    if not _executed(records, sha) or proposal.proposal.model_dump(mode="json") not in records:
+        raise ValueError("color_history_model_evidence_missing")
+    return candidate, proposal, reservation
+
+
+def verify_color_repair_result(
+    store, result_ref: ArtifactRef, *, workflow_id: str
+) -> tuple[ColorRepairCandidate, ColorRepairExecutionResult]:
+    """Audit a committed repair without new execution or live-owner authority.
+
+    The controller's successful operation is required, not inferred from CAS presence.
+    Return the original candidate and checked execution for downstream provenance binding.
+    """
+    result = ColorRepairExecutionResult.model_validate_json(store.read_artifact(result_ref))
+    snapshot = store.status(workflow_id)
+    operations = [
+        (i, op)
+        for i, op in enumerate(snapshot.operations)
+        if op.capability == "asset.revise"
+        and op.status == "succeeded"
+        and op.result
+        and result_ref in op.result.outputs
+        and result.receipt in op.result.outputs
+    ]
+    if len(operations) != 1:
+        raise ValueError("color_history_execution_not_committed")
+    _, operation = operations[0]
+    artifact_closure(store, (result_ref, result.receipt, *result.evidence))
+
+    def read(ref):
+        return json.loads(store.read_artifact(ref))
+
+    receipt = read(result.receipt)
+    expected = {
+        "schema_version": "x2env.local_color_execution.v1",
+        "status": "succeeded",
+        "error_code": None,
+        "physical_evaluated": False,
+        "parent_mismatch_preserved": True,
+        **{
+            name: getattr(result, name).model_dump(mode="json") if getattr(result, name) else None
+            for name in ("resolved", "child", "preview", "assessment")
+        },
+        "evidence": [ref.model_dump() for ref in result.evidence if ref != result.receipt],
+    }
+    if (
+        result.status != "succeeded"
+        or result.error_code is not None
+        or any(
+            getattr(result, name) is None for name in ("resolved", "child", "preview", "assessment")
+        )
+        or any(receipt.get(k) != v for k, v in expected.items())
+    ):
+        raise ValueError("color_history_result_binding_mismatch")
+    candidate_ref = ArtifactRef.model_validate(receipt["candidate"])
+    proposal_ref = ArtifactRef.model_validate(receipt["proposal"])
+    envelope_ref = ArtifactRef.model_validate(receipt["reservation"])
+    if not {candidate_ref, proposal_ref, envelope_ref} <= set(result.evidence):
+        raise ValueError("color_history_evidence_missing")
+    candidate, proposal, reservation = verify_color_repair_approval(
+        store, workflow_id=workflow_id, operation_id=operation.operation_id
+    )
+    envelope = ColorRepairReservationEnvelope.model_validate_json(store.read_artifact(envelope_ref))
+    if (
+        envelope.workflow_id != workflow_id
+        or envelope.operation_id != operation.operation_id
+        or envelope.input_bundle != snapshot.input_bundle
+        or envelope.scene_ir != candidate.scene_ir
+        or envelope.candidate != candidate_ref
+        or envelope.proposal != proposal_ref
+        or envelope.reservation != reservation
+        or ColorRepairCandidate.model_validate_json(store.read_artifact(candidate_ref)) != candidate
+        or ColorRepairProposalResult.model_validate_json(store.read_artifact(proposal_ref))
+        != proposal
+        or read(reservation.approval)["candidate"] != candidate_ref.model_dump()
+        or read(reservation.approval)["proposal"] != proposal_ref.model_dump()
+    ):
+        raise ValueError("color_history_reservation_mismatch")
+    patch = AssetPatch(base_color=proposal.proposal.rgba, color_mode="uniform_replace")
+    child, proof, assessment = result.child, result.preview, result.assessment
+    if (
+        AssetRegistry(store).inspect(child.version_sha256) != child
+        or child.parent_version != candidate.parent_version
+        or child.geometry_sha256 != candidate.version.geometry_sha256
+        or child.license != candidate.version.license
+        or child.source != candidate.version.source
+        or child.category != candidate.version.category
+        or child.asset_id != candidate.version.asset_id
+        or result.resolved
+        != ResolvedAsset(
+            entity_id=candidate.entity_id,
+            version_sha256=child.version_sha256,
+            acquisition_source="local",
+            selection="exact",
+        )
+    ):
+        raise ValueError("color_history_child_mismatch")
+    child_receipt = read(child.receipt)
+    if (
+        child_receipt.get("attribute_provenance")
+        != {
+            name: {
+                "kind": "controller_approved_revision",
+                "approval": reservation.approval.model_dump(),
+            }
+            for name in ("base_color", "color_mode")
+        }
+        or child_receipt.get("parent_version") != candidate.parent_version
+        or child_receipt.get("patch") != patch.model_dump(mode="json", exclude_none=True)
+    ):
+        raise ValueError("color_history_child_approval_mismatch")
+    parent_report = read(candidate.version.normalization_report)
+    child_report = read(child.normalization_report)
+    revised_keys = {"files", "asset_revision", "checks"}
+    if (
+        child_receipt.get("normalization_report") != child.normalization_report.model_dump()
+        or child.entrypoint != candidate.version.entrypoint
+        or {f.path for f in child.files} != {f.path for f in candidate.version.files}
+        or {k: v for k, v in child_report.items() if k not in revised_keys}
+        != {k: v for k, v in parent_report.items() if k not in revised_keys}
+        or child_report.get("files")
+        != [
+            {"path": f.path, "sha256": f.artifact.sha256, "size_bytes": f.artifact.size_bytes}
+            for f in sorted(child.files, key=lambda f: f.path)
+        ]
+        or child_report.get("asset_revision")
+        != {
+            "parent_version": candidate.parent_version,
+            "patch": patch.model_dump(mode="json", exclude_none=True),
+            "approval": reservation.approval.model_dump(),
+            "basis": "supplied_not_measured",
+            "color_replacement": child_receipt.get("color_replacement"),
+        }
+        or child_report.get("checks")
+        != {
+            **parent_report.get("checks", {}),
+            "physical_profile": "not_run",
+            "genesis_load_step": "not_run",
+            "visual_intent": "not_run",
+        }
+    ):
+        raise ValueError("color_history_normalization_mismatch")
+    preview_receipt = read(proof.receipt)
+    if (
+        proof.status != "passed"
+        or proof.image is None
+        or proof.version_sha256 != child.version_sha256
+        or proof.receipt == candidate.preview_proof.receipt
+        or preview_receipt.get("scope") != "asset_preview_scope"
+        or preview_receipt.get("status") != "passed"
+        or preview_receipt.get("version_sha256") != child.version_sha256
+        or proof.image.model_dump() not in preview_receipt.get("outputs", {}).values()
+    ):
+        raise ValueError("color_history_preview_mismatch")
+    with Image.open(BytesIO(store.read_artifact(proof.image))) as image:
+        image.verify()
+    _verify_child_assessment(store, assessment, child, proof.image, candidate.version.category)
+    return candidate, result
 
 
 def _verify_child_assessment(store, assessment, child, image, category):

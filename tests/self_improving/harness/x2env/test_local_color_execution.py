@@ -16,6 +16,227 @@ from tests.self_improving.harness.x2env.test_local_color_advisory import color_i
 from tests.self_improving.harness.x2env.test_resolver import preview_proof
 
 
+@pytest.mark.parametrize(
+    "fault",
+    [
+        None,
+        "uncommitted",
+        "receipt",
+        "preview",
+        "verdict",
+        "license",
+        "workflow",
+        "candidate",
+        "proposal",
+        "reservation",
+    ],
+)
+def test_public_history_audit_requires_bound_committed_execution(tmp_path, fault):
+    from self_improving.harness.x2env.contracts import ArtifactRef
+    from self_improving.harness.x2env.local_color_execution import verify_color_repair_result
+    from tests.self_improving.harness.x2env.test_source_router import (
+        continuation_inputs,
+        start_continuation,
+    )
+
+    store, _, snapshot, _, execution, execution_ref = continuation_inputs(tmp_path)
+    original_ref = execution_ref
+    payload = json.loads(store.read_artifact(execution.receipt))
+    if fault == "receipt":
+        payload["resolved"]["entity_id"] = "mouse"
+    if fault == "preview":
+        envelope = json.loads(store.read_artifact(ArtifactRef.model_validate(payload["candidate"])))
+        execution = execution.model_copy(
+            update={"preview": execution.preview.model_validate(envelope["preview_proof"])}
+        )
+        payload["preview"] = execution.preview.model_dump(mode="json")
+    if fault == "verdict":
+        execution = execution.model_copy(
+            update={
+                "assessment": execution.assessment.model_copy(
+                    update={
+                        "verdicts": (
+                            execution.assessment.verdicts[0].model_copy(
+                                update={"verdict": "mismatch"}
+                            ),
+                        )
+                    }
+                )
+            }
+        )
+        payload["assessment"] = execution.assessment.model_dump(mode="json")
+    if fault == "license":
+        execution = execution.model_copy(
+            update={
+                "child": execution.child.model_copy(
+                    update={
+                        "license": execution.child.license.model_copy(
+                            update={"source_url": "wrong"}
+                        )
+                    }
+                )
+            }
+        )
+        payload["child"] = execution.child.model_dump(mode="json")
+    if fault in {"workflow", "candidate", "proposal", "reservation"}:
+        env = json.loads(store.read_artifact(ArtifactRef.model_validate(payload["reservation"])))
+        if fault == "workflow":
+            env["workflow_id"] = "other-workflow"
+        elif fault == "reservation":
+            env["reservation"]["failure_fingerprint"] = "a" * 64
+        else:
+            env[fault] = execution.receipt.model_dump()
+        payload["reservation"] = store.write_artifact(
+            json.dumps(env).encode(), "application/json"
+        ).model_dump()
+    if fault not in {None, "uncommitted"}:
+        receipt = store.write_artifact(json.dumps(payload).encode(), "application/json")
+        execution = execution.model_copy(update={"receipt": receipt})
+        execution_ref = store.write_artifact(
+            execution.model_dump_json().encode(), "application/json"
+        )
+    snapshot = start_continuation(store, snapshot, execution, execution_ref)
+    if fault == "uncommitted":
+        execution_ref = store.write_artifact(
+            execution.model_dump_json(indent=2).encode(), "application/json"
+        )
+        assert execution_ref != original_ref
+    if fault:
+        with pytest.raises((ValueError, OSError, KeyError)):
+            verify_color_repair_result(store, execution_ref, workflow_id=snapshot.workflow_id)
+    else:
+        candidate, checked = verify_color_repair_result(
+            store, execution_ref, workflow_id=snapshot.workflow_id
+        )
+        assert checked == execution and candidate.parent_version == checked.child.parent_version
+
+
+@pytest.mark.parametrize("status", ["failed", "cancelled"])
+@pytest.mark.parametrize(
+    "fault",
+    [
+        None,
+        "model",
+        "model_raw",
+        "model_sha",
+        "model_receipt",
+        "model_evidence",
+        "proposal",
+        "candidate",
+        "approval",
+        "uncommitted",
+    ],
+)
+def test_failed_repair_approval_audit_requires_original_model_transport(tmp_path, status, fault):
+    from self_improving.harness.x2env.local_color_execution import verify_color_repair_approval
+
+    store, _, _, _, _, candidate_ref, proposal_ref, envelope_ref = prepared(tmp_path, fault)
+    envelope = json.loads(store.read_artifact(envelope_ref))
+    snapshot = store.status(envelope["workflow_id"])
+    operation = snapshot.operations[-1]
+    store.complete_operation(
+        snapshot,
+        ToolResult(
+            operation_id=operation.operation_id, status=status, error_code="explicit_failed_attempt"
+        ),
+        snapshot.input_bundle,
+        status=status,
+    )
+    if fault:
+        with pytest.raises((ValueError, OSError, KeyError)):
+            verify_color_repair_approval(
+                store, workflow_id=snapshot.workflow_id, operation_id=operation.operation_id
+            )
+    else:
+        candidate, proposal, reservation = verify_color_repair_approval(
+            store, workflow_id=snapshot.workflow_id, operation_id=operation.operation_id
+        )
+        assert candidate.model_dump(mode="json") == json.loads(store.read_artifact(candidate_ref))
+        assert proposal.model_dump(mode="json") == json.loads(store.read_artifact(proposal_ref))
+        assert proposal.candidate == candidate
+        assert reservation == operation.repair_reservation
+
+
+@pytest.mark.parametrize("fault", ["dimensions", "metadata", "approval", "checks"])
+def test_history_rejects_registered_child_with_uninherited_normalization(tmp_path, fault):
+    from self_improving.harness.x2env.asset_advisory import AssetVisualAssessment, VisualVerdict
+    from self_improving.harness.x2env.local_color_execution import verify_color_repair_result
+    from tests.self_improving.harness.x2env.test_source_router import (
+        continuation_inputs,
+        start_continuation,
+    )
+
+    store, registry, snapshot, _, execution, _ = continuation_inputs(tmp_path)
+
+    def put(value):
+        return store.write_artifact(json.dumps(value).encode(), "application/json")
+
+    report = json.loads(store.read_artifact(execution.child.normalization_report))
+    if fault == "dimensions":
+        report["dimensions_m"] = [3.0, 3.0, 3.0]
+    elif fault == "metadata":
+        report["normalization_was_measured"] = "unearned claim"
+    elif fault == "approval":
+        report["asset_revision"]["approval"] = execution.receipt.model_dump()
+    else:
+        report["checks"]["genesis_load_step"] = "passed"
+    report_ref = put(report)
+    receipt = json.loads(store.read_artifact(execution.child.receipt))
+    receipt["normalization_report"] = report_ref.model_dump()
+    child = registry.register(
+        execution.child.asset_id,
+        execution.child.category,
+        tmp_path / "execution/child",
+        "asset.urdf",
+        files=tuple(f["path"] for f in report["files"]),
+        normalization_report=report_ref,
+        license=execution.child.license,
+        source=execution.child.source,
+        receipt=put(receipt),
+        parent_version=execution.child.parent_version,
+    )
+    proof = preview_proof(store, child, execution.preview.image)
+    detail = json.loads(store.read_artifact(execution.assessment.verdicts[0].detail))
+    detail["candidate_id"] = child.version_sha256
+    detail_ref = put(detail)
+    verdict = VisualVerdict(
+        candidate_id=child.version_sha256, preview=proof.image, verdict="match", detail=detail_ref
+    )
+    assessment_receipt = json.loads(store.read_artifact(execution.assessment.receipt))
+    assessment_receipt["verdicts"] = [verdict.model_dump(mode="json")]
+    assessment_receipt["evidence"] = [detail_ref.model_dump()]
+    assessment = AssetVisualAssessment(
+        status="completed",
+        verdicts=(verdict,),
+        receipt=put(assessment_receipt),
+        evidence=(detail_ref,),
+    )
+    payload = json.loads(store.read_artifact(execution.receipt))
+    result = execution.model_copy(
+        update={
+            "child": child,
+            "preview": proof,
+            "assessment": assessment,
+            "resolved": execution.resolved.model_copy(
+                update={"version_sha256": child.version_sha256}
+            ),
+        }
+    )
+    for name in ("child", "preview", "assessment", "resolved"):
+        payload[name] = getattr(result, name).model_dump(mode="json")
+    receipt_ref = put(payload)
+    result = result.model_copy(
+        update={
+            "receipt": receipt_ref,
+            "evidence": (*[r for r in result.evidence if r != execution.receipt], receipt_ref),
+        }
+    )
+    result_ref = put(result.model_dump(mode="json"))
+    start_continuation(store, snapshot, result, result_ref)
+    with pytest.raises(ValueError, match="color_history_normalization"):
+        verify_color_repair_result(store, result_ref, workflow_id=snapshot.workflow_id)
+
+
 def prepared(tmp_path, fault=None, pending=False):
     from self_improving.harness.x2env.local_color_execution import color_failure_fingerprint
 
@@ -56,7 +277,7 @@ print(json.dumps({'type':'turn.completed'}))
         backend, candidate, output_root=tmp_path / "proposal", timeout=10
     )
     assert proposal.status == "completed"
-    if fault == "model":
+    if fault in {"model", "model_raw", "model_sha", "model_receipt", "model_evidence"}:
         kept = []
         for ref in proposal.evidence:
             if ref == proposal.receipt:
@@ -66,11 +287,19 @@ print(json.dumps({'type':'turn.completed'}))
                 if ref.media_type == "application/json"
                 else None
             )
-            if isinstance(body, dict) and "start_ticks" in body:
+            if fault == "model" and isinstance(body, dict) and "start_ticks" in body:
+                continue
+            if fault == "model_raw" and body == proposal.proposal.model_dump(mode="json"):
                 continue
             kept.append(ref)
         body = json.loads(store.read_artifact(proposal.receipt))
         body["evidence"] = [ref.model_dump() for ref in kept]
+        if fault == "model_sha":
+            body["executable_sha256"] = "b" * 64
+        if fault == "model_receipt":
+            body["proposal"]["rgba"][0] = 0.1
+        if fault == "model_evidence":
+            body["evidence"] = []
         replaced = store.write_artifact(json.dumps(body).encode(), "application/json")
         proposal = proposal.model_copy(update={"receipt": replaced, "evidence": (*kept, replaced)})
     if fault == "proposal":

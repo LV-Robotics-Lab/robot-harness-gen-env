@@ -8,6 +8,37 @@ from self_improving.harness.x2env.contracts import X2EnvRequest
 from self_improving.harness.x2env.deployment import build_harness, load_deployment
 
 
+def test_request_resolver_continuation_reuses_assembly_without_local_queries(tmp_path):
+    from self_improving.harness.x2env.contracts import InputBundle
+    from self_improving.harness.x2env.deployment import Deployment, _RequestResolver
+    from tests.self_improving.harness.x2env.test_source_router import (
+        continuation_inputs,
+        start_continuation,
+    )
+
+    store, _, snapshot, original, execution, execution_ref = continuation_inputs(tmp_path)
+    snapshot = start_continuation(store, snapshot, execution, execution_ref)
+    resolver = _RequestResolver(
+        Deployment(state_dir=str(store.database.parent)),
+        store,
+        None,
+        snapshot.request,
+        InputBundle.model_validate_json(store.read_artifact(snapshot.input_bundle)),
+    )
+    result = resolver.resume_after_local_repairs(
+        original,
+        (execution_ref,),
+        workflow_id=snapshot.workflow_id,
+        allowed_sources=snapshot.request.allowed_sources,
+        allow_cousin=False,
+        output_root=tmp_path / "deployment-continuation",
+    )
+    assert result.status == "blocked" and not result.pending_color_repairs
+    assert [a.entity_id for a in result.resolved.assets] == ["box", "accepted"]
+    assert not (tmp_path / "deployment-continuation/local").exists()
+    assert not (tmp_path / "deployment-continuation/previews").exists()
+
+
 def test_explicit_design_policy_reaches_controller_without_prompt_authorization(tmp_path):
     import hashlib
 

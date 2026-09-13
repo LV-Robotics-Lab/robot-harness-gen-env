@@ -151,7 +151,7 @@ def build_harness(config):
                 Path(config.codex.executable), config.codex.sha256, config.codex.model, store
             )
 
-    replay = None
+    replay = preview = None
     if config.genesis:
         from .replay import GenesisReplayExecutor
 
@@ -162,12 +162,20 @@ def build_harness(config):
                 denied_roots=config.genesis.denied_roots,
             )
 
+        def preview(store, output_root, seed):
+            from .asset_preview import AssetPreviewRenderer
+
+            return AssetPreviewRenderer(
+                store, config.genesis.runtime_roots.model_dump(), output_root, seed
+            ).render
+
     return Harness(
         Path(config.state_dir),
         scene_design_policy=config.scene_design_policy,
         backend_factory=backend,
         compile_policy=config.compile_policy,
         replay_factory=replay,
+        asset_preview_factory=preview,
         contextual_resolver_factory=lambda store, backend, request, bundle: _RequestResolver(
             config, store, backend, request, bundle
         ),
@@ -187,6 +195,19 @@ class _RequestResolver:
         )
 
     def resolve(self, scene_ir, **kwargs):
+        return self._build_router(scene_ir, **kwargs).resolve(scene_ir, **kwargs)
+
+    def resume_after_local_repairs(self, original_resolution_ref, repair_result_refs, **kwargs):
+        from .resolver import ResolutionResult
+
+        original = ResolutionResult.model_validate_json(
+            self.store.read_artifact(original_resolution_ref)
+        )
+        return self._build_router(original.resolved.scene_ir, **kwargs).resume_after_local_repairs(
+            original_resolution_ref, repair_result_refs, **kwargs
+        )
+
+    def _build_router(self, scene_ir, **kwargs):
         from .asset_preview import AssetPreviewRenderer
         from .assets import AssetRegistry
         from .resolver import LocalAssetResolver
@@ -304,9 +325,7 @@ class _RequestResolver:
         reconstruction = (
             _ConfiguredSource(self.store, reconstruction_factory) if config.reconstruction else None
         )
-        return SourceRouter(
-            self.store, local=local, web=web, reconstruction=reconstruction
-        ).resolve(scene_ir, **kwargs)
+        return SourceRouter(self.store, local=local, web=web, reconstruction=reconstruction)
 
 
 def select_reconstruction_image(store, bundle, scene_ir, entity_id, *, output_root, timeout=60):

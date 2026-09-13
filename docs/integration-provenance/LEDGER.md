@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C10-COLOR-CONTINUATION — 原 local 之后的受控新版本续点
+
+- `origin_owner`：Yuxin 原检索/a6；`integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `6cd060e` 颜色执行、`c20b3cd` pending 路由；原 Yuxin 来源链不变。
+- `target_paths`：x2env/harness.py、source_router.py、deployment.py、local_color_execution.py 与对应测试。
+- `integration_method`：单 workflow 的共享成本预留、不可变 child/new preview、原已提交证据历史审计，
+  原 local 只查一次，后续来源仅访问未执行分支；失败保留 partial，不授执行恢复权限。
+- `verification`：contract_pass；主线程 91 项通过，外部模型/渲染明确替身；最终包链另片接入。
+- `recorded_git_authors`：原文件历史和本提交元数据；不推断自然人身份映射，无许可升级。
+
 ## INT-CANONICAL-C13-G2B — 历史 campaign/Qwen 脚本退役
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；历史脚本原 Git 作者保留。

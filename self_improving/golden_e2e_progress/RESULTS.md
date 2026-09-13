@@ -1,5 +1,30 @@
 # 进度与结果
 
+## 2026-09-13 C10 local 颜色单 workflow 续接
+
+- 同一 journal 保留初始 blocked asset.resolve、codex.asset_color、成本 1 asset.revise、成功
+  asset.resolve；新版本必须新预览/原 a6 MATCH。原 partial 保留，local 不重查，仅普通 missing 继续
+  尚未执行的 web/reconstruction。deployment 复用同一 provider 装配与真实 preview renderer。
+- 公共 historical approval/result 审计不要求当前 live owner，却要求原已提交提案、原始输出/执行
+  回执、精确批准、不可变 child 几何/来源/许可及 normalization 继承；failed/cancelled 预留也可审。
+- Public Harness 6 项测试涵盖 plain/contextual、失配、取消、真实短子进程失联及已提交 child 续接；
+  失联无结果保守 blocked 审计，保留成本，不重做 mutation。测试模型/renderer 明确替身。
+- 主线程四组最终 91 passed/10.08s，ruff 通过；子 agent 广义回归 148 passed/10.43s。
+  normalization 继承攻击先 RED 再 GREEN。完成包颜色链接线另片进行，不记真实 E2E 成功。
+
+## 2026-09-13 S04 fixed d08aaa1 模型超时
+
+- 固定 clean `d08aaa127735df1cbcf2f601b11e9f912463db0f`，原 S04 文本/图像/seed41/web-only 不变。
+  workflow `c8f210e5-099e-4429-92b5-aea74ae31747` failed/model_timeout、revision 2、owner null；
+  外层 600.573923s、CLI 600.442863s，ingest 0.019635s、interpret 600.220204s。
+- 模型只返回启动两事件，没有提案；新增分类修复尚未被执行到，未 query/web/ground/Genesis。
+  PID 1917010 经 SIGINT 后 reaped/exit 1，无外层强杀、无原样重试，只有原图与日志。
+- 证据目录 `/home/jingxiang/bingsheng/canonical-s04-design2-20260913.WASmJr`：audit SHA256
+  `3b940d757f921fc44fb0ca1bc85cdf5a9507ed740c5e537c338703d56398bf07`；run SHA256
+  `c28a64275cba15155b164f4d3c7ecd9d6def6f5fa70564276a8a769b34069839`；failure manifest
+  `a2748669723ffc02f88a5222884e6d8214bc41a07d0e4a612abfefb0a2db497e`。
+  继续与短时成功的解释阶段做只读对照；尚无已确认根因，不更改原结果。
+
 ## 2026-09-13 C13 G2b 历史脚本入口退役
 
 - 调用点检索未发现 active Python/配置消费者后，删除 `script/run_compile_acceptance.py` 和

@@ -22,6 +22,7 @@ class Harness:
         replay_factory=None,
         contextual_resolver_factory=None,
         scene_design_policy=None,
+        asset_preview_factory=None,
     ):
         from .grounding import SceneDesignPolicy
 
@@ -35,6 +36,7 @@ class Harness:
         if resolver_factory and contextual_resolver_factory:
             raise ValueError("choose one resolver assembly")
         self._contextual_resolver_factory = contextual_resolver_factory
+        self._asset_preview_factory = asset_preview_factory
         from .skill_execution import build_capabilities
 
         self._capabilities = build_capabilities(
@@ -110,6 +112,27 @@ class Harness:
         existing = self.status(workflow_id)
         if existing.status in {"succeeded", "failed", "cancelled"}:
             return existing
+        if existing.asset_resolution is not None and existing.resolved_assets is None:
+            from .resolver import ResolutionResult
+
+            resolution = ResolutionResult.model_validate_json(
+                self._store.read_artifact(existing.asset_resolution)
+            )
+            if (
+                resolution.error_code == "local_color_repair_pending"
+                and resolution.pending_color_repairs
+            ):
+                if existing.status == "blocked" and any(
+                    op.capability in {"codex.asset_color", "asset.revise", "asset.color.reject"}
+                    and op.status in {"blocked", "failed", "cancelled"}
+                    and op.result is not None
+                    and op.result.error_code
+                    not in {"recoverable_dead_owner", "blocked_color_repair_resources"}
+                    for op in existing.operations
+                ):
+                    return existing
+                snapshot = self._store.claim(workflow_id)
+                return self._local_colors(snapshot) if snapshot.status == "active" else snapshot
         if existing.pending_scene_ir is not None and any(
             op.capability == "codex.ground"
             and op.status in {"blocked", "failed", "cancelled"}
@@ -327,11 +350,16 @@ class Harness:
                 error_code=resolution.error_code,
             )
             ready = resolution.status == "succeeded"
+            pending_color = (
+                resolution.status == "blocked"
+                and resolution.error_code == "local_color_repair_pending"
+                and bool(resolution.pending_color_repairs)
+            )
             snapshot = self._store.complete_operation(
                 snapshot,
                 result,
                 snapshot.input_bundle,
-                status="active" if ready else resolution.status,
+                status="active" if ready or pending_color else resolution.status,
                 reason=resolution.error_code,
                 required_resources=resolution.required_resources,
                 asset_resolution=resolution_ref,
@@ -339,8 +367,308 @@ class Harness:
             )
         except (ValueError, OSError, KeyError, TypeError) as error:
             return self._stage_failure(snapshot, "asset_resolution_failed", error)
+        if pending_color:
+            return self._local_colors(snapshot)
         if not ready:
             return snapshot
+        return self._ground(snapshot) if snapshot.pending_scene_ir else self._compile(snapshot)
+
+    def _color_reject(self, snapshot, code, error=None):
+        """Non-executable refusal, never a reused successful or running operation."""
+        import json
+
+        snapshot = self._store.begin_operation(snapshot, "asset.color.reject")
+        ref = self._store.write_artifact(
+            json.dumps(
+                {
+                    "error_code": code,
+                    "reason": str(error or code),
+                    "executable_repair": False,
+                    "asset_resolution": snapshot.asset_resolution.model_dump(),
+                }
+            ).encode(),
+            "application/json",
+        )
+        return self._store.complete_operation(
+            snapshot,
+            ToolResult(
+                operation_id=snapshot.operations[-1].operation_id,
+                status="blocked",
+                outputs=(ref,),
+                error_code=code,
+            ),
+            snapshot.input_bundle,
+            status="blocked",
+            reason=code,
+        )
+
+    def _local_colors(self, snapshot):
+        import json
+
+        from .assets import AssetRegistry
+        from .contracts import RepairReservation
+        from .local_color_advisory import ColorRepairProposalResult, propose_color_repair
+        from .local_color_execution import (
+            ColorRepairExecutionResult,
+            color_failure_fingerprint,
+            execute_color_repair,
+        )
+        from .resolver import ResolutionResult
+
+        original_ref = snapshot.asset_resolution
+        resolution = ResolutionResult.model_validate_json(self._store.read_artifact(original_ref))
+        if (
+            resolution.error_code != "local_color_repair_pending"
+            or not resolution.pending_color_repairs
+        ):
+            return self._color_reject(snapshot, "invalid_pending_color_resolution")
+        if self._backend is None or self._asset_preview_factory is None:
+            return self._color_reject(snapshot, "blocked_color_repair_resources")
+        for op in snapshot.operations:
+            if op.capability in {"codex.asset_color", "asset.revise"} and op.status != "succeeded":
+                code = (
+                    "color_repair_recovery_requires_audit"
+                    if op.result is None or op.result.error_code == "recoverable_dead_owner"
+                    else op.result.error_code
+                )
+                return self._color_reject(snapshot, code or "color_repair_stopped")
+        successful = []
+        for candidate in resolution.pending_color_repairs:
+            self._remaining()
+            candidate_ref = self._store.write_artifact(
+                candidate.model_dump_json().encode(), "application/json"
+            )
+            proposal_ref = execution_ref = None
+            for op in snapshot.operations:
+                if (
+                    op.status != "succeeded"
+                    or not op.result
+                    or op.capability not in {"codex.asset_color", "asset.revise"}
+                ):
+                    continue
+                for ref in op.result.outputs:
+                    if ref.media_type != "application/json":
+                        continue
+                    body = json.loads(self._store.read_artifact(ref))
+                    if not isinstance(body, dict):
+                        continue
+                    if (
+                        op.capability == "codex.asset_color"
+                        and "receipt" in body
+                        and body.get("candidate") == candidate.model_dump(mode="json")
+                    ):
+                        saved = ColorRepairProposalResult.model_validate_json(
+                            self._store.read_artifact(ref)
+                        )
+                        if saved.status != "completed":
+                            return self._color_reject(snapshot, "invalid_committed_color_proposal")
+                        proposal_ref = ref
+                    if op.capability == "asset.revise" and "receipt" in body and "resolved" in body:
+                        saved = ColorRepairExecutionResult.model_validate_json(
+                            self._store.read_artifact(ref)
+                        )
+                        saved_receipt = json.loads(self._store.read_artifact(saved.receipt))
+                        if saved_receipt.get("candidate") == candidate_ref.model_dump():
+                            if saved.status != "succeeded":
+                                return self._color_reject(
+                                    snapshot, "invalid_committed_color_execution"
+                                )
+                            execution_ref = ref
+            if execution_ref is not None:
+                successful.append(execution_ref)
+                continue
+            if proposal_ref is None:
+                snapshot = self._store.begin_operation(snapshot, "codex.asset_color")
+                operation = snapshot.operations[-1]
+                try:
+                    proposed = propose_color_repair(
+                        self._backend,
+                        candidate,
+                        output_root=self._state_dir
+                        / "attempts"
+                        / snapshot.workflow_id
+                        / operation.operation_id,
+                        timeout=self._remaining(),
+                    )
+                    proposal_ref = self._store.write_artifact(
+                        proposed.model_dump_json().encode(), "application/json"
+                    )
+                    status = "succeeded" if proposed.status == "completed" else proposed.status
+                    snapshot = self._store.complete_operation(
+                        snapshot,
+                        ToolResult(
+                            operation_id=operation.operation_id,
+                            status=status,
+                            outputs=tuple(
+                                dict.fromkeys(
+                                    (
+                                        candidate_ref,
+                                        proposal_ref,
+                                        proposed.receipt,
+                                        *proposed.evidence,
+                                    )
+                                )
+                            ),
+                            error_code=proposed.error_code,
+                        ),
+                        snapshot.input_bundle,
+                        status="active" if status == "succeeded" else status,
+                        reason=proposed.error_code,
+                    )
+                    if status != "succeeded":
+                        return snapshot
+                except (ValueError, OSError, KeyError, TypeError) as error:
+                    return self._stage_failure(snapshot, "color_proposal_failed", error)
+            try:
+                proposed = ColorRepairProposalResult.model_validate_json(
+                    self._store.read_artifact(proposal_ref)
+                )
+                if proposed.proposal is None or proposed.candidate != candidate:
+                    raise ValueError("invalid_committed_color_proposal")
+                fingerprint = color_failure_fingerprint(candidate)
+                approval = self._store.write_artifact(
+                    json.dumps(
+                        {
+                            "authority": "harness_controller",
+                            "approved": True,
+                            "parent_version": candidate.parent_version,
+                            "patch": {
+                                "base_color": list(proposed.proposal.rgba),
+                                "color_mode": "uniform_replace",
+                            },
+                            "workflow_id": snapshot.workflow_id,
+                            "base_revision": snapshot.revision,
+                            "input_bundle": snapshot.input_bundle.model_dump(),
+                            "scene_ir": candidate.scene_ir.model_dump(),
+                            "candidate": candidate_ref.model_dump(),
+                            "proposal": proposal_ref.model_dump(),
+                            "cost": 1,
+                            "failure_fingerprint": fingerprint,
+                        },
+                        sort_keys=True,
+                    ).encode(),
+                    "application/json",
+                )
+                reservation = RepairReservation(
+                    kind="asset",
+                    cost=1,
+                    failure_fingerprint=fingerprint,
+                    approval=approval,
+                    base_revision=snapshot.revision,
+                )
+                snapshot = self._store.begin_operation(
+                    snapshot, "asset.revise", repair_reservation=reservation
+                )
+            except (ValueError, OSError, KeyError, TypeError) as error:
+                code = {
+                    "repair_budget_exhausted": "revision_budget_exhausted",
+                    "repair_repeated_failure": "repeated_failure",
+                }.get(str(error), "color_repair_preflight_rejected")
+                return self._color_reject(snapshot, code, error)
+            operation = snapshot.operations[-1]
+            try:
+                envelope = self._store.write_artifact(
+                    json.dumps(
+                        {
+                            "workflow_id": snapshot.workflow_id,
+                            "operation_id": operation.operation_id,
+                            "reservation": reservation.model_dump(mode="json"),
+                            "input_bundle": snapshot.input_bundle.model_dump(),
+                            "scene_ir": candidate.scene_ir.model_dump(),
+                            "candidate": candidate_ref.model_dump(),
+                            "proposal": proposal_ref.model_dump(),
+                        },
+                        sort_keys=True,
+                    ).encode(),
+                    "application/json",
+                )
+                root = self._state_dir / "attempts" / snapshot.workflow_id / operation.operation_id
+                preview = self._asset_preview_factory(
+                    self._store, root / "preview", snapshot.request.seed
+                )
+                executed = execute_color_repair(
+                    candidate_ref,
+                    proposal_ref,
+                    envelope,
+                    store=self._store,
+                    registry=AssetRegistry(self._store),
+                    backend=self._backend,
+                    preview=preview,
+                    output_root=root / "execution",
+                    timeout=self._remaining(),
+                )
+                execution_ref = self._store.write_artifact(
+                    executed.model_dump_json().encode(), "application/json"
+                )
+                snapshot = self._store.complete_operation(
+                    snapshot,
+                    ToolResult(
+                        operation_id=operation.operation_id,
+                        status=executed.status,
+                        outputs=(execution_ref, executed.receipt),
+                        error_code=executed.error_code,
+                    ),
+                    snapshot.input_bundle,
+                    status="active" if executed.status == "succeeded" else executed.status,
+                    reason=executed.error_code,
+                )
+                if executed.status != "succeeded":
+                    return snapshot
+                successful.append(execution_ref)
+            except (ValueError, OSError, KeyError, TypeError) as error:
+                return self._stage_failure(snapshot, "color_repair_failed", error)
+        snapshot = self._store.begin_operation(snapshot, "asset.resolve")
+        operation = snapshot.operations[-1]
+        try:
+            resolver = (
+                self._contextual_resolver_factory(
+                    self._store,
+                    self._backend,
+                    snapshot.request,
+                    InputBundle.model_validate_json(
+                        self._store.read_artifact(snapshot.input_bundle)
+                    ),
+                )
+                if self._contextual_resolver_factory
+                else self._resolver
+            )
+            resumed = resolver.resume_after_local_repairs(
+                original_ref,
+                tuple(successful),
+                workflow_id=snapshot.workflow_id,
+                allowed_sources=snapshot.request.allowed_sources,
+                allow_cousin=snapshot.request.constraints.allow_cousin,
+                output_root=self._state_dir
+                / "attempts"
+                / snapshot.workflow_id
+                / operation.operation_id,
+                timeout=self._remaining(),
+            )
+            result_ref = self._store.write_artifact(
+                resumed.model_dump_json().encode(), "application/json"
+            )
+            assets_ref = self._store.write_artifact(
+                resumed.resolved.model_dump_json().encode(), "application/json"
+            )
+            snapshot = self._store.complete_operation(
+                snapshot,
+                ToolResult(
+                    operation_id=operation.operation_id,
+                    status=resumed.status,
+                    outputs=(resumed.receipt, result_ref, assets_ref),
+                    error_code=resumed.error_code,
+                ),
+                snapshot.input_bundle,
+                status="active" if resumed.status == "succeeded" else resumed.status,
+                reason=resumed.error_code,
+                asset_resolution=result_ref if resumed.status == "succeeded" else original_ref,
+                resolved_assets=assets_ref if resumed.status == "succeeded" else None,
+                required_resources=resumed.required_resources,
+            )
+            if resumed.status != "succeeded":
+                return snapshot
+        except (ValueError, OSError, KeyError, TypeError, AttributeError) as error:
+            return self._stage_failure(snapshot, "color_continuation_failed", error)
         return self._ground(snapshot) if snapshot.pending_scene_ir else self._compile(snapshot)
 
     def _ground(self, snapshot):
