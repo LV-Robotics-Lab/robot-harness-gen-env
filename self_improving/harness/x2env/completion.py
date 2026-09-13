@@ -1300,6 +1300,10 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
     bundle = InputBundle.model_validate_json(store.read_artifact(snapshot.input_bundle))
     if base.input_sha256 != bundle.request_sha256:
         raise ValueError("completion_grounding_input_mismatch")
+    if not isinstance(receipt.get("evidence"), list) or any(
+        not isinstance(ref, dict) for ref in receipt["evidence"]
+    ):
+        raise ValueError("completion_grounding_evidence_invalid")
     records = [
         read(ArtifactRef.model_validate(ref))
         for ref in receipt["evidence"]
@@ -1338,7 +1342,11 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
         "proposal.json",
     }
     transport = receipt.get("transport", {})
-    if set(transport) != names or any(ref not in receipt["evidence"] for ref in transport.values()):
+    if (
+        not isinstance(transport, dict)
+        or set(transport) != names
+        or any(ref not in receipt["evidence"] for ref in transport.values())
+    ):
         raise ValueError("completion_grounding_transport_unbound")
     transport_refs = {name: ArtifactRef.model_validate(ref) for name, ref in transport.items()}
     invocation = read(transport_refs["invocation.json"])
@@ -1409,7 +1417,13 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
     if any(
         not isinstance(event, dict)
         or not isinstance(event.get("type"), str)
-        or ("item" in event and not isinstance(event["item"], dict))
+        or (
+            "item" in event
+            and (
+                not isinstance(event["item"], dict)
+                or not isinstance(event["item"].get("type"), str)
+            )
+        )
         for event in events
     ):
         raise ValueError("completion_grounding_transport_event_invalid")

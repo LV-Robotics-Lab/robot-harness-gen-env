@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C08-V2-COMPLETION-ATTACKS — 独立producer拒绝
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness b2b63b7及v2授权合同。
+- target_paths：completion.py与test_completion_v2.py；integration_method：仅v2异常容器前置检查与公开Store攻击。
+- verification：主线程111项回归通过；runtime_verification：not_run，外部程序为明确fixture。
+- upstream_owner / recorded_git_authors：Codex原接口与Harness本次消费实现分开，不由测试替身推断真实模型成功。
+
+
 ## INT-CANONICAL-C09-MULTI-COLLISION-PREVIEW — 精确候选资源闭包
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis与原资产归属独立。

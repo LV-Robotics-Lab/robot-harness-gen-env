@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 v2完成门结构化失败与独立producer攻击
+
+- evidence含非object、transport用同键list、event.item.type为list三项原始异常先RED；现v2前置
+  容器/事件类型检查返回明确completion_grounding错误，不改v1或放松原始transport绑定。
+- 新测试通过公开Store重新推进独立producer及真实CAS复制，核授权workflow/operation、原proposal/
+  assets、固定值/context、schema/argv/process、known axis与原始events；不直接写DB或mock verifier。
+- 主线程completion及v2回归111 passed/110.54s，Ruff/diff通过。agent独立测量v2主审计
+  91.95%语句/86%分支，仍缺7行/7分支及媒体辅助路径；不是全completion或整体100%。
+- 证据`/var/tmp/canonical-completion-v2-coverage.VLgPhq/summary.json`和RED/GREEN JUnit/coverage；
+  transport为明确短测试程序，不称真实Codex或矩阵资格。
+
+
 ## 2026-09-13 多collision候选预览接线
 
 - AssetPreviewRenderer从固定四文件限制改为单link URDF精确必要闭包，支持collision/part-N.obj目录；
