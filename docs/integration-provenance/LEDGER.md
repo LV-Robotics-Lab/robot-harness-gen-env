@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C10-EVIDENCE-ATTACKS — 物理媒体拒绝证据
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：原Genesis/Gujie数学来源不变。
+- source_ref：`eaccbeb24d7983f5d73ebd9c8db6c42c4d02d604`；target_paths：test_assessment.py。
+- integration_method：公开评估接口fixture攻击，重哈希不绕过语义，真实FFmpeg编码错误视频；无生产改动。
+- verification：59项主线程通过，语句279/281、分支136/138；runtime_verification：无新Genesis运行。
+- recorded_git_authors：原实现来源与本次测试维护独立保留；不将trace_consistency升级为仿真资格。
+
 ## INT-CANONICAL-C05-CONCISE-INTENT — 有界提示性能实验
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Codex CLI原作者。

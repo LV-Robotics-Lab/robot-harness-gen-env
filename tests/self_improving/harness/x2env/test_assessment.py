@@ -176,6 +176,125 @@ def test_missing_full_second_profile_is_not_run():
     assert evaluate_physics(scene, a, b[:-1], loaded)["physical_status"] == "not_run"
 
 
+@pytest.mark.parametrize(
+    "path,value,reason",
+    [
+        (("objects", "item", "velocity"), [True, 0, 0], "invalid finite numeric"),
+        (("objects", "item", "velocity"), [float("nan"), 0, 0], "invalid finite numeric"),
+        (("objects", "item", "velocity"), [0, 0], "invalid finite numeric"),
+        (("objects", "item", "orientation_wxyz"), [2, 0, 0, 0], "nonunit quaternion"),
+        (("contact_phase",), "initial_detection", "invalid contact phase"),
+        (("time_s",), float("inf"), "nonsequential trajectory"),
+        (("contacts", 0, "a"), "table", "invalid contact pair"),
+        (("contacts", 0, "b"), "unknown", "invalid contact pair"),
+        (("contacts", 0, "normal"), [0, 0, 2], "invalid contact normal"),
+        (("contacts", 0, "penetration"), -0.001, "invalid penetration"),
+        (("contacts", 0, "force_b"), [0, 0, 0.981], "contact forces are not opposite"),
+        (("net_contact_forces",), {}, "missing net force evidence"),
+        (("objects",), {}, "incomplete object trace"),
+    ],
+)
+def test_malformed_solved_trace_cannot_be_physical_evidence(path, value, reason):
+    scene, baseline, half_dt, loaded = analytic()
+    target = baseline[1]
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    report = evaluate_physics(scene, baseline, half_dt, loaded)
+    assert report["physical_status"] == "failed"
+    assert report["error_code"] == "invalid_physical_evidence"
+    assert reason in report["reason"]
+    assert report["simulator_execution_proven"] is False
+
+
+@pytest.mark.parametrize(
+    "entity,field,value,reason",
+    [
+        ("item", "dofs", 0, "actual loaded physics differs"),
+        ("item", "mass_kg", 0.2, "actual loaded physics differs"),
+        ("table", "friction", [0.2], "loaded support friction differs"),
+        ("item", "geometry_basis", "authored_aabb", "missing actual loaded geometry"),
+        ("item", "local_visual_vertices_m", [[0, 0, 0]], "incomplete actual footprint"),
+    ],
+)
+def test_loaded_runtime_properties_cannot_be_replaced_by_authored_claims(
+    entity, field, value, reason
+):
+    scene, baseline, half_dt, loaded = analytic()
+    loaded["baseline"][entity][field] = value
+    report = evaluate_physics(scene, baseline, half_dt, loaded)
+    assert report["physical_status"] == "failed"
+    assert reason in report["reason"]
+
+
+@pytest.mark.parametrize("initial", ["pair_force", "net_force"])
+def test_initial_detection_cannot_claim_a_solved_force(initial):
+    scene, baseline, half_dt, loaded = analytic()
+    if initial == "pair_force":
+        baseline[0]["contacts"][0]["force_a"] = [0, 0, 0.981]
+    else:
+        baseline[0]["net_contact_forces"]["item"] = [0, 0, 0.981]
+    report = evaluate_physics(scene, baseline, half_dt, loaded)
+    assert report["physical_status"] == "failed"
+    assert report["error_code"] == "invalid_physical_evidence"
+
+
+def test_loaded_entity_omission_cannot_pass_complete_scene():
+    scene, baseline, half_dt, loaded = analytic()
+    del loaded["baseline"]["table"]
+    report = evaluate_physics(scene, baseline, half_dt, loaded)
+    assert report["physical_status"] == "failed"
+    assert report["reason"] == "loaded entity set differs"
+
+
+def test_missing_declared_support_is_not_an_implicit_ground_support():
+    scene, baseline, half_dt, loaded = analytic()
+    scene["relations"] = []
+    report = evaluate_physics(scene, baseline, half_dt, loaded)
+    assert report["physical_status"] == "not_run"
+    assert report["error_code"] == "unsupported_physical_profile"
+
+
+def test_tilted_support_does_not_inherit_horizontal_profile():
+    import math
+
+    scene, baseline, half_dt, loaded = analytic()
+    tilt = [math.cos(math.pi / 12), math.sin(math.pi / 12), 0.0, 0.0]
+    scene["entities"][0]["orientation_wxyz"] = tilt
+    for name, rows in (("baseline", baseline), ("half_dt", half_dt)):
+        loaded[name]["table"]["orientation_wxyz"] = tilt
+        for row in rows:
+            row["objects"]["table"]["orientation_wxyz"] = tilt
+    result = evaluate_physics(scene, baseline, half_dt, loaded)
+    assert result["physical_status"] == "not_run"
+    assert result["error_code"] == "unsupported_tilted_support_profile"
+
+
+def test_dense_measured_footprint_keeps_same_support_assertions():
+    scene, baseline, half_dt, loaded = analytic()
+    sparse = evaluate_physics(scene, baseline, half_dt, loaded)
+    assert sparse["physical_status"] == "passed"
+    for profile in loaded.values():
+        for key in ("local_visual_vertices_m", "local_collision_vertices_m"):
+            profile["item"][key] = profile["item"][key] * 10
+    dense = evaluate_physics(scene, baseline, half_dt, loaded)
+    assert dense == sparse
+
+
+def test_reversed_contact_pair_preserves_measured_support_force():
+    scene, baseline, half_dt, loaded = analytic()
+    for rows in (baseline, half_dt):
+        for row in rows:
+            contact = row["contacts"][0]
+            contact["a"], contact["b"] = contact["b"], contact["a"]
+            contact["force_a"], contact["force_b"] = contact["force_b"], contact["force_a"]
+            contact["normal"] = [0, 0, -1]
+    report = evaluate_physics(scene, baseline, half_dt, loaded)
+    assert report["physical_status"] == "passed"
+    assert report["authority"] == "trace_consistency_only"
+    assert report["simulator_execution_proven"] is False
+
+
 def bound_fixture(tmp_path):
     """Synthetic artifact producer: never a real process/simulation qualification."""
     import numpy as np
@@ -340,6 +459,88 @@ def test_bound_analytic_files_do_not_gain_live_execution_authority(tmp_path):
 
 
 @pytest.mark.parametrize(
+    "field,value,reason",
+    [
+        ("total_frames", 40, "incomplete sequential media"),
+        ("step", 1, "unbound or nonsequential capture"),
+        ("captured_at", "2026-01-01T00:00:00", "invalid camera completion timestamp"),
+        ("png_sha256", "0" * 64, "camera PNG differs"),
+        ("width", 64, "camera format differs"),
+        ("rgb_sha256", "0" * 64, "camera pixels differ"),
+        ("unique_frames", 2, "lossless movie differs from ordered camera frames"),
+    ],
+)
+def test_rehashed_media_manifest_cannot_replace_actual_capture(tmp_path, field, value, reason):
+    from pathlib import Path
+
+    kwargs = bound_fixture(tmp_path)
+    profile = kwargs["profiles"]["baseline"]
+    path = Path(profile["root"]) / "media.json"
+    media = json.loads(path.read_bytes())
+    if field in {"total_frames", "width", "unique_frames"}:
+        media[field] = value
+    else:
+        media["frames"][0][field] = value
+    path.write_text(json.dumps(media))
+    for member in profile["files"]:
+        if member["path"] == "media.json":
+            member.update(
+                sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                size_bytes=path.stat().st_size,
+            )
+    result = assess_scene(**kwargs, visual_status="passed")
+    assert result["physical_status"] == "failed"
+    assert result["reason"] == reason
+    assert result.get("execution_evidence_bound") is not True
+
+
+@pytest.mark.parametrize(
+    "filter_value,reason",
+    [
+        ("setpts=2*PTS", "video frame timing differs from capture sequence"),
+        ("scale=64:32", "video frame size/count differs"),
+    ],
+)
+def test_rehashed_encoded_video_must_match_declared_capture(tmp_path, filter_value, reason):
+    from pathlib import Path
+
+    kwargs = bound_fixture(tmp_path)
+    profile = kwargs["profiles"]["baseline"]
+    root = Path(profile["root"])
+    altered = root / "altered.mp4"
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-threads",
+            "1",
+            "-i",
+            str(root / "preview.mp4"),
+            "-vf",
+            filter_value,
+            "-fps_mode",
+            "passthrough",
+            "-c:v",
+            "libx264",
+            str(altered),
+        ],
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=30,
+    )
+    altered.replace(root / "preview.mp4")
+    for member in profile["files"]:
+        if member["path"] == "preview.mp4":
+            raw = (root / "preview.mp4").read_bytes()
+            member.update(sha256=hashlib.sha256(raw).hexdigest(), size_bytes=len(raw))
+    result = assess_scene(**kwargs, visual_status="passed")
+    assert result["physical_status"] == "failed"
+    assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
     "attack",
     [
         "wrong_input",
@@ -348,6 +549,13 @@ def test_bound_analytic_files_do_not_gain_live_execution_authority(tmp_path):
         "false_mass",
         "missing_frame",
         "nan_inertia",
+        "invalid_visual_status",
+        "relative_profile_root",
+        "missing_required_artifact",
+        "duplicate_artifact",
+        "false_execution",
+        "false_lifecycle",
+        "false_child_identity",
     ],
 )
 def test_newly_hashed_but_semantically_false_evidence_is_rejected(tmp_path, attack):
@@ -370,6 +578,37 @@ def test_newly_hashed_but_semantically_false_evidence_is_rejected(tmp_path, atta
 
     if attack == "wrong_input":
         kwargs["input_sha256"] = "d" * 64
+    elif attack == "invalid_visual_status":
+        report = assess_scene(**kwargs, visual_status="approved")
+        assert report["physical_status"] == "failed"
+        assert report["reason"] == "invalid separate visual status"
+        return
+    elif attack == "relative_profile_root":
+        kwargs["profiles"]["baseline"]["root"] = "relative-profile"
+    elif attack == "missing_required_artifact":
+        kwargs["profiles"]["baseline"]["files"] = [
+            m for m in kwargs["profiles"]["baseline"]["files"] if m["path"] != "trace.ndjson"
+        ]
+        report = assess_scene(**kwargs, visual_status="passed")
+        assert report["physical_status"] == "not_run"
+        assert report["error_code"] == "missing_profile_evidence"
+        assert report["missing_files"] == ["trace.ndjson"]
+        return
+    elif attack == "duplicate_artifact":
+        members = kwargs["profiles"]["baseline"]["files"]
+        members.append(dict(members[0]))
+    elif attack == "false_execution":
+        execution = json.loads((baseline / "result.json").read_bytes())
+        execution["simulator_executed"] = False
+        update("baseline", "result.json", execution)
+    elif attack == "false_lifecycle":
+        process = json.loads((baseline / "process.json").read_bytes())
+        process["exit_code"] = 1
+        update("baseline", "process.json", process)
+    elif attack == "false_child_identity":
+        invocation = json.loads((baseline / "invocation.json").read_bytes())
+        invocation["child_sha256"] = "0" * 64
+        update("baseline", "invocation.json", invocation)
     elif attack == "reused_process":
         update("half_dt", "process.json", json.loads((baseline / "process.json").read_bytes()))
     elif attack in ["false_geometry", "false_mass", "nan_inertia"]:
