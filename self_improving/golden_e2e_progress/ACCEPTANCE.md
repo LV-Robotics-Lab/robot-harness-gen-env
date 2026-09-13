@@ -11,6 +11,9 @@ UTC 起点 `2026-09-13T06:25:09Z`，硬截止 `2026-09-13T08:25:09Z`；单次完
 ≥8/12、三来源成功、三个不同包 copy-run、core 100% 为非阻断测量项，必须报告实际数值、
 未运行和失败，不可声称旧完整资格已满足；物理阈值、许可、闭包、fresh observation 和真实模型
 证据仍不降低。active 测试/lint/文档和正常 push 等未冲突要求保留。
+四个实际通过及源码差异见[本轮机读结果](qualification-matrix-v2-results.json)和
+[walkthrough](CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)。最后冻结测试/Git结果写在其中固定的
+外部push-audit记录，避免为追加结果反复改变已测身份；4/4本身不授予push或旧正式资格。
 原 v1 数据不变；以下为历史完整合同，其中冲突的范围/预算门不再阻断本窗口。
 
 状态：accepted_matrix_v1_frozen。权威为已批准实施计划和用户允许替代重建后端的补充。

@@ -1,0 +1,333 @@
+{
+  "schema_version": "x2env.matrix_v2_results.v1",
+  "matrix_path": "qualification-matrix-v2.json",
+  "case_gate": "passed",
+  "successes": 4,
+  "required_cases": 4,
+  "v1_passed": false,
+  "v1_results_unchanged": true,
+  "cases": [
+    {
+      "case": "S01",
+      "input": {
+        "id": "S01",
+        "seed": 11,
+        "modality": "text",
+        "prompt": "在桌面放一个粉红色鼠标。",
+        "media": [],
+        "source_policy": "default",
+        "purpose": "One pink mouse supported by a table; no injected dimensions or pose.",
+        "required": true
+      },
+      "workflow": "90f8a08e-e145-44e9-b7f6-b1b325f641ad",
+      "source_commit": "da78d4026084ec8da0f771230a8abf2c82bbff7f",
+      "status": "真实通过",
+      "workflow_status": "succeeded",
+      "failure_stage": null,
+      "wall_seconds": 339.02346736507025,
+      "source_policy": "default",
+      "environment_package": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/requested-output/environment",
+      "manifest": {
+        "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/requested-output/environment/manifest.json",
+        "sha256": "49918f237e09b6a81fae127d241eb47c82784a5e6ab9bdeec83cfb86f5753338",
+        "size_bytes": 97642
+      },
+      "physical_status": "passed",
+      "visual_status": "passed",
+      "reports": {
+        "input_bundle": {
+          "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/state/cas/ce/ce8d0fa0502523ae9cac91b36e3f258a8b85a3d2958d4cbf54a207a3889351b7",
+          "sha256": "ce8d0fa0502523ae9cac91b36e3f258a8b85a3d2958d4cbf54a207a3889351b7",
+          "size_bytes": 523
+        },
+        "proposal": {
+          "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/state/cas/05/0538720babc717b023978cf8806061056f67b6df937c584439ef5f32879de992",
+          "sha256": "0538720babc717b023978cf8806061056f67b6df937c584439ef5f32879de992",
+          "size_bytes": 9119
+        },
+        "scene_ir": {
+          "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/state/cas/39/39727edca06f397ed33a900c8920b7b8fe1e279cc5e5f0b75633ab4e025bbc96",
+          "sha256": "39727edca06f397ed33a900c8920b7b8fe1e279cc5e5f0b75633ab4e025bbc96",
+          "size_bytes": 4385
+        },
+        "grounding": {
+          "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/state/cas/ff/ff8d2560a7f53c23e82db7df260e5c2b80c6034b697c20c529c1c1ee7f4eb1eb",
+          "sha256": "ff8d2560a7f53c23e82db7df260e5c2b80c6034b697c20c529c1c1ee7f4eb1eb",
+          "size_bytes": 15143
+        },
+        "resolved_assets": {
+          "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/state/cas/bd/bd4b82d69c368e61f0a805d23b3b136463683862cac7be981cf80bb161eb51b9",
+          "sha256": "bd4b82d69c368e61f0a805d23b3b136463683862cac7be981cf80bb161eb51b9",
+          "size_bytes": 308
+        },
+        "replay_result": {
+          "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/state/cas/62/6269c6c3d65ad3125e5becbadface5db1805f8259bbc47e15ba59851306d15f2",
+          "sha256": "6269c6c3d65ad3125e5becbadface5db1805f8259bbc47e15ba59851306d15f2",
+          "size_bytes": 18805
+        },
+        "observation": {
+          "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/state/cas/f3/f3a5dde5ca1a2d695cfd44da75fd39b146196059c9c1259758a59f3bbf8bbd14",
+          "sha256": "f3a5dde5ca1a2d695cfd44da75fd39b146196059c9c1259758a59f3bbf8bbd14",
+          "size_bytes": 1079
+        },
+        "diagnosis": {
+          "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/state/cas/3c/3ca0a54e439b7b94bccbc79243db6993ccf6c52de8b8e190afb326cef7b956c4",
+          "sha256": "3ca0a54e439b7b94bccbc79243db6993ccf6c52de8b8e190afb326cef7b956c4",
+          "size_bytes": 881
+        },
+        "validation": {
+          "path": "/var/tmp/canonical-matrix-v2-text-multimodal-r2.HKsm7Z/S01/state/cas/05/05914f410dbb0ebd180c94838311a1f48a7335849346242b1b38a716d1f01210",
+          "sha256": "05914f410dbb0ebd180c94838311a1f48a7335849346242b1b38a716d1f01210",
+          "size_bytes": 563
+        }
+      }
+    },
+    {
+      "case": "S02",
+      "input": {
+        "id": "S02",
+        "seed": 23,
+        "modality": "image",
+        "prompt": null,
+        "media": [
+          "inputs/centered-red-cube.png"
+        ],
+        "source_policy": "default",
+        "purpose": "Interpret the actual reference image without hidden user text.",
+        "required": true
+      },
+      "workflow": "108e9fbe-8b82-4ad0-80ef-d3e17fc42cd8",
+      "source_commit": "e754ff97d047d4d994b992e3738ccc99dbc0d93f",
+      "status": "真实通过",
+      "workflow_status": "succeeded",
+      "failure_stage": null,
+      "wall_seconds": 290.755650312989,
+      "source_policy": "default",
+      "environment_package": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/requested-output/environment",
+      "manifest": {
+        "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/requested-output/environment/manifest.json",
+        "sha256": "4ec92c7c828c4c4f78590281445ac6ba4baf1202d85c1240b94ad1310a7bc530",
+        "size_bytes": 47435
+      },
+      "physical_status": "passed",
+      "visual_status": "passed",
+      "reports": {
+        "input_bundle": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/state/cas/5a/5af458af79232fa48f9644d7be2cf5ed32dc3db811b90e82ef276a7424271dfe",
+          "sha256": "5af458af79232fa48f9644d7be2cf5ed32dc3db811b90e82ef276a7424271dfe",
+          "size_bytes": 755
+        },
+        "proposal": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/state/cas/18/187aed6efeeac0f08bc110da84e6653494364ded665b1091213bbdfe70da9e69",
+          "sha256": "187aed6efeeac0f08bc110da84e6653494364ded665b1091213bbdfe70da9e69",
+          "size_bytes": 8487
+        },
+        "scene_ir": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/state/cas/c1/c1e95a9ec6dc6651240c7bb85451435a29c936545e9ca412df7fb10ae307f037",
+          "sha256": "c1e95a9ec6dc6651240c7bb85451435a29c936545e9ca412df7fb10ae307f037",
+          "size_bytes": 4447
+        },
+        "grounding": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/state/cas/63/634a4f88f916c84e941ba903f318f2523d04154b61be80f978511014e87e389e",
+          "sha256": "634a4f88f916c84e941ba903f318f2523d04154b61be80f978511014e87e389e",
+          "size_bytes": 14756
+        },
+        "resolved_assets": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/state/cas/7d/7dd7002e899149e0be6a8a36283adb6374976f8a64bc1b0fc0145521a39296cb",
+          "sha256": "7dd7002e899149e0be6a8a36283adb6374976f8a64bc1b0fc0145521a39296cb",
+          "size_bytes": 310
+        },
+        "replay_result": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/state/cas/f6/f68ea44dcd65d8ec8e432de30e485c50fb76d202b267a53b0dba5e40378dca60",
+          "sha256": "f68ea44dcd65d8ec8e432de30e485c50fb76d202b267a53b0dba5e40378dca60",
+          "size_bytes": 18805
+        },
+        "observation": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/state/cas/29/292da318e0e6030db810c83b2bdf7b556e57b97d096865ac132e774272c7c508",
+          "sha256": "292da318e0e6030db810c83b2bdf7b556e57b97d096865ac132e774272c7c508",
+          "size_bytes": 1079
+        },
+        "diagnosis": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/state/cas/c9/c9cec33a4ebd5c840bfab30bdb250489f8da7222f8b86914c65ff603ccf4c128",
+          "sha256": "c9cec33a4ebd5c840bfab30bdb250489f8da7222f8b86914c65ff603ccf4c128",
+          "size_bytes": 1008
+        },
+        "validation": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S02/state/cas/1b/1b086cc2018f7cad62448848d45aa49e73e0ab6a1ac4c995be6985e389ee6008",
+          "sha256": "1b086cc2018f7cad62448848d45aa49e73e0ab6a1ac4c995be6985e389ee6008",
+          "size_bytes": 564
+        }
+      }
+    },
+    {
+      "case": "S03",
+      "input": {
+        "id": "S03",
+        "seed": 37,
+        "modality": "video",
+        "prompt": null,
+        "media": [
+          "inputs/centered-red-cube.mp4"
+        ],
+        "source_policy": "default",
+        "purpose": "Recover a static environment from the original video, not actions; this purpose is not user text.",
+        "required": true
+      },
+      "workflow": "6e1d0f79-a688-47d4-8bf2-e64e2271f39c",
+      "source_commit": "e754ff97d047d4d994b992e3738ccc99dbc0d93f",
+      "status": "真实通过",
+      "workflow_status": "succeeded",
+      "failure_stage": null,
+      "wall_seconds": 312.47769345191773,
+      "source_policy": "default",
+      "environment_package": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/requested-output/environment",
+      "manifest": {
+        "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/requested-output/environment/manifest.json",
+        "sha256": "68f1b0e7d11cc7665e69dacc007998b594cde8807b94c6b74233ab448c72c267",
+        "size_bytes": 52916
+      },
+      "physical_status": "passed",
+      "visual_status": "passed",
+      "reports": {
+        "input_bundle": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/state/cas/5e/5e4d460d09bb0602f35ab3875c46b0b52243a74ae00628d8bcb9b76dfcfc8b7a",
+          "sha256": "5e4d460d09bb0602f35ab3875c46b0b52243a74ae00628d8bcb9b76dfcfc8b7a",
+          "size_bytes": 1027
+        },
+        "proposal": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/state/cas/df/df71c1aa0ca967e5fa52ceb6274dc12bbebb88e175268bafecde13d2ecf613d8",
+          "sha256": "df71c1aa0ca967e5fa52ceb6274dc12bbebb88e175268bafecde13d2ecf613d8",
+          "size_bytes": 9152
+        },
+        "scene_ir": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/state/cas/45/45012567789c08f1d8c2ed745c21c1b08cd252ca2426fe566190e26924a81d7f",
+          "sha256": "45012567789c08f1d8c2ed745c21c1b08cd252ca2426fe566190e26924a81d7f",
+          "size_bytes": 4365
+        },
+        "grounding": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/state/cas/ac/accee0977fe52a6763f31c86b14fba26bda37deaa6d2ab5285ac70194789d299",
+          "sha256": "accee0977fe52a6763f31c86b14fba26bda37deaa6d2ab5285ac70194789d299",
+          "size_bytes": 14446
+        },
+        "resolved_assets": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/state/cas/1a/1ada1e41476d11b977c6b4b67f461fa687297440ec318beb72041bc38e637783",
+          "sha256": "1ada1e41476d11b977c6b4b67f461fa687297440ec318beb72041bc38e637783",
+          "size_bytes": 310
+        },
+        "replay_result": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/state/cas/52/524b7744a4480c9a262337c8262d74b15d651c03a37f0feb925313e99500110e",
+          "sha256": "524b7744a4480c9a262337c8262d74b15d651c03a37f0feb925313e99500110e",
+          "size_bytes": 18805
+        },
+        "observation": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/state/cas/6e/6e08b5448d3fe03189c97775ad2f5093342e9526f9f5cb51eec6adbc1548b7b5",
+          "sha256": "6e08b5448d3fe03189c97775ad2f5093342e9526f9f5cb51eec6adbc1548b7b5",
+          "size_bytes": 1079
+        },
+        "diagnosis": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/state/cas/fa/faa680b2b0dde3660504e6da7613549ae7c3bc1bfa86e0afb64ae8be2d9dd4b9",
+          "sha256": "faa680b2b0dde3660504e6da7613549ae7c3bc1bfa86e0afb64ae8be2d9dd4b9",
+          "size_bytes": 795
+        },
+        "validation": {
+          "path": "/var/tmp/canonical-matrix-v2-context-fix-20260913.L5g8GB/S03/state/cas/37/3769f206185af990772bb342cafe55240fa981274687d986724f67aa01a9ddb6",
+          "sha256": "3769f206185af990772bb342cafe55240fa981274687d986724f67aa01a9ddb6",
+          "size_bytes": 563
+        }
+      }
+    },
+    {
+      "case": "S04",
+      "input": {
+        "id": "S04",
+        "seed": 41,
+        "modality": "multimodal",
+        "prompt": "参考图片，在桌面放一个蓝色方块，颜色以文字要求为准。",
+        "media": [
+          "inputs/centered-red-cube.png"
+        ],
+        "source_policy": "default",
+        "purpose": "Preserve the reference object category and bind explicit blue text override with provenance.",
+        "required": true
+      },
+      "workflow": "04c11992-8fec-4e11-9623-8f6709aedf55",
+      "source_commit": "9d5909b1a53732254801ff7ad9a4af678d95aab9",
+      "status": "真实通过",
+      "workflow_status": "succeeded",
+      "failure_stage": null,
+      "wall_seconds": 383.3912247150438,
+      "source_policy": "default",
+      "environment_package": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/requested-output/environment",
+      "manifest": {
+        "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/requested-output/environment/manifest.json",
+        "sha256": "c4a85ff0cd41a3a274cde577a2f3c63a1ddf255f2eca33b704eef22a5603fee9",
+        "size_bytes": 105960
+      },
+      "physical_status": "passed",
+      "visual_status": "passed",
+      "reports": {
+        "input_bundle": {
+          "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/state/cas/63/63112e8dc74d35e65bcf22a0ddd830c1877222bbb79297c8a8a6cad2148ac695",
+          "sha256": "63112e8dc74d35e65bcf22a0ddd830c1877222bbb79297c8a8a6cad2148ac695",
+          "size_bytes": 875
+        },
+        "proposal": {
+          "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/state/cas/90/909b17d2c65eddb93f7eaa1c6b958a34d94539f2ad170612e8b9e83db34ed1b4",
+          "sha256": "909b17d2c65eddb93f7eaa1c6b958a34d94539f2ad170612e8b9e83db34ed1b4",
+          "size_bytes": 9148
+        },
+        "scene_ir": {
+          "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/state/cas/e5/e5a5cc32987f52e7c3ad9e49525093c7bd4f16ac351f70dc603ff2a55a682823",
+          "sha256": "e5a5cc32987f52e7c3ad9e49525093c7bd4f16ac351f70dc603ff2a55a682823",
+          "size_bytes": 5006
+        },
+        "grounding": {
+          "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/state/cas/13/1368d1c0607dac146a8154c8cbca2e66eaa2963233cdaddd832f56ac9ea93db1",
+          "sha256": "1368d1c0607dac146a8154c8cbca2e66eaa2963233cdaddd832f56ac9ea93db1",
+          "size_bytes": 15444
+        },
+        "resolved_assets": {
+          "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/state/cas/9d/9d7bdd8266fcd8d99599450af5b06bc286218ce45feedac535ab3b1fe969dfb8",
+          "sha256": "9d7bdd8266fcd8d99599450af5b06bc286218ce45feedac535ab3b1fe969dfb8",
+          "size_bytes": 311
+        },
+        "replay_result": {
+          "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/state/cas/3c/3ce30a9d855cf09bc33c230c814fdb34b233c11714eb18149e5949a920e08ed4",
+          "sha256": "3ce30a9d855cf09bc33c230c814fdb34b233c11714eb18149e5949a920e08ed4",
+          "size_bytes": 18777
+        },
+        "observation": {
+          "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/state/cas/70/707aa96ad5dc85aaeeebb3c8e3d7dba46a3ddb5943877e083211e28a55ac7124",
+          "sha256": "707aa96ad5dc85aaeeebb3c8e3d7dba46a3ddb5943877e083211e28a55ac7124",
+          "size_bytes": 1079
+        },
+        "diagnosis": {
+          "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/state/cas/15/15de02506cf586b6becb4661de9fab66666e93b172c6289a810eeb9fe89dccf5",
+          "sha256": "15de02506cf586b6becb4661de9fab66666e93b172c6289a810eeb9fe89dccf5",
+          "size_bytes": 862
+        },
+        "validation": {
+          "path": "/var/tmp/canonical-matrix-v2-s04-r4.66Jgpe/S04/state/cas/23/230c76f8f492fd35c3f82bcbcd85f9042a466da5611bff935e24f7cfbea3fd7e",
+          "sha256": "230c76f8f492fd35c3f82bcbcd85f9042a466da5611bff935e24f7cfbea3fd7e",
+          "size_bytes": 563
+        }
+      }
+    }
+  ],
+  "full_absolute_asset_media_log_inventory": {
+    "path": "/home/jingxiang/bingsheng/canonical-matrix-v2-push-audit-20260913.cKTw0K/evidence-index.json",
+    "sha256": "15f9e7608001195eb68487dfc46416829491b71e535e87b40973aeefe523d87c"
+  },
+  "copy_run": {
+    "status": "真实通过",
+    "case": "S01",
+    "summary": "/var/tmp/canonical-matrix-v2-copy-2T6YQtGX/summary.json",
+    "source_commit": "da78d4026084ec8da0f771230a8abf2c82bbff7f",
+    "original_roots_denied": 9,
+    "wall_seconds": 125.649183
+  },
+  "push_is_not_implied_by_case_gate": true,
+  "final_push_audit": "/home/jingxiang/bingsheng/canonical-matrix-v2-push-audit-20260913.cKTw0K/push-audit.json",
+  "robot_policy_evaluated": false,
+  "data_collection_evaluated": false
+}

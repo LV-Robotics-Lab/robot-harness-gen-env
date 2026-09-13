@@ -1,5 +1,22 @@
 # 进度与结果
 
+## 2026-09-13 matrix v2四例及复制运行通过，进入最终push审计
+
+- S01 da78d40/339.200397s，S02 e754ff9/290.985332s，S03 e754ff9/312.627s，
+  S04 9d5909b/383.564632s，全部公共默认资产策略、真实受管理模型/Genesis、同workflow终态succeeded。
+  原输入/seed逐一吻合v2；视觉与物理分别passed，不回填任何前序失败或旧matrix v1。
+- 主线程只读核SQLite/public stdout一致、每个真实package成员完整bytes/SHA及原输入绑定通过；
+  完整绝对路径与逐阶段证据在[机读结果](qualification-matrix-v2-results.json)及
+  [walkthrough](CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)。S04成功未触发syntax regeneration，
+  该新分支仍仅替身测试；不扩大真实fallback主张。
+- S01独立copy根`/var/tmp/canonical-matrix-v2-copy-2T6YQtGX`，125.649183s、9原根拒读、双dt/26物理项、
+  新图片和41帧连续视频通过。执行版本da78d40，post-step reset/robot/data未验证。
+- e754ff9六组+root+merge全通过802.83s，root2398 passed/1 skipped，core7557/8213语句、2852/3382分支；
+  缺656语句/530分支。最新坏JSON导出23项、语法重生成78项通过；最终冻结同源回归另存最终审计记录。
+- d9898f7历史坏JSON失败导出真实通过0.00445s，原failed和8095 bytes不改，标不完整解析，非成功环境。
+- 独立用户入口配置/两父资产登记/help/非法输入拒绝通过，无新模型/仿真；四种可执行命令见用户指南。
+  最后测试/Git/远端审计路径固定为`/home/jingxiang/bingsheng/canonical-matrix-v2-push-audit-20260913.cKTw0K/push-audit.json`。
+
 ## 2026-09-13 S04模型语法失败与有界格式重生成
 
 - e754ff9 S04第三次50.793268s，workflow`49bfce32-4183-4051-993f-e6447ae9a01e`，

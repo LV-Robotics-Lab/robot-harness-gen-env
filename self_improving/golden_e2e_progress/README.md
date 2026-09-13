@@ -6,6 +6,8 @@
 
 ## 文件地图
 
+- `CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md`：本轮实施walkthrough、真实案例与复制运行、最终push审计入口；当前状态以文内明确结论为准。
+
 - `CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md`：C08/C09动态支撑拓扑、真实面域与多实体设计补全增量契约；尚未实现的能力不升级为通过。
 
 - `CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`：当前已批准 canonical 实施计划；包含目标模块、
@@ -48,6 +50,14 @@
    内容 manifest/hash 后才能成为来源证据。
 
 ## 当前阶段
+
+2026-09-13最新matrix v2四简单例全部真实成功，S01已独立复制load/step/新媒体通过；
+当前只做最终冻结测试、来源/Git审计和条件满足后的普通push，不创建main PR。
+精确运行版本、失败和剩余能力见[本轮walkthrough](CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)及
+[机读结果](qualification-matrix-v2-results.json)。最后外部审计路径固定在walkthrough内，
+不把4/4当作旧v1资格、全来源成功或机器人能力。固定模型max、已声明本机入口可自行测试。
+
+## Canonical matrix v1启动时基线（历史）
 
 2026-09-13 用户已批准 canonical x2env 合并计划，Qualification Matrix v1 冻结：目标收敛为三个 public Skills、同一
 Harness 和同一多模态入口，清理旧 experiment/limited-preview/MCP 活跃路径，并在保护

@@ -1,5 +1,16 @@
 # 功能级整合台账
 
+## INT-CANONICAL-MATRIX-V2-REAL — 四简单例及隔离交付
+
+- source_refs：S01 da78d40、S02/S03 e754ff9、S04 9d5909b；具体workflow/输入/资产/媒体/版本在v2结果索引。
+- origin_owner：本轮Harness编排为Bingsheng workstream；upstream_owner：Genesis、Codex、Yuxin复用实现及
+  各资产许可证作者分别保留，不用用户x2env1.0署名覆盖Cesium等第三方资产。
+- integration_method：同一CLI/controller、默认provider策略、实际新颜色child、严格完成门及可迁移包；
+  结构颜色e755421仅忠实传递SceneIR RGBA，未改布局/物理阈值。未复制Gujie dirty bytes或接入新插件系统。
+- verification：四例真实成功、S01独立拒读9原根copy/run、新媒体/物理通过；当前web/reconstruction部署未配置。
+  d9898f7失败导出只在失败路径保不可解析JSON，正常路径严格；真实原坏8095bytes新导出核验通过。
+- runtime_verification：仅已列Genesis刚体profile；正式资格、通用重建、robot/data均未授予。recorded_git_authors见逐功能Git。
+
 ## INT-CANONICAL-INTERPRET-SYNTAX — 单次同预算格式重生成
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：e754ff9实际S04模型日志。

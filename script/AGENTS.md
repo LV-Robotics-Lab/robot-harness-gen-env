@@ -31,8 +31,9 @@
 
 ### Testing Requirements（测试要求）
 - 场景脚本覆盖来自 `tests/scene_gen/`；旧 qualified replay 执行与资格图已退役，固定历史从 Git 恢复。
-- 改测试归属或 CI 时读取 Golden E2E 计划第12节和 `x2env_test_groups.py`。每组和归并独立限时，
-  使用新证据目录；只有同源完整六组测量可合并，canonical 业务语句/分支门为100%。
+- 改测试归属或 CI 时先读 Golden E2E 的 `qualification-matrix-v2.json` 最新授权和 `x2env_test_groups.py`。
+  本轮每组和归并含退出最多20分钟，使用新证据目录；只有同源完整六组测量可合并，
+  canonical业务语句/分支覆盖率实测报告，不以精确100%阻断；测试/lint/源码与测量完整性仍阻断。
   外部执行边界精确列于脚本，pending 非覆盖门不算已通过。
 - 第五组在pytest前执行reader docs门；报告区分local/archive/remote，远端未查不得写完整通过。
   历史归档仅核manifest成员，不把原文内部旧相对链接或旧指令当active契约。

@@ -48,6 +48,10 @@ When working on x2env Skills, Codex orchestration, MCP adaptation, asset-debt re
 Genesis golden line, read `self_improving/golden_e2e_progress/README.md` first and update its live
 task, TODO, decision, and result ledgers before reporting progress.
 
+For the current matrix v2 implementation walkthrough, runtime evidence, or push decision, read
+`self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md`.
+For user setup and public CLI recipes, read `repo-docs/walkthroughs/canonical-x2env-user-guide.md`.
+
 When incorporating behavior from Bingsheng, Gujie, or Yuxin, also read
 `docs/integration-provenance/README.md` and update `docs/integration-provenance/LEDGER.md` in the
 same feature commit. Keep origin ownership, third-party upstream ownership, integration ownership,

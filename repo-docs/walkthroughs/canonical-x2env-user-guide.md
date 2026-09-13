@@ -189,7 +189,40 @@ x2env resume --deployment /absolute/deployment.json --workflow-id WORKFLOW_ID
 当前覆盖率政策为测量和报告缺口，不再因不足精确 100% 阻断；所有 active 测试、lint、
 源码身份和测量完整性仍是门。旧 matrix v1 及历史失败不回填、不改称本轮成功。
 
-## 实现依据
+## 本机已配置的实验入口
+
+无需重新部署sealed runtime，可直接用下面的固定本机环境；它不是可任意搬迁的安装包。
+准备报告与完整使用说明位于`/home/jingxiang/bingsheng/canonical-x2env-user-entry-20260913.AydTBI/`，
+源码固定9d5909b；只做过配置组装、help和非法输入拒绝，本独立state尚未提交真实案例。
+四例成功来自walkthrough列出的各自隔离部署，不能混称同一已运行state。
+
+```bash
+entry_root=/home/jingxiang/bingsheng/canonical-x2env-user-entry-20260913.AydTBI
+entry_python=/var/tmp/canonical-ci-python313.BmJ3Cc/venv/bin/python
+entry_deployment="$entry_root/deployment.json"
+export PYTHONPATH=/var/tmp/canonical-shapely-2.1.2.TgCNjK/site:"$entry_root/source-current":"$entry_root/source-current/self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim"
+entry_media=/home/jingxiang/bingsheng/generic-experiment-v2-20260913.1QrGYD/inputs
+
+"$entry_python" -m self_improving.harness.x2env.cli submit --deployment "$entry_deployment" \
+  --text '在桌面放一个粉红色鼠标。' --seed 11 --idempotency-key my-text-1 --output "$entry_root/outputs/text-1"
+"$entry_python" -m self_improving.harness.x2env.cli submit --deployment "$entry_deployment" \
+  --image "$entry_media/centered-red-cube.png" --seed 23 --idempotency-key my-image-1 --output "$entry_root/outputs/image-1"
+"$entry_python" -m self_improving.harness.x2env.cli submit --deployment "$entry_deployment" \
+  --video "$entry_media/centered-red-cube.mp4" --seed 37 --idempotency-key my-video-1 --output "$entry_root/outputs/video-1"
+"$entry_python" -m self_improving.harness.x2env.cli submit --deployment "$entry_deployment" \
+  --image "$entry_media/centered-red-cube.png" --text '参考图片，在桌面放一个蓝色方块，颜色以文字要求为准。' \
+  --seed 41 --idempotency-key my-mixed-1 --output "$entry_root/outputs/mixed-1"
+
+"$entry_python" -m self_improving.harness.x2env.cli status --deployment "$entry_deployment" --workflow-id WORKFLOW_ID
+"$entry_python" -m json.tool "$entry_root/outputs/text-1/result.json"
+```
+
+把输入替换为自己的绝对路径或文本，并使用新key及新输出目录；不要同时运行上面全部命令争抢资源。
+本机只配置local及两份父资产（mouse/redblock），无匹配时后续未配置来源会准确阻断；
+私有模型端点和现有运行环境必须可访问，其他机器安装按前文配置，不能照抄本机路径。
+包内图片、视频、资产和报告从`result.json`给出的真实路径读取；失败包保留原始错误，不编辑state/CAS。
+
+## 源码依据
 
 [CLI](../../self_improving/harness/x2env/cli.py)、
 [部署组装](../../self_improving/harness/x2env/deployment.py)、
