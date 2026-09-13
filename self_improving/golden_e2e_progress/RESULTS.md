@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C06 台账直接执行兼容修复
+
+- 固定d5补本地Git源码后，第六组72.585秒失败：保留root1010 passed/1 skipped，stage5 72 passed，
+  Alchedata35 passed/3 skipped，agenticsim11 passed/2 skipped，asset_reuse901 passed/2 skipped/
+  1 failed；web/OpenXSim后续段未运行。证据 `/var/tmp/canonical-group6-initialized.bTWUKw/`。
+- 真实失败为既有公开runpy直接入口无法使用新相对import。先复现RED，ledger按__package__选择
+  相对导入或原lib绝对fallback；不加sys.path或宽异常捕获，不删除测试。
+- 主线程台账/provider聚焦325 passed/0.32s；尚未重跑完整group6，不将部分测试数写成全组通过。
+
 ## 2026-09-13 C14 历史文档可审阅来源
 
 - 16条历史相对链接指向已退役路径。先尝试固定GitHub链接，12独立URL匿名HEAD全404，

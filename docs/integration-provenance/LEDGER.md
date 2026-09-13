@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-LEDGER-DIRECT — 保留台账直接执行
+
+- origin_owner：Yuxin资产复用来源；integration_owner：Bingsheng Harness workstream。
+- source_ref：`d5f52d5` 固定失败；target_paths：asset_reuse/lib/ledger.py。
+- integration_method：保留原lib绝对导入作为direct-script分支，package分支使用相对导入。
+- verification：原公开runpy测试RED后主线程325项通过；runtime_verification：未运行仿真。
+- recorded_git_authors：原台账及当前提交元数据分别记录，不推断自然人映射。
+
 ## INT-CANONICAL-C14-HISTORY-LINKS — 固定原文非active归档
 
 - origin_owner / upstream_owner：12份原文各自固定Git历史作者/来源，沿用原文归属。

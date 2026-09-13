@@ -51,7 +51,10 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
 
-from . import conventions
+if __package__:
+    from . import conventions
+else:
+    from lib import conventions
 
 # representations[].frame / geometry_state are OPTIONAL on purpose, and their
 # absence carries meaning -- do not "helpfully" backfill them:
