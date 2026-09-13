@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-S01-COPY-RUN — 拒读原来源后重新加载
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis及CreativeTrio资产独立保留。
+- source_ref：S01包固定`a57a0ea`；runtime Genesis`0e74bf392781884ccad765c3f344419c86b872ca`。
+- integration_method：复制包自身loader，两profile实际Landlock拒五原根；未引用原CAS资产，原包未改。
+- verification：186members一致；runtime_verification：118.72s真实load/step/连续媒体，新轨迹26项另复算通过。
+- limitation：无显式reset，三次最终copy资格及发布未通过；证据/精确hash见RESULTS。
+- recorded_git_authors：原包/loader实现与本次执行审计独立，未改上游归属。
+
 ## INT-CANONICAL-C09-LOADED-TOPOLOGY — 实际三角面而非顶点集合
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis公开geom API与原Gujie适配来源。

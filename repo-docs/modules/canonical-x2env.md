@@ -8,7 +8,9 @@
 
 固定a57a0ea的S01已从一次公共Harness提交真实完成local检索、颜色child及视觉复验、ground、
 compile、双profile Genesis replay、观察诊断、validate和包物化，约546.60秒，物理26/26通过。
-这只授予单案例开发闭环：包仍development_review/sim_ready=false，复制运行与最终矩阵资格待验。
+这只授予单案例开发闭环：包仍development_review/sim_ready=false，最终矩阵资格待验。
+该包另在新目录实测拒读五个原来源后双profile重新load/step/产媒体，118.72秒，新轨迹26项复算通过；
+旧worker没有显式reset调用，所以不授reset能力，也未满足三个最终合格copy-run门。
 完整证据入口见进度RESULTS中“S01 同一公共工作流真实开发闭环”，不是将旧limited证据升级。
 
 场景准入检查必要布局缺值，不只相信模型unknown.critical；显式冲突即使非critical也需澄清。

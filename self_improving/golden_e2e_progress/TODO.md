@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- S01双profile隔离copy/load/step真实通过118.72s，新轨迹26/26复算通过；显式reset缺口单独修复中，未授最终copy-run资格。
+
 - 实际拓扑首片123项通过，尚待新child真实验证；旧assessment调用明确topology not_run，动态图门未放开。
 - S02固定17d32的新署名正确准备已放行唯一publicsubmit；原A5hnHk预备未submit且保留，不改已登记旧版本。
 

@@ -2,6 +2,16 @@
 
 ## 2026-09-13 已批准 canonical 执行清单
 
+当前验收子步骤（不替代C00–C15全门）：
+
+- [x] S01单publicworkflow真实local/颜色child/ground/Genesis/validate/package开发闭环。
+- [x] S01包复制目录实际拒读原来源后双profile load/step/新媒体及26项新轨迹复算。
+- [ ] 显式reset调用与恢复初态真实验证；旧freshprocess不补写为reset。
+- [ ] S02/S03/S04/M04及完整冻结12例；动态支撑与多实体设计按增量spec实现。
+- [ ] 新版六组/root同源core100%、三次最终copy-run、正式资格及push。
+
+阶段完整清单：
+
 - [x] C00：用户批准 Q01–Q64、计划和 Qualification Matrix v1；登记不可降低的 push 门。
 - [ ] C01：fetch 后冻结 refs/worktrees，保护并复原验证 dirty bytes，分类形成 clean bingsheng 基线。
 - [x] C02：权威 contracts、seams、acceptance、机读矩阵冻结；不代表矩阵执行通过。

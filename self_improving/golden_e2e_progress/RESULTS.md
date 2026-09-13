@@ -1,5 +1,24 @@
 # 进度与结果
 
+## 2026-09-13 S01 包隔离复制运行与独立物理复算
+
+- 新根 `/home/jingxiang/bingsheng/canonical-s01-copy-run-20260913.hmSDIW`，从S01包复制186成员及
+  manifest，逐SHA一致；只用复制包loader与声明runtime，原包/复制包before-after字节未变。
+- baseline59.089254s/1000steps，half_dt59.589659s/2000steps，合118.718138s；两次真实Landlock ABI8
+  对原run+CAS、固定源码、集成树、licensed原资产和用户主repo五根逐一os.listdir实际PermissionError。
+  进程正常退出；Python3.12.3/Genesis1.3.3另受同隔离实际import核验，不把文件存在当运行版本证明。
+- 新媒体各640×480/10fps/41帧，unique5/3；主线程查看baseline/frames/step-1000.png。
+  新视频 `baseline/preview.mp4`、`half_dt/preview.mp4`。确定性内容hash可与旧输出相同；
+  新进程/拒读/捕获时间/输出记录证明重新执行，不把“hash不同”当唯一真实性条件。
+- 初次audit仅接触/稳定性子集。随后固定clean a57a0ea公开evaluate_physics消费新轨迹+loaded，
+  26/26通过；compute0.338997s/postcheckwall0.622469s单列，不加进copy执行wall。
+  复算仍authority=trace_consistency_only，不自称执行证明；真实执行证据在两profile原日志中。
+- summary.json SHA `58d17712d4a2ee7aac8353f3da96a2fbb1b37bd9d3f1a4d738c3f69a49dc47bb`；
+  audit.json `f5fb2c17b0f9dbee885052718fffb5ac05c0fe4fa79a18e3ae3d319c6612358a`；
+  physics-postcheck.json `1fc72b35be9caa906380c91a3201b0df02bf41c4d1b1671d520d3413b78e62ad`，主线程重核。
+- 准确缺口：原worker仅fresh build，没有显式scene.reset调用，因此只授copy/load/step而非reset。
+  已分配独立TDD修复，不改本包manifest、旧运行或资格；三个最终合格copy-run及正式推送门仍未满足。
+
 ## 2026-09-13 C09 实际加载拓扑审计首片
 
 - 新child通过固定Genesis公开geom顶点/face接口逐几何读取并转换entity-local，独立比对authored URDF
