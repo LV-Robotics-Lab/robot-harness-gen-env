@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 observation 公共证据拒绝测试
+
+- observe_replay新增外来scene、失败replay、receipt scene/status漂移、重复profile/member、缺媒体、
+  帧SHA重绑八类拒绝测试；真实Store/CAS，未mock内部assessment或修改生产实现。
+- 9 passed/0.74s，单文件observation.py 50/50语句、20/20分支；Ruff/diff通过。
+  这是已有拒绝行为的测试补齐，不伪称发现RED漏洞，不计真实Genesis或全仓覆盖通过。
+  覆盖数据 `/var/tmp/canonical-observation-boundaries.coverage`；六组同源归并仍待完成。
+
 ## 2026-09-13 S02 序号字段路径导致的真实阻断
 
 - 固定clean `17d32ecd9a5085c0907fe9d381c646159ba7aec6`，corrected31osM1一次公共image-only提交；
