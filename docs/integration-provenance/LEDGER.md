@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-EXPLICIT-MAX — 受管理后端可审计最大力度
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：OpenAI Codex。
+- source_ref：`6a23a22` transport，CLI固定sha `56ef98ab4032d317ab26e9b5e5a175650717351edb16ed9cde0cb6d1734d62da`。
+- target_paths：x2env/codex.py、test_codex.py；integration_method：同transport固定max、真实argv记录、不降级。
+- verification：root156项；runtime_verification：独立真实中性max探针6.323秒完成，未执行新业务/Genesis。
+- recorded_git_authors：原文件与本提交元数据，不推断自然人身份；实际服务端effort未验证。
+
 ## INT-CANONICAL-C08-COMPILE-EDGES — 真实编译输入拒绝与默认边界
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`85cf4f8`。

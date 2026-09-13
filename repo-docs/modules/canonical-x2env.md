@@ -1,5 +1,8 @@
 # Canonical x2env（收敛实施中）
 
+内部 Codex 所有角色通过唯一 transport 显式请求 `model_reasoning_effort="max"`；拒绝时不降级。
+回执记录请求值与实际argv，但不把CLI接受配置描述成服务端有效力度已验证；旧未指定回执不回填。
+
 旧 System 2 planner/dispatcher、GoldenRun、独立 Qwen replay assessment，以及仅 Python 消费的
 Workbench assessment 链已退役（18 个源文件，Git 历史可恢复）。稳定 SAPIEN runtime 工具与只读
 事件 feed 保留。旧 Workbench compile 的 app/static 消费者随后也已下线，四组旧路由返回 404，

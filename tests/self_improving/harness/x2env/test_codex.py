@@ -57,6 +57,41 @@ def executable(tmp_path, response, event="turn.completed", tool=False):
     return path
 
 
+@pytest.mark.parametrize("exit_code", [2, 17])
+def test_maximum_config_or_model_rejection_preserves_logs_without_retry(tmp_path, exit_code):
+    from self_improving.harness.x2env.codex import CodexBackend
+
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(text="a table", seed=1, idempotency_key="reject", output_dir=str(tmp_path)),
+        store,
+    )
+    path = tmp_path / "rejecting-process-double"
+    path.write_text(
+        f"#!{sys.executable}\nimport json,pathlib,sys\n"
+        "with pathlib.Path('calls.jsonl').open('a') as out:\n"
+        " out.write(json.dumps(sys.argv)+'\\n')\n"
+        "print('explicit external config/model rejection',file=sys.stderr)\n"
+        f"sys.exit({exit_code})\n"
+    )
+    path.chmod(0o700)
+    result = CodexBackend(
+        path, hashlib.sha256(path.read_bytes()).hexdigest(), "test-double", store
+    ).interpret(bundle, output_root=tmp_path / "attempt", timeout=10)
+    assert result.status == "failed" and result.error_code == "model_exit_failure"
+    calls = (tmp_path / "attempt" / "calls.jsonl").read_text().splitlines()
+    assert len(calls) == 1
+    argv = json.loads(calls[0])
+    assert [arg for arg in argv if arg.startswith("model_reasoning_effort=")] == [
+        'model_reasoning_effort="max"'
+    ]
+    terminal = json.loads((tmp_path / "attempt" / "process-terminal.json").read_text())
+    assert terminal["returncode"] == exit_code and terminal["reaped"] is True
+    assert b"explicit external config/model rejection\n" in [
+        store.read_artifact(ref) for ref in result.evidence
+    ]
+
+
 def test_unknown_is_advisory_and_logs_bound_input_and_model(tmp_path):
     from self_improving.harness.x2env.codex import CodexBackend
 
@@ -97,10 +132,17 @@ def test_unknown_is_advisory_and_logs_bound_input_and_model(tmp_path):
     assert "Unknown yaw is null, not zero" in prompt
     manifest = json.loads(store.read_artifact(result.evidence[-1]))
     assert manifest["model"] == "test-double"
+    assert manifest["requested_reasoning_effort"] == "max"
+    assert manifest["server_effective_effort_verified"] is False
     assert manifest["input_sha256"] == bundle.request_sha256
     assert manifest["external_agent_executed"] is True
     assert "粉红色鼠标在打开的柜子上" in (tmp_path / "attempt" / "prompt.txt").read_text()
-    argv = json.loads((tmp_path / "attempt" / "invocation.json").read_text())["argv"]
+    invocation = json.loads((tmp_path / "attempt" / "invocation.json").read_text())
+    argv = invocation["argv"]
+    assert 'model_reasoning_effort="max"' in argv
+    assert argv[argv.index('model_reasoning_effort="max"') - 1] == "-c"
+    assert invocation["requested_reasoning_effort"] == "max"
+    assert invocation["server_effective_effort_verified"] is False
     assert argv[argv.index("--sandbox") + 1] == "read-only"
     process = json.loads((tmp_path / "attempt" / "process.json").read_text())
     assert process["start_ticks"] > 0

@@ -30,6 +30,7 @@ XY中心/Z底面，编译器做显式偏移。仅未给出的结构厚度/世界
 不得修改用户已给轴/朝向，尺寸冲突拒绝；没有解析的关节/inside不静默简化。
 
 - CodexBackend.interpret / assess_asset_candidates / assess_and_diagnose只提供建议，不控制执行或物理通过。
+- 所有模型角色共用的 transport 固定显式请求 max 并记实际argv；拒绝原样失败，不重试降级，服务端有效力度未验证。
 - CodexBackend.ground_scene 补全显式部署允许的生成设计未知项；pending intent 只供查资产，
   测得的不可变资产尺寸与原媒体共同形成设计依据，不是图像绝对尺度测量，未通过检查不得 compile。
 - YuxinProviderAdapter调用原provider engine，带真实local/web和许可门。

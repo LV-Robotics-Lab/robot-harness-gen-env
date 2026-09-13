@@ -1,5 +1,18 @@
 # 进度与结果
 
+## 2026-09-13 C05 显式 maximum 合规与受限传输探针
+
+- 同固定 f35/exe/gpt-6-astra，无图无tools的39B/174B中性探针先6.923394s完成；单变量增加
+  `-c model_reasoning_effort="max"` 后6.322602s完成，exit0/reaped、无信号。只证明此CLI配置
+  接受与当次最小调用完成；不证明业务语义、服务端实际力度或超时根因。schema冲突对照未执行。
+- 证据根 `/home/jingxiang/bingsheng/canonical-codex-diagnosis-20260913.j3I1Gr/`；
+  summary-max.json SHA `c56c6b5c026e7293ac399e8bd5fdccf62583d27d182ee3797b58664f04e4439a`。
+  max探针脚本初次本地source-needle断言失败在子进程启动前；修换行后仅一次真实调用。
+- 生产唯一 _invoke 固定max并记录请求/有效力度未知；不加可降级枚举或第二模型workflow。
+  公开receipt/argv先RED，root六组156 passed/11.62s；agent156/11.50s。
+  agent初次漏原provider PYTHONPATH导致19项fixture失败，补正确环境后通过，未改业务来遮蔽。
+- 外部exit2/17测试保日志、单次调用与原失败，无重试降级。后续真实业务仍需固定新版本验证。
+
 ## 2026-09-13 C08 编译拒绝边界与显式结构字段
 
 - 补公开compile攻击：关节、相对/符号路径、不合法规范化尺度、缺physics、多支撑、

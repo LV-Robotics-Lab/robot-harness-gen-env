@@ -1,5 +1,12 @@
 # 稳定决策
 
+## 2026-09-13 唯一受管理 Codex transport 显式请求最大力度
+
+- 现固定传 `-c model_reasoning_effort="max"`；用户/模型prompt不能降级，也不在拒绝后换值。
+- invocation记录 requested_reasoning_effort=max、server_effective_effort_verified=false；
+  CLI接受并完成调用不证明服务端实际执行力度。旧未显式指定的回执不回填为max。
+- 中性最小探针只证明CLI兼容；此改动满足最大力度与可审计约束，不声称解决600秒业务超时。
+
 ## 2026-09-13 安装源码身份不是运行权限或资格
 
 - 预览的 Git/installed 身份只记录实际执行源；部署可 pin commit 或原始 RECORD digest，

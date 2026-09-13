@@ -145,6 +145,8 @@ class CodexBackend:
                     "status": status,
                     "error_code": error,
                     "model": self.model,
+                    "requested_reasoning_effort": "max",
+                    "server_effective_effort_verified": False,
                     "executable_sha256": self.executable_sha,
                     "verifier": "asset_reuse.lib.a6_verify.verify_candidate",
                     "verdicts": [v.model_dump(mode="json") for v in verdicts],
@@ -434,6 +436,8 @@ class CodexBackend:
                     "status": status,
                     "error_code": failure,
                     "model": self.model,
+                    "requested_reasoning_effort": "max",
+                    "server_effective_effort_verified": False,
                     "executable_sha256": self.executable_sha,
                     "input_sha256": bundle.request_sha256,
                     "external_agent_executed": executed,
@@ -474,6 +478,8 @@ class CodexBackend:
             "read-only",
             "--model",
             self.model,
+            "-c",
+            'model_reasoning_effort="max"',
             "--output-schema",
             str(root / "proposal.schema.json"),
             "-c",
@@ -488,7 +494,17 @@ class CodexBackend:
         for image in images:
             argv.extend(["-i", image["path"]])
         argv.append("-")
-        record("invocation.json", json.dumps({"argv": argv, "media": images}).encode())
+        record(
+            "invocation.json",
+            json.dumps(
+                {
+                    "argv": argv,
+                    "media": images,
+                    "requested_reasoning_effort": "max",
+                    "server_effective_effort_verified": False,
+                }
+            ).encode(),
+        )
         with (
             (root / "codex.jsonl").open("wb") as stdout,
             (root / "codex.stderr").open("wb") as stderr,

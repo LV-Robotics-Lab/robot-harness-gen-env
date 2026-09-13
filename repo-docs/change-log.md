@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 同一内部Codex transport显式请求max，记录请求值但不授服务端力度证明；156项测试和中性兼容探针通过。
+
 - 孤立旧Store/media/runtime/snapshot九模块和专属native退役；465项主线程保留层回归通过，六组CI仍在收敛。
 
 - 旧qualification/catalog/exporter和38份资源退出active tree；保留实际消费Python类型，canonical合同摘要不变。
