@@ -7,6 +7,40 @@ import pytest
 from self_improving.harness.x2env.store import Store
 
 
+def test_invalid_json_callback_is_explicit_and_retains_other_transitive_members(tmp_path):
+    from self_improving.harness.x2env.artifacts import artifact_closure
+
+    store = Store(tmp_path / "state")
+    broken = store.write_artifact(b'{"unknowns":[{}}', "application/json")
+    image = store.write_artifact(b"opaque image fixture", "image/png")
+    root = store.write_artifact(
+        json.dumps({"broken": broken.model_dump(), "valid_sibling": image.model_dump()}).encode(),
+        "application/json",
+    )
+    with pytest.raises(json.JSONDecodeError):
+        artifact_closure(store, (root,))
+    errors = []
+    refs = artifact_closure(
+        store,
+        (root,),
+        on_invalid_json=lambda ref, error: errors.append((ref, type(error).__name__)),
+    )
+    assert set(refs) == {root, broken, image}
+    assert errors == [(broken, "JSONDecodeError")]
+    with pytest.raises(ValueError, match="budget"):
+        artifact_closure(store, (root,), max_refs=1, on_invalid_json=lambda *args: None)
+    with pytest.raises(ValueError, match="budget"):
+        artifact_closure(store, (broken,), max_bytes=1, on_invalid_json=lambda *args: None)
+    with pytest.raises(ValueError):
+        artifact_closure(
+            store,
+            (broken.model_copy(update={"size_bytes": 1}),),
+            on_invalid_json=lambda *args: pytest.fail(
+                "CAS integrity errors must not be suppressed"
+            ),
+        )
+
+
 def test_receipt_graph_requires_all_referenced_bytes_not_just_root(tmp_path):
     from self_improving.harness.x2env.artifacts import artifact_closure
 

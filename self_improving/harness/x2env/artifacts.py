@@ -5,7 +5,10 @@ import json
 from .contracts import ArtifactRef
 
 
-def artifact_closure(store, roots, *, max_bytes=256 * 1024 * 1024, max_refs=2048):
+def artifact_closure(
+    store, roots, *, max_bytes=256 * 1024 * 1024, max_refs=2048, on_invalid_json=None
+):
+    """Strict by default; failure exporters may explicitly record unparsed JSON leaves."""
     if type(max_bytes) is not int or max_bytes < 1 or type(max_refs) is not int or max_refs < 1:
         raise ValueError("invalid artifact graph budget")
     pending, seen, byte_hashes = list(roots), {}, set()
@@ -28,7 +31,13 @@ def artifact_closure(store, roots, *, max_bytes=256 * 1024 * 1024, max_refs=2048
         seen[ref] = None
         if ref.media_type != "application/json":
             continue
-        nodes = [json.loads(data)]
+        try:
+            nodes = [json.loads(data)]
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            if on_invalid_json is None:
+                raise
+            on_invalid_json(ref, error)
+            continue
         visited = 0
         while nodes:
             item = nodes.pop()

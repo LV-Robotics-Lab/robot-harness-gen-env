@@ -45,7 +45,19 @@ def materialize_failure(snapshot, store, output, *, reuse_existing=False):
         if ref is not None
     ]
     roots.extend(ref for op in snapshot.operations if op.result for ref in op.result.outputs)
-    refs = artifact_closure(store, roots)
+    unparsed_json = []
+
+    def record_invalid_json(ref, error):
+        unparsed_json.append(
+            {
+                "artifact": ref.model_dump(mode="json"),
+                "error_type": type(error).__name__,
+                "error": str(error),
+                "references": "not_discoverable_from_invalid_json",
+            }
+        )
+
+    refs = artifact_closure(store, roots, on_invalid_json=record_invalid_json)
     reuse = reuse_existing and output.is_dir()
     if not reuse:
         output.mkdir(parents=True, exist_ok=False)
@@ -119,6 +131,8 @@ def materialize_failure(snapshot, store, output, *, reuse_existing=False):
         "environment_package": None,
         "scene_ir": scene,
     }
+    if unparsed_json:
+        manifest.update(unparsed_json=unparsed_json, reference_graph_complete=False)
     raw = json.dumps(manifest, sort_keys=True, indent=2).encode()
     if reuse:
         if (failure / "manifest.json").is_symlink() or (
@@ -141,6 +155,8 @@ def materialize_failure(snapshot, store, output, *, reuse_existing=False):
         "failure_bundle": str(failure),
         "manifest_sha256": hashlib.sha256(raw).hexdigest(),
     }
+    if unparsed_json:
+        result.update(unparsed_json=unparsed_json, reference_graph_complete=False)
     serialized = json.dumps(result, sort_keys=True, indent=2).encode()
     if reuse:
         if (output / "result.json").is_symlink() or (

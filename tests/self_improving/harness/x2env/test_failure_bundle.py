@@ -8,6 +8,50 @@ from self_improving.harness.x2env.contracts import X2EnvRequest
 from self_improving.harness.x2env.harness import Harness
 
 
+@pytest.mark.parametrize("raw", [b'{"unknowns":[{}}', b"\xff"])
+def test_invalid_json_model_output_is_preserved_in_failure_bundle(tmp_path, raw):
+    from self_improving.harness.x2env.contracts import ToolResult
+    from self_improving.harness.x2env.failure_bundle import materialize_failure
+    from self_improving.harness.x2env.store import Store
+
+    store = Store(tmp_path / "state")
+    broken = store.write_artifact(raw, "application/json")
+    receipt = store.write_artifact(
+        json.dumps({"raw_output": broken.model_dump()}).encode(), "application/json"
+    )
+    snapshot = store.claim(
+        store.submit(
+            X2EnvRequest(
+                text="a table",
+                seed=1,
+                idempotency_key="invalid-json",
+                output_dir=str(tmp_path / "output"),
+            )
+        ).workflow_id
+    )
+    snapshot = store.complete_operation(
+        snapshot,
+        ToolResult(
+            operation_id=snapshot.operations[-1].operation_id,
+            status="failed",
+            outputs=(receipt,),
+            error_code="invalid_model_evidence",
+        ),
+        None,
+        status="failed",
+        reason="invalid_model_evidence",
+    )
+    result = materialize_failure(snapshot, store, tmp_path / "review")
+    root = tmp_path / "review/failure"
+    assert (root / f"partial/{broken.sha256}.json").read_bytes() == raw
+    manifest = json.loads((root / "manifest.json").read_bytes())
+    assert manifest["unparsed_json"][0]["artifact"] == broken.model_dump(mode="json")
+    assert manifest["reference_graph_complete"] is False
+    assert result["environment_package"] is None and result["status"] == "failed"
+    assert store.status(snapshot.workflow_id) == snapshot
+    assert materialize_failure(snapshot, store, tmp_path / "review", reuse_existing=True) == result
+
+
 def test_missing_backend_produces_failure_bundle_with_original_input_and_no_scene(tmp_path):
     harness = Harness(tmp_path / "state")
     handle = harness.submit(
