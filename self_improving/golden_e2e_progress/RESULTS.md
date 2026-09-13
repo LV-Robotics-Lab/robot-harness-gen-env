@@ -1,5 +1,18 @@
 # 进度与结果
 
+## 2026-09-13 固定新 reset child 真实双时间步通过
+
+- 固定clean `a57f248da9849de8c44d9b03b73c2b430bd98a72`，新根
+  `/home/jingxiang/bingsheng/canonical-reset-dual-probe-20260913.QfcUxI`，复用Cesium小Box许可闭包，
+  公共Registry/compile/ReplayExecutor/assess；场景为显式operator fixture，不是S02/model生成。
+- 主线程读取并核summary SHA `4e4ff498692fef8a8bd305d04a2de8cbfe222c4cf27e8db984491c4590365f64`。
+  command122.645187s、replay120.940442s、assessment1.581518s；physical26/26，
+  initial_reset_status及两profile均passed，source_unchanged=true。
+- baseline1000×.004、half_dt2000×.002，各640×480/10fps/41帧/2unique，实际拓扑passed。
+  verification.json列媒体及process；原包/来源/CAS六根实际拒读，两个进程exit0已退出。
+- overall/visual仍not_run，没有模型视觉、步进后恢复或资格；灰色外观不被物理pass覆盖。
+  首次准备脚本strict JSON调用错误0.28s、未启动Genesis已保留，修正后只有一次真实双profile执行。
+
 ## 2026-09-13 成功交付目的目录保护
 
 - export_completion新增相对目录、根目录、已有用户文件目录与符号目录拒绝测试；原包manifest、

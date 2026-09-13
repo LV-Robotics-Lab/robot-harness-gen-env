@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- 固定a57f248真实双dt初始reset/物理26项通过122.65s；visual与post-step restoration not_run，不是S02资格。
+
 - 成功包delivery公开目的目录保护10项通过；原包/状态/已有用户字节不变，不作新case资格。
 
 - failure bundle部分产物测试补齐后12项通过，单文件59语句/32分支100%，整体门仍未满足。

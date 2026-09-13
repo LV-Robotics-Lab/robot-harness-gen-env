@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-RESET-DUAL-PROBE — 固定新版真实动作
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis及Cesium资产独立保留。
+- source_ref：Harness a57f248、Genesis0e74bf；integration_method：新隔离根、公开Registry/compile/replay/assess。
+- verification / runtime_verification：122.65s真实双dt reset与26物理项通过；精确summary SHA及日志见RESULTS。
+- limitation：operator fixture非冻结S02，visual/post-step restoration未执行，不授qualification。
+- recorded_git_authors：引擎、资产和Harness调用/审计作者分别保留，不扩展用户媒体署名。
+
 ## INT-CANONICAL-C09-INITIAL-RESET — 实际动作及历史独立消费
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis公开Scene.reset接口。
