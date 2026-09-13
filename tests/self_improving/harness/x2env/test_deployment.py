@@ -8,6 +8,22 @@ from self_improving.harness.x2env.contracts import X2EnvRequest
 from self_improving.harness.x2env.deployment import build_harness, load_deployment
 
 
+def test_private_router_requires_explicit_fixed_terra_model(tmp_path):
+    from self_improving.harness.x2env.deployment import CodexConfig
+
+    base = {"executable": "/usr/bin/codex", "sha256": "a" * 64}
+    route = {"api_key_file": str(tmp_path / "router.key")}
+    config = CodexConfig(**base, model="openai/gpt-5.6-terra", router=route)
+    assert config.router.base_url == "http://100.64.0.1:8324/v1"
+    assert "api_key" not in config.model_dump_json().replace("api_key_file", "path")
+    with pytest.raises(ValueError):
+        CodexConfig(**base, router=route)
+    with pytest.raises(ValueError):
+        CodexConfig(**base, model="openai/gpt-5.6-terra")
+    with pytest.raises(ValueError):
+        CodexConfig(**base, model="openai/gpt-5.6-terra-pro", router=route)
+
+
 def test_deployment_parses_explicit_source_policy_without_changing_runtime_roots(tmp_path):
     from self_improving.harness.x2env.deployment import Deployment
 

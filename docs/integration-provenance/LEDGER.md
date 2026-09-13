@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-MODEL-ROUTER — 用户指定Terra内部路由
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：306375c上的现有CodexBackend。
+- upstream_owner：模型服务及Codex客户端分别归其提供方；未复制第三方源码或改变Gujie/Yuxin来源。
+- integration_method：受信部署选择固定模型/端点，子进程环境凭据，同一个advisory transport/controller。
+  外部JSON schema遵循不足时在输入附同一schema，本地校验不删；secret不入Git/证据。
+- verification：真实协议1.29s，受管理interpret44.72s通过；先前75.95s结构失败原样保留，见RESULTS。
+  98项回归与2项argv门测试通过；runtime_verification：本切片Genesis not_run。
+- recorded_git_authors：Git提交身份仅作记录，不推断模型/服务/资产的自然人所有权。
+
 ## INT-CANONICAL-C08-PRECOMMIT-AUDIT — v3采纳前独立审核
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：91da764的v3完成门审核。

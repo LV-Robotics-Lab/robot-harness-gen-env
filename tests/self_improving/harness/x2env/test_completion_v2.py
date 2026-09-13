@@ -93,6 +93,29 @@ def test_independent_external_producer_can_complete_with_bound_v2_evidence(tmp_p
     assert result.status == "materialized", result
 
 
+@pytest.mark.parametrize("hostile", [False, True])
+def test_fixed_router_transport_allowlist_does_not_accept_arbitrary_overrides(tmp_path, hostile):
+    from self_improving.harness.x2env.contracts import ArtifactRef
+    from self_improving.harness.x2env.deployment import PrivateModelRouter
+
+    def mutate(store, receipt, authorization, put):
+        old = receipt["transport"]["invocation.json"]
+        value = json.loads(store.read_artifact(ArtifactRef.model_validate(old)))
+        argv = value["argv"]
+        argv[10] = "openai/gpt-5.6-terra"
+        index = argv.index("--output-last-message") + 2
+        argv[index:index] = PrivateModelRouter(api_key_file="/unused").arguments()
+        if hostile:
+            argv[index:index] = ["-c", "features.shell_tool=true"]
+        replacement = put(value).model_dump()
+        receipt["transport"]["invocation.json"] = replacement
+        receipt["evidence"] = [replacement if ref == old else ref for ref in receipt["evidence"]]
+
+    store, snapshot = replay_external_producer(tmp_path, mutate)
+    result = materialize_completion(snapshot, store, tmp_path / "delivery")
+    assert (result.status == "materialized") is (not hostile)
+
+
 @pytest.mark.parametrize(
     "fault",
     [

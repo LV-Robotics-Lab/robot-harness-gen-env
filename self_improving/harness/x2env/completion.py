@@ -1537,6 +1537,12 @@ def _audit_generated_content(
     expected_images = (
         [{"path": str(attempt / "input.png")}] if receipt.get("media_selection") else []
     )
+    if len(argv) > 10 and argv[10] == "openai/gpt-5.6-terra":
+        from .deployment import PrivateModelRouter
+
+        expected_argv[10] = "openai/gpt-5.6-terra"
+        # Only the operator-authorized fixed endpoint/model, never arbitrary CLI overrides.
+        expected_argv.extend(PrivateModelRouter(api_key_file="/unused-secret").arguments())
     for image in expected_images:
         expected_argv.extend(["-i", image["path"]])
     expected_argv.append("-")

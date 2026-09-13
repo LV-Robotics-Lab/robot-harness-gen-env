@@ -6,6 +6,8 @@ Dependencies are checked when used so status/failure packaging remain available.
 
 import hashlib
 import json
+import os
+import stat
 import time
 import uuid
 from pathlib import Path
@@ -20,15 +22,61 @@ from .grounding import SceneDesignPolicy
 from .source_identity import SourceIdentityPolicy
 
 
+class PrivateModelRouter(Model):
+    """Operator-authorized route; credentials are read only for the child process."""
+
+    base_url: Literal["http://100.64.0.1:8324/v1"] = "http://100.64.0.1:8324/v1"
+    api_key_file: str
+
+    @model_validator(mode="after")
+    def absolute_secret_path(self):
+        if not Path(self.api_key_file).is_absolute():
+            raise ValueError("absolute private credential path required")
+        return self
+
+    def child_environment(self):
+        path = Path(self.api_key_file)
+        if any(p.is_symlink() for p in (path, *path.parents)):
+            raise ValueError("unsafe_model_credential")
+        with path.open("rb") as stream:
+            info = os.fstat(stream.fileno())
+            if (
+                not stat.S_ISREG(info.st_mode)
+                or stat.S_IMODE(info.st_mode) != 0o600
+                or info.st_uid != os.getuid()
+                or not 1 <= info.st_size <= 4096
+            ):
+                raise ValueError("unsafe_model_credential")
+            key = stream.read().decode().strip()
+        if not key or any(c.isspace() for c in key):
+            raise ValueError("unsafe_model_credential")
+        return {**os.environ, "X2ENV_ROUTER_API_KEY": key}
+
+    def arguments(self):
+        values = (
+            'model_provider="x2env_router"',
+            'model_providers.x2env_router.name="Authorized x2env router"',
+            f'model_providers.x2env_router.base_url="{self.base_url}"',
+            'model_providers.x2env_router.wire_api="responses"',
+            'model_providers.x2env_router.env_key="X2ENV_ROUTER_API_KEY"',
+            "model_providers.x2env_router.request_max_retries=0",
+            "model_providers.x2env_router.stream_max_retries=0",
+        )
+        return [item for value in values for item in ("-c", value)]
+
+
 class CodexConfig(Model):
     executable: str
     sha256: Sha256
-    model: Literal["gpt-6-astra"] = "gpt-6-astra"
+    model: Literal["gpt-6-astra", "openai/gpt-5.6-terra"] = "gpt-6-astra"
+    router: PrivateModelRouter | None = None
 
     @model_validator(mode="after")
     def absolute_executable(self):
         if not Path(self.executable).is_absolute():
             raise ValueError("absolute Codex executable required")
+        if (self.router is not None) != (self.model == "openai/gpt-5.6-terra"):
+            raise ValueError("Terra requires the explicitly authorized private router")
         return self
 
 
@@ -164,6 +212,7 @@ def build_harness(config):
                 config.codex.sha256,
                 config.codex.model,
                 store,
+                router=config.codex.router,
                 local_category_vocabulary=vocabulary,
                 local_category_context_error=context_error,
             )

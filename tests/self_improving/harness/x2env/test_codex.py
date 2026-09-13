@@ -44,6 +44,48 @@ def test_external_cancellation_propagates_after_scoped_cleanup(tmp_path):
     assert (tmp_path / "attempt" / "codex.stderr").is_file()
 
 
+def test_router_secret_reaches_only_child_environment(tmp_path):
+    from self_improving.harness.x2env.codex import CodexBackend
+    from self_improving.harness.x2env.deployment import PrivateModelRouter
+
+    key = tmp_path / "credential"
+    key.write_text("test-only-not-a-real-secret")
+    key.chmod(0o600)
+    router = PrivateModelRouter(api_key_file=str(key))
+    process = tmp_path / "route-double"
+    process.write_text(
+        f"#!{sys.executable}\nimport os,sys\n"
+        "assert os.environ['X2ENV_ROUTER_API_KEY']=='test-only-not-a-real-secret'\n"
+        "assert 'test-only-not-a-real-secret' not in str(sys.argv)\n"
+        'sys.stdin.read()\nprint(\'{"type":"turn.completed"}\')\n'
+    )
+    process.chmod(0o700)
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(text="a table", seed=1, idempotency_key="route", output_dir=str(tmp_path)),
+        store,
+    )
+    result = CodexBackend(
+        process,
+        hashlib.sha256(process.read_bytes()).hexdigest(),
+        "openai/gpt-5.6-terra",
+        store,
+        router=router,
+    ).interpret(bundle, output_root=tmp_path / "attempt", timeout=5)
+    assert result.status != "completed"  # Transport double deliberately supplies no proposal.
+    terminal = json.loads((tmp_path / "attempt/process-terminal.json").read_text())
+    assert terminal["returncode"] == 0
+    invocation = (tmp_path / "attempt/invocation.json").read_text()
+    assert "test-only-not-a-real-secret" not in invocation
+    assert 'model_provider=\\"x2env_router\\"' in invocation
+    prompt = (tmp_path / "attempt/prompt.txt").read_text()
+    assert "Exact output JSON Schema" in prompt
+    assert '"x2env.scene_intent_proposal.v2"' in prompt
+    key.chmod(0o644)
+    with pytest.raises(ValueError, match="unsafe_model_credential"):
+        router.child_environment()
+
+
 def executable(tmp_path, response, event="turn.completed", tool=False):
     path = tmp_path / "model-double"
     path.write_text(
@@ -499,6 +541,36 @@ def test_cabinet_mouse_attributes_and_relation_survive_typed_proposal(tmp_path, 
         assert result.proposal.scene.entities[0].articulation_state.state == "open"
         assert result.proposal.scene.entities[1].color == "pink"
         assert result.proposal.scene.relations[0].relation == "on"
+
+
+@pytest.mark.parametrize("hang", [False, True])
+def test_revoked_auth_is_structured_blocker_without_model_retry(tmp_path, hang):
+    from self_improving.harness.x2env.codex import CodexBackend
+
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(text="a table", seed=1, idempotency_key="revoked", output_dir=str(tmp_path)),
+        store,
+    )
+    path = tmp_path / "revoked-auth-process-double"
+    path.write_text(
+        f"#!{sys.executable}\nimport sys,time\n"
+        "print('ERROR failed to refresh available models: "
+        "401 Unauthorized; auth error code: token_revoked', file=sys.stderr,flush=True)\n"
+        + ("time.sleep(20)\n" if hang else "sys.exit(1)\n")
+    )
+    path.chmod(0o700)
+    result = CodexBackend(
+        path, hashlib.sha256(path.read_bytes()).hexdigest(), "test-double", store
+    ).interpret(bundle, output_root=tmp_path / "attempt", timeout=1)
+    assert result.status == "blocked"
+    assert result.error_code == "model_authentication_required"
+    terminal = json.loads((tmp_path / "attempt/process-terminal.json").read_bytes())
+    assert terminal["reaped"] is True
+    assert terminal["failure"] == ("model_timeout" if hang else None)
+    diagnostic = json.loads((tmp_path / "attempt/transport-diagnostic.json").read_bytes())
+    assert diagnostic["required_resources"] == ["managed_codex_authentication"]
+    assert diagnostic["retry_performed"] is False
 
 
 def test_external_model_timeout_is_bounded_and_keeps_logs(tmp_path):

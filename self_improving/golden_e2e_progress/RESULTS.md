@@ -1,5 +1,21 @@
 # 进度与结果
 
+## 2026-09-13 私有Terra路由与结构化输出实测
+
+- 用户明确授权新内部路由；部署固定`openai/gpt-5.6-terra`，保留max、不使用旧planner。
+  私钥仅权限600文件读取后进入子进程环境，根忽略`.x2env-private/`，不进入argv或回执。
+- 真实Responses小调用HTTP200、completed、1.29s；此为协议探针，不是workflow成功。
+- 原S03失败stderr明确401/token_revoked，旧终态model_timeout保持；新增分类测试2项先RED，
+  现返回blocked/model_authentication_required、不重试，原process-terminal仍保超时/退出原因。
+- 第一受管理Codex探针`/var/tmp/canonical-terra-interpret-dprbo_4k`，75.95s返回JSON但55项合同错误；
+  路由未落实output-schema扩展的结果被本地严格拒绝。models列表格式警告亦保留，不当作调用成功。
+- 同一合同显式加入模型输入后，`/var/tmp/canonical-terra-schema-c5l8fjl0`真实interpret
+  completed、44.72s，原模型输出通过类型/输入来源校验；没有手填SceneIR、模型降级或仿真执行。
+- 98项相邻回归通过48.75s；新增固定路由/任意参数注入完成门测试2项通过2.98s。
+  模型、密钥传递与错误测试中的程序替身不计真实E2E。
+- 用户收窄范围后第二Plate候选安全中断789.80s，无新资产；现场
+  `/var/tmp/canonical-plate-coacd-candidate2.iHWy4v`保留，不宣称碰撞保真改进。
+
 ## 2026-09-13 v3采纳前只读独立审核
 
 - 同一active codex.ground操作先核真实controller授权、显式部署policy、原模型transport、candidate与几何，

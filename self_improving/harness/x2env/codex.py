@@ -34,6 +34,7 @@ class CodexBackend:
         model: str,
         artifact_store: ArtifactStore,
         *,
+        router=None,
         local_category_vocabulary: tuple[str, ...] = (),
         local_category_context_error: str | None = None,
     ):
@@ -66,6 +67,7 @@ class CodexBackend:
         self.executable_sha = approved_executable_sha256
         self.model = model
         self.store = artifact_store
+        self.router = router
 
     def assess_asset_candidates(self, candidates, *, output_root: Path, timeout: int = 600):
         """Inject managed Codex into Yuxin's existing visual verification seam."""
@@ -469,12 +471,15 @@ class CodexBackend:
                 "model_timeout",
                 "model_interrupted",
                 "model_exit_failure",
+                "model_authentication_required",
                 "model_incomplete_turn",
                 "advisory_tool_violation",
                 "proposal_input_mismatch",
                 "video_evidence_mismatch",
             }
             failure = str(exc) if str(exc) in allowed else "invalid_model_evidence"
+            if failure == "model_authentication_required":
+                status = "blocked"
             proposal = None
         executed = (root / "process.json").is_file()
         elapsed = time.monotonic() - started
@@ -510,10 +515,15 @@ class CodexBackend:
         failure = None
         cancellation = None
         signals_sent = []
+        output_schema = structured_output_schema(schema, bundle=bundle)
+        if self.router is not None:
+            # Some compatible providers do not enforce the transport's schema extension.
+            # Supply the same contract to the model; local validation remains mandatory.
+            prompt += "\nExact output JSON Schema:\n" + json.dumps(output_schema)
         record("prompt.txt", prompt.encode(), "text/plain")
         record(
             "proposal.schema.json",
-            json.dumps(structured_output_schema(schema, bundle=bundle)).encode(),
+            json.dumps(output_schema).encode(),
         )
         argv = [
             str(self.executable),
@@ -540,6 +550,11 @@ class CodexBackend:
             "--output-last-message",
             str(root / "proposal.json"),
         ]
+        if self.router is not None:
+            if self.model != "openai/gpt-5.6-terra":
+                raise ValueError("invalid_model_route")
+            argv.extend(self.router.arguments())
+        child_environment = self.router.child_environment() if self.router else None
         for image in images:
             argv.extend(["-i", image["path"]])
         argv.append("-")
@@ -564,6 +579,7 @@ class CodexBackend:
                 stdout=stdout,
                 stderr=stderr,
                 cwd=root,
+                env=child_environment,
                 start_new_session=True,
             )
             process_stat = Path(f"/proc/{process.pid}/stat").read_text()
@@ -617,6 +633,21 @@ class CodexBackend:
             record("proposal.json", proposal_path.read_bytes())
         if cancellation is not None:
             raise cancellation
+        stderr_text = (root / "codex.stderr").read_text(errors="replace")
+        if (failure or process.returncode != 0) and (
+            "401 Unauthorized" in stderr_text and "token_revoked" in stderr_text
+        ):
+            record(
+                "transport-diagnostic.json",
+                json.dumps(
+                    {
+                        "error_code": "model_authentication_required",
+                        "required_resources": ["managed_codex_authentication"],
+                        "retry_performed": False,
+                    }
+                ).encode(),
+            )
+            raise ValueError("model_authentication_required")
         if failure:
             raise ValueError(failure)
         if process.returncode != 0:

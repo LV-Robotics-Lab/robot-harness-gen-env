@@ -9,8 +9,10 @@
 - `CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md`：C08/C09动态支撑拓扑、真实面域与多实体设计补全增量契约；尚未实现的能力不升级为通过。
 
 - `CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`：当前已批准 canonical 实施计划；包含目标模块、
-  dirty-byte/全分支收敛、C00–C15 逐功能提交、4+4+4 固定矩阵、30 分钟预算、制品发布和 bingsheng
+  dirty-byte/全分支收敛、C00–C15 逐功能提交；最新matrix v2以四个简单例与必要交付门验收，单次20分钟，制品发布和 bingsheng
   push 停止点。
+- `qualification-matrix-v2.json`：2026-09-13用户主动收窄的当前矩阵；06:25:09Z起、08:25:09Z前必须审计。
+  v1原文和失败证据保留，不宣称v1通过；覆盖率实测报告但不再要求精确100%。
 - `CANONICAL_X2ENV_MERGE_DECISIONS.md`：当前 canonical x2env 收敛、开发分支整合、验证与
   `worktree/bingsheng` push 计划的 Q01–Q64 澄清检查点；实施计划以其中已确认决策为输入。
 - `HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`：历史实验交接 prompt；记录安全停止现场、
