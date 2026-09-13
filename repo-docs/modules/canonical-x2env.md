@@ -65,11 +65,11 @@ compile、双profile Genesis replay、观察诊断、validate和包物化，约5
 未知foreground XY不能在compile中变成零；显式结构默认、Registry尺寸和唯一on支撑高度推导仍合法。
 完成门独立复核这些条件，并把原interpret proposal纳入证据包；209项相关回归及上述S01真实路径已通过。
 
-测试从 `script/run_self_improving_tests.sh` 执行六组、独立root与merge；每组独立30分钟总预算。
-同源六份测量才可归并，业务文件语句/分支必须100%。全active lint与reader docs检查已实际接入，
+测试从 `script/run_self_improving_tests.sh` 执行六组、独立root与merge；本轮显式限制每组20分钟。
+同源六份测量才可归并；业务覆盖率及缺口实测报告，测试/lint/测量完整性仍阻断。全active lint与reader docs检查已实际接入，
 不再列为未实现；固定源码的真实全组结果和资格仍须分别验收，详见进度账。
 固定a0499b9已在本地Python3.13通过六组与独立root测试、lint及docslink；合并core语句92.739%、
-分支85.064%，因此覆盖门仍失败，不是后续HEAD、可推送资格或hosted CI证明。
+分支85.064%，因此当时v1覆盖门失败；该旧失败不回填，也不是后续HEAD、可推送资格或hosted CI证明。
 
 内部 Codex 所有角色通过唯一 transport 显式请求 `model_reasoning_effort="max"`；拒绝时不降级。
 回执记录请求值与实际argv，但不把CLI接受配置描述成服务端有效力度已验证；旧未指定回执不回填。
