@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C08/C09 支撑拓扑只读设计
+
+- 固定Genesis0e74bf公开get_verts/init_faces及get_vverts/init_vfaces可读实际面；求解器初始化消费
+  init_faces+vert_start。主线程复读关键callsite；原URDF逐collision循环支持单link多凸块。
+- 已声明runtime发现CoACD1.0.14文件/接口，但未做native import/分解/新仿真，不称执行通过。
+- 当前normalize整体凸包、评估静态矩形target、grounding两实体限制不能证明M03/H02/H03。
+  增量契约明确先拓扑/有效面，再动态图/逐实体设计，不改冻结矩阵或阈值。
+
 ## 2026-09-13 S01 同一公共工作流真实开发闭环
 
 - 固定clean `a57a0ea33acbb2926774ac01f6d7b0480f6c9386`，workflow

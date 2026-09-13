@@ -45,6 +45,10 @@ _Avoid_: cabinet、basket、任意primitive替代物
 含来源、许可、几何、物理元数据与完整依赖的不可变对象表示；修订产生关联的新版本。
 _Avoid_: 可覆盖目录、仅文件名身份
 
+**Measured Support Surface（实测支撑面）**:
+由实际几何确定、保留边界和孔洞的承载区域；区域存在仍不等于运行中有有效接触。
+_Avoid_: 外包围盒、凸包填洞、对象最高点
+
 **Asset Source（资产来源）**:
 资产的获取来路，包括本地库、许可允许的网络来源或真实重建。
 _Avoid_: exact、digital cousin

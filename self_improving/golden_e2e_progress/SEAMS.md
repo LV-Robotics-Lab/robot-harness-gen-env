@@ -53,6 +53,9 @@ classify_design_unknowns保留原unknown行与标记；规则有内容时原unkn
 
 ## 冻结验收seam
 
+C08/C09多实体支撑增量按[增量契约](CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)在既有compile/
+ground/Harness/assessment/package公开seam执行TDD；固定Genesis实际拓扑先验证，不能只删类型门。
+
 [qualification-matrix-v1.json](qualification-matrix-v1.json)与
 [physics-assertions-v1.json](physics-assertions-v1.json)是C02公开测试输入。
 C03测试typed contracts/Registry，C04工作流，C06–C10 adapter，C11复制包，C12 CLI，

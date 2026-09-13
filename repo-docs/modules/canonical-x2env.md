@@ -1,5 +1,9 @@
 # Canonical x2env（收敛实施中）
 
+多实体动态支撑尚在实施：当前整体凸包碰撞体不能证明凹盘底，类型门也不能直接删除。
+下一片先补实际加载三角拓扑和保孔洞的实测支撑面，再做目标逐帧坐标与逐实体设计授权；
+详见[增量契约](../../self_improving/golden_e2e_progress/CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)。
+
 固定a57a0ea的S01已从一次公共Harness提交真实完成local检索、颜色child及视觉复验、ground、
 compile、双profile Genesis replay、观察诊断、validate和包物化，约546.60秒，物理26/26通过。
 这只授予单案例开发闭环：包仍development_review/sim_ready=false，复制运行与最终矩阵资格待验。

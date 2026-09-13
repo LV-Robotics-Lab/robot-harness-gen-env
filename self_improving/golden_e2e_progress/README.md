@@ -6,6 +6,8 @@
 
 ## 文件地图
 
+- `CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md`：C08/C09动态支撑拓扑、真实面域与多实体设计补全增量契约；尚未实现的能力不升级为通过。
+
 - `CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`：当前已批准 canonical 实施计划；包含目标模块、
   dirty-byte/全分支收敛、C00–C15 逐功能提交、4+4+4 固定矩阵、30 分钟预算、制品发布和 bingsheng
   push 停止点。

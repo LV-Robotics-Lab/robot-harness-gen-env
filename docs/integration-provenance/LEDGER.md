@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C08-SUPPORT-DESIGN — 实际加载面域前置
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis/CoACD/Gujie独立保留。
+- source_ref：Harness`dfda113`，Genesis`0e74bf392781884ccad765c3f344419c86b872ca`。
+- integration_method：只读核公开几何拓扑及URDF多collision，增量spec不直接复制第三方树或放宽物理门。
+- verification：主线程复读关键callsite；runtime_verification：未执行新分解/支撑仿真。
+- recorded_git_authors：原API、原适配与后续Harness实现分别保留；当前状态为设计。
+
 ## INT-CANONICAL-S01-REAL-CLOSURE — 单workflow开发闭环
 
 - origin_owner：Bingsheng Harness workstream；upstream_owner：Yuxin检索、CreativeTrio CC0鼠标、Genesis分别保留。
