@@ -1,23 +1,8 @@
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
-from pathlib import Path
-from uuid import UUID
-
 import pytest
 from pydantic import ValidationError
 
-from self_improving.harness.artifacts import LocalArtifactStore
-from self_improving.harness.events import RecordingEventSink
-from self_improving.harness.handlers.text2env_compile import text2env_compile_descriptor
-from self_improving.harness.handlers.text2env_replay import text2env_replay_descriptor
-from self_improving.harness.registry import (
-    HandlerResult,
-    RegistryRegistrationError,
-    SkillRegistry,
-    StaticDependencyResolver,
-)
 from self_improving.harness.schemas import (
     ArtifactRef,
     ExecutionReproducibility,
@@ -135,90 +120,3 @@ def test_v2_descriptor_still_requires_v1_qualification_receipt() -> None:
 
     with pytest.raises(ValidationError, match="qualification_artifact.schema_version"):
         SkillDescriptorV2.model_validate(payload)
-
-
-def _put_json(
-    store: LocalArtifactStore,
-    path: Path,
-    *,
-    name: str,
-    schema_version: str,
-    payload: object,
-) -> ArtifactRef:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
-    return store.put_file(
-        path,
-        name=name,
-        media_type="application/json",
-        schema_version=schema_version,
-    )
-
-
-def test_registry_rejects_unverified_v2_descriptor_without_conversion(tmp_path: Path) -> None:
-    store = LocalArtifactStore(tmp_path / "cas")
-    report = _put_json(
-        store,
-        tmp_path / "report.json",
-        name="qualification_report",
-        schema_version="harness.skill_qualification_report.v1",
-        payload={"case": "repeatable-physical-case", "status": "pass"},
-    )
-    qualification = _put_json(
-        store,
-        tmp_path / "qualification.json",
-        name="qualification",
-        schema_version="harness.skill_qualification.v1",
-        payload={
-            "skill_ref": "test.repeatable@1.0.0",
-            "status": "pass",
-            "deterministic_case_id": "repeatable-physical-case",
-            "regression_command": "pytest -q",
-            "report_sha256": report.sha256,
-        },
-    )
-    descriptor = SkillDescriptorV2(
-        skill_id="test.repeatable",
-        version="1.0.0",
-        mcp_tool_name="test_repeatable_v1_0_0",
-        input_schema="harness.artifact_ref.v1",
-        output_schema="harness.artifact_ref.v1",
-        implementation_name="tests.repeatable",
-        implementation_version="1",
-        implementation_sha256=SHA_B,
-        reproducibility=ExecutionReproducibility.EVIDENCE_INVARIANT_REPEATABLE,
-        max_attempts=1,
-        qualification_artifact=qualification,
-    )
-    registry = SkillRegistry(
-        artifact_resolver=store,
-        dependency_resolver=StaticDependencyResolver({}),
-        event_sink=RecordingEventSink(),
-        clock=lambda: datetime(2026, 8, 31, tzinfo=timezone.utc),
-        run_id_factory=lambda: UUID("12345678-1234-4234-9234-123456789abc"),
-    )
-
-    with pytest.raises(RegistryRegistrationError, match="verified evidence-invariant"):
-        registry.register(descriptor, lambda value, _context: HandlerResult(output=value))
-
-    assert registry.list() == ()
-
-
-def test_production_factories_make_truthful_versioned_claims() -> None:
-    qualification = _qualification_ref()
-
-    compile_descriptor = text2env_compile_descriptor(
-        qualification_artifact=qualification,
-        implementation_sha256=SHA_B,
-    )
-    replay_descriptor = text2env_replay_descriptor(
-        qualification_artifact=qualification,
-        implementation_sha256=SHA_B,
-    )
-
-    assert type(compile_descriptor) is SkillDescriptor
-    assert compile_descriptor.deterministic is True
-    assert type(replay_descriptor) is SkillDescriptorV2
-    assert (
-        replay_descriptor.reproducibility is ExecutionReproducibility.EVIDENCE_INVARIANT_REPEATABLE
-    )

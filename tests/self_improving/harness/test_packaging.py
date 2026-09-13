@@ -59,7 +59,6 @@ def _copy_build_fixture(destination: Path) -> Path:
         FROZEN_ASSERTIONS,
         *(p.relative_to(REPO_ROOT) for p in (REPO_ROOT / CANONICAL_SCHEMAS).glob("*.json")),
         CANONICAL_SCHEMAS / "api-fields.md",
-        QUALIFIED_REPLAY_CLI,
         Path("self_improving/registry.py"),
         Path("self_improving/harness/__init__.py"),
         Path("scene_gen/__init__.py"),
@@ -142,10 +141,7 @@ def test_wheel_installs_runtime_source_and_qualification_resources(tmp_path: Pat
         assert expected_scene_gen_resources <= members
         assert expected_qualifications <= members
         assert expected_media_native <= members
-        assert (
-            archive.read(QUALIFIED_REPLAY_CLI.as_posix())
-            == (REPO_ROOT / QUALIFIED_REPLAY_CLI).read_bytes()
-        )
+        assert QUALIFIED_REPLAY_CLI.as_posix() not in members
         entry_points_member = next(
             name for name in members if name.endswith(".dist-info/entry_points.txt")
         )
@@ -211,9 +207,7 @@ assert hashlib.sha256(native_source.read_bytes()).hexdigest() == {MEDIA_NATIVE_S
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
     for member in expected_media_native:
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
-    assert (installed / QUALIFIED_REPLAY_CLI).read_bytes() == (
-        REPO_ROOT / QUALIFIED_REPLAY_CLI
-    ).read_bytes()
+    assert not (installed / QUALIFIED_REPLAY_CLI).exists()
 
 
 def test_packaging_declares_qualified_skill_resources() -> None:

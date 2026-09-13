@@ -1,5 +1,19 @@
 # 进度与结果
 
+## 2026-09-13 C13 旧资格执行权威退役
+
+- 真实消费者检索确认旧 application/Registry/compile-replay handlers/qualifiers/receipts/深 CLI
+  已无保留生产入口，删除14个源文件及15个专属测试；handlers 包不再重导出旧实现。
+  descriptor 混合测试仅去旧 Registry/工厂部分，纯 schema 断言保留；wheel 不再携带旧深 CLI。
+- absence 先 RED，随后主线程边界/descriptor/packaging/runtime-events/feed 75 passed/1.05s；
+  子agent定向408 passed/6.87s，全仓 collection 2411/0.69s。原字节可从 `f35ea18dd51902edb52f7d791ae6de75511de1f8`
+  恢复。底层 schema、staging、稳定 runtime/feed 保留；旧资格资源与余下孤立模块仍待下一切片。
+- 并行 canonical 诊断测试747 passed/152.68s，报告 `/var/tmp/canonical-coverage-f35ea18-dev.json`；
+  执行于开发中的工作树而非固定 f35ea18，含当时在改的 source_identity，不能作为最终覆盖资格。
+  全 canonical 报告约83%，仍有995条未覆盖语句；尚未达到冻结 core 100% 门，未降低最终阈值。
+- Dashboard 三 JSON 入口仍404，无 task id，未伪造更新。S01 正在固定 f35ea18 的独立工作树运行。
+
+
 ## 2026-09-13 C14 安装后的 canonical 资源闭包
 
 - platform 显式声明 scipy；同一 wheel 携带原冻结 physics-assertions-v1.json、canonical schema

@@ -1,5 +1,16 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-QUALIFIED-EXECUTION-RETIRE — 旧执行权威删除
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；原作者及第三方归属保留 Git 历史。
+- source_ref：`f35ea18dd51902edb52f7d791ae6de75511de1f8` 可恢复全部被删源文件。
+- target_paths：旧 application/compile_cli/Registry/replay_application/qualify_compile/qualify_replay/
+  replay_qualification/run_receipts/replay_dependencies、四个 text2env handler、qualified_replay_cli。
+- integration_method：确认仅旧组内部消费者后退役，不重签资格，不删除仍被消费的底层契约。
+- verification：主线程75项通过，collection2411；runtime_verification：本切片无新仿真。
+- recorded_git_authors：以固定来源与本提交 Git 元数据为准，不推断自然人映射。
+
+
 ## INT-CANONICAL-C14-INSTALLED-RESOURCES — 同一 wheel 的公共资源
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：SciPy 原作者。
