@@ -1,5 +1,12 @@
 # 稳定决策
 
+## 2026-09-13 支撑几何证明与物理证明分离
+
+- MeasuredSupportSurface是不可变资产的派生几何记录，绑定全部成员和面来源；不写回资产版本造成循环。
+- 面候选不按类别/最高点代选；visual/collision共同有效域保留孔洞，完整footprint投影跨孔即拒绝。
+- Shapely2.1.2只进入platform依赖，实际版本与GEOS身份入记录，不改sealed Genesis；动态物理门仍关闭。
+
+
 ## 2026-09-13 v2生成布局授权与传输独立绑定
 
 - 新GeneratedLayoutPolicy必须显式mode/enabled，旧SceneDesignPolicy与缺mode配置保留v1。

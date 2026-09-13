@@ -34,6 +34,7 @@ platform = [
   "jsonschema>=4.23,<5",
   "numpy>=1.26,<3",
   "scipy>=1.17,<2",
+  "shapely==2.1.2",
   "trimesh>=4.5,<5",
 ]
 

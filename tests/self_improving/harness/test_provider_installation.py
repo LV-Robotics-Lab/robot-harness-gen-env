@@ -121,6 +121,14 @@ def test_wheel_declares_scipy_for_the_canonical_platform(installed_provider):
     assert any(line.startswith("scipy") and 'extra == "platform"' in line for line in requirements)
 
 
+def test_wheel_pins_hole_preserving_geometry_for_the_platform(installed_provider):
+    _, _, wheel = installed_provider
+    with zipfile.ZipFile(wheel) as archive:
+        name = next(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
+        requirements = BytesParser().parsebytes(archive.read(name)).get_all("Requires-Dist")
+    assert 'shapely==2.1.2; extra == "platform"' in requirements
+
+
 def test_installed_canonical_schema_snapshots_and_loader_templates_are_original(installed_provider):
     root, python, wheel = installed_provider
     with zipfile.ZipFile(wheel) as archive:

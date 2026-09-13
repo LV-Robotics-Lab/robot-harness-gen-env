@@ -21,7 +21,8 @@ loaded/step0零速度；历史无证明维持not_run。152项回归通过，新r
 多实体动态支撑尚在实施：当前整体凸包碰撞体不能证明凹盘底，类型门也不能直接删除。
 新child已接逐geom实际有向三角面与authored URDF核对，123项相关测试通过；真实新版运行待验。
 旧顶点审计明确topology not_run，不能由此授予盘面或动态支撑。
-下一片先补实际加载三角拓扑和保孔洞的实测支撑面，再做目标逐帧坐标与逐实体设计授权；
+`measured_support.py`已实现保孔洞共同面域与完整源投影的目标坐标检查，Shapely2.1.2属platform依赖。
+70项相关测试通过；此处是authored几何组件，不授实际加载/动态接触。下一片接独立拓扑消费与动态物理；
 详见[增量契约](../../self_improving/golden_e2e_progress/CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)。
 
 固定a57a0ea的S01已从一次公共Harness提交真实完成local检索、颜色child及视觉复验、ground、

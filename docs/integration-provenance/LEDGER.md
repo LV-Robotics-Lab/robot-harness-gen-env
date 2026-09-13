@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-MEASURED-SUPPORT — authored面域组件
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Shapely/GEOS、trimesh独立保留。
+- source_ref：Harness b2b63b7与已批准多实体spec；依赖Shapely2.1.2，wheel身份见RESULTS。
+- target_paths：measured_support.py、对应公开测试、platform依赖与第4组映射。
+- integration_method：真实Registry/CAS读取、完整变换、共同面域/孔洞及目标坐标footprint；无复制vendor代码。
+- verification：主线程70项相关测试通过，191语句/90分支100%；runtime_verification：not_run。
+- limitation：仅组件，不证明实际加载/动态接触/矩阵成功；recorded_git_authors：第三方作者与Harness整合记录分开。
+
+
 ## INT-CANONICAL-C06-NORMALIZED-COLOR-PBR — 真实灰暗画面原因修复
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：trimesh与Genesis导入器独立保留。

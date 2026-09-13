@@ -1,5 +1,22 @@
 # 进度与结果
 
+## 2026-09-13 保孔洞的实测支撑面组件
+
+- 两个公开seam读取真实Registry/CAS的不可变URDF/OBJ/GLB，应用URDF与node变换，返回所有共同
+  visual/collision水平面；扣遮挡、保孔洞、不按类别/最高点选择。完整源三角投影在目标当帧坐标中核
+  covers和冻结2cm边界余量，不用凸包填洞或顶点包含替代内部覆盖。
+- 非法faces/parts/布尔值/字符串姿态、URDF尾随token先真实RED再拒绝；有限数位姿变换溢出亦先RED。
+  有限非零面积三点环必simple，移除重复不可达triangle/union assertion；保留消费处域有效性及有限面积门。
+- agent最终62 passed/1.40s；主线程加真实离线wheel安装测试共70 passed/4.76s；
+  measured_support 191/191语句、90/90分支100%，无排除或内部mock。总体覆盖不能由单文件结果替代。
+- platform明确钉Shapely2.1.2；真实wheel metadata测试先缺依赖失败，再1 passed/1.77s。
+  独立安装`/var/tmp/canonical-shapely-2.1.2.TgCNjK/site`，GEOS3.13.1，wheel SHA
+  `7ed1a5bbfb386ee8332713bf7508bc24e32d24b74fc9a7b9f8529a55db9f4ee6`；未修改sealed Genesis环境。
+- 测试日志`/var/tmp/canonical-support-complete.log`及json；主线程coverage
+  `/var/tmp/canonical-support-root.coverage`。合成几何不是仿真，actual_loaded_evaluated与physical_evaluated均false。
+  新测试归第4组；动态图、真实碰撞分解、编译/物理/包消费仍待后续，不授任何矩阵成功。
+
+
 ## 2026-09-13 固定a0499b9完整测试与覆盖实测
 
 - clean固定`a0499b97989ea85f5e5fbb81bdded1e5bcc1778a`，六组全部通过；各组wall为
