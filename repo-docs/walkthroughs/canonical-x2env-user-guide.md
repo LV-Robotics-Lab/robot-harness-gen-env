@@ -166,6 +166,8 @@ x2env resume --deployment /absolute/deployment.json --workflow-id WORKFLOW_ID
 ## 如何判断结果、定位失败
 
 - 先读顶层 `status/error_code/stage/workflow_id`，再读 snapshot 的停止原因、所需资源和操作结果。
+- 失败包`result.json`与`failure/error.json`列出停止阶段、可读说明和必要资源。
+  `between_operations`表示尚未进入下一操作，不把最近成功步骤误报成失败；旧导出格式不回填。
 - `blocked_external_resource`：检查部署文件、模型/资源可用性、许可与源 pin；不要读取或传播密钥值。
 - `model_authentication_required`：受管理模型认证失效，父状态列出`managed_codex_authentication`；
   由部署方恢复凭据，不消耗模型重试，不把“本机缓存已登录”当作服务端授权有效的证明。

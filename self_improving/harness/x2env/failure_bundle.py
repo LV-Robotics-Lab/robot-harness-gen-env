@@ -10,6 +10,20 @@ from .artifacts import artifact_closure
 def materialize_failure(snapshot, store, output, *, reuse_existing=False):
     if snapshot.status not in {"failed", "blocked", "cancelled"}:
         raise ValueError("failure bundle requires stopped workflow")
+    last = snapshot.operations[-1] if snapshot.operations else None
+    stage = last.capability if last and last.status != "succeeded" else "between_operations"
+    error_code = snapshot.stop_reason
+    explanation = (
+        f"Harness stopped at {stage}: {error_code}. "
+        "Completed artifacts and original logs are retained. No usable environment is granted."
+    )
+    diagnostic = {
+        "stage": stage,
+        "error_code": error_code,
+        "message": explanation,
+        "required_resources": list(snapshot.required_resources),
+        "last_operation": last.capability if last else None,
+    }
     output = Path(output)
     if not output.is_absolute() or any(p.is_symlink() for p in (output, *output.parents)):
         raise ValueError("failure output must be absolute non-symbolic new directory")
@@ -84,14 +98,15 @@ def materialize_failure(snapshot, store, output, *, reuse_existing=False):
             {
                 "status": snapshot.status,
                 "stop_reason": snapshot.stop_reason,
-                "required_resources": snapshot.required_resources,
+                **diagnostic,
             }
         ).encode(),
     )
     put(
         "human-readable.md",
         (
-            f"# x2env workflow {snapshot.status}\n\nStop reason: {snapshot.stop_reason}\n\n"
+            f"# x2env workflow {snapshot.status}\n\n{explanation}\n\n"
+            f"Required resources: {', '.join(snapshot.required_resources) or 'none recorded'}\n\n"
             "Only completed evidence is included. "
             "No usable environment or qualification is granted.\n"
         ).encode(),
@@ -117,6 +132,7 @@ def materialize_failure(snapshot, store, output, *, reuse_existing=False):
         "revision": snapshot.revision,
         "status": snapshot.status,
         "stop_reason": snapshot.stop_reason,
+        **diagnostic,
         "scene_ir": scene,
         "images": images,
         "videos": videos,

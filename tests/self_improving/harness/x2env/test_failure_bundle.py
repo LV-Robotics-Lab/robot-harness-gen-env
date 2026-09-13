@@ -23,6 +23,10 @@ def test_missing_backend_produces_failure_bundle_with_original_input_and_no_scen
     assert result["status"] == "blocked"
     assert result["environment_package"] is None
     assert result["scene_ir"] == {"status": "not_produced"}
+    assert result["required_resources"] == ["managed_codex_backend"]
+    assert result["error_code"] == snapshot.stop_reason
+    assert result["stage"] == "between_operations"
+    assert "No usable environment" in result["message"]
     root = tmp_path / "review"
     manifest = json.loads((root / "failure/manifest.json").read_text())
     assert manifest["workflow_id"] == handle.workflow_id

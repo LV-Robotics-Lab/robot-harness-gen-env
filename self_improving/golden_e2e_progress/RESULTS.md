@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 matrix v2首次S01与失败可读性
+
+- 新固定e6570f3 S01，workflow`1d7bdf27-e9c0-453b-9073-75d5edfe1f97`，179.63s失败，
+  `color_execution_child_model_context_mismatch`。真实interpret、原资产视觉、颜色建议、不可变child和
+  新粉红鼠标Genesis预览已执行；旧审核问句精确比较未接router的同schema后缀，未compile/完成。
+  根`/var/tmp/canonical-matrix-v2-text-multimodal.BXDrkz/S01`，失败包与原两资产保留，所有owner已退出。
+- 主线程已查看真实新粉红鼠标预览，但它不是完整桌面环境或物理通过。针对性兼容修复另立提交；
+  不复写该失败或原样重试。共享dashboard三入口本轮仍404，无状态更新伪称。
+- 失败交付新增真实停止stage、error_code、required_resources和可读说明；只有完成操作后停止时标
+  `between_operations`，不把已完成ingest称失败阶段。原部分产物和复用防篡改检查保留。
+  failure_bundle/CLI 30项通过；旧失败包保持原bytes，不在原目录重物化新格式。
+
 ## 2026-09-13 私有Terra路由与结构化输出实测
 
 - 后续补足父workflow认证阻断的`required_resources=managed_codex_authentication`，
