@@ -274,7 +274,12 @@ def test_typed_runtime_delegates_verified_scene_to_shared_launcher(tmp_path, mon
     def launcher(payload, **kwargs):
         calls.append((payload, kwargs))
         kwargs["output"].mkdir()
-        return {"status": "failed", "error_code": "boundary_double", "wall_seconds": 0.01}
+        return {
+            "status": "failed",
+            "error_code": "boundary_double",
+            "wall_seconds": 0.01,
+            "loaded": {"vertices": [[0.125, 0.25, 0.5]] * 10000},
+        }
 
     monkeypatch.setattr(package_loader, "launch_child", launcher)
     result = run_scene(
@@ -290,6 +295,9 @@ def test_typed_runtime_delegates_verified_scene_to_shared_launcher(tmp_path, mon
     payload, args = calls[0]
     assert payload["seed"] == 37 and args["profile"] == "half_dt"
     assert args["timeout_seconds"] == 123 and args["child_path"].name == "genesis_child.py"
+    raw = (tmp_path / "out/result.json").read_bytes()
+    assert json.loads(raw) == result
+    assert len(raw) < 230000, "mesh evidence must not be amplified by pretty printing"
 
 
 def scene():

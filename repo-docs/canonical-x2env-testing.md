@@ -203,6 +203,8 @@ SceneIR 修订、compile/replay/observe/validate 报告和总耗时。
 [本轮 walkthrough](../self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)
 和 [机读结果](../self_improving/golden_e2e_progress/qualification-matrix-v2-results.json)。
 当前四例真实通过来源为 local；web/reconstruction 未在该部署配置并实跑，digital cousin 未实现。
+后续P1已在本机入口配置web/reconstruction并开始真实运行，失败/修复与阶段耗时另见
+[P1记录](../docs/evidence/canonical-p0-p1-20260913.md)，不改写旧四例来源范围。
 场景布局 fallback 的组件测试、真实颜色新版本 fallback 和通用重建不是同一份证明。
 
 ## 复制包的真实 load/step 检查

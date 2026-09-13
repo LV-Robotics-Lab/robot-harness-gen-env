@@ -198,8 +198,8 @@ x2env resume --deployment /absolute/deployment.json --workflow-id WORKFLOW_ID
 
 无需重新部署sealed runtime，可直接用下面的固定本机环境；它不是可任意搬迁的安装包。
 准备报告与完整使用说明位于`/home/jingxiang/bingsheng/runtime/harness/`，
-源码固定9d5909b；只做过配置组装、help和非法输入拒绝，本独立state尚未提交真实案例。
-四例成功来自walkthrough列出的各自隔离部署，不能混称同一已运行state。
+P1源码固定18ce9af（source-p1-color）；当前state已开始执行web和reconstruction案例，结果在
+`p1-evidence/`，不同于旧matrix v2四例的隔离部署。当前状态以各summary/原始stdout为准。
 迁移后另用当前部署的 runtime 根完成复制包 `load_step_smoke`：25 步、60.35 秒、新图片和视频，
 实际拒读源码/原资产/CAS；未重跑模型或物理 profile。记录在
 `/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/runtime-verification.json`。
@@ -208,8 +208,10 @@ x2env resume --deployment /absolute/deployment.json --workflow-id WORKFLOW_ID
 entry_root=/home/jingxiang/bingsheng/runtime/harness
 entry_python=/var/tmp/canonical-ci-python313.BmJ3Cc/venv/bin/python
 entry_deployment="$entry_root/deployment.json"
-export PYTHONPATH=/var/tmp/canonical-shapely-2.1.2.TgCNjK/site:"$entry_root/source-current":"$entry_root/source-current/self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim"
+export PYTHONPATH=/var/tmp/canonical-shapely-2.1.2.TgCNjK/site:"$entry_root/source-p1-color":"$entry_root/source-current/self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim"
 entry_media=/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/preserved/generic-experiment-v2-20260913.1QrGYD/inputs
+
+"$entry_python" -m self_improving.harness.x2env.cli check --deployment "$entry_deployment"
 
 "$entry_python" -m self_improving.harness.x2env.cli submit --deployment "$entry_deployment" \
   --text '在桌面放一个粉红色鼠标。' --seed 11 --idempotency-key my-text-1 --output "$entry_root/outputs/text-1"
@@ -226,7 +228,8 @@ entry_media=/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/preserved/g
 ```
 
 把输入替换为自己的绝对路径或文本，并使用新key及新输出目录；不要同时运行上面全部命令争抢资源。
-本机只配置local及两份父资产（mouse/redblock），无匹配时后续未配置来源会准确阻断；
+本机当前配置local、固定GitHub web provider及SAM2/TRELLIS重建；后者只配置了已授权
+“鼠标和笔.jpg”的派生授权。其他输入不自动获得授权。配置存在不代表该来源任意输入成功；
 私有模型端点和现有运行环境必须可访问，其他机器安装按前文配置，不能照抄本机路径。
 包内图片、视频、资产和报告从`result.json`给出的真实路径读取；失败包保留原始错误，不编辑state/CAS。
 

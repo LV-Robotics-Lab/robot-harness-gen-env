@@ -222,6 +222,36 @@ def test_failed_runtime_retains_partial_artifact_without_preview_success(tmp_pat
     assert "stderr.log" in json.loads(store.read_artifact(proof.receipt))["outputs"]
 
 
+def test_preview_references_full_runtime_result_without_duplicate_geometry(tmp_path):
+    from self_improving.harness.x2env.artifacts import artifact_closure
+    from self_improving.harness.x2env.asset_preview import AssetPreviewRenderer
+    from self_improving.harness.x2env.contracts import ArtifactRef
+
+    store, _, version = fixture(tmp_path)
+    result = {
+        "status": "failed",
+        "error_code": "fixture_failure",
+        "loaded": {"vertices": [0.125] * 10000},
+    }
+    raw = json.dumps(result, sort_keys=True).encode() + b"\n"
+
+    def runner(scene, **kwargs):
+        output = kwargs["output_dir"]
+        output.mkdir()
+        (output / "result.json").write_bytes(raw)
+        return result
+
+    proof = AssetPreviewRenderer(store, {}, tmp_path / "preview", 1, runner=runner).render(version)
+    receipt = json.loads(store.read_artifact(proof.receipt))
+    assert proof.status == "failed" and proof.error_code == "fixture_failure"
+    assert proof.receipt.size_bytes < 15000
+    ref = ArtifactRef.model_validate(receipt["runtime_result_ref"])
+    assert ref == ArtifactRef.model_validate(receipt["outputs"]["result.json"])
+    assert store.read_artifact(ref) == raw
+    refs = artifact_closure(store, [proof.receipt])
+    assert sum(r.size_bytes for r in refs) < len(raw) + 30000
+
+
 @pytest.mark.parametrize("fault", ["hash", "escape", "corrupt_parent"])
 def test_unbound_preview_or_corrupt_parent_never_yields_image(tmp_path, fault):
     from self_improving.harness.x2env.asset_preview import AssetPreviewRenderer

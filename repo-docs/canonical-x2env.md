@@ -14,7 +14,11 @@
 
 matrix v2 的 text、image、video、image+text 四个简单 workflow 成功，使用本地 mouse/redblock 资产；S01/S04 实际产生不可变颜色子版本。S01 另做一次隔离复制后的 Genesis 双时间步运行与新媒体输出。对应运行绑定各自源码提交，不能因本轮更新文档而改写身份。
 
-web 和 reconstruction adapter 已有实现，本机四例部署未配置它们的外部资源，不能称三来源都已真实通过。复杂容器、关节、多点支撑及机器人 policy/data collection 尚未获得端到端验证。`succeeded` 表示当前开发工作流完成；导出中的 `sim_ready=false`、`release_qualified=false` 与独立 copy-run 结果分别阅读。
+历史四例部署未配置 web/reconstruction。当前P1已配置并真实执行网络下载与新几何生成、登记和
+Genesis资产预览；完整来源案例仍有失败，见[P1逐次记录](../docs/evidence/canonical-p0-p1-20260913.md)。
+大几何预览的完整运行结果现在由回执引用；运行JSON取消缩进，减少重复存储，原始字段与容量门不变。
+这项存储修复不授予新的物理或端到端成功。
+复杂容器、关节、多点支撑及机器人 policy/data collection 尚未获得端到端验证。`succeeded` 表示当前开发工作流完成；导出中的 `sim_ready=false`、`release_qualified=false` 与独立 copy-run 结果分别阅读。
 
 ## 真实证据和文件位置
 

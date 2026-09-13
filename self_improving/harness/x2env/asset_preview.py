@@ -172,7 +172,9 @@ class AssetPreviewRenderer:
                 denied_roots=self.denied_roots,
                 timeout_seconds=remaining,
             )
-            receipt["runtime_result"] = result
+            receipt["runtime_result_ref"] = self.store.write_artifact(
+                _json(result) + b"\n", "application/json"
+            ).model_dump(mode="json")
             if result.get("status") != "passed" or not result.get("simulator_executed"):
                 raise ValueError(result.get("error_code", "preview_runtime_failed"))
             frame = result["media"]["frames"][-1]

@@ -227,7 +227,7 @@ def parse_runtime_scene(value):
 
 
 def _write(path, value):
-    path.write_text(json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + "\n")
+    path.write_text(json.dumps(value, sort_keys=True, allow_nan=False) + "\n")
 
 
 def _member(root, name):

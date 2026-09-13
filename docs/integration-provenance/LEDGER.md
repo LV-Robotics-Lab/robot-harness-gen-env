@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-RUNTIME-EVIDENCE-SIZE
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis及固定Gujie来源不变。
+- source_refs：18ce9af，reconstruction-03回执2c06aa3c7a497321b8a6287719a1cfe79f3dc40228f0e2f80dc8d975a76a6092。
+- integration_method：AssetPreviewRenderer用ArtifactRef保存完整运行结果，运行及可迁移launcher JSON取消缩进；不删拓扑/轨迹/物理字段。
+- lifecycle：integrated；verification：contract_pass（102项）；runtime_verification：新真实案例待运行。
+- 原现场派生序列化核验：receipt从51,026,578降至5,691 bytes；26引用共164,125,679 bytes，原256MiB预算通过。
+  result语义相等；旧CAS/终态不变，无新仿真主张。证据p1-evidence/compact-evidence-pz_h7_y_/summary.json。
+- recorded_git_authors：本提交Git元数据；无第三方代码复制。
+
 ## INT-CANONICAL-RECONSTRUCTION-COLOR
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：固定Gujie/SAM2/TRELLIS来源不变。

@@ -3,6 +3,32 @@
 本计划依据 [roadmap](../../repo-docs/canonical-x2env-roadmap.md) 的 P0/P1 与本轮只读发现制定。
 它是执行计划，不是能力声明；每一步完成与否以 RESULTS 中的实际记录为准。
 
+## 实时检查点
+
+- P0-a已提交a0fc1e0，后补CI库存及安装CLI契约；24项初始测试、72项prepare/web/库存测试通过。
+- P1-web-1已配置；web-01源轴失败经076c801修复。web-02已下载/规范化/入库/预览，视觉语义拒绝；
+  duck-01许可证受阻；独立cube案例进行中。尚无完整web成功，不标P1-web-2/P1-x完成。
+- P1-rec-1/2已配置实体解释器、新runtime和派生授权；原固定源码/模型库clean。
+- reconstruction-01已实际SAM2分割/TRELLIS新几何49.31秒，规范化登记后geometry不在运行前库中；
+  后续Genesis/视觉/完成门仍在执行。
+- 所有case命令、时限、测量、summary在 `/home/jingxiang/bingsheng/runtime/harness/p1-evidence/`；
+  state及输出分别为同父目录 `state/`、`outputs/`。失败不重写或从测量分母剔除。
+- 进一步检查点：数值mesh修复5e7116d真实越过旧节点限制，reconstruction-02因颜色白灰不符pink失败；
+  18ce9af增加模型颜色估计→既有规范化传递，并说明刚体无关节应为null。第三次重建299.796秒因
+  重复几何证据超256MiB失败；方盒109.797秒仍因动画/扩展候选耗尽失败。没有任务仍在运行。
+- 完整证据页：[`canonical-p0-p1-20260913.md`](../../docs/evidence/canonical-p0-p1-20260913.md)。
+
+## 实跑后续优先级（不以换prompt代替修复）
+
+0. 优先修复预览回执内嵌及运行JSON缩进放大；保持完整拓扑/哈希和256MiB预算，先RED/GREEN，
+   再原现场派生存储核验，最后新固定版本真实重建。不重写旧CAS或失败终态。
+1. 当前web仅一次词法query，cube没有扩展到box，命中动画样本即耗尽；需要基于失败类型设计有界
+   查询修订/更丰富来源，保留原类别和所有失败。不得映射某个prompt到固定资产URL。
+2. 资产规范化仅支持有限glTF core。occlusion/扩展/动画必须分别明确支持或拒绝，不能删字段制造通过。
+3. 原图重建颜色曾丢失，18ce9af均匀色设计修复待真实通过；纹理/隐藏面恢复仍未实现。
+4. 澄清必须展示具体原因；来源closure拒绝时也要保留原始来源回执与部分产物索引，但不能信任坏引用。
+5. 达到上述分支成功后再验证local miss→web完整成功和新来源copy-run；P2继续后置。
+
 ## 本轮发现（执行前）
 
 - `worktree/bingsheng` HEAD `e175e47`，工作树干净，远端同步；四例 matrix v2 只用 local 资产。

@@ -1,8 +1,13 @@
 # Canonical x2env 后续开发方向与计划
 
-本页是 matrix v2 推送后的开发建议，不把排期写成已完成能力，也不重新启动已结束的两小时验收窗口。基线是[四例结果](../self_improving/golden_e2e_progress/qualification-matrix-v2-results.json)和[最终审计](../self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)。本轮文档更新不执行下列功能项目。
+本页是 matrix v2 推送后的开发方向。用户现已批准先推进P0/P1，执行清单见
+[P0/P1计划](../self_improving/golden_e2e_progress/CANONICAL_P0_P1_PLAN_20260913.md)。
+基线仍为[四例结果](../self_improving/golden_e2e_progress/qualification-matrix-v2-results.json)和
+[最终审计](../self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)，不回填旧验收窗口。
 
 ## P0：把现有实验入口变成容易部署和诊断的服务组件
+
+当前公开只读 `check` 已实现并通过CLI/配置测试；已配置项与未配置项分别报告，尚非新机器安装验收。
 
 先减少首次安装和运行的人工拼接。现有本机入口绑定私有模型路由、固定源码及运行环境，其他机器还需显式配置。优先做公开的配置检查命令、资源缺失清单、可复制的依赖说明和最小部署示例。检查只读取版本、pin 和可用性，不打印密钥，不自动升级共享 runtime。
 
@@ -11,6 +16,10 @@
 验收：在新环境从文档安装，配置缺项能定位到具体字段；现有四模态样例分别运行并得到可追溯结果；每阶段有耗时、失败码和路径。若开发 CLI 增加新子命令，先定 API 并更新帮助/测试/文档，不能只在说明中虚构命令。
 
 ## P1：接通 web 与真实新资产重建
+
+当前本机已配置两来源；实跑已到网络下载/规范化/登记/预览，以及SAM2/TRELLIS新几何/登记/预览。
+完整E2E仍受视觉语义、许可、材质/动画范围等限制，逐次失败见[P1记录](../docs/evidence/canonical-p0-p1-20260913.md)。
+因此下一步是解决实际完成门缺口，不是重新从零写provider/重建adapter。
 
 资产搜索继续复用 Yuxin engine，围绕现有 `WebConfig` 接入固定 provider config、许可记录及所需索引。先在隔离目录完成一次真实下载、规范化、Registry 登记、Genesis replay/validate；记录作者、许可、来源 URL、原始 bytes 和新版本。许可或服务不可用保留受阻，不绕过来源检查。
 
@@ -56,4 +65,4 @@
 
 下一轮建议顺序为 P0 的部署检查和测量、P1 的 web、P1 的重建，然后 P2 的 can-on-plate；P3/P4 跟随实际失败补齐。资源阻断先给出所需环境和已完成产物，避免盲目模型重试。
 
-`worktree/bingsheng` 文档或功能 push 与 main PR 分开。本轮只推送用户要求的文档；main PR 仍待单独批准。
+`worktree/bingsheng` 文档或功能 push 与 main PR 分开。当前按P0/P1逐功能提交；main PR仍待单独批准。

@@ -1,5 +1,29 @@
 # 进度与结果
 
+## 2026-09-13 重建第三例与存储修复
+
+- reconstruction-03终态blocked，299.796203秒，artifact graph byte budget exceeded；生成、颜色覆盖及预览完成，视觉未执行。
+- 原回执2.546秒可复现超限；公开preview/run_scene回归先RED，修复后102项通过（3.38秒）。
+- 原现场派生序列化对比5.013秒，26引用/164,125,679 bytes；receipt 51,026,578→5,691 bytes。
+  完整result语义相等，不修改历史CAS/终态；没有新模拟执行。结果位于
+  `/home/jingxiang/bingsheng/runtime/harness/p1-evidence/compact-evidence-pz_h7_y_/summary.json`。
+
+## 2026-09-13 web 查询召回限制
+
+- web-solid-box-02（39901da2-dfac-4a4c-8b34-19553c51d46c）109.796818秒/blocked。
+  刚体null修复实际生效；真实search advisory选择cube，固定库仅命中三个不支持动画/扩展候选。
+  不是联网不可达，而是单次词法召回与规范化范围无法覆盖该输入。保留本轮全部7次web失败，不继续换prompt碰运气。
+- 后续计划增加失败驱动有界查询修订与材质支持切片，不预定候选或扩大许可。
+
+## 2026-09-13 本轮根测试与增量复核
+
+- 最后颜色/重建/原Codex/check/closure集中增量74项通过6.25秒，日志final-incremental.log；未运行完整六组coverage。
+
+- 第二次root核验2411 passed/1 skipped，281.08秒；`/var/tmp/x2env-p1-20260913/root-final.{log,xml}`。
+  执行期间后续颜色切片开发未包含在该root收集范围；不称最终HEAD冻结全测。
+- 颜色规划/规范化/原始Codex邻组53项通过4.84秒；大型证据/重建resolver/package53项通过2.16秒。
+- 最新颜色/刚体修复固定18ce9af，真实reconstruction-03/web-solid-box-02运行中；旧失败全部保留。
+
 ## 2026-09-13 重建颜色与刚体意图修复
 
 - reconstruction-02：f19597ef-d51a-445e-9e4f-a673fbc0c6c2，252.450571秒/blocked。

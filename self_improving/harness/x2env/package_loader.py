@@ -33,7 +33,7 @@ AUDIT_FILES = (
 
 
 def _write(path, body):
-    path.write_text(json.dumps(body, sort_keys=True, indent=2, allow_nan=False) + "\n")
+    path.write_text(json.dumps(body, sort_keys=True, allow_nan=False) + "\n")
 
 
 def _safe(root, name):
