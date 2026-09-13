@@ -503,6 +503,50 @@ def reset_fixture(tmp_path):
     return kwargs, update
 
 
+@pytest.mark.parametrize("fault", ["winding", "missing", "null", "valid", "legacy"])
+def test_assessment_recomputes_topology_despite_producer_claim(tmp_path, fault):
+    """Synthetic producer lies about topology; the public consumer must recompute."""
+    from pathlib import Path
+
+    import trimesh
+
+    kwargs = bound_fixture(tmp_path)
+    for profile in kwargs["profiles"].values():
+        path = Path(profile["root"]) / "loaded.json"
+        loaded = json.loads(path.read_bytes())
+        parts = {}
+        for kind, filename in (("visual", "visual.glb"), ("collision", "collision.obj")):
+            mesh = trimesh.load(
+                kwargs["package_root"] / filename, force="scene", process=False
+            ).to_geometry()
+            faces = mesh.faces.tolist()
+            if fault == "winding":
+                faces[0] = faces[0][::-1]
+            parts[kind] = [
+                {"geom_id": 0, "local_vertices_m": mesh.vertices.tolist(), "faces": faces}
+            ]
+        loaded["item"].update(geometry_parts=parts, topology_status="passed")
+        if fault in {"missing", "legacy"}:
+            loaded["item"].pop("geometry_parts")
+        if fault == "null":
+            loaded["item"]["geometry_parts"] = None
+        if fault == "legacy":
+            loaded["item"].pop("topology_status")
+        path.write_text(json.dumps(loaded))
+        member = next(m for m in profile["files"] if m["path"] == "loaded.json")
+        member.update(
+            sha256=hashlib.sha256(path.read_bytes()).hexdigest(), size_bytes=path.stat().st_size
+        )
+    result = assess_scene(**kwargs)
+    if fault in {"valid", "legacy"}:
+        assert result["physical_status"] == "passed"
+        assert result["topology_status"] == ("passed" if fault == "valid" else "not_run")
+        assert result["simulator_execution_proven"] is False
+    else:
+        assert result["physical_status"] == "failed"
+        assert "topology" in result["reason"]
+
+
 def test_bound_reset_lifecycle_is_independently_checked(tmp_path):
     kwargs, _ = reset_fixture(tmp_path)
     result = assess_scene(**kwargs)

@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-TOPOLOGY-CONSUMER — 独立面拓扑验收
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis实际geom接口独立保留。
+- source_ref：Harness3528bc4、原拓扑child8ba6eff；target_paths：assessment.py及公开攻击测试。
+- integration_method：消费实际parts，按原不可变URDF重算有向三角；历史无证明不回填passed。
+- verification：83项assessment测试通过；runtime_verification：新增consumer尚待真实保留文件复核，不是新仿真。
+- recorded_git_authors：引擎原作者与Harness证据消费作者独立；动态支撑门仍关闭。
+
+
 ## INT-CANONICAL-C09-MEASURED-SUPPORT — authored面域组件
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Shapely/GEOS、trimesh独立保留。

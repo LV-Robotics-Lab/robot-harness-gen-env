@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-09-13 — 面拓扑独立消费
+
+- assess_scene不再忽略actual geometry_parts；拒绝同顶点异面和缺parts自报passed。
+- 83项相关测试通过；历史无拓扑证据保持not_run，尚不授动态支撑能力。
+
 ## 2026-09-13 — 保孔洞支撑几何组件
 
 - 增加不可变资产共同面域、完整投影及固定余量检查，platform钉Shapely2.1.2。

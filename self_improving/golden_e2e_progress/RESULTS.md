@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 验收端独立重核实际面拓扑
+
+- public assess_scene此前忽略producer的geometry_parts；真实RED显示相同顶点、首面反向且
+  producer声称topology passed时仍physical passed。现将实际parts送原authored三角核对，不信任自报。
+- 缺parts/null且声称passed同样先RED再拒绝；合法拓扑和无拓扑历史样本分别明确passed/not_run。
+  输出topology_profiles及总状态；仍仅历史证据消费，不授live simulator或动态支撑。
+- 83项assessment测试通过/16.12s，Ruff通过；外部媒体为明确fixture，不是新增Genesis运行。
+  后续将以已保留真实双dt文件做只读消费复核，不重新运行旧case或改写原证据。
+
+
 ## 2026-09-13 保孔洞的实测支撑面组件
 
 - 两个公开seam读取真实Registry/CAS的不可变URDF/OBJ/GLB，应用URDF与node变换，返回所有共同

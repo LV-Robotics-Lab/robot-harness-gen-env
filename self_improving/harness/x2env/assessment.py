@@ -389,6 +389,8 @@ def assess_scene(
         "initial_reset_status": "not_run",
         "initial_reset_profiles": {},
         "post_step_reset_evaluated": False,
+        "topology_status": "not_run",
+        "topology_profiles": {},
     }
     if set(profiles) != {"baseline", "half_dt"}:
         return {**result, "error_code": "incomplete_dual_profile"}
@@ -481,7 +483,14 @@ def assess_scene(
             ):
                 raise ValueError("executed child identity differs")
             loaded[profile] = read("loaded.json")
-            _verify_loaded_assets(scene, package, loaded[profile])
+            try:
+                result["topology_profiles"][profile] = _verify_loaded_assets(
+                    scene, package, loaded[profile]
+                )
+            except (ValueError, KeyError, TypeError, OSError) as exc:
+                result["topology_status"] = "failed"
+                result["topology_profiles"][profile] = "failed"
+                raise ValueError(f"invalid loaded asset/topology evidence: {exc}") from exc
             rows[profile] = [
                 json.loads(line) for line in (root / "trace.ndjson").read_bytes().splitlines()
             ]
@@ -499,6 +508,9 @@ def assess_scene(
         computed = evaluate_physics(scene, rows["baseline"], rows["half_dt"], loaded)
         result.update(computed)
         result["execution_evidence_bound"] = True
+        result["topology_status"] = (
+            "passed" if set(result["topology_profiles"].values()) == {"passed"} else "not_run"
+        )
         result["initial_reset_status"] = (
             "passed" if set(result["initial_reset_profiles"].values()) == {"passed"} else "not_run"
         )
@@ -619,6 +631,7 @@ def _verify_initial_reset(scene, root, names, execution, process, loaded, rows):
 
 
 def _verify_loaded_assets(scene, package, loaded):
+    topology = []
     for entity in scene.entities:
         if entity.kind != "rigid":
             continue
@@ -658,13 +671,19 @@ def _verify_loaded_assets(scene, package, loaded):
             )
         ):
             raise ValueError("actual inertia/COM/mass differs from immutable URDF")
-        audit_geometry(
+        parts = actual.get("geometry_parts")
+        if parts is None and actual.get("topology_status", "not_run") != "not_run":
+            raise ValueError("missing loaded topology evidence")
+        audit = audit_geometry(
             actual["local_visual_vertices_m"],
             actual["local_collision_vertices_m"],
             [0.0, 0.0, 0.0],
             [1.0, 0.0, 0.0, 0.0],
             package / entity.urdf_path,
+            geometry_parts=parts,
         )
+        topology.append(audit["topology_status"])
+    return "passed" if topology and set(topology) == {"passed"} else "not_run"
 
 
 def _verify_media(root, media, names, profile):
