@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-S04-DEVELOPMENT — 冻结联网输入的解释阻断
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；联网候选配置原属 Yuxin/provider 上游。
+- `source_ref`：clean canonical `109b0c53f8dce987eed6b21b9c675f5afbce9b9f`。
+- `verification`：blocked；一次真实 Codex 解释后 clarification_required，无web/Genesis执行。
+- `runtime_evidence`：RESULTS 中 workflow `6c297fbc-8cad-4faa-8a82-499af13e6562` 和完整 SHA；
+  三次独立 transport 对照仅诊断，不替代该 workflow 或来源成功。
+- `recorded_git_authors`：固定提交元数据；没有新资产来源、许可或物理资格授予。
+
 ## INT-CANONICAL-C06-LOCAL-COLOR-ADVISORY — 原视觉失败后的受限颜色建议
 
 - `origin_owner`：Yuxin asset reuse 的 a6_verify；新颜色建议与整合责任为 Bingsheng Harness workstream。

@@ -1,5 +1,33 @@
 # 进度与结果
 
+## 2026-09-13 S04 联网输入开发运行：结构设计关键未知
+
+- 固定 clean `109b0c53f8dce987eed6b21b9c675f5afbce9b9f`；原 S04 文本/图像、seed41、web-only，
+  一次公共 submit，workflow `6c297fbc-8cad-4faa-8a82-499af13e6562`。
+- ingest 0.021376s，真实 interpret 72.176174s；CLI 72.378271s、外层 72.506491s。
+  模型保留蓝色、8cm、工作台80×60cm、local x=-15cm/y=10cm/yaw45及override来源；
+  但工作台厚度、world pose 为 critical unspecified，方块 local z 为 critical pose_unobservable。
+- 最终 blocked/clarification_required；没有 pending SceneIR、query/search/fetch、Genesis、新媒体或环境。
+  原失败保留，不重试或改写 proposal。代码还有单轴 field 路径识别缺口；后续修复是显式结构设计分类，
+  不是无条件放行 unspecified，更不覆盖已知位置或将默认值说成真实测量。
+- 证据根 `/home/jingxiang/bingsheng/canonical-s04-web-20260913.jrLXbH`：
+  `audit-summary.json` SHA256 `3909f58c688e49a5972105dfd4753ba09100d988812729239267f22dcb9bcb17`；
+  `run-summary.json` SHA256 `5a74376420ea96217bb6c8d5803c34523f4823d84e6b49d1353733b1700fe164`；
+  `requested-output/failure` manifest SHA256 `e252c2826ca8c9a725c2d4caaf8bf6d093a1d1ea07786aed0f76b4c652f7944c`。
+
+## 2026-09-13 模型等待的有界对照诊断
+
+- 使用同 fixed109b0c5 managed transport/executable/gpt-6-astra/认证环境，三次各≤90s；
+  不改 effort/config，不进入业务 workflow，不重跑失败 case。
+- 极小结构输出无图 4.220249s，通过；同 prompt/schema 仅增加 S02 图像 5.972536s，通过。
+  原 S02 完整 prompt/schema 仅去掉附件 49.482135s 完成，但凭空提议蓝色杯子，**语义不可信**，不入库。
+  只能说明这些条件下 transport/schema 可完成，不能确定 S02 超时是负载、组合还是瞬时服务因素。
+- 根 `/home/jingxiang/bingsheng/canonical-codex-transport-20260913.AGTkW6`：
+  `summary.json` SHA256 `c384b8229c5384eae9bceb8b2c26831d5cc5ebd6d1f5524de4f815454f0d19fc`；
+  `summary-image.json` SHA256 `e5829dbd0a465ee615327e2b3b7f8361556d5b0b336851fb6b6aac549ba1c2af`；
+  `summary-full-no-image.json` SHA256 `55109b8ab245d31c3947f4bf587cf8612d56212370f806dd081d32dce4a41550`。
+  三次均 exit0/reaped，无信号；不是任何 golden 成功。
+
 ## 2026-09-13 C06 本地颜色失配分类与受管建议
 
 - 新 local_color_advisory 只将原 a6_verify 的纯颜色 veto 分类为待修订候选；核 Registry 版本、实测尺寸、
