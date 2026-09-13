@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 failure bundle 复用与路径攻击
+
+- 公开Harness.package/materialize_failure覆盖manifest/result/error成员篡改与符号链接、
+  相对目录/符号目录祖先、未终态workflow不得导出失败；原状态及篡改现场不被重写。
+- 11 passed/0.71s；failure_bundle.py单组56/59语句、29/32分支，尚未覆盖本组媒体/scene导出三处。
+  生产行为未改；初次fixture缺output_dir/误用非公开store属性已修，不冒充业务RED。
+  `/var/tmp/canonical-failure-boundaries.coverage`为本组数据，不与固定旧六组混并。
+
 ## 2026-09-13 observation 公共证据拒绝测试
 
 - observe_replay新增外来scene、失败replay、receipt scene/status漂移、重复profile/member、缺媒体、

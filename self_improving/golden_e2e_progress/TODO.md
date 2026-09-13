@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- failure bundle公开路径/篡改拒绝11项通过，单组仍缺媒体/scene导出三处；整体覆盖门未授予。
+
 - observation公开证据拒绝9项通过，单文件50语句/20分支100%；不替代六组整体覆盖门。
 
 - v2显式布局设计首片字段和直接结构支撑子集已冻结，agent按公开ground/Harness/completion纵切TDD；未接深层动态支撑。
