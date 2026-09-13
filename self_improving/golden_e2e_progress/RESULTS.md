@@ -1,5 +1,32 @@
 # 进度与结果
 
+## 2026-09-13 新PBR准备的S02在模型阶段超时
+
+- 固定b2b63b7，根`/home/jingxiang/bingsheng/canonical-s02-pbr-v2-20260913.QrvPwn`；
+  workflow `1b51dd70-8d7d-4f26-a3e1-28957d5e1cb2`终态failed/model_timeout、revision2、owner=null。
+  总600.892s，ingest0.019222s成功，interpret600.519887s失败；内部模型600s先于总1770s预算。
+- 无SceneIR、asset.resolve、红预览、ground或Genesis；failure bundle为requested-output/failure，
+  图像仅原输入，不把partial图片当生成环境。子进程SIGINT后reaped，外层exit1，未重试。
+- 主线程核run-summary.json SHA
+  `814bcf7c9acb8c09bb59b6407e741fa03604965bf0d37a027d8f23281184b555`。
+  原失败、旧版本均保留；新PBR规范化版本`dfecd909fb1e16442c94675124f674189d1674d9c98b6766cb4c7723e2d91da8`
+  尚无实际画面验证，不授S02或新增local成功。
+- 原transport只含thread.started/turn.started，101B；无正文、usage、proposal、重连或安全拒绝。
+  stderr仅Reading prompt from stdin。失败prompt3353B/schema7099B；同图曾成功31osM1 interpret229.118s，
+  排除attempt路径/输入绑定后prompt及schema相同。确定是600s未收到终态，不能据此推断服务故障。
+
+## 2026-09-13 新拓扑consumer对保留真实文件只读复核
+
+- a088411 assessment精确源码SHA
+  `9ebf4d14482e18d32219e4f2e0cce917b52924b8ad1abdd1141a5fd47077eb09`；读取QfcUxI原双profile文件，
+  不新建Genesis、不修改原CAS或原报告；主线程实测1.711965s。
+- topology两profile及总状态passed，initial_reset passed，physical26项passed；visual/post-step不升级。
+  证据`/var/tmp/canonical-topology-consumer-S3ZCwfoo/summary.json`，SHA
+  `d3f6a8b80ca6ed16aac18f7295078c7c9e32e9bb34e483749f8a0b269376ff47`；新assessment SHA
+  `ece15fd7566c1ea868ac0ac1be78fd5e449e779c1acbe464594c4379eaaf6024`。
+  五个原顶层证据前后hash一致，profile资源逐成员按原绑定核验；不称新模型/case/仿真成功。
+
+
 ## 2026-09-13 验收端独立重核实际面拓扑
 
 - public assess_scene此前忽略producer的geometry_parts；真实RED显示相同顶点、首面反向且

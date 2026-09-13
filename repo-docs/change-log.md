@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-09-13 — S02模型超时与独立拓扑复核
+
+- 记录新S02在interpret 600秒超时、正常收尾及无新增仿真产物；不从静默日志推断服务故障。
+- a088411只读消费保留真实双dt文件，拓扑/reset/26物理项通过；不回写原报告或授新case资格。
+
 ## 2026-09-13 — 面拓扑独立消费
 
 - assess_scene不再忽略actual geometry_parts；拒绝同顶点异面和缺parts自报passed。

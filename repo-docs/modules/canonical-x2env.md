@@ -14,14 +14,15 @@ loaded/step0零速度；历史无证明维持not_run。152项回归通过，新r
 122.65秒通过且物理26/26；visual和步进后恢复未验，不计S02或qualification。
 此前8ba6eff拓扑worker已实际运行25步Box小测并核对真实面索引；画面灰暗问题独立诊断，不能当S02通过。
 
-最新S02 image-only开发尝试在229.50秒后于设计准入阻断：模型用了合法的实体数组序号unknown路径，
-旧classifier仅识别实体ID路径。原proposal和失败包保留，尚未执行该case的资产查询或Genesis；
-严格路径映射修复在进行，不能把interpret成功算成S02环境成功。
+S02旧229.50秒尝试因实体数组序号unknown路径阻断；严格映射已修复，原proposal/失败包保留。
+新固定b2b63b7单次尝试又在interpret 600秒超时，未进入资产或Genesis；日志没有明确服务端错误，
+不能把启动回合算模型成功，或把本次失败归因于PBR。下一步独立渲染检查颜色并推进视频分支。
 
 多实体动态支撑尚在实施：当前整体凸包碰撞体不能证明凹盘底，类型门也不能直接删除。
 新child已接逐geom实际有向三角面与authored URDF核对，123项相关测试通过；真实新版运行待验。
 验收端现独立重核实际geometry_parts与URDF面拓扑，缺面却声称passed会拒绝；83项相关测试通过。
-旧无parts证据明确topology not_run，不能由此授予盘面或动态支撑；新消费器的保留真实文件复核待执行。
+旧无parts证据明确topology not_run，不能由此授予盘面或动态支撑。新消费器已在1.71秒只读复核
+QfcUxI保留真实双profile，拓扑/reset/物理26项通过；不称新仿真或矩阵案例，原文件未改。
 `measured_support.py`已实现保孔洞共同面域与完整源投影的目标坐标检查，Shapely2.1.2属platform依赖。
 70项相关测试通过；此处是authored几何组件，不授实际加载/动态接触。下一片接独立拓扑消费与动态物理；
 详见[增量契约](../../self_improving/golden_e2e_progress/CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)。
