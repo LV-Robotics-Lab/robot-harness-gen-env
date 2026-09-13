@@ -240,14 +240,16 @@ class Harness:
         )
         proposal = advisory.proposal
         critical = [unknown for unknown in proposal.unknowns if unknown.critical]
-        design_pending = (
-            bool(critical)
-            and self._scene_design_policy.enabled
-            and all(
-                unknown.reason_kind in {"scale_unobservable", "pose_unobservable"}
-                for unknown in critical
-            )
-        )
+        design_pending = False
+        if critical and self._scene_design_policy.enabled:
+            from .design_plan import classify_design_unknowns
+
+            try:
+                classify_design_unknowns(proposal, self._scene_design_policy, self._compile_policy)
+                design_pending = True
+            except ValueError:
+                # The original advisory/critical fields remain in the journal for clarification.
+                pass
         if proposal.scene is None or (critical and not design_pending):
             return self._store.complete_operation(
                 snapshot,
@@ -353,6 +355,7 @@ class Harness:
                 snapshot.proposal,
                 snapshot.resolved_assets,
                 self._scene_design_policy,
+                structural_policy=self._compile_policy,
                 output_root=self._state_dir
                 / "attempts"
                 / snapshot.workflow_id

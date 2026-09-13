@@ -3,6 +3,7 @@
 import hashlib
 import json
 
+import pytest
 from PIL import Image
 
 from self_improving.harness.x2env.codex import CodexBackend
@@ -10,6 +11,127 @@ from self_improving.harness.x2env.contracts import InputMedia, X2EnvRequest
 from self_improving.harness.x2env.input import ingest
 from tests.self_improving.harness.x2env.test_codex import executable
 from tests.self_improving.harness.x2env.test_local_catalog import fixture
+
+
+@pytest.mark.parametrize("fault", [None, "default", "derived", "known_height", "no_media_layout"])
+def test_text_structural_design_uses_real_geometry_and_fixed_policy(tmp_path, fault):
+    from self_improving.harness.x2env.compile import StructuralPolicy
+    from self_improving.harness.x2env.grounding import SceneDesignPolicy, ground_scene
+
+    store, _, _, old_proposal, old_assets = setup(tmp_path, measured=True)
+    bundle = ingest(
+        X2EnvRequest(
+            text="A container on a worktop",
+            seed=41,
+            idempotency_key="text-design",
+            output_dir=str(tmp_path / "out-text"),
+        ),
+        store,
+    )
+
+    def put(value):
+        return store.write_artifact(json.dumps(value).encode(), "application/json")
+
+    proposal = json.loads(store.read_artifact(old_proposal))
+    scene = proposal["proposal"]["scene"]
+    scene["input_sha256"] = bundle.request_sha256
+    support, obj = scene["entities"]
+    support["dimensions"] = [0.8, 0.6, None]
+    support["pose"]["position"] = [None, None, None]
+    obj["dimensions"] = [0.05, 0.06, 0.07]
+    obj["pose"] = {"frame": "support", "position": [-0.15, 0.1, None], "yaw_degrees": 45}
+    if fault == "known_height":
+        obj["pose"]["position"][2] = 0.2
+    if fault == "no_media_layout":
+        obj["pose"]["position"][0] = None
+    provenance = [{"source": "text", "input_sha256": bundle.text.sha256, "kind": "explicit"}]
+    for entity in scene["entities"]:
+        entity["provenance"] = {k: provenance for k in entity["provenance"]}
+    scene["relations"][0]["provenance"] = provenance
+    unknowns = [
+        {
+            "field": field,
+            "reason_kind": kind,
+            "critical": True,
+            "reason": "unit missing",
+            "provenance": provenance,
+        }
+        for field, kind in [
+            ("scene.entities.support.dimensions[2]", "unspecified"),
+            ("scene.entities.support.pose", "unspecified"),
+        ]
+    ]
+    if fault != "known_height":
+        unknowns.append(
+            {
+                "field": "scene.entities.object.pose.position[2]",
+                "reason_kind": "pose_unobservable",
+                "critical": True,
+                "reason": "on geometry",
+                "provenance": provenance,
+            }
+        )
+    proposal["proposal"]["unknowns"] = unknowns
+    assets = json.loads(store.read_artifact(old_assets))
+    assets["scene_ir"] = put(scene).model_dump()
+    response = {
+        "entities": [
+            {
+                "id": "support",
+                "dimensions": [0.8, 0.6, 0.04],
+                "frame": "world",
+                "position": [0, 0, 0.75],
+                "yaw_degrees": 0,
+            },
+            {
+                "id": "object",
+                "dimensions": [0.05, 0.06, 0.07],
+                "frame": "support",
+                "position": [-0.15, 0.1, 0.035],
+                "yaw_degrees": 45,
+            },
+        ]
+    }
+    if fault == "default":
+        response["entities"][0]["position"][0] = 0.1
+    if fault == "derived":
+        response["entities"][1]["position"][2] = 0.04
+    path = executable(tmp_path, response)
+    backend = CodexBackend(path, hashlib.sha256(path.read_bytes()).hexdigest(), "double", store)
+    result = ground_scene(
+        put(bundle.model_dump(mode="json")),
+        put(proposal),
+        put(assets),
+        SceneDesignPolicy(
+            enabled=True,
+            structural_defaults_enabled=True,
+            world_anchor_xy=(0, 0),
+            world_anchor_yaw_degrees=0,
+        ),
+        structural_policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+        store=store,
+        backend=backend,
+        output_root=tmp_path / "text-attempt",
+    )
+    if fault:
+        expected = {
+            "default": "grounding_changed_authoritative_design_value",
+            "derived": "grounding_changed_authoritative_design_value",
+            "known_height": "known_height_conflicts_with_on_geometry",
+            "no_media_layout": "grounding_requires_media",
+        }[fault]
+        assert result.status == "blocked" and result.error_code == expected
+    else:
+        assert result.status == "completed", result
+        assert result.proposed_scene.entities[1].pose.position == (-0.15, 0.1, 0.035)
+        receipt = json.loads(store.read_artifact(result.receipt))
+        assert receipt["fixed_values"]["object.pose.position[2]"] == 0.035
+        assert receipt["structural_policy"]["thickness_m"] == 0.04
+        assert receipt["original_unknowns"][0]["critical"]
+        assert not receipt["design_plan"]["requires_media"]
+        assert (
+            json.loads((tmp_path / "text-attempt" / "invocation.json").read_bytes())["media"] == []
+        )
 
 
 def setup(tmp_path, *, measured=False, response_fault=None, conflict=False):

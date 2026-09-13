@@ -15,11 +15,18 @@ from tests.self_improving.harness.x2env.test_grounding import setup
 @pytest.mark.parametrize("enabled", [False, True])
 @pytest.mark.parametrize("conflict", [False, True])
 @pytest.mark.parametrize("measured", [False, True])
+@pytest.mark.parametrize("structural_case", [False, True])
 def test_unknown_scale_is_pending_until_asset_anchored_design_commits(
-    tmp_path, enabled, conflict, measured
+    tmp_path, enabled, conflict, measured, structural_case
 ):
     store, backend, bundle, proposal, assets = setup(tmp_path, measured=measured, conflict=conflict)
     original = BackendProposal.model_validate_json(store.read_artifact(proposal))
+    if structural_case and not conflict:
+        document = original.model_dump(mode="json")
+        document["proposal"]["unknowns"][0].update(
+            field="scene.entities.support.pose", reason_kind="unspecified"
+        )
+        original = BackendProposal.model_validate_json(json.dumps(document))
     calls = []
 
     class ModelDouble:
@@ -44,7 +51,12 @@ def test_unknown_scale_is_pending_until_asset_anchored_design_commits(
         tmp_path / "state",
         backend_factory=lambda _: ModelDouble(),
         resolver_factory=lambda *_: ResolverDouble(),
-        scene_design_policy=SceneDesignPolicy(enabled=enabled),
+        scene_design_policy=SceneDesignPolicy(
+            enabled=enabled,
+            structural_defaults_enabled=structural_case,
+            world_anchor_xy=(0.1, 0.0) if structural_case else None,
+            world_anchor_yaw_degrees=0.0 if structural_case else None,
+        ),
         compile_policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
     )
     handle = harness.submit(

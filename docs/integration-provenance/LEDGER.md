@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-STRUCTURAL-DESIGN — 结构默认值与几何推导
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；不是 Gujie 原米制重建能力。
+- `source_ref`：canonical `9e2182e` controller、`24a3b97` grounding、S04 fixed `109b0c5` 真实失败。
+- `target_paths`：x2env/design_plan.py、grounding.py、harness.py、codex.py 与公开测试。
+- `integration_method`：共享精确未知字段分类器；部署显式授权结构默认，实测 on-z，与 managed 输出逐轴核对。
+- `verification`：contract_pass；相关七组 82 passed，外部模型明确替身；真实 S04 未升级，完成门审计待同步。
+- `recorded_git_authors`：本提交元数据；无新第三方来源复制或运行资格。
+
 ## INT-CANONICAL-C11-REPAIR-BUDGET-AUDIT — 历史额度进入交付链
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

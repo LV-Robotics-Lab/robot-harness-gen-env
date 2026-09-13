@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 C05 结构设计默认值与 on 高度接线
+
+- 同一 classify_design_unknowns 被 interpret 准入和 grounding 复核共同消费；支持实际实体的单轴路径，
+  不再只用 reason_kind 白名单或任意 suffix。原 critical 及已知值保持，不放行冲突/未知类别/多个支撑。
+- SceneDesignPolicy 仅在显式 structural_defaults_enabled 与有限 world XY/yaw 同时配置时授权结构默认；
+  厚度/表面高度沿用 StructuralPolicy，不建立第二套数值配置。局部 on-z 由实测资产高度一半推导。
+- 模型仍返回 GroundingValues，但 controller 核部署/几何固定值；已知 z 冲突、已知 XY/yaw 漂移拒绝。
+  文本无图仅在无需媒体估计时可补全，同一模型调用不伪造媒体；逐轴 design rules、fixed values 和原 unknown 入回执。
+- controller 公共 tracer 先 RED（结构 unspecified 提前阻断）后 GREEN；七组主线程复跑 82 passed（5.20s）。
+  首次未声明原 Yuxin agenticsim 依赖时 web 测试有 1 失败；补显式 PYTHONPATH 后全绿，未改业务 import 路径。
+  真实 S04 原失败不升级；新的 grounding 完成门审计及固定代码真实重验尚待完成。
+
 ## 2026-09-13 C11 历史修订预算进入完成门
 
 - 完成门对全部预留操作累计成本/指纹，包括失败和取消；核原批准与已提交输入、场景、诊断。

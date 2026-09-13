@@ -183,7 +183,15 @@ class CodexBackend:
         )
 
     def ground_scene(
-        self, bundle_ref, proposal_ref, assets_ref, policy, *, output_root: Path, timeout: int = 600
+        self,
+        bundle_ref,
+        proposal_ref,
+        assets_ref,
+        policy,
+        *,
+        output_root: Path,
+        timeout: int = 600,
+        structural_policy=None,
     ):
         """One advisory simulation-design call, with no real-world scale claim."""
         from .grounding import ground_scene
@@ -193,6 +201,7 @@ class CodexBackend:
             proposal_ref,
             assets_ref,
             policy,
+            structural_policy=structural_policy,
             store=self.store,
             backend=self,
             output_root=output_root,

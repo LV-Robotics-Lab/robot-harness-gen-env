@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from .artifacts import artifact_closure
 from .assets import AssetRegistry
@@ -19,6 +19,25 @@ from .contracts import ArtifactRef, BackendProposal, FieldProvenance, InputBundl
 class SceneDesignPolicy(Model):
     enabled: bool = False
     mode: Literal["asset_anchored_simulation"] = "asset_anchored_simulation"
+    structural_defaults_enabled: bool = False
+    world_anchor_xy: (
+        tuple[
+            Annotated[float, Field(allow_inf_nan=False, ge=-1000, le=1000)],
+            Annotated[float, Field(allow_inf_nan=False, ge=-1000, le=1000)],
+        ]
+        | None
+    ) = None
+    world_anchor_yaw_degrees: (
+        Annotated[float, Field(allow_inf_nan=False, ge=-180, le=180)] | None
+    ) = None
+
+    @model_validator(mode="after")
+    def explicit_anchor(self):
+        if self.structural_defaults_enabled and (
+            self.world_anchor_xy is None or self.world_anchor_yaw_degrees is None
+        ):
+            raise ValueError("structural defaults require explicit world anchor")
+        return self
 
 
 Positive = Annotated[float, Field(gt=0, le=100)]
@@ -47,7 +66,16 @@ class GroundingResult(Model):
 
 
 def ground_scene(
-    bundle_ref, proposal_ref, assets_ref, policy, *, store, backend, output_root, timeout=600
+    bundle_ref,
+    proposal_ref,
+    assets_ref,
+    policy,
+    *,
+    store,
+    backend,
+    output_root,
+    timeout=600,
+    structural_policy=None,
 ):
     """One bounded managed-model call; all explicit axes and semantic fields immutable."""
     policy = SceneDesignPolicy.model_validate(policy)
@@ -65,6 +93,8 @@ def ground_scene(
     status = "blocked"
     changes = []
     original_unknowns = []
+    plan = None
+    fixed_values = {}
 
     def record(name, raw, media_type="application/json"):
         (root / name).write_bytes(raw)
@@ -83,23 +113,13 @@ def ground_scene(
         proposal = original.proposal
         base = proposal.scene
         original_unknowns = [u.model_dump(mode="json") for u in proposal.unknowns]
-        allowed = {"scale_unobservable", "pose_unobservable"}
-        if any(u.critical and u.reason_kind not in allowed for u in proposal.unknowns):
-            raise ValueError("grounding_requires_clarification")
-        resolved_indices = tuple(
-            i for i, u in enumerate(proposal.unknowns) if u.reason_kind in allowed
-        )
-        if not resolved_indices:
-            raise ValueError("no_authorized_design_unknowns")
-        for index in resolved_indices:
-            unknown = proposal.unknowns[index]
-            expected = (
-                unknown.field.endswith(".dimensions")
-                if unknown.reason_kind == "scale_unobservable"
-                else unknown.field.endswith((".pose", ".pose.position", ".pose.yaw_degrees"))
-            )
-            if not expected:
-                raise ValueError("grounding_unknown_field_not_designable")
+        from .compile import StructuralPolicy
+        from .design_plan import classify_design_unknowns
+
+        if structural_policy is not None:
+            structural_policy = StructuralPolicy.model_validate(structural_policy)
+        plan = classify_design_unknowns(proposal, policy, structural_policy)
+        resolved_indices = plan.resolved_unknown_indices
         assets = ResolvedAssetSet.model_validate_json(store.read_artifact(assets_ref))
         if (
             base.input_sha256 != bundle.request_sha256
@@ -139,25 +159,44 @@ def ground_scene(
             raise ValueError("missing_measured_anchor_dimensions")
         from .deployment import select_reconstruction_image
 
-        chosen = select_reconstruction_image(
-            store,
-            bundle,
-            assets.scene_ir,
-            anchor.id,
-            output_root=root / "media-selection",
-            timeout=max(1, int(timeout - (time.monotonic() - started))),
+        for rule in plan.rules:
+            value = rule.value
+            if rule.basis == "on_geometry_derived":
+                value = dims[2] / 2
+            if rule.basis == "asset_anchor":
+                value = dims[int(rule.path[-2])]
+            if value is not None:
+                fixed_values[rule.entity_id + "." + rule.path] = value
+        if anchor.pose.frame == support.id and anchor.pose.position[2] is not None:
+            if not math.isclose(anchor.pose.position[2], dims[2] / 2, abs_tol=1e-9, rel_tol=0):
+                raise ValueError("known_height_conflicts_with_on_geometry")
+        chosen = (
+            select_reconstruction_image(
+                store,
+                bundle,
+                assets.scene_ir,
+                anchor.id,
+                output_root=root / "media-selection",
+                timeout=max(1, int(timeout - (time.monotonic() - started))),
+            )
+            if bundle.images or bundle.video
+            else None
         )
-        if chosen is None:
+        if chosen is None and plan.requires_media:
             raise ValueError("grounding_requires_media")
-        raw = store.read_artifact(chosen.image)
-        record("input.png", raw, "image/png")
+        if chosen is not None:
+            raw = store.read_artifact(chosen.image)
+            record("input.png", raw, "image/png")
         context = {
             "bundle_ref": bundle_ref.model_dump(),
             "seed": bundle.seed,
             "original_proposal": proposal.model_dump(mode="json"),
             "asset_version": version.model_dump(mode="json"),
             "anchor_dimensions_m": dims,
-            "media_selection": chosen.model_dump(mode="json"),
+            "media_selection": chosen.model_dump(mode="json") if chosen else None,
+            "design_plan": plan.model_dump(mode="json"),
+            "fixed_values": fixed_values,
+            "structural_policy": structural_policy.model_dump() if structural_policy else None,
             "policy": policy.model_dump(),
             "real_world_scale_recovered": False,
         }
@@ -173,6 +212,9 @@ def ground_scene(
             "Estimate support footprint and object placement from relative visual layout, "
             "not a fixed "
             "center template. No license, measurement, physical pass, or success claims. "
+            "Deployment and geometry fixed_values are authoritative; return each exactly. "
+            "If no media is attached, perform only the explicitly authorized text/deployment "
+            "design and geometry derivations; do not claim visual observations. "
             "Return GroundingValues JSON only. Context:\n" + json.dumps(context)
         )
         if backend is None:
@@ -185,7 +227,7 @@ def ground_scene(
         raw_values = backend._invoke(
             root,
             prompt,
-            [{"path": str(root / "input.png")}],
+            [{"path": str(root / "input.png")}] if chosen else [],
             GroundingValues,
             record,
             timeout,
@@ -198,6 +240,19 @@ def ground_scene(
         entities = []
         for entity in base.entities:
             value = by_id[entity.id]
+            actual_values = {
+                **{f"dimensions[{i}]": v for i, v in enumerate(value.dimensions)},
+                **{f"pose.position[{i}]": v for i, v in enumerate(value.position)},
+                "pose.yaw_degrees": value.yaw_degrees,
+            }
+            for path, actual in actual_values.items():
+                key = entity.id + "." + path
+                if (
+                    key in fixed_values
+                    and actual != fixed_values[key]
+                    and not (entity.id == anchor.id and path.startswith("dimensions"))
+                ):
+                    raise ValueError("grounding_changed_authoritative_design_value")
             known = entity.dimensions or (None, None, None)
             for old, new in zip(known, value.dimensions, strict=True):
                 if old is not None and old != new:
@@ -237,26 +292,33 @@ def ground_scene(
                             + (["yaw_degrees"] if entity.pose.yaw_degrees is None else []),
                             "original": old,
                             "design_value": new,
-                            "basis": "selected_asset_simulation_scale"
-                            if field == "dimensions" and entity.id == anchor.id
-                            else "media_relative_layout_design_estimate",
+                            "basis": "per_axis_design_rules",
                             "asset_version": version.version_sha256,
                             "normalization_report": version.normalization_report.model_dump(),
-                            "media_selection": chosen.provenance.model_dump(),
+                            "media_selection": chosen.provenance.model_dump() if chosen else None,
+                            "design_rules": [
+                                r.model_dump(mode="json")
+                                for r in plan.rules
+                                if r.entity_id == entity.id and r.path.startswith(field)
+                            ],
                         }
                     )
             provenance = entity.provenance
-            source = "image" if bundle.images else "video"
+            source = "image" if bundle.images else "video" if bundle.video else "text"
             media_hash = (
-                bundle.images[0].source.sha256 if bundle.images else bundle.video.source.sha256
+                bundle.images[0].source.sha256
+                if bundle.images
+                else bundle.video.source.sha256
+                if bundle.video
+                else bundle.text.sha256
             )
             design = FieldProvenance(
                 source=source,
                 input_sha256=media_hash,
                 kind="inferred",
-                media_index=0,
-                frame_index=None if bundle.images else 0,
-                note="simulation design-choice; not recovered real-world scale; "
+                media_index=0 if chosen else None,
+                frame_index=0 if bundle.video and not bundle.images else None,
+                note="deployment/geometry design-choice; not recovered real-world scale; "
                 + version.version_sha256,
             )
             provenance = provenance.model_copy(
@@ -302,6 +364,9 @@ def ground_scene(
                 "proposal_ref": proposal_ref.model_dump(),
                 "assets_ref": assets_ref.model_dump(),
                 "policy": policy.model_dump(),
+                "design_plan": plan.model_dump(mode="json") if plan else None,
+                "fixed_values": fixed_values,
+                "structural_policy": structural_policy.model_dump() if structural_policy else None,
                 "original_unknowns": original_unknowns,
                 "resolved_unknowns": resolved_indices,
                 "changes": changes,
