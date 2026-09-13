@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C12-CLI-COVERAGE — 真实用户入口边界
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Python signal/argparse原作者。
+- source_ref：`a4a68da`；target_paths：test_cli.py；生产未改。
+- integration_method：main公共调用使用真实部署/Store，仅时钟/信号系统边界受控；不修改成功语义。
+- verification：18项通过，97语句/32分支全覆盖；runtime_verification：无新模型或仿真。
+- recorded_git_authors：原CLI与本次测试维护分别保留。
+
 ## INT-CANONICAL-C14-SOURCE-IDENTITY-ATTACKS — 开发来源不是签名资格
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Git/Python metadata原作者。

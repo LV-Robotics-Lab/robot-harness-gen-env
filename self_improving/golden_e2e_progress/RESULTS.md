@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C12 CLI 公共接口覆盖补齐
+
+- 新增参数、超大文本、缺失媒体、真实resume/package、系统时钟/信号超时与timer恢复测试；
+  不mock部署解析、Harness或Store，系统边界替身不冒充真实模型/仿真。
+- 主线程18 passed/0.49s；独立测量97/97语句、32/32分支，excluded=0。
+  `/var/tmp/canonical-cli-final.json`。初次缺媒体错误码假设已按真实持久failed/input_unavailable修正，
+  不称生产bug；所有业务版本仍未获得矩阵或copy-run资格。
+
 ## 2026-09-13 C14 安装来源身份攻击覆盖
 
 - capture_source_identity新增20项真实Git/临时unsigned dist-info测试，覆盖RECORD pin/格式/重复/缺成员、
