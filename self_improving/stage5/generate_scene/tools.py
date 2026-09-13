@@ -15,9 +15,16 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.observation_agent import observe_scene_with_provider
-from generate_scene.schemas import read_json, validate_placement_spec, write_json
-from generate_scene.asset_catalog import load_asset_catalog
+# Import follows the legacy source path bootstrap.
+from generate_scene.asset_catalog import load_asset_catalog  # noqa: E402
+
+# Import follows the legacy source path bootstrap.
+from generate_scene.observation_agent import observe_scene_with_provider  # noqa: E402
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    validate_placement_spec,
+    write_json,
+)
 
 
 def list_assets(catalog_path: Path) -> dict[str, Any]:
@@ -141,7 +148,11 @@ def visual_review(smoke_dir: Path, prompt: str, mode: str = "required") -> dict[
         return observe_scene_with_provider(smoke_dir=smoke_dir, prompt=prompt, model_provider=mode)
 
     artifacts = get_smoke_artifacts(smoke_dir)
-    missing = [name for name, exists in artifacts["exists"].items() if name != "observer_video" and not exists]
+    missing = [
+        name
+        for name, exists in artifacts["exists"].items()
+        if name != "observer_video" and not exists
+    ]
     if missing:
         status = "fail_missing_artifacts"
     elif mode == "artifact_only":
@@ -157,7 +168,12 @@ def visual_review(smoke_dir: Path, prompt: str, mode: str = "required") -> dict[
         "missing_required_artifacts": missing,
         "notes": [
             "Artifact existence is not a semantic visual review.",
-            "A human, Codex visual reference review, or external VLM must check object identity, orientation, table contact, penetration, occlusion, and prompt match before the scene is accepted.",
+            (
+                "A human, Codex visual reference review, or external VLM must"
+                " check object identity, orientation, table contact, penetrat"
+                "ion, occlusion, and prompt match before the scene is accepte"
+                "d."
+            ),
         ],
     }
 
@@ -198,7 +214,9 @@ def main() -> int:
     p_visual = sub.add_parser("visual-review")
     p_visual.add_argument("--smoke-dir", required=True)
     p_visual.add_argument("--prompt", required=True)
-    p_visual.add_argument("--mode", choices=["required", "artifact_only", "moonshot", "openai"], default="required")
+    p_visual.add_argument(
+        "--mode", choices=["required", "artifact_only", "moonshot", "openai"], default="required"
+    )
 
     args = parser.parse_args()
 
@@ -207,7 +225,11 @@ def main() -> int:
     elif args.command == "get-asset-metadata":
         result = get_asset_metadata(Path(args.asset_catalog), args.asset_id)
     elif args.command == "validate-placement":
-        result = validate_placement_spec(read_json(Path(args.placement)), load_asset_catalog(Path(args.asset_catalog)), robotwin_root=args.robotwin_root)
+        result = validate_placement_spec(
+            read_json(Path(args.placement)),
+            load_asset_catalog(Path(args.asset_catalog)),
+            robotwin_root=args.robotwin_root,
+        )
         if args.out:
             write_json(Path(args.out), result)
     elif args.command == "run-smoke":

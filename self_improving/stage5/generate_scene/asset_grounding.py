@@ -14,16 +14,21 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.asset_catalog import load_asset_catalog
-from generate_scene.schemas import read_json, write_json
-
+# Import follows the legacy source path bootstrap.
+from generate_scene.asset_catalog import load_asset_catalog  # noqa: E402
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    write_json,
+)
 
 STOP_TERMS = {"table", "desk", "surface", "side", "left", "right", "front", "back"}
 
 
 def slugify_prompt(prompt: str, max_words: int = 5) -> str:
     words = re.findall(r"[a-z0-9]+", prompt.lower())
-    words = [word for word in words if word not in {"a", "an", "the", "and", "on", "of", "to", "is"}]
+    words = [
+        word for word in words if word not in {"a", "an", "the", "and", "on", "of", "to", "is"}
+    ]
     if not words:
         return "scene"
     return "_".join(words[:max_words])
@@ -57,7 +62,9 @@ def _contains_term(prompt: str, term: str) -> bool:
     return re.search(pattern, prompt) is not None
 
 
-def extract_spatial_relations(prompt: str, matched_assets: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def extract_spatial_relations(
+    prompt: str, matched_assets: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     prompt_norm = _norm(re.sub(r"\b(a|an|the)\b", " ", prompt))
     relations: list[dict[str, Any]] = []
     mention_to_asset = {item["mention"]: item["asset_id"] for item in matched_assets}
@@ -155,13 +162,18 @@ def ground_assets(
                     "semantic_name": entry.get("semantic_name"),
                     "match_type": match_type,
                     "confidence": confidence,
-                    "reason": f"Prompt mention {term!r} matched catalog {match_type.replace('_', ' ')} for {entry['asset_id']}.",
+                    "reason": (
+                        f"Prompt mention {term!r} matched catalog "
+                        f"{match_type.replace('_', ' ')} for {entry['asset_id']}."
+                    ),
                 }
             )
 
     warnings: list[str] = []
     if not matches:
-        warnings.append("No catalog asset matched the prompt. Add assets or use an LLM/embedding backend.")
+        warnings.append(
+            "No catalog asset matched the prompt. Add assets or use an LLM/embedding backend."
+        )
 
     return {
         "schema_version": "robotwin.tabletop_asset_grounding.v0",
@@ -178,29 +190,65 @@ def ground_assets(
     }
 
 
-def validate_asset_grounding_result(result: dict[str, Any], master_catalog: dict[str, Any]) -> dict[str, Any]:
+def validate_asset_grounding_result(
+    result: dict[str, Any], master_catalog: dict[str, Any]
+) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
     entries = {entry["asset_id"]: entry for entry in master_catalog.get("entries", [])}
     if result.get("schema_version") == "robotwin.tabletop_asset_grounding.v0":
-        checks.append({"name": "schema_version", "status": "pass", "message": "Schema version is v0."})
+        checks.append(
+            {"name": "schema_version", "status": "pass", "message": "Schema version is v0."}
+        )
     else:
-        checks.append({"name": "schema_version", "status": "fail", "message": "Expected robotwin.tabletop_asset_grounding.v0."})
+        checks.append(
+            {
+                "name": "schema_version",
+                "status": "fail",
+                "message": "Expected robotwin.tabletop_asset_grounding.v0.",
+            }
+        )
 
     matched = result.get("matched_assets", [])
     if matched:
-        checks.append({"name": "matched_assets_nonempty", "status": "pass", "message": f"Found {len(matched)} matched asset(s)."})
+        checks.append(
+            {
+                "name": "matched_assets_nonempty",
+                "status": "pass",
+                "message": f"Found {len(matched)} matched asset(s).",
+            }
+        )
     else:
-        checks.append({"name": "matched_assets_nonempty", "status": "fail", "message": "No assets matched."})
+        checks.append(
+            {"name": "matched_assets_nonempty", "status": "fail", "message": "No assets matched."}
+        )
 
     for item in matched:
         asset_id = item.get("asset_id")
         status = "pass" if asset_id in entries else "fail"
-        checks.append({"name": f"asset_exists:{asset_id}", "status": status, "message": f"Checked {asset_id} in master catalog."})
+        checks.append(
+            {
+                "name": f"asset_exists:{asset_id}",
+                "status": status,
+                "message": f"Checked {asset_id} in master catalog.",
+            }
+        )
         confidence = item.get("confidence")
         if isinstance(confidence, (int, float)) and 0 <= float(confidence) <= 1:
-            checks.append({"name": f"confidence_range:{asset_id}", "status": "pass", "message": f"confidence={confidence}"})
+            checks.append(
+                {
+                    "name": f"confidence_range:{asset_id}",
+                    "status": "pass",
+                    "message": f"confidence={confidence}",
+                }
+            )
         else:
-            checks.append({"name": f"confidence_range:{asset_id}", "status": "fail", "message": "confidence must be numeric in [0, 1]."})
+            checks.append(
+                {
+                    "name": f"confidence_range:{asset_id}",
+                    "status": "fail",
+                    "message": "confidence must be numeric in [0, 1].",
+                }
+            )
 
     fail_count = sum(1 for check in checks if check["status"] == "fail")
     return {
@@ -236,9 +284,13 @@ def prompt_case_from_grounding(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Ground a tabletop scene prompt to RoboTwin catalog assets.")
+    parser = argparse.ArgumentParser(
+        description="Ground a tabletop scene prompt to RoboTwin catalog assets."
+    )
     parser.add_argument("--prompt", required=True)
-    parser.add_argument("--master-catalog", default="asset_catalogs/robotwin_tabletop_assets_master.json")
+    parser.add_argument(
+        "--master-catalog", default="asset_catalogs/robotwin_tabletop_assets_master.json"
+    )
     parser.add_argument("--out", required=True)
     parser.add_argument("--prompt-case-out")
     parser.add_argument("--case-name")

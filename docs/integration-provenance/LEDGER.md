@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-STAGE-RUNTIME-LINT — 保留层样式收敛
+
+- origin_owner / upstream_owner：Stage5与AgenticSim既有固定来源作者；integration_owner：Bingsheng Harness workstream。
+- source_ref：`1dcda27` 切片基线；target_paths：stage5与sim_adapters/agenticsim_runtime的43份Python。
+- integration_method：37份AST相同、6仅imports；越界Markdown格式副作用已恢复，不改变历史原文。
+- verification：72项Stage5、11项runtime通过/2项外部bundle缺失skip，范围Ruff通过。
+- runtime_verification：未运行新GPU；recorded_git_authors：原来源与维护提交分别保留。
+
 ## INT-CANONICAL-C13-ALCHEDATA-LINT — 保值字符串与导入维护
 
 - origin_owner / upstream_owner：Alchedata原固定来源作者；integration_owner：Bingsheng Harness workstream。

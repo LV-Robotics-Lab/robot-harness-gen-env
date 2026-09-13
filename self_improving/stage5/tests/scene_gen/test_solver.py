@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 import math
 from pathlib import Path
 
@@ -41,7 +40,9 @@ def test_solver_is_deterministic_and_preserves_real_asset_paths() -> None:
 
 def test_solver_meets_all_geometric_relations() -> None:
     catalog = _real_catalog()
-    spec = parse_rule_based("A cup is in front of a wooden block and at least 0.20 m away.", seed=19)
+    spec = parse_rule_based(
+        "A cup is in front of a wooden block and at least 0.20 m away.", seed=19
+    )
     resolved = solve_scene(spec, catalog)
     objects = {item.object_id: item for item in resolved.objects}
     cup = objects["cup_1"]
@@ -50,7 +51,10 @@ def test_solver_meets_all_geometric_relations() -> None:
     assert math.dist(cup.pose.position_m[:2], block.pose.position_m[:2]) >= 0.20
     assert any(item.relation == RelationType.FRONT_OF for item in resolved.relations)
     assert resolved.solver_trace.status == "pass"
-    assert resolved.solver_trace.total_attempts <= 2 * resolved.solver_trace.max_attempts_per_object * 49
+    assert (
+        resolved.solver_trace.total_attempts
+        <= 2 * resolved.solver_trace.max_attempts_per_object * 49
+    )
 
 
 def test_fixed_100_seed_gate_passes_for_the_declared_can_basket_case() -> None:
@@ -141,9 +145,7 @@ def test_solver_rejects_a_source_that_cannot_fit_the_stable_support_surface() ->
             max_attempts_per_object=4,
         )
     reasons = {
-        reason
-        for attempt in raised.value.report["attempts"]
-        for reason in attempt["reasons"]
+        reason for attempt in raised.value.report["attempts"] for reason in attempt["reasons"]
     }
     assert "object footprint does not fit stable support surface" in reasons
 
@@ -201,9 +203,15 @@ def test_solver_maps_semantic_articulation_to_all_movable_joint_qpos() -> None:
                         stable_pose_id="upright",
                         stable_orientation_wxyz=(1.0, 0.0, 0.0, 0.0),
                         articulation_joints=(
-                            CatalogJoint(name="drawer_1", joint_type="prismatic", lower=0.0, upper=0.66),
-                            CatalogJoint(name="drawer_2", joint_type="prismatic", lower=0.0, upper=0.66),
-                            CatalogJoint(name="drawer_3", joint_type="prismatic", lower=0.0, upper=0.66),
+                            CatalogJoint(
+                                name="drawer_1", joint_type="prismatic", lower=0.0, upper=0.66
+                            ),
+                            CatalogJoint(
+                                name="drawer_2", joint_type="prismatic", lower=0.0, upper=0.66
+                            ),
+                            CatalogJoint(
+                                name="drawer_3", joint_type="prismatic", lower=0.0, upper=0.66
+                            ),
                         ),
                         articulation_closed_qpos=(0.0, 0.0, 0.0),
                         articulation_open_qpos=(0.6, 0.5, 0.4),

@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C13 Stage5 与 AgenticSim 保值维护
+
+- 两范围288条lint清零，43份Python改动：37份Python3.11 AST完全一致，6份仅import变化，
+  不改变算法、物理判据、报告字符串或生成代码值。
+- 主线程Stage5 72 passed/0.68s；AgenticSim 11 passed/2 skipped/0.06s，skip为原外部runtime
+  bundle缺失，不记作GPU验证。两范围Ruff通过，formatter检查83份Python通过。
+- Ruff目录调用意外格式化一份历史Markdown里的Python fence，已由原文stdin精确复现其归属，
+  主线程恢复原两行示例；只提交授权Python范围，以后显式限定Python文件。
+
 ## 2026-09-13 C13 Alchedata lint 收尾
 
 - 保原字符串值拆分长literal，临时formatter每文件先后AST相同才写；三个嵌入HTML/CSS模板

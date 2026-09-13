@@ -92,11 +92,7 @@ def _catalog_with_local_block_meshes(tmp_path: Path) -> AssetCatalog:
                 "collision_path": str(collision),
             }
         )
-        entries.append(
-            entry.model_copy(
-                update={"asset_path": str(asset_dir), "models": (model,)}
-            )
-        )
+        entries.append(entry.model_copy(update={"asset_path": str(asset_dir), "models": (model,)}))
     return catalog.model_copy(
         update={
             "robotwin_root": str(tmp_path / "RoboTwin"),
@@ -162,9 +158,9 @@ def test_runtime_unstable_block_uses_dimension_preserving_proxy_on_table(
     assert provenance["source_asset_id"] == "004_fluted-block"
     assert provenance["uniform_scale_factor"] == 1.0
     assert provenance["dimensions_m"] == list(
-        next(
-            entry for entry in catalog.entries if entry.asset_id == "004_fluted-block"
-        ).models[0].dimensions_m
+        next(entry for entry in catalog.entries if entry.asset_id == "004_fluted-block")
+        .models[0]
+        .dimensions_m
     )
     assert provenance["adaptation_reasons"] == ["source_runtime_instability"]
 
@@ -186,8 +182,7 @@ def test_proxy_mesh_bounds_match_declared_dimensions(tmp_path: Path) -> None:
         if line.startswith("v ")
     ]
     bounds = tuple(
-        max(vertex[axis] for vertex in vertices)
-        - min(vertex[axis] for vertex in vertices)
+        max(vertex[axis] for vertex in vertices) - min(vertex[axis] for vertex in vertices)
         for axis in range(3)
     )
     expected = tuple(provenance["dimensions_m"])

@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -14,15 +13,24 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.model_providers import (
+# Import follows the legacy source path bootstrap.
+from generate_scene.asset_catalog import load_asset_catalog  # noqa: E402
+from generate_scene.model_providers import (  # noqa: E402 - After legacy source path bootstrap.
     critic_review_from_validation,
     design_initial_spec,
     orchestrate_final_spec,
     validation_plan_for,
 )
-from generate_scene.asset_catalog import load_asset_catalog
-from generate_scene.schemas import read_json, validate_placement_spec, write_json
-from generate_scene.tools import get_smoke_artifacts, run_robotwin_smoke, visual_review
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    validate_placement_spec,
+    write_json,
+)
+from generate_scene.tools import (  # noqa: E402 - After legacy source path bootstrap.
+    get_smoke_artifacts,
+    run_robotwin_smoke,
+    visual_review,
+)
 
 
 def _rel(path: Path) -> str:
@@ -122,11 +130,16 @@ def main() -> int:
         "--visual-review-mode",
         choices=["required", "artifact_only"],
         default="required",
-        help="required prevents smoke artifact existence from being treated as semantic visual pass.",
+        help=(
+            "required prevents smoke artifact existence from being treated as semantic visual pass."
+        ),
     )
     parser.add_argument(
         "--visual-review-report",
-        help="Optional human/VLM/Codex-visual review JSON. status must be pass for final pipeline pass.",
+        help=(
+            "Optional human/VLM/Codex-visual review JSON. status must be "
+            "pass for final pipeline pass."
+        ),
     )
     args = parser.parse_args()
 
@@ -155,7 +168,9 @@ def main() -> int:
         designer_path = out_dir / "designer_initial_placement.json"
         write_json(designer_path, designer_spec)
 
-        initial_validation = validate_placement_spec(designer_spec, catalog, robotwin_root=args.robotwin_root)
+        initial_validation = validate_placement_spec(
+            designer_spec, catalog, robotwin_root=args.robotwin_root
+        )
         initial_validation_path = out_dir / "static_validation_initial.json"
         write_json(initial_validation_path, initial_validation)
 
@@ -175,7 +190,9 @@ def main() -> int:
         candidate_path = out_dir / "candidate_placement.json"
         write_json(candidate_path, final_spec)
 
-        final_validation = validate_placement_spec(final_spec, catalog, robotwin_root=args.robotwin_root)
+        final_validation = validate_placement_spec(
+            final_spec, catalog, robotwin_root=args.robotwin_root
+        )
         candidate_validation_path = out_dir / "static_validation_candidate.json"
         write_json(candidate_validation_path, final_validation)
 
@@ -216,7 +233,9 @@ def main() -> int:
             smoke_report_path = out_dir / "smoke_report_with_command.json"
             write_json(smoke_report_path, smoke_report)
 
-            visual_review_report = visual_review(smoke_dir, args.prompt, mode=args.visual_review_mode)
+            visual_review_report = visual_review(
+                smoke_dir, args.prompt, mode=args.visual_review_mode
+            )
             if args.visual_review_report:
                 visual_review_report = read_json(Path(args.visual_review_report))
             visual_review_path = out_dir / "visual_review.json"
@@ -230,7 +249,9 @@ def main() -> int:
                     "preview": get_smoke_artifacts(smoke_dir),
                 }
             )
-            smoke_passed = smoke_report.get("status") == "pass" and smoke_report.get("returncode") == 0
+            smoke_passed = (
+                smoke_report.get("status") == "pass" and smoke_report.get("returncode") == 0
+            )
             visual_status = str(visual_review_report.get("status", ""))
             if not smoke_passed:
                 summary["status"] = "fail_smoke"

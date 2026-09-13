@@ -38,10 +38,14 @@ def test_builder_writes_hash_bound_resolved_only_replay_package(tmp_path: Path) 
     manifest = build_scene_package(spec, resolved, tmp_path)
     assert manifest["source_scene_spec_sha256"] == spec.digest()
     assert manifest["resolved_scene_sha256"] == resolved.digest()
-    assert manifest["resolved_only_entrypoint"] == "scene_gen.envs.generated_scene:load_resolved_scene"
+    assert (
+        manifest["resolved_only_entrypoint"] == "scene_gen.envs.generated_scene:load_resolved_scene"
+    )
     assert verify_package(tmp_path)["status"] == "pass"
 
-    replayed = ResolvedSceneSpec.model_validate_json((tmp_path / "resolved_scene.json").read_text(encoding="utf-8"))
+    replayed = ResolvedSceneSpec.model_validate_json(
+        (tmp_path / "resolved_scene.json").read_text(encoding="utf-8")
+    )
     assert replayed.digest() == resolved.digest()
     module_source = (tmp_path / "generated_scene.py").read_text(encoding="utf-8")
     tree = ast.parse(module_source)
@@ -74,7 +78,9 @@ def test_static_validator_checks_bounds_overlap_relations_and_roundtrip(tmp_path
     assert all(
         item["status"] == "pass"
         for item in report["checks"]
-        if item["name"].startswith(("workspace_bounds", "no_overlap", "relation", "resolved_only", "package_manifest"))
+        if item["name"].startswith(
+            ("workspace_bounds", "no_overlap", "relation", "resolved_only", "package_manifest")
+        )
     )
 
 
@@ -114,7 +120,8 @@ def test_runtime_validator_requires_each_object_visibility_and_physics() -> None
     failed_report = validate_resolved_scene(resolved, runtime_evidence=failed, require_runtime=True)
     assert failed_report["status"] == "fail"
     assert any(
-        item["name"] == f"head_visibility:{resolved.objects[0].object_id}" and item["status"] == "fail"
+        item["name"] == f"head_visibility:{resolved.objects[0].object_id}"
+        and item["status"] == "fail"
         for item in failed_report["checks"]
     )
 
@@ -127,9 +134,7 @@ def test_runtime_validator_requires_each_object_visibility_and_physics() -> None
         require_runtime=True,
     )
     unique_frames = next(
-        item
-        for item in endpoint_report["checks"]
-        if item["name"] == "observer_video_unique_frames"
+        item for item in endpoint_report["checks"] if item["name"] == "observer_video_unique_frames"
     )
     assert unique_frames["status"] == "fail"
     assert unique_frames["evidence"]["minimum"] == 30
@@ -175,9 +180,12 @@ def test_runtime_v2_validates_dynamic_relations_instead_of_exact_spawn_pose() ->
     report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
     assert report["status"] == "pass"
     dynamic_id = next(item.object_id for item in resolved.objects if not item.is_static)
-    assert next(
-        item for item in report["checks"] if item["name"] == f"translation_drift:{dynamic_id}"
-    )["status"] == "not_applicable"
+    assert (
+        next(
+            item for item in report["checks"] if item["name"] == f"translation_drift:{dynamic_id}"
+        )["status"]
+        == "not_applicable"
+    )
 
     failed = json.loads(json.dumps(evidence))
     failed["relations"][next(iter(relations))]["pass"] = False
@@ -255,16 +263,13 @@ def test_static_validator_rejects_edge_placement_even_inside_outer_plate_bounds(
     edge_scene = resolved.model_copy(
         update={
             "objects": tuple(
-                edge_can if item.object_id == can.object_id else item
-                for item in resolved.objects
+                edge_can if item.object_id == can.object_id else item for item in resolved.objects
             )
         }
     )
     report = validate_resolved_scene(edge_scene)
     relation = next(
-        item
-        for item in report["checks"]
-        if item["name"] == "relation:on_top_of:can_1:plate_1"
+        item for item in report["checks"] if item["name"] == "relation:on_top_of:can_1:plate_1"
     )
     assert relation["status"] == "fail"
     assert relation["evidence"]["support_footprint_margin_m"] < 0.008
@@ -298,9 +303,7 @@ def test_static_validator_rejects_target_local_container_overflow() -> None:
     )
     report = validate_resolved_scene(attacked)
     relation = next(
-        item
-        for item in report["checks"]
-        if item["name"] == "relation:inside:apple_1:basket_1"
+        item for item in report["checks"] if item["name"] == "relation:inside:apple_1:basket_1"
     )
     assert relation["status"] == "fail"
     assert relation["evidence"]["inside_footprint_margin_m"] < 0.0
@@ -314,8 +317,7 @@ def test_runtime_validator_rejects_static_contact_free_nested_support() -> None:
     attacked = resolved.model_copy(
         update={
             "objects": tuple(
-                static_can if item.object_id == can.object_id else item
-                for item in resolved.objects
+                static_can if item.object_id == can.object_id else item for item in resolved.objects
             )
         }
     )
@@ -416,8 +418,6 @@ def test_runtime_validator_rejects_nested_source_contacting_table() -> None:
         }
     report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
     check = next(
-        item
-        for item in report["checks"]
-        if item["name"] == "no_unexpected_support_contact:can_1"
+        item for item in report["checks"] if item["name"] == "no_unexpected_support_contact:can_1"
     )
     assert check["status"] == "fail"

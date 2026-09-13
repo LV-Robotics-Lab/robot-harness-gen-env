@@ -15,8 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.schemas import write_json
-
+from generate_scene.schemas import write_json  # noqa: E402 - After legacy source path bootstrap.
 
 SKIP_ASSET_DIRS = {"objaverse", "vis_box"}
 
@@ -109,7 +108,9 @@ def _read_model_metadata(asset_dir: Path, model_id: int) -> dict[str, Any]:
             try:
                 with bounding_box_path.open("r", encoding="utf-8") as f:
                     bbox = json.load(f)
-                data["extents"] = [float(bbox["max"][idx]) - float(bbox["min"][idx]) for idx in range(3)]
+                data["extents"] = [
+                    float(bbox["max"][idx]) - float(bbox["min"][idx]) for idx in range(3)
+                ]
             except Exception:
                 pass
         data["_source_model_dir"] = path.parent.name
@@ -141,13 +142,21 @@ def _raw_extents(metadata: dict[str, Any]) -> Any:
 
 def _scaled_extents(metadata: dict[str, Any]) -> list[float] | None:
     extents = _raw_extents(metadata)
-    if not (isinstance(extents, list) and len(extents) == 3 and all(isinstance(item, (int, float)) for item in extents)):
+    if not (
+        isinstance(extents, list)
+        and len(extents) == 3
+        and all(isinstance(item, (int, float)) for item in extents)
+    ):
         return None
 
     scale = metadata.get("scale")
     if isinstance(scale, (int, float)):
         return [float(item) * float(scale) for item in extents]
-    if isinstance(scale, list) and len(scale) == 3 and all(isinstance(item, (int, float)) for item in scale):
+    if (
+        isinstance(scale, list)
+        and len(scale) == 3
+        and all(isinstance(item, (int, float)) for item in scale)
+    ):
         return [float(extents[idx]) * float(scale[idx]) for idx in range(3)]
 
     # Many RoboTwin model_data files store normalized mesh extents around 1-2
@@ -199,7 +208,10 @@ def _entry_for_asset(asset_dir: Path) -> dict[str, Any]:
                 "is_static": True,
                 "notes": [
                     "RoboTwin 110_basket is side-facing with identity qpos.",
-                    "Use x90 qpos so the basket opening faces world z-up and the basket is stable as a tabletop container.",
+                    (
+                        "Use x90 qpos so the basket opening faces world z-up and the "
+                        "basket is stable as a tabletop container."
+                    ),
                 ],
             }
         )
@@ -228,9 +240,18 @@ def _entry_for_asset(asset_dir: Path) -> dict[str, Any]:
                 "force_qpos": True,
                 "is_static": True,
                 "notes": [
-                    "RoboTwin 034_knife should lie flat on the tabletop for ordinary placement prompts.",
-                    "Do not use y90/root poses that make the blade stand upright on its narrow edge.",
-                    "Keep it static for background scene generation; the dynamic flat pose is unstable in smoke tests.",
+                    (
+                        "RoboTwin 034_knife should lie flat on the tabletop for ordin"
+                        "ary placement prompts."
+                    ),
+                    (
+                        "Do not use y90/root poses that make the blade stand upright "
+                        "on its narrow edge."
+                    ),
+                    (
+                        "Keep it static for background scene generation; the dynamic "
+                        "flat pose is unstable in smoke tests."
+                    ),
                 ],
             }
         )
@@ -242,8 +263,14 @@ def _entry_for_asset(asset_dir: Path) -> dict[str, Any]:
                 "force_qpos": True,
                 "fix_root_link": True,
                 "notes": [
-                    "RoboTwin open_laptop loads 015_laptop with create_sapien_urdf_obj/rand_create_sapien_urdf_obj.",
-                    "Use a stable tabletop root orientation and fixed root link for background placement.",
+                    (
+                        "RoboTwin open_laptop loads 015_laptop with create_sapien_urd"
+                        "f_obj/rand_create_sapien_urdf_obj."
+                    ),
+                    (
+                        "Use a stable tabletop root orientation and fixed root link f"
+                        "or background placement."
+                    ),
                 ],
             }
         )
@@ -317,7 +344,9 @@ def select_prompt_assets(prompt: str, catalog: dict[str, Any]) -> dict[str, Any]
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build a lightweight asset catalog from RoboTwin assets/objects.")
+    parser = argparse.ArgumentParser(
+        description="Build a lightweight asset catalog from RoboTwin assets/objects."
+    )
     parser.add_argument("--robotwin-root", default=str(Path.home() / "RoboTwin"))
     parser.add_argument("--out", required=True)
     parser.add_argument("--prompt")

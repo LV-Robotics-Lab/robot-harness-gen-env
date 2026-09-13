@@ -14,25 +14,45 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.asset_catalog import load_asset_catalog
-from generate_scene.asset_discovery import discover_robotwin_assets
-from generate_scene.asset_grounding import (
+# Import follows the legacy source path bootstrap.
+from generate_scene.asset_catalog import load_asset_catalog  # noqa: E402
+
+# Import follows the legacy source path bootstrap.
+from generate_scene.asset_discovery import discover_robotwin_assets  # noqa: E402
+from generate_scene.asset_grounding import (  # noqa: E402 - After legacy source path bootstrap.
     ground_assets,
     prompt_case_from_grounding,
     slugify_prompt,
     validate_asset_grounding_result,
 )
-from generate_scene.gpt_agent import (
+from generate_scene.gpt_agent import (  # noqa: E402 - After legacy source path bootstrap.
     moonshot_design_initial_spec,
     moonshot_ground_assets,
     moonshot_repair_from_scene_critic,
 )
-from generate_scene.model_providers import design_initial_spec, validation_plan_for
-from generate_scene.observation_agent import observe_scene_with_provider
-from generate_scene.scene_codegen import generate_scene_module
-from generate_scene.scene_critic import build_scene_critic_report
-from generate_scene.schemas import read_json, validate_placement_spec, write_json
-from generate_scene.tools import get_smoke_artifacts, run_robotwin_smoke, visual_review
+from generate_scene.model_providers import (  # noqa: E402 - After legacy source path bootstrap.
+    design_initial_spec,
+    validation_plan_for,
+)
+
+# Import follows the legacy source path bootstrap.
+from generate_scene.observation_agent import observe_scene_with_provider  # noqa: E402
+
+# Import follows the legacy source path bootstrap.
+from generate_scene.scene_codegen import generate_scene_module  # noqa: E402
+
+# Import follows the legacy source path bootstrap.
+from generate_scene.scene_critic import build_scene_critic_report  # noqa: E402
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    validate_placement_spec,
+    write_json,
+)
+from generate_scene.tools import (  # noqa: E402 - After legacy source path bootstrap.
+    get_smoke_artifacts,
+    run_robotwin_smoke,
+    visual_review,
+)
 
 
 def _rel(path: Path) -> str:
@@ -44,7 +64,9 @@ def _rel(path: Path) -> str:
 
 def _case_base_catalog(case_path: Path, master_catalog_path: Path) -> str:
     try:
-        return str(master_catalog_path.resolve().relative_to(case_path.parent.resolve())).replace("\\", "/")
+        return str(master_catalog_path.resolve().relative_to(case_path.parent.resolve())).replace(
+            "\\", "/"
+        )
     except ValueError:
         return str(master_catalog_path.resolve())
 
@@ -82,7 +104,10 @@ def _mark_final_spec(
         "reason": scene_critic_review.get("summary", "Scene Critic accepted the rendered scene."),
         "accepted_attempt": attempt,
         "remaining_uncertainties": [
-            "This scene is a tabletop background/placement artifact, not a generated play_once() task policy.",
+            (
+                "This scene is a tabletop background/placement artifact, not "
+                "a generated play_once() task policy."
+            ),
             "Downstream manipulation tasks must still define play_once() and check_success().",
         ],
     }
@@ -122,7 +147,10 @@ def _mark_review_candidate(
         "review_attempt": attempt,
         "remaining_uncertainties": [
             "Semantic visual review has not passed; this candidate is not publishable.",
-            "This scene is a tabletop background/placement artifact, not a generated play_once() task policy.",
+            (
+                "This scene is a tabletop background/placement artifact, not "
+                "a generated play_once() task policy."
+            ),
             "Downstream manipulation tasks must still define play_once() and check_success().",
         ],
     }
@@ -192,9 +220,13 @@ def _copy_if_exists(src: Path, dst: Path) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run prompt to a render-reviewed RoboTwin scene module.")
+    parser = argparse.ArgumentParser(
+        description="Run prompt to a render-reviewed RoboTwin scene module."
+    )
     parser.add_argument("--prompt", required=True)
-    parser.add_argument("--master-catalog", default="asset_catalogs/robotwin_tabletop_assets_master.json")
+    parser.add_argument(
+        "--master-catalog", default="asset_catalogs/robotwin_tabletop_assets_master.json"
+    )
     parser.add_argument("--discover-assets-from-robotwin", action="store_true")
     parser.add_argument("--prompt-case")
     parser.add_argument("--case-name")
@@ -210,13 +242,22 @@ def main() -> int:
     parser.add_argument("--video-frames", type=int, default=60)
     parser.add_argument("--fps", type=int, default=15)
     parser.add_argument("--smoke-timeout", type=int, default=420)
-    parser.add_argument("--python-executable", help="Python executable for RoboTwin smoke. Also configurable through ROBOTWIN_PYTHON.")
-    parser.add_argument("--visual-review-mode", choices=["required", "artifact_only", "moonshot", "openai"], default="required")
+    parser.add_argument(
+        "--python-executable",
+        help="Python executable for RoboTwin smoke. Also configurable through ROBOTWIN_PYTHON.",
+    )
+    parser.add_argument(
+        "--visual-review-mode",
+        choices=["required", "artifact_only", "moonshot", "openai"],
+        default="required",
+    )
     parser.add_argument("--visual-review-report")
     parser.add_argument("--visual-repair-attempts", type=int, default=0)
     parser.add_argument("--variation-index", type=int, default=0)
     parser.add_argument("--num-variations", type=int, default=1)
-    parser.add_argument("--diversity-context", help="Optional JSON file with previous accepted placement summaries.")
+    parser.add_argument(
+        "--diversity-context", help="Optional JSON file with previous accepted placement summaries."
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -295,7 +336,11 @@ def main() -> int:
         summary["artifacts"]["prompt_case_copy"] = _rel(case_copy_path)
 
         catalog = load_asset_catalog(prompt_case_path)
-        diversity_context = read_json(Path(args.diversity_context)).get("accepted_scenes", []) if args.diversity_context else []
+        diversity_context = (
+            read_json(Path(args.diversity_context)).get("accepted_scenes", [])
+            if args.diversity_context
+            else []
+        )
         if _uses_llm_agent(args.model_provider):
             working_spec = moonshot_design_initial_spec(
                 prompt=args.prompt,
@@ -335,13 +380,17 @@ def main() -> int:
             write_json(attempt_placement_path, working_spec)
             attempt_record["placement"] = _rel(attempt_placement_path)
 
-            static_validation = validate_placement_spec(working_spec, catalog, robotwin_root=args.robotwin_root)
+            static_validation = validate_placement_spec(
+                working_spec, catalog, robotwin_root=args.robotwin_root
+            )
             static_validation_path = out_dir / f"{attempt_name}_static_validation.json"
             write_json(static_validation_path, static_validation)
             attempt_record["static_validation"] = _rel(static_validation_path)
             if attempt == 0:
                 _copy_if_exists(static_validation_path, out_dir / "static_validation_initial.json")
-                summary["artifacts"]["static_validation_initial"] = _rel(out_dir / "static_validation_initial.json")
+                summary["artifacts"]["static_validation_initial"] = _rel(
+                    out_dir / "static_validation_initial.json"
+                )
 
             if static_validation.get("status") != "pass":
                 scene_critic_review = build_scene_critic_report(
@@ -359,7 +408,9 @@ def main() -> int:
 
                 if attempt + 1 >= max_attempts or not _uses_llm_agent(args.model_provider):
                     write_json(out_dir / "scene_critic_review.json", scene_critic_review)
-                    summary["artifacts"]["scene_critic_review"] = _rel(out_dir / "scene_critic_review.json")
+                    summary["artifacts"]["scene_critic_review"] = _rel(
+                        out_dir / "scene_critic_review.json"
+                    )
                     summary["status"] = "fail_static_preflight"
                     write_json(out_dir / "scene_generation_summary.json", summary)
                     print(f"FAIL {out_dir / 'scene_generation_summary.json'}")
@@ -373,7 +424,9 @@ def main() -> int:
                 )
                 continue
 
-            scene_report = generate_scene_module(placement_path=attempt_placement_path, out_path=scene_module_path)
+            scene_report = generate_scene_module(
+                placement_path=attempt_placement_path, out_path=scene_module_path
+            )
             scene_report_path = out_dir / f"{attempt_name}_scene_codegen_report.json"
             write_json(scene_report_path, scene_report)
             attempt_record["generated_scene_module"] = _rel(scene_module_path)
@@ -448,7 +501,9 @@ def main() -> int:
                     model_provider=args.visual_review_mode,
                 )
             else:
-                visual_review_report = visual_review(smoke_dir, args.prompt, mode=args.visual_review_mode)
+                visual_review_report = visual_review(
+                    smoke_dir, args.prompt, mode=args.visual_review_mode
+                )
             visual_review_path = out_dir / f"{attempt_name}_visual_review.json"
             write_json(visual_review_path, visual_review_report)
             last_visual_review = visual_review_report
@@ -524,7 +579,9 @@ def main() -> int:
                         "scene_codegen_report": _rel(out_dir / "scene_codegen_report.json"),
                         "validation_plan": _rel(out_dir / "validation_plan.json"),
                         "smoke_report": _rel((out_dir / "smoke") / "smoke_report.json"),
-                        "smoke_report_with_command": _rel(out_dir / "smoke_report_with_command.json"),
+                        "smoke_report_with_command": _rel(
+                            out_dir / "smoke_report_with_command.json"
+                        ),
                         "visual_review": _rel(out_dir / "visual_review.json"),
                         "scene_critic_review": _rel(out_dir / "scene_critic_review.json"),
                         "preview": get_smoke_artifacts(out_dir / "smoke"),
@@ -547,15 +604,21 @@ def main() -> int:
         if not accepted:
             if last_scene_critic is not None:
                 write_json(out_dir / "scene_critic_review.json", last_scene_critic)
-                summary["artifacts"]["scene_critic_review"] = _rel(out_dir / "scene_critic_review.json")
+                summary["artifacts"]["scene_critic_review"] = _rel(
+                    out_dir / "scene_critic_review.json"
+                )
             if last_visual_review is not None:
                 write_json(out_dir / "visual_review.json", last_visual_review)
                 summary["artifacts"]["visual_review"] = _rel(out_dir / "visual_review.json")
             if last_smoke_report is not None:
                 write_json(out_dir / "smoke_report_with_command.json", last_smoke_report)
-                summary["artifacts"]["smoke_report_with_command"] = _rel(out_dir / "smoke_report_with_command.json")
+                summary["artifacts"]["smoke_report_with_command"] = _rel(
+                    out_dir / "smoke_report_with_command.json"
+                )
             final_status = (last_scene_critic or {}).get("overall_status", "fail_exception")
-            summary["status"] = final_status if str(final_status).startswith("fail") else "repair_required"
+            summary["status"] = (
+                final_status if str(final_status).startswith("fail") else "repair_required"
+            )
 
         write_json(out_dir / "scene_generation_summary.json", summary)
         if summary["status"] == "pass":

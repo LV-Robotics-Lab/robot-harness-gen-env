@@ -40,7 +40,9 @@ def load_scene_module(path: Path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     if not hasattr(module, "load_scene"):
-        raise RuntimeError(f"Generated scene module has no load_scene(task, placement_spec=None): {path}")
+        raise RuntimeError(
+            f"Generated scene module has no load_scene(task, placement_spec=None): {path}"
+        )
     return module
 
 
@@ -105,7 +107,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--robotwin-root", default=str(Path.home() / "RoboTwin"))
     parser.add_argument("--placement", required=True)
-    parser.add_argument("--scene-module", help="Optional generated scene module with load_scene(task, placement_spec=None).")
+    parser.add_argument(
+        "--scene-module",
+        help="Optional generated scene module with load_scene(task, placement_spec=None).",
+    )
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--task-config", default="demo_smoke")
     parser.add_argument("--seed", type=int, default=0)
@@ -120,7 +125,9 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     spec = read_json(placement_path)
-    scene_module_path = Path(args.scene_module).expanduser().resolve() if args.scene_module else None
+    scene_module_path = (
+        Path(args.scene_module).expanduser().resolve() if args.scene_module else None
+    )
 
     os.chdir(robotwin_root)
     sys.path.insert(0, str(robotwin_root))
@@ -128,6 +135,7 @@ def main() -> int:
     import sapien.core as sapien
     from envs._base_task import Base_Task
     from envs.utils import create_actor, create_sapien_urdf_obj
+
     scene_module = load_scene_module(scene_module_path) if scene_module_path else None
 
     class TabletopPlacementSmoke(Base_Task):
@@ -142,7 +150,9 @@ def main() -> int:
 
         def load_actors(self) -> None:
             if self.generated_scene_module is not None:
-                self.placement_objects = self.generated_scene_module.load_scene(self, self.placement_spec)
+                self.placement_objects = self.generated_scene_module.load_scene(
+                    self, self.placement_spec
+                )
                 return
 
             table_z = 0.741 + self.table_z_bias
@@ -167,7 +177,9 @@ def main() -> int:
                         pose=sapien.Pose(xyz, qpos),
                         modelname=obj["asset_id"],
                         modelid=obj.get("model_id", 0),
-                        fix_root_link=defaults.get("fix_root_link", obj.get("physical", {}).get("is_static", False)),
+                        fix_root_link=defaults.get(
+                            "fix_root_link", obj.get("physical", {}).get("is_static", False)
+                        ),
                     )
                     if "articulation_qpos" in defaults:
                         actor.set_qpos(defaults["articulation_qpos"])
@@ -261,9 +273,18 @@ def main() -> int:
                 "pose_delta_norm_m": max_pose_delta,
                 "notes": [
                     "Objects were loaded from RoboTwin assets through create_actor.",
-                    "If scene_module is set, objects were loaded through generated load_scene(task).",
-                    "Object-specific scale and pose metadata are read from the placement spec when provided.",
-                    "This smoke confirms load/render evidence; human or VLM visual review should inspect the saved image/video.",
+                    (
+                        "If scene_module is set, objects were loaded through generate"
+                        "d load_scene(task)."
+                    ),
+                    (
+                        "Object-specific scale and pose metadata are read from the pl"
+                        "acement spec when provided."
+                    ),
+                    (
+                        "This smoke confirms load/render evidence; human or VLM visua"
+                        "l review should inspect the saved image/video."
+                    ),
                 ],
             }
         )

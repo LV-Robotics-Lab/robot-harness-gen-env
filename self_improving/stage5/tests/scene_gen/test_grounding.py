@@ -22,7 +22,12 @@ def test_grounding_selects_real_usable_models_without_inventing_ids() -> None:
     assert "color metadata unknown; query red preserved" in can.reasons
     assert basket.entry.asset_id == "110_basket"
     assert basket.model.model_id == 1
-    assert basket.model.stable_orientation_wxyz == (0.7071067811865476, 0.7071067811865476, 0.0, 0.0)
+    assert basket.model.stable_orientation_wxyz == (
+        0.7071067811865476,
+        0.7071067811865476,
+        0.0,
+        0.0,
+    )
 
 
 def test_grounding_is_reproducible_for_fixed_catalog_query_and_seed() -> None:

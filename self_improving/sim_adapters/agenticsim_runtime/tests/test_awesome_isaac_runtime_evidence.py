@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -29,9 +28,7 @@ def test_runtime_evidence_rebuild_matches_checked_summary() -> None:
         pytest.skip("raw 39 MB runtime evidence bundle is intentionally external")
     rebuilt = module.build_runtime_evidence()
     checked = json.loads(
-        (ROOT / "docs" / "awesome_isaac_runtime_evidence.json").read_text(
-            encoding="utf-8"
-        )
+        (ROOT / "docs" / "awesome_isaac_runtime_evidence.json").read_text(encoding="utf-8")
     )
 
     assert rebuilt == checked

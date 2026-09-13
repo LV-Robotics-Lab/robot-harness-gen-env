@@ -35,7 +35,12 @@ def test_health_and_job_input_boundary(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(
         pipeline,
         "submit",
-        lambda prompt, seed: {"job_id": "abcdef0123456789", "prompt": prompt, "seed": seed, "status": "queued"},
+        lambda prompt, seed: {
+            "job_id": "abcdef0123456789",
+            "prompt": prompt,
+            "seed": seed,
+            "status": "queued",
+        },
     )
     response = client.post("/api/jobs", json={"prompt": "Put a cup inside a basket.", "seed": 9})
     assert response.status_code == 202

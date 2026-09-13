@@ -16,7 +16,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.schemas import read_json, write_json
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    write_json,
+)
 
 
 def slugify_name(name: str) -> str:
@@ -25,7 +28,9 @@ def slugify_name(name: str) -> str:
 
 
 def scene_module_source(spec: dict[str, Any], *, source_placement: str) -> str:
-    scene_name = slugify_name(spec.get("placement_name", "generated_scene")).replace("_final_static_v0", "")
+    scene_name = slugify_name(spec.get("placement_name", "generated_scene")).replace(
+        "_final_static_v0", ""
+    )
     spec_literal = pprint.pformat(spec, indent=2, sort_dicts=False, width=120)
     source_placement = source_placement.replace("\\", "/")
     source_placement_literal = json.dumps(source_placement)
@@ -77,7 +82,8 @@ def load_scene(task: Any, placement_spec: dict[str, Any] | None = None) -> dict[
                 pose=sapien.Pose(xyz, qpos),
                 modelname=obj["asset_id"],
                 modelid=obj.get("model_id", 0),
-                fix_root_link=defaults.get("fix_root_link", obj.get("physical", {{}}).get("is_static", False)),
+                fix_root_link=defaults.get("fix_root_link", \
+obj.get("physical", {{}}).get("is_static", False)),
             )
             if "articulation_qpos" in defaults:
                 actor.set_qpos(defaults["articulation_qpos"])
@@ -111,13 +117,17 @@ def generate_scene_module(*, placement_path: Path, out_path: Path) -> dict[str, 
         "status": "pass",
         "placement": str(placement_path),
         "scene_module": str(out_path),
-        "scene_name": slugify_name(spec.get("placement_name", out_path.stem)).replace("_final_static_v0", ""),
+        "scene_name": slugify_name(spec.get("placement_name", out_path.stem)).replace(
+            "_final_static_v0", ""
+        ),
         "generated_at": date.today().isoformat(),
     }
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate a RoboTwin scene module from a placement spec.")
+    parser = argparse.ArgumentParser(
+        description="Generate a RoboTwin scene module from a placement spec."
+    )
     parser.add_argument("--placement", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--report")

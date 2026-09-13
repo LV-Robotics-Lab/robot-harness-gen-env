@@ -10,7 +10,6 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 RAW_ROOT = ROOT / "artifacts" / "awesome_isaac" / "5090_runtime_baseline"
 DEFAULT_OUTPUT = ROOT / "docs" / "awesome_isaac_runtime_evidence.json"
@@ -34,10 +33,16 @@ CANDIDATES = (
         "visual_evidence_status": "accepted",
         "conditions": [
             "Install source/openarm as an editable package.",
-            "Add the repository root to PYTHONPATH because candidate modules import source.openarm paths.",
+            (
+                "Add the repository root to PYTHONPATH because candidate modu"
+                "les import source.openarm paths."
+            ),
         ],
         "remaining_blockers": [
-            "Package-only execution is not portable until repository-root imports are removed upstream."
+            (
+                "Package-only execution is not portable until repository-root"
+                " imports are removed upstream."
+            )
         ],
     },
     {
@@ -78,7 +83,9 @@ CANDIDATES = (
         ),
         "selected_asset": {
             "path": "isaac_neuromeka/assets/model/usd/indy7/indy7.usd",
-            "git_lfs_oid": "sha256:b1c2dfd4003980c07ab02dde2951e6478d55fd771f5e479dc3c241b686c44fae",
+            "git_lfs_oid": (
+                "sha256:b1c2dfd4003980c07ab02dde2951e6478d55fd771f5e479dc3c241b686c44fae"
+            ),
             "size_bytes": 12_851_047,
         },
     },
@@ -101,7 +108,10 @@ CANDIDATES = (
         "visual_evidence_status": "not_captured",
         "conditions": [],
         "remaining_blockers": [
-            "The core WobbleGo USD is not present in the repository and the configured remote URL did not resolve in Isaac Sim."
+            (
+                "The core WobbleGo USD is not present in the repository and t"
+                "he configured remote URL did not resolve in Isaac Sim."
+            )
         ],
         "external_core_asset": "https://data.noxcaw.com/downloads/wobble-go/usds/WobbleGo.usd",
     },
@@ -111,22 +121,37 @@ CANDIDATES = (
         "license_findings": {
             "github_detected_spdx": "Apache-2.0",
             "bundled_go2_asset_provenance": "unitreerobotics/unitree_ros",
-            "status": "recognized_open_source_license_bundled_asset_provenance_not_independently_licensed",
+            "status": (
+                "recognized_open_source_license_bundled_asset_provenance_not_independently_licensed"
+            ),
         },
         "task": "RobotLab-Isaac-Velocity-Flat-Unitree-Go2-v0",
         "report": "candidates/robot_lab_go2_smoke.json",
         "screenshot": "candidates/robot_lab_go2_smoke.png",
         "runtime_status": "passed_after_declared_dependency_install",
-        "open_source_runtime_verdict": "runtime_usable_repository_license_recognized_asset_provenance_review_remaining",
-        "required_asset_license_status": "bundled_under_repository_license_no_separate_asset_notice_detected",
+        "open_source_runtime_verdict": (
+            "runtime_usable_repository_license_recognized_asset_provenance_review_remaining"
+        ),
+        "required_asset_license_status": (
+            "bundled_under_repository_license_no_separate_asset_notice_detected"
+        ),
         "source_tree_modified": False,
         "visual_evidence_status": "accepted_robot_fell_under_zero_action",
         "conditions": [
-            "Install the declared but unpinned cusrl dependency; the bounded probe used cusrl==1.2.0 without the all extra.",
+            (
+                "Install the declared but unpinned cusrl dependency; the boun"
+                "ded probe used cusrl==1.2.0 without the all extra."
+            ),
         ],
         "remaining_blockers": [
-            "The bundled Go2 meshes cite unitree_ros provenance but do not carry a separate asset license notice.",
-            "The zero-action screenshot proves composition and physics, not a trained locomotion policy.",
+            (
+                "The bundled Go2 meshes cite unitree_ros provenance but do no"
+                "t carry a separate asset license notice."
+            ),
+            (
+                "The zero-action screenshot proves composition and physics, n"
+                "ot a trained locomotion policy."
+            ),
         ],
         "failure_artifacts": (
             {
@@ -161,13 +186,27 @@ CANDIDATES = (
         "source_tree_modified": False,
         "visual_evidence_status": "accepted_runtime_root_framed",
         "conditions": [
-            "Download the public, non-gated unitreerobotics/unitree_model dataset and configure UNITREE_MODEL_DIR.",
+            (
+                "Download the public, non-gated unitreerobotics/unitree_model"
+                " dataset and configure UNITREE_MODEL_DIR."
+            ),
             "Materialize the Go2 Git LFS object before task creation.",
-            "Frame the camera from robot.data.root_pos_w because terrain placement moved env_0 about 79 meters from the authored USD origin.",
+            (
+                "Frame the camera from robot.data.root_pos_w because terrain "
+                "placement moved env_0 about 79 meters from the authored USD "
+                "origin."
+            ),
         ],
         "remaining_blockers": [
-            "The required unitree_model dataset exposes neither license metadata nor a license file, so redistribution rights are unverified.",
-            "UNITREE_MODEL_DIR remains a literal source placeholder rather than an environment variable or package setting.",
+            (
+                "The required unitree_model dataset exposes neither license m"
+                "etadata nor a license file, so redistribution rights are unv"
+                "erified."
+            ),
+            (
+                "UNITREE_MODEL_DIR remains a literal source placeholder rathe"
+                "r than an environment variable or package setting."
+            ),
         ],
         "failure_artifacts": (
             {
@@ -184,7 +223,9 @@ CANDIDATES = (
             "dataset": "unitreerobotics/unitree_model",
             "dataset_head_oid": "323e350252b9c3aee9c40acbfdad84f6ce46a5ac",
             "path": "Go2/usd/configuration/go2_description_base.usd",
-            "git_lfs_oid": "sha256:eeed42fb9e41395c47bc3fac7ff5d58625ac62f44bfa5a09cacebff83229c7a0",
+            "git_lfs_oid": (
+                "sha256:eeed42fb9e41395c47bc3fac7ff5d58625ac62f44bfa5a09cacebff83229c7a0"
+            ),
             "size_bytes": 18_806_122,
         },
     },
@@ -202,17 +243,26 @@ CANDIDATES = (
         "report": "candidates/lerobot_so101_base_smoke.reframed.json",
         "screenshot": "candidates/lerobot_so101_base_smoke.reframed.png",
         "runtime_status": "passed_after_git_lfs_materialization",
-        "open_source_runtime_verdict": "runtime_usable_but_attributed_core_asset_license_unverified",
+        "open_source_runtime_verdict": (
+            "runtime_usable_but_attributed_core_asset_license_unverified"
+        ),
         "required_asset_license_status": "upstream_no_license_detected",
         "asset_license_gap": True,
         "source_tree_modified": False,
         "visual_evidence_status": "accepted_native_viewer",
         "conditions": [
-            "Materialize all 13 Git LFS assets and add the repository source directory to PYTHONPATH.",
+            (
+                "Materialize all 13 Git LFS assets and add the repository sou"
+                "rce directory to PYTHONPATH."
+            ),
             "Use the task-native viewer pose; a generic wide pose did not frame the arm.",
         ],
         "remaining_blockers": [
-            "The repository attributes the SO101 USD to MuammerBay/so-arm101-ros2-bridge, which has no detected license or license file.",
+            (
+                "The repository attributes the SO101 USD to MuammerBay/so-arm"
+                "101-ros2-bridge, which has no detected license or license fi"
+                "le."
+            ),
         ],
         "evidence_artifacts": {
             "lfs_file_list": "candidates/lerobot_so101_lfs_files.txt",
@@ -233,20 +283,35 @@ CANDIDATES = (
         "report": "candidates/lehome_biso101_garment_v2_smoke.json",
         "screenshot": "candidates/lehome_biso101_garment_v2_smoke.png",
         "runtime_status": "passed_after_compatibility_patch",
-        "open_source_runtime_verdict": "open_source_code_and_assets_runtime_usable_after_source_patch",
+        "open_source_runtime_verdict": (
+            "open_source_code_and_assets_runtime_usable_after_source_patch"
+        ),
         "required_asset_license_status": "apache_2_0",
         "source_tree_modified": True,
         "visual_evidence_status": "accepted",
         "conditions": [
             "Download and materialize the public Apache-2.0 lehome/asset_challenge dataset.",
-            "Install plotly==6.5.2, pyserial==3.5, and deepdiff==8.6.1 without the full lerobot dependency set.",
+            (
+                "Install plotly==6.5.2, pyserial==3.5, and deepdiff==8.6.1 wi"
+                "thout the full lerobot dependency set."
+            ),
             "Set cfg.garment_name=Top_Long_Unseen_0 before environment creation.",
             "Apply the recorded two-line GarmentObject first-reset compatibility patch.",
         ],
         "remaining_blockers": [
-            "Upstream reset calls GarmentObject.reset before initialize on Isaac Sim 5.1; unpatched CUDA execution fails.",
-            "Three of four registered task IDs reference Python modules absent from this commit; only the v2 task source is present.",
-            "A full lerobot==0.4.3 install would change core NumPy, packaging, and protobuf versions and was deliberately not applied.",
+            (
+                "Upstream reset calls GarmentObject.reset before initialize o"
+                "n Isaac Sim 5.1; unpatched CUDA execution fails."
+            ),
+            (
+                "Three of four registered task IDs reference Python modules a"
+                "bsent from this commit; only the v2 task source is present."
+            ),
+            (
+                "A full lerobot==0.4.3 install would change core NumPy, packa"
+                "ging, and protobuf versions and was deliberately not applied"
+                "."
+            ),
         ],
         "failure_artifacts": (
             {
@@ -285,7 +350,10 @@ CANDIDATES = (
         "compatibility_patches": (
             {
                 "name": "initialize_garment_before_first_reset",
-                "reason": "DirectRLEnv invokes reset before GarmentObject.initialize has populated initial_points_positions.",
+                "reason": (
+                    "DirectRLEnv invokes reset before GarmentObject.initialize ha"
+                    "s populated initial_points_positions."
+                ),
                 "tracked_path": "docs/awesome_isaac_patches/lehome_garment_initial_reset.patch",
                 "runtime_path": "candidates/lehome_initial_reset_patch.diff",
             },
@@ -325,9 +393,7 @@ def build_baseline(raw_root: Path) -> dict[str, Any]:
     report_path = raw_root / "isaac_runtime_visual_smoke_continuous.json"
     report = read_json(report_path)
     if report.get("status") != "passed":
-        raise RuntimeError(
-            f"Isaac runtime baseline did not pass: {report.get('status')}"
-        )
+        raise RuntimeError(f"Isaac runtime baseline did not pass: {report.get('status')}")
 
     video = report.get("video_evidence") or {}
     sequence = video.get("sequence") or {}
@@ -345,9 +411,7 @@ def build_baseline(raw_root: Path) -> dict[str, Any]:
             expected.get("sha256") != current["sha256"]
             or expected.get("size_bytes") != current["size_bytes"]
         ):
-            raise RuntimeError(
-                f"Pulled {name} does not match the remote runtime report"
-            )
+            raise RuntimeError(f"Pulled {name} does not match the remote runtime report")
 
     frame_count = int(encode.get("frame_count") or 0)
     fps = float(encode.get("fps") or 0.0)
@@ -396,7 +460,8 @@ def build_candidate(raw_root: Path, config: dict[str, Any]) -> dict[str, Any]:
     captured = report.get("status") == "captured"
     if captured != expected_pass:
         raise RuntimeError(
-            f"Runtime result mismatch for {config['slug']}: status={report.get('status')} expected_pass={expected_pass}"
+            f"Runtime result mismatch for {config['slug']}: "
+            f"status={report.get('status')} expected_pass={expected_pass}"
         )
 
     artifacts: dict[str, Any] = {"report": artifact(report_path)}
@@ -405,8 +470,7 @@ def build_candidate(raw_root: Path, config: dict[str, Any]) -> dict[str, Any]:
         artifacts["screenshot"] = artifact(screenshot_path)
         if (
             not report.get("screenshot_ready")
-            or report.get("screenshot_size_bytes")
-            != artifacts["screenshot"]["size_bytes"]
+            or report.get("screenshot_size_bytes") != artifacts["screenshot"]["size_bytes"]
         ):
             raise RuntimeError(f"Screenshot evidence mismatch for {config['slug']}")
 
@@ -501,18 +565,18 @@ def build_runtime_evidence(raw_root: Path = RAW_ROOT) -> dict[str, Any]:
         "schema": "agenticsim.awesome_isaac_runtime_evidence.v1",
         "generated_at": baseline["finished_at"],
         "claim_boundary": (
-            "The baseline proves Isaac Sim physics, RTX rendering, CUDA compute, and a genuinely multi-frame video on "
-            "the recorded host. Candidate rows prove only the named task, exact commit, reset/step count, and visual "
-            "capture. Conditions, source patches, and required-asset license gaps remain part of each usability verdict; "
+            "The baseline proves Isaac Sim physics, RTX rendering, CUDA compute, "
+            "and a genuinely multi-frame video on the recorded host. Candidate rows prove only "
+            "the named task, exact commit, reset/step count, and visual capture. Conditions, "
+            "source patches, and required-asset license gaps remain part of each usability "
+            "verdict; "
             "a public download is not treated as an open-source license grant."
         ),
         "baseline": baseline,
         "summary": {
             "repository_probe_count": len(repositories),
             "runtime_pass_count": sum(row["runtime_passed"] for row in repositories),
-            "runtime_blocked_count": sum(
-                not row["runtime_passed"] for row in repositories
-            ),
+            "runtime_blocked_count": sum(not row["runtime_passed"] for row in repositories),
             "direct_unmodified_pass_count": sum(
                 row["runtime_passed"]
                 and not row["source_tree_modified"]
@@ -521,16 +585,13 @@ def build_runtime_evidence(raw_root: Path = RAW_ROOT) -> dict[str, Any]:
                 for row in repositories
             ),
             "source_unmodified_runtime_pass_count": sum(
-                row["runtime_passed"] and not row["source_tree_modified"]
-                for row in repositories
+                row["runtime_passed"] and not row["source_tree_modified"] for row in repositories
             ),
             "runtime_pass_after_source_patch_count": sum(
-                row["runtime_passed"] and row["source_tree_modified"]
-                for row in repositories
+                row["runtime_passed"] and row["source_tree_modified"] for row in repositories
             ),
             "runtime_pass_with_asset_license_gap_count": sum(
-                row["runtime_passed"] and row["asset_license_gap"]
-                for row in repositories
+                row["runtime_passed"] and row["asset_license_gap"] for row in repositories
             ),
             "visual_evidence_accepted_count": sum(
                 row["visual_evidence_accepted"] for row in repositories
@@ -554,11 +615,7 @@ def main() -> int:
     args.output.write_text(
         json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
-    print(
-        json.dumps(
-            {"status": "written", **report["summary"]}, indent=2, ensure_ascii=False
-        )
-    )
+    print(json.dumps({"status": "written", **report["summary"]}, indent=2, ensure_ascii=False))
     return 0
 
 

@@ -28,7 +28,11 @@ def test_rendered_critic_requires_complete_machine_readable_vlm_checks(tmp_path:
                 "status": "pass",
                 "summary": "Both requested objects are visible and supported.",
                 "checks": [
-                    {"name": name, "status": "not_applicable" if name == "articulation_state" else "pass", "evidence": "visible"}
+                    {
+                        "name": name,
+                        "status": "not_applicable" if name == "articulation_state" else "pass",
+                        "evidence": "visible",
+                    }
                     for name in sorted(REQUIRED_CHECKS)
                 ],
                 "issues": [],
@@ -77,7 +81,14 @@ def test_rendered_critic_repairs_one_incomplete_response(tmp_path: Path) -> None
     def infer(**_kwargs):
         nonlocal calls
         calls += 1
-        names = sorted(REQUIRED_CHECKS - ({"overall_prompt_match"} if calls == 1 else (REQUIRED_CHECKS - {"overall_prompt_match"})))
+        names = sorted(
+            REQUIRED_CHECKS
+            - (
+                {"overall_prompt_match"}
+                if calls == 1
+                else (REQUIRED_CHECKS - {"overall_prompt_match"})
+            )
+        )
         return json.dumps(
             {
                 "status": "pass",
@@ -123,9 +134,7 @@ def test_rendered_critic_cannot_pass_with_major_issue(tmp_path: Path) -> None:
                     }
                     for name in sorted(REQUIRED_CHECKS)
                 ],
-                "issues": [
-                    {"severity": "major", "target": "scene", "message": "visible mismatch"}
-                ],
+                "issues": [{"severity": "major", "target": "scene", "message": "visible mismatch"}],
             }
         )
 
@@ -165,8 +174,6 @@ def test_rendered_critic_normalizes_deterministic_check_applicability(tmp_path: 
         model_name="test-vlm",
     )
     assert review["status"] == "pass"
-    articulation = next(
-        item for item in review["checks"] if item["name"] == "articulation_state"
-    )
+    articulation = next(item for item in review["checks"] if item["name"] == "articulation_state")
     assert articulation["status"] == "not_applicable"
     assert review["contract_normalizations"][0]["model_status"] == "pass"

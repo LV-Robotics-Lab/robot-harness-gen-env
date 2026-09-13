@@ -13,8 +13,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.schemas import read_json, write_json
-from generate_scene.tools import get_smoke_artifacts
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    write_json,
+)
+
+# Import follows the legacy source path bootstrap.
+from generate_scene.tools import get_smoke_artifacts  # noqa: E402
 
 
 def _static_issues(static_validation: dict[str, Any]) -> list[dict[str, Any]]:
@@ -106,16 +111,24 @@ def build_scene_critic_report(
     visual_status = visual_review.get("status") if visual_review else "not_run"
 
     issues = _static_issues(static_validation) + _visual_issues(visual_review)
-    suggestions = _repair_suggestions(static_validation=static_validation, visual_review=visual_review)
+    suggestions = _repair_suggestions(
+        static_validation=static_validation, visual_review=visual_review
+    )
 
     if static_status != "pass":
         overall_status = "fail_preflight"
         decision = "repair_spec"
-        summary = "Static preflight failed; do not trust render/codegen until the PlacementSpec is repaired."
+        summary = (
+            "Static preflight failed; do not trust render/codegen until t"
+            "he PlacementSpec is repaired."
+        )
     elif smoke_report and (smoke_status != "pass" or smoke_returncode not in {0, None}):
         overall_status = "fail_smoke"
         decision = "repair_spec"
-        summary = "RoboTwin smoke did not pass; repair placement or asset loading before accepting the scene."
+        summary = (
+            "RoboTwin smoke did not pass; repair placement or asset loadi"
+            "ng before accepting the scene."
+        )
         issues.append(
             {
                 "source": "simulator_smoke",

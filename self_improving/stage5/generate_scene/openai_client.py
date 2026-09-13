@@ -13,7 +13,6 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_TEXT_MODEL = "gpt-5.5"
 DEFAULT_VISION_MODEL = "gpt-5.5"
@@ -44,20 +43,36 @@ class OpenAIConfigError(RuntimeError):
 
 
 def api_key_from_env() -> str:
-    key = os.environ.get("OPENAI_API_KEY") or _api_key_from_local_config() or HARDCODED_OPENAI_API_KEY
+    key = (
+        os.environ.get("OPENAI_API_KEY") or _api_key_from_local_config() or HARDCODED_OPENAI_API_KEY
+    )
     if not key:
-        raise OpenAIConfigError("Set OPENAI_API_KEY or create generate_scene/local_config.py with OPENAI_API_KEY.")
+        raise OpenAIConfigError(
+            "Set OPENAI_API_KEY or create generate_scene/local_config.py with OPENAI_API_KEY."
+        )
     return key
 
 
 def model_from_env(kind: str) -> str:
     if kind == "vision":
-        return os.environ.get("OPENAI_VISION_MODEL") or _local_config_value("OPENAI_VISION_MODEL") or DEFAULT_VISION_MODEL
-    return os.environ.get("OPENAI_TEXT_MODEL") or _local_config_value("OPENAI_TEXT_MODEL") or DEFAULT_TEXT_MODEL
+        return (
+            os.environ.get("OPENAI_VISION_MODEL")
+            or _local_config_value("OPENAI_VISION_MODEL")
+            or DEFAULT_VISION_MODEL
+        )
+    return (
+        os.environ.get("OPENAI_TEXT_MODEL")
+        or _local_config_value("OPENAI_TEXT_MODEL")
+        or DEFAULT_TEXT_MODEL
+    )
 
 
 def base_url_from_env() -> str:
-    return (os.environ.get("OPENAI_BASE_URL") or _local_config_value("OPENAI_BASE_URL") or DEFAULT_BASE_URL).rstrip("/")
+    return (
+        os.environ.get("OPENAI_BASE_URL")
+        or _local_config_value("OPENAI_BASE_URL")
+        or DEFAULT_BASE_URL
+    ).rstrip("/")
 
 
 def image_to_data_url(path: Path) -> str:

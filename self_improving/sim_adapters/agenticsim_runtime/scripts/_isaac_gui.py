@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import subprocess
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -40,7 +40,9 @@ def build_launch_config(args: Any) -> dict[str, object]:
     }
 
 
-def configure_isaaclab_runtime_settings(*, headless: bool, offscreen: bool | None = None) -> dict[str, object]:
+def configure_isaaclab_runtime_settings(
+    *, headless: bool, offscreen: bool | None = None
+) -> dict[str, object]:
     """Set IsaacLab app flags across older local and upstream-main IsaacLab APIs."""
     values = {
         "/isaaclab/cameras_enabled": True,
@@ -111,7 +113,9 @@ def resolve_viewer_camera(
     return tuple(float(v) for v in eye), tuple(float(v) for v in lookat)
 
 
-def apply_camera_view(env, eye: tuple[float, float, float], lookat: tuple[float, float, float]) -> None:
+def apply_camera_view(
+    env, eye: tuple[float, float, float], lookat: tuple[float, float, float]
+) -> None:
     unwrapped_env = unwrap_env(env)
     sim = getattr(unwrapped_env, "sim", None)
     if sim is not None and hasattr(sim, "set_camera_view"):
@@ -149,7 +153,11 @@ def describe_camera_prim(camera_prim_path: str) -> dict[str, object]:
 
     prim = stage.GetPrimAtPath(camera_prim_path)
     if not prim.IsValid():
-        return {"ready": False, "camera_prim_path": camera_prim_path, "reason": "camera_prim_missing"}
+        return {
+            "ready": False,
+            "camera_prim_path": camera_prim_path,
+            "reason": "camera_prim_missing",
+        }
 
     xformable = UsdGeom.Xformable(prim)
     matrix = xformable.ComputeLocalToWorldTransform(0.0)
@@ -174,7 +182,11 @@ def describe_stage_matches(
 ) -> dict[str, object]:
     from omni.usd import get_context
 
-    stage = None if prefer_current_stage else getattr(getattr(unwrap_env(env), "scene", None), "stage", None)
+    stage = (
+        None
+        if prefer_current_stage
+        else getattr(getattr(unwrap_env(env), "scene", None), "stage", None)
+    )
     if stage is None:
         stage = get_context().get_stage()
     if stage is None:
@@ -237,7 +249,9 @@ def describe_stage_sources(env, *, top_level_limit: int = 16) -> dict[str, objec
     return {
         "env_stage": _stage_info(env_stage),
         "current_stage": _stage_info(current_stage),
-        "same_object": bool(env_stage is not None and current_stage is not None and env_stage == current_stage),
+        "same_object": bool(
+            env_stage is not None and current_stage is not None and env_stage == current_stage
+        ),
     }
 
 
@@ -263,7 +277,9 @@ def describe_light_prim(light_prim_path: str = "/World/Light") -> dict[str, obje
     }
 
 
-def describe_light_collection(light_root_path: str = "/Environment/light", *, limit: int = 32) -> dict[str, object]:
+def describe_light_collection(
+    light_root_path: str = "/Environment/light", *, limit: int = 32
+) -> dict[str, object]:
     from omni.usd import get_context
 
     stage = get_context().get_stage()
@@ -433,8 +449,15 @@ async def capture_active_viewport(
         from isaacsim.core.utils.viewports import set_camera_view
 
         camera_path = getattr(viewport, "camera_path", None)
-        camera_prim_path = getattr(camera_path, "pathString", None) or str(camera_path or "/OmniverseKit_Persp")
-        set_camera_view(list(camera_eye), list(camera_lookat), camera_prim_path=camera_prim_path, viewport_api=viewport)
+        camera_prim_path = getattr(camera_path, "pathString", None) or str(
+            camera_path or "/OmniverseKit_Persp"
+        )
+        set_camera_view(
+            list(camera_eye),
+            list(camera_lookat),
+            camera_prim_path=camera_prim_path,
+            viewport_api=viewport,
+        )
 
     deadline = time.monotonic() + float(timeout_s) if timeout_s and timeout_s > 0 else None
 
@@ -447,7 +470,9 @@ async def capture_active_viewport(
         return await asyncio.wait_for(awaitable, timeout=remaining)
 
     try:
-        await _with_deadline(next_viewport_frame_async(viewport, max(int(warmup_frames), 0)), "warmup")
+        await _with_deadline(
+            next_viewport_frame_async(viewport, max(int(warmup_frames), 0)), "warmup"
+        )
         capture = capture_viewport_to_file(viewport, file_path=str(output_path), is_hdr=False)
         success = await _with_deadline(
             capture.wait_for_result(completion_frames=max(int(completion_frames), 1)),
@@ -464,14 +489,21 @@ async def capture_active_viewport(
                 destroy()
 
 
-def encode_png_sequence_to_mp4(frame_dir: Path, output_path: Path, *, fps: float = 8.0) -> dict[str, object]:
+def encode_png_sequence_to_mp4(
+    frame_dir: Path, output_path: Path, *, fps: float = 8.0
+) -> dict[str, object]:
     """Encode frame_00000.png ... into an MP4 using the system ffmpeg."""
     frame_dir = frame_dir.resolve()
     output_path = output_path.resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     frames = sorted(frame_dir.glob("frame_*.png"))
     if not frames:
-        return {"ready": False, "reason": "no_frames", "frame_dir": str(frame_dir), "output_path": str(output_path)}
+        return {
+            "ready": False,
+            "reason": "no_frames",
+            "frame_dir": str(frame_dir),
+            "output_path": str(output_path),
+        }
 
     cmd = [
         "ffmpeg",
@@ -493,7 +525,9 @@ def encode_png_sequence_to_mp4(frame_dir: Path, output_path: Path, *, fps: float
         "+faststart",
         str(output_path),
     ]
-    result = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    result = subprocess.run(
+        cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False
+    )
     ready = result.returncode == 0 and output_path.is_file() and output_path.stat().st_size > 0
     return {
         "ready": ready,

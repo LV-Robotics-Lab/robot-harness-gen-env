@@ -4,8 +4,8 @@ import json
 import sys
 from pathlib import Path
 
-from generate_scene import run_scene_generation_pipeline as pipeline
 from generate_scene import run_placement_pipeline as placement_pipeline
+from generate_scene import run_scene_generation_pipeline as pipeline
 from generate_scene.run_placement_pipeline import _pipeline_exit_code as _placement_exit_code
 from generate_scene.run_scene_batch import (
     _aggregate_status,

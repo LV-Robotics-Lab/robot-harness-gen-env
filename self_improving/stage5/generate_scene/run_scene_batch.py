@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import subprocess
 import sys
 from pathlib import Path
@@ -14,9 +13,15 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generate_scene.asset_grounding import slugify_prompt
-from generate_scene.schemas import read_json, write_json
-from generate_scene.tools import get_smoke_artifacts
+# Import follows the legacy source path bootstrap.
+from generate_scene.asset_grounding import slugify_prompt  # noqa: E402
+from generate_scene.schemas import (  # noqa: E402 - After legacy source path bootstrap.
+    read_json,
+    write_json,
+)
+
+# Import follows the legacy source path bootstrap.
+from generate_scene.tools import get_smoke_artifacts  # noqa: E402
 
 
 def _placement_summary(scene_dir: Path, status: str) -> dict[str, Any]:
@@ -89,13 +94,17 @@ def _scene_counts(accepted_scenes: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate a diverse batch of RoboTwin tabletop scenes.")
+    parser = argparse.ArgumentParser(
+        description="Generate a diverse batch of RoboTwin tabletop scenes."
+    )
     parser.add_argument("--prompt", required=True)
     parser.add_argument("--batch-name")
     parser.add_argument("--num-scenes", type=int, default=5)
     parser.add_argument("--max-candidates", type=int, default=8)
     parser.add_argument("--out-dir", required=True)
-    parser.add_argument("--master-catalog", default="asset_catalogs/robotwin_tabletop_assets_master.json")
+    parser.add_argument(
+        "--master-catalog", default="asset_catalogs/robotwin_tabletop_assets_master.json"
+    )
     parser.add_argument("--discover-assets-from-robotwin", action="store_true")
     parser.add_argument("--robotwin-root", default=str(Path.home() / "RoboTwin"))
     parser.add_argument("--model-provider", default="codex_reference")
@@ -108,7 +117,11 @@ def main() -> int:
     parser.add_argument("--fps", type=int, default=15)
     parser.add_argument("--smoke-timeout", type=int, default=420)
     parser.add_argument("--python-executable")
-    parser.add_argument("--visual-review-mode", choices=["required", "artifact_only", "moonshot", "openai"], default="required")
+    parser.add_argument(
+        "--visual-review-mode",
+        choices=["required", "artifact_only", "moonshot", "openai"],
+        default="required",
+    )
     parser.add_argument("--visual-repair-attempts", type=int, default=0)
     parser.add_argument(
         "--allow-pending-visual",
@@ -179,7 +192,9 @@ def main() -> int:
         if args.python_executable:
             cmd.extend(["--python-executable", args.python_executable])
 
-        completed = subprocess.run(cmd, cwd=str(REPO_ROOT), text=True, capture_output=True, check=False)
+        completed = subprocess.run(
+            cmd, cwd=str(REPO_ROOT), text=True, capture_output=True, check=False
+        )
         summary_path = scene_dir / "scene_generation_summary.json"
         scene_summary = read_json(summary_path) if summary_path.exists() else {}
         status = str(scene_summary.get("status", "fail_no_summary"))

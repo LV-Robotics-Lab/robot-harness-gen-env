@@ -69,13 +69,13 @@ def test_scene_spec_rejects_unknown_and_self_references() -> None:
 def test_scene_spec_rejects_missing_support_and_relation_cycles() -> None:
     missing_support = valid_payload()
     missing_support["relations"] = missing_support["relations"][1:]
-    with pytest.raises((ValidationError, SceneSpecError), match="requires exactly one support relation"):
+    with pytest.raises(
+        (ValidationError, SceneSpecError), match="requires exactly one support relation"
+    ):
         SceneSpec.model_validate(missing_support)
 
     cycle = valid_payload()
-    cycle["relations"].append(
-        {"relation": "left_of", "source": "basket_1", "target": "can_1"}
-    )
+    cycle["relations"].append({"relation": "left_of", "source": "basket_1", "target": "can_1"})
     with pytest.raises((ValidationError, SceneSpecError), match="left/right relation cycle"):
         SceneSpec.model_validate(cycle)
 

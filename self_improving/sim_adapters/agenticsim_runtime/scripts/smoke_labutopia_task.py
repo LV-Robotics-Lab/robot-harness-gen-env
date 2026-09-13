@@ -30,9 +30,7 @@ def _to_rgb_uint8(image: Any):
     array = np.asarray(image)
     if array.ndim != 3:
         raise ValueError(f"Expected a 3D camera image, got shape {array.shape}")
-    if array.shape[0] in (3, 4) and (
-        array.shape[-1] not in (3, 4) or array.shape[1] not in (3, 4)
-    ):
+    if array.shape[0] in (3, 4) and (array.shape[-1] not in (3, 4) or array.shape[1] not in (3, 4)):
         array = array.transpose(1, 2, 0)
     if array.shape[-1] == 4:
         array = array[..., :3]

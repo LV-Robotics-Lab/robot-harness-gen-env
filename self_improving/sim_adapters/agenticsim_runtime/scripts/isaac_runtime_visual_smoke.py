@@ -87,7 +87,9 @@ def _frame_sequence_stats(paths: list[Path]) -> dict[str, Any]:
         if previous is not None:
             difference = ImageChops.difference(previous, current)
             channel_means = ImageStat.Stat(difference).mean
-            adjacent_deltas.append(sum(float(value) for value in channel_means) / len(channel_means))
+            adjacent_deltas.append(
+                sum(float(value) for value in channel_means) / len(channel_means)
+            )
         previous = current
 
     return {
@@ -98,19 +100,24 @@ def _frame_sequence_stats(paths: list[Path]) -> dict[str, Any]:
         "last_sha256": hashes[-1],
         "adjacent_mean_abs_rgb_delta": {
             "min": round(min(adjacent_deltas), 4) if adjacent_deltas else 0.0,
-            "mean": round(sum(adjacent_deltas) / len(adjacent_deltas), 4) if adjacent_deltas else 0.0,
+            "mean": round(sum(adjacent_deltas) / len(adjacent_deltas), 4)
+            if adjacent_deltas
+            else 0.0,
             "max": round(max(adjacent_deltas), 4) if adjacent_deltas else 0.0,
         },
     }
 
 
-def _pose_sequence_stats(records: list[dict[str, Any]], *, movement_threshold: float = 0.001) -> dict[str, Any]:
+def _pose_sequence_stats(
+    records: list[dict[str, Any]], *, movement_threshold: float = 0.001
+) -> dict[str, Any]:
     positions = [record["cube_position"] for record in records]
     if not positions:
         return {"ready": False, "reason": "no_poses", "pose_count": 0}
 
     adjacent_distances = [
-        math.dist(previous, current) for previous, current in zip(positions, positions[1:], strict=False)
+        math.dist(previous, current)
+        for previous, current in zip(positions, positions[1:], strict=False)
     ]
     return {
         "ready": True,
@@ -119,7 +126,9 @@ def _pose_sequence_stats(records: list[dict[str, Any]], *, movement_threshold: f
             {tuple(round(float(value), 4) for value in position) for position in positions}
         ),
         "movement_threshold_m": movement_threshold,
-        "movement_transition_count": sum(distance > movement_threshold for distance in adjacent_distances),
+        "movement_transition_count": sum(
+            distance > movement_threshold for distance in adjacent_distances
+        ),
         "adjacent_distance_m": {
             "min": round(min(adjacent_distances), 6) if adjacent_distances else 0.0,
             "mean": round(sum(adjacent_distances) / len(adjacent_distances), 6)
@@ -342,7 +351,9 @@ def main() -> int:
         finally:
             timeline.play()
         image = _image_stats(args.screenshot)
-        physics_passed = final_position[2] < initial_position[2] - 0.5 and 0.0 < final_position[2] < 0.6
+        physics_passed = (
+            final_position[2] < initial_position[2] - 0.5 and 0.0 < final_position[2] < 0.6
+        )
         render_passed = bool(image.get("ready")) and float(image.get("std_luma") or 0.0) > 2.0
         torch_passed = bool(torch_info.get("compute_passed"))
         video_passed = True
@@ -350,7 +361,9 @@ def main() -> int:
         if args.video:
             sequence = _frame_sequence_stats(frame_paths)
             poses = _pose_sequence_stats(frame_records)
-            encode = encode_png_sequence_to_mp4(frame_dir, args.video, fps=max(float(args.video_fps), 1.0))
+            encode = encode_png_sequence_to_mp4(
+                frame_dir, args.video, fps=max(float(args.video_fps), 1.0)
+            )
             minimum_frames = min(24, len(sample_steps))
             minimum_unique = min(12, minimum_frames)
             minimum_pose_transitions = min(12, max(minimum_frames - 1, 0))
