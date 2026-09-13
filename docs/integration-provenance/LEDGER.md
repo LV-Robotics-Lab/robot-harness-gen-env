@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-NORMALIZED-COLOR-PBR — 真实灰暗画面原因修复
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：trimesh与Genesis导入器独立保留。
+- source_ref：Harness a0499b9、Genesis0e74bf；target_paths：normalization.py与normalization/asset_revision测试。
+- integration_method：显式颜色覆盖产PBR材质，不改无覆盖请求、旧版本或几何；主线程核原GLB/URDF颜色callsite。
+- verification：95项通过；runtime_verification：原灰暗画面已确认，新PBR版本真实渲染待验。
+- recorded_git_authors：原引擎/资产作者与新Harness规范化修复分开，不将渲染颜色当物理证据。
+
 ## INT-CANONICAL-C08-GENERATED-LAYOUT-V2 — 多实体独立资产设计
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Codex后端、Yuxin/Gujie候选来源分别保留。

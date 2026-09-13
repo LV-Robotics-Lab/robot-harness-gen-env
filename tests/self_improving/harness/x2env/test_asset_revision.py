@@ -167,6 +167,8 @@ def fixture(tmp_path, vertex_color=False, textured=False):
     registry = AssetRegistry(store)
     source = tmp_path / "source.glb"
     mesh = trimesh.creation.box()
+    if vertex_color:
+        mesh.visual.vertex_colors = [0, 255, 0, 255]
     if textured:
         import numpy as np
         from PIL import Image
@@ -186,7 +188,6 @@ def fixture(tmp_path, vertex_color=False, textured=False):
         up_axis="Z",
         mass_kg=0.1,
         friction=0.6,
-        color_rgba=(0.0, 1.0, 0.0, 1.0) if vertex_color else None,
     )
     proof = store.write_artifact(b"fixture", "text/plain")
     version = registry.register(

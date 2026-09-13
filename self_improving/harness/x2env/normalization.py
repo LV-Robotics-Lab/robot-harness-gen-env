@@ -135,10 +135,12 @@ def normalize_mesh(
     for index, piece in enumerate(pieces):
         piece.apply_transform(transform)
         if color_rgba is not None:
-            piece.visual = trimesh.visual.ColorVisuals(
-                mesh=piece,
-                vertex_colors=np.tile(
-                    np.rint(np.array(color_rgba) * 255).astype(np.uint8), (len(piece.vertices), 1)
+            # The fixed Genesis GLB importer consumes PBR factors, not COLOR_0.
+            piece.visual = trimesh.visual.TextureVisuals(
+                material=trimesh.visual.material.PBRMaterial(
+                    baseColorFactor=np.rint(np.array(color_rgba) * 255).astype(np.uint8),
+                    metallicFactor=0.0,
+                    roughnessFactor=1.0,
                 ),
             )
         visual.add_geometry(piece, geom_name=f"part_{index}", node_name=f"part_{index}")

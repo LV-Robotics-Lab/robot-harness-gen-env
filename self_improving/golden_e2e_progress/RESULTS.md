@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 显式颜色覆盖改用引擎可消费的材质
+
+- 主线程复读固定Genesis0e74bf：URDF的GLB走gltf parser；primitive无material时使用默认surface，
+  baseColorFactor有明确消费，而COLOR_0未进入颜色读取。OiUXeV/QfcUxI灰暗图像不是红色验证通过。
+- normalize_mesh仅color_rgba分支改为统一PBR颜色（无COLOR_0/旧texture）；无覆盖请求保留原材质。
+  RED原导出含COLOR_0且无material；GREEN验证红/蓝材质、原纹理/顶点色不改、几何/碰撞/physics/URDF不变。
+- 旧AssetRevision顶点色攻击fixture曾借颜色override制造COLOR_0；修为原source显式顶点色且不传override，
+  保原攻击意义，不移除拒绝测试或改AssetRevision生产逻辑。
+- 主线程normalization/asset_revision/registry/preparation 95 passed/1.62s，Ruff/diff通过。
+  新规范化资产尚未真实渲染；旧版本及失败现场不改，下一次运行须新不可变版本。
+
 ## 2026-09-13 v2显式多实体生成布局接线
 
 - GeneratedLayoutPolicy默认关闭；旧v1和缺mode配置不改。1..8实体、多个结构支撑、每前景独立

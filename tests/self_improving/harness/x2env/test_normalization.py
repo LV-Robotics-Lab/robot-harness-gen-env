@@ -195,12 +195,58 @@ def test_color_override_is_explicit_and_collision_bounds_measured(tmp_path):
     )
     assert result["material_policy"] == "explicit_color_override"
     loaded = trimesh.load(tmp_path / "out/visual.glb", force="mesh", process=False)
-    assert np.all(loaded.visual.vertex_colors == [255, 0, 0, 255])
+    raw = (tmp_path / "out/visual.glb").read_bytes()
+    size = struct.unpack("<I", raw[12:16])[0]
+    document = json.loads(raw[20 : 20 + size])
+    for mesh in document["meshes"]:
+        for primitive in mesh["primitives"]:
+            assert "COLOR_0" not in primitive["attributes"]
+            pbr = document["materials"][primitive["material"]]["pbrMetallicRoughness"]
+            assert pbr["baseColorFactor"] == [1.0, 0.0, 0.0, 1.0]
+            assert "baseColorTexture" not in pbr
+    np.testing.assert_array_equal(loaded.visual.material.baseColorFactor, [255, 0, 0, 255])
     hull = trimesh.load(tmp_path / "out/collision.obj", process=False)
     np.testing.assert_allclose(hull.bounds, result["collision"]["bounds_m"], atol=1e-8)
     assert hull.volume == pytest.approx(result["collision"]["volume_m3"])
     assert result["collision"]["fills_concavities"] is True
     assert result["checks"]["container_inside_profile"] == "not_run"
+
+
+@pytest.mark.parametrize("original_appearance", ["texture", "vertex_color"])
+def test_uniform_override_replaces_appearance_without_changing_geometry_or_old_files(
+    tmp_path, original_appearance
+):
+    mesh = trimesh.creation.box()
+    if original_appearance == "texture":
+        mesh.visual = trimesh.visual.TextureVisuals(
+            uv=np.zeros((len(mesh.vertices), 2)),
+            material=trimesh.visual.material.PBRMaterial(
+                baseColorTexture=Image.new("RGB", (2, 2), (0, 255, 0))
+            ),
+        )
+    else:
+        mesh.visual.vertex_colors = [0, 255, 0, 255]
+    source = tmp_path / "source.glb"
+    source.write_bytes(mesh.export(file_type="glb"))
+    source_bytes = source.read_bytes()
+    kwargs = dict(dimensions_m=(0.1, 0.2, 0.3), up_axis="Y", mass_kg=0.2, friction=0.5)
+    normalize_mesh(source, tmp_path / "original", **kwargs)
+    old_files = {p.name: p.read_bytes() for p in (tmp_path / "original").iterdir()}
+    normalize_mesh(source, tmp_path / "recolored", color_rgba=(0.0, 0.0, 1.0, 1.0), **kwargs)
+    preserved = trimesh.load(tmp_path / "original/visual.glb", force="mesh", process=False)
+    recolored = trimesh.load(tmp_path / "recolored/visual.glb", force="mesh", process=False)
+    if original_appearance == "texture":
+        assert preserved.visual.material.baseColorTexture.getpixel((0, 0)) == (0, 255, 0)
+    else:
+        assert np.all(preserved.visual.vertex_colors == [0, 255, 0, 255])
+    np.testing.assert_array_equal(recolored.visual.material.baseColorFactor, [0, 0, 255, 255])
+    assert recolored.visual.material.baseColorTexture is None
+    np.testing.assert_array_equal(recolored.vertices, preserved.vertices)
+    np.testing.assert_array_equal(recolored.faces, preserved.faces)
+    for name in ["collision.obj", "physics.json", "asset.urdf"]:
+        assert (tmp_path / "recolored" / name).read_bytes() == old_files[name]
+    assert source.read_bytes() == source_bytes
+    assert {p.name: p.read_bytes() for p in (tmp_path / "original").iterdir()} == old_files
 
 
 @pytest.mark.parametrize("raw", [b"invalid", b"glTF" + struct.pack("<IIII", 1, 20, 0, 0)])
