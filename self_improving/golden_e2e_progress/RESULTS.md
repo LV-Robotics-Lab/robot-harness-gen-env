@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C10 本地颜色新版本执行与新视觉复核
+
+- execute_color_repair 核当前 asset.revise/live owner/head、共享预留、精确批准、原候选与已提交模型建议；
+  失败指纹不含建议 RGBA，不能改建议逃预算。accepted 与 pending 意图均可消费，执行器不擅自接受场景。
+- 原 AssetRevision 产生 immutable child，真实新 preview port 和原 a6_verify 结果绑定后仅 MATCH 返回
+  resolved；旧预览、再次失配、资源缺失保留已产出 child/preview/日志，父 mismatch 不改变。
+- public executor 的 19 项专项测试包含 pending/未提交建议/模型证据/批准/输入漂移与取消；
+  主线程相关三组 88 passed（3.43s）。外部模型/renderer 均明确替身，不授真实颜色闭环通过。
+- Harness 编排与来源续点在下一片接入。限定 18 项时覆盖率 93%，并非最终 100% 门，缺口保留。
+
 ## 2026-09-13 C11 结构设计完成来源独立重算
 
 - 完成门从原 proposal 重新分类并重算部署 defaults/Registry 几何 fixed values，结构 policy 必须与实际

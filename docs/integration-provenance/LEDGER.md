@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C10-LOCAL-COLOR-EXECUTION — 预留批准后的新版本复核
+
+- `origin_owner`：Yuxin 原 a6_verify；新受控执行 `integration_owner` 为 Bingsheng Harness workstream。
+- `source_ref`：canonical `aa6b5b6` 颜色建议、`48ee402` 不可变改色、`51695c6` 共享额度。
+- `target_paths`：x2env/local_color_execution.py、test_local_color_execution.py。
+- `integration_method`：批准/当前操作强绑定，child 新 preview/原视觉 MATCH 后才接受，失败保留部分产物。
+- `verification`：contract_pass；88 项相关测试，外部进程/renderer 明确替身；controller/完成门待接。
+- `recorded_git_authors`：本提交元数据；不修改父资产/来源许可，未授新的 Genesis 或视觉运行资格。
+
 ## INT-CANONICAL-C11-STRUCTURAL-DESIGN-AUDIT — 结构设计来源复核
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
