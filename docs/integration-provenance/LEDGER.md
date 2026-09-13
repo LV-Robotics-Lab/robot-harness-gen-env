@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C14-ACTIVE-LINT-GATE — 实际全范围检查
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Ruff原作者。
+- source_ref：当前声明active范围；target_paths：x2env_test_groups.py、ci.yml与公开runner测试。
+- integration_method：真实Ruff输出结构化保留，第六组前置；不修改覆盖排除或生成合成成功状态。
+- verification：runner/checker36项、完整active Ruff通过；runtime_verification：非仿真门，完整六组仍待固定执行。
+- recorded_git_authors：原文件及本提交；颜色真实组件验证与S01失败分别记录于RESULTS，不合并授golden。
+
 ## INT-CANONICAL-C13-OPENXSIM-WRAPPERS — 完整入口与测试样式
 
 - origin_owner / upstream_owner：OpenXSim原wrapper/tests作者；integration_owner：Bingsheng Harness workstream。

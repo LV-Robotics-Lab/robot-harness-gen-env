@@ -1,5 +1,28 @@
 # 进度与结果
 
+## 2026-09-13 C14 完整 active lint 接第六组
+
+- LINT_ROOTS显式包含稳定层、platform入口/harness/Stage5/Alchedata/runtime、asset_reuse/web及
+  完整OpenXSim根；第六组inventory/pytest前运行真实Ruff并保ruff.json。
+  真实undefined-name拒绝fixture先RED后GREEN，不提供合成成功receipt。
+- checker+runner36 passed/0.80s，主线程完整声明范围Ruff通过；未实现pending门归零仅表示
+  已接线，不表示六组已执行通过。后续必须固定新版真正运行六组/root/coverage merge。
+
+## 2026-09-13 S01 数组修复版超时与颜色阶段独立真验
+
+- 固定495e6cf的S01在interpret600.219512秒超时，outer600.558615秒，workflow
+  `6baf93c3-0102-4dab-b2c2-08bffbfb2460` failed/revision2/owner=null；无下游stage或新媒体。
+  `/home/jingxiang/bingsheng/canonical-s01-array-schema-20260913.nezJp0/`，audit SHA
+  `bb73cdac55cf79d4fa8d0322926167658f06e12b01b38d2c90a293ded14f8420`，11成员/13841B核验。
+- 该次与tBWgI7成功interpret，必要路径/请求SHA归一化后prompt/schema/argv bytes相同。
+  成功调用usage input19120/output6484/reasoning3795；超时无usage，不推算其token或服务端原因。
+- 为验证具体修复，独立公共颜色建议读取原真实候选/图片及52refs/688823B，固定495e6cf
+  仅一次调用12.374451秒成功，RGBA=[1,.7529411764705882,.796078431372549,1]；
+  input21416/output254/reasoning208。没有业务Store、没有应用patch或修改旧workflow，不补S01通过。
+  `/home/jingxiang/bingsheng/canonical-color-array-probe-20260913.4JpYmM/summary.json`，
+  SHA `06a9017d39bd6ee7e441d3b2993fbc4ba4a74d2943472ea082763610e0b6fcb0`。
+  初始诊断port缺asset_version在spawn前失败，补原只读版本记录后仅一次模型执行，旧目录保留。
+
 ## 2026-09-13 C13 OpenXSim wrapper/tests 覆盖实际 lint 范围
 
 - 9份wrapper/tests的38条额外lint清零；5份AST完全一致，其余仅import排序/unused导入，

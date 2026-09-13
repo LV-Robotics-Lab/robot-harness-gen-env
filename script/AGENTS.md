@@ -36,6 +36,7 @@
   外部执行边界精确列于脚本，pending 非覆盖门不算已通过。
 - 第五组在pytest前执行reader docs门；报告区分local/archive/remote，远端未查不得写完整通过。
   历史归档仅核manifest成员，不把原文内部旧相对链接或旧指令当active契约。
+- 第六组先跑完整LINT_ROOTS并保ruff.json，再做库存和保留层测试；pending为空只说明均已接线。
 - 改动后用 `--help` 校验脚本的 CLI 表面。
 
 ### Common Patterns（常见模式）

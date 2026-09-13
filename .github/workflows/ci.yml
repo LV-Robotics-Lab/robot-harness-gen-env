@@ -34,6 +34,7 @@ jobs:
             ${{ env.CI_EVIDENCE }}/*/result.json
             ${{ env.CI_EVIDENCE }}/*/junit-*.xml
             ${{ env.CI_EVIDENCE }}/*/reader-docs.json
+            ${{ env.CI_EVIDENCE }}/*/ruff.json
             ${{ env.CI_EVIDENCE }}/*/.coverage.*
           include-hidden-files: true
           if-no-files-found: error

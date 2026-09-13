@@ -130,6 +130,7 @@ def test_ci_keeps_six_groups_and_independent_root():
             in {
                 "pending-gates.json",
                 "reader-docs.json",
+                "ruff.json",
                 "log.txt",
                 "result.json",
                 "junit-*.xml",
@@ -230,4 +231,34 @@ def test_docs_group_stops_on_real_missing_reader_documents_before_tests(tmp_path
     assert worker(tmp_path, "5", output) != 0
     report = json.loads((output / "reader-docs.json").read_text())
     assert report["local_links"] == report["archive_bytes"] == "failed"
+    assert not list(output.glob("junit-*.xml"))
+
+
+def test_retained_group_stops_on_real_active_lint_error_before_inventory(tmp_path):
+    from script.x2env_test_groups import ACTIVE, CANONICAL, GROUPS, LINT_ROOTS, worker
+
+    # Rejection-only workspace; no synthetic passing test or inventory result is supplied.
+    for names in GROUPS.values():
+        for name in names.split():
+            path = tmp_path / CANONICAL / f"test_{name}.py"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch()
+    for directory, _, _ in ACTIVE:
+        path = tmp_path / directory / "test_placeholder.py"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+    for name in LINT_ROOTS:
+        path = tmp_path / name
+        if path.suffix == ".py":
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch()
+        else:
+            path.mkdir(parents=True, exist_ok=True)
+    (tmp_path / "pyproject.toml").write_text('[tool.ruff.lint]\nselect = ["F"]\n')
+    (tmp_path / "scene_gen/bad.py").write_text("undefined_probe_symbol\n")
+    output = tmp_path / "result"
+    output.mkdir()
+    assert worker(tmp_path, "6", output) != 0
+    diagnostics = json.loads((output / "ruff.json").read_text())
+    assert any(item["code"] == "F821" for item in diagnostics)
     assert not list(output.glob("junit-*.xml"))

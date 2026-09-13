@@ -4,6 +4,10 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- 完整active Ruff真实通过并接group6；所有非覆盖门已有调用，下一步新固定tree执行六组/root/归并，不能按接线即pass。
+- S01数组修复版再次interpret超时；独立颜色公共组件12.37秒真实通过，未应用patch、未补golden。
+- 继续依据真实输出token/出处冗余研究有界性能优化，不原样重跑、降max或绕过出处/物理门。
+
 - reader docs公共checker与group5接通，开发检查52文档/243本地链接/12归档/5公共HTTP通过；最终固定CI待跑。
 - 专用CI Python3.13依赖环境就绪，原shared/runtime未改；root四模块39项通过。全active lint最后汇总与core覆盖并行推进。
 

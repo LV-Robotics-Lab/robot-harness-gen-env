@@ -60,7 +60,24 @@ SOURCE_ROOTS = (
     "self_improving/asset_pipeline/active/web",
     "self_improving/asset_pipeline/active/shared/openxsim",
 )
-PENDING_GATES = ("full_active_ruff_scope_and_legacy_debt",)
+LINT_ROOTS = (
+    "scene_gen",
+    "demo",
+    "tests",
+    "script",
+    "self_improving/__init__.py",
+    "self_improving/__main__.py",
+    "self_improving/registry.py",
+    "self_improving/compile_acceptance.py",
+    "self_improving/harness",
+    "self_improving/stage5",
+    "self_improving/alchedata",
+    "self_improving/sim_adapters/agenticsim_runtime",
+    "self_improving/asset_pipeline/active/asset_reuse",
+    "self_improving/asset_pipeline/active/web",
+    "self_improving/asset_pipeline/active/shared/openxsim",
+)
+PENDING_GATES = ()
 ACTIVE = (
     ("self_improving/stage5/tests", ".", (".", "self_improving/stage5")),
     (
@@ -222,6 +239,21 @@ def worker(root: Path, group: str, output: Path) -> int:
         if schema.returncode:
             return schema.returncode
     if group == "6":
+        lint = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "ruff",
+                "check",
+                "--output-format=json",
+                "--output-file",
+                str(output / "ruff.json"),
+                *LINT_ROOTS,
+            ],
+            cwd=root,
+        )
+        if lint.returncode:
+            return lint.returncode
         inventory = subprocess.run([sys.executable, "-m", "self_improving", "--json"], cwd=root)
         if inventory.returncode:
             return inventory.returncode
@@ -352,8 +384,9 @@ def main(argv=None) -> int:
     (output / "pending-gates.json").write_text(
         json.dumps(
             {
-                "status": "not_run",
+                "status": "not_run" if PENDING_GATES else "none_unimplemented",
                 "gates": list(PENDING_GATES),
+                "execution_results": "See individual group receipts; wired does not mean passed.",
             },
             indent=2,
         )
