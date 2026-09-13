@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 C13/C14 原 provider 的可安装依赖闭包
+
+- 先 RED：真实 wheel 缺 agenticsim；根 setuptools 多源目录发现加入已有 agenticsim/openxsim/generation
+  三包，不新增 vendor 副本。再次 RED：导入探针抓到隐式 isaaclab_tasks 初始化；移除顶层自动调用与
+  EnvFactory discovery，保留原显式 bootstrap helper（未发现当前外部消费者依赖隐式行为）。
+- 临时 venv/system-site-packages 内离线 wheel 安装，repo 外 cwd、Python -I、清 PYTHONPATH：
+  运行真实 Store/normalize/RegistryLocalCatalog→原 robotwin_local 查询；原 provider、agenticsim、
+  canonical 模块均确认从临时 site-packages 加载，导入不改 sys.path、不加载可选仿真器。
+- 主线程 6 passed/3.11s；未修改共享 .venv/全局环境，未联网/模型/Genesis。此门只证明安装后的
+  provider seam，不把它写成整个 CLI/runtime 的安装完成；源树测试未安装时仍可显式配置依赖路径。
+
 ## 2026-09-13 历史 normal 包资产闭包表述纠正（只读小核对）
 
 - 仅重读旧 normal review-package 的 index/representation，不重跑 v4、runtime seal 或 8.5 GB 闭包。

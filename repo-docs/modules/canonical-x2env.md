@@ -1,5 +1,10 @@
 # Canonical x2env（收敛实施中）
 
+Provider 安装使用根项目的 `pip install '.[platform]'`（开发可加 `-e`）。现有 Yuxin engine 和
+它实际依赖的三个 `agenticsim` 包从原位置进入同一 wheel；无需为 provider 手写工作区 PYTHONPATH，
+也不必安装 IsaacLab/MetaSim。顶层导入不再自动初始化这些可选仿真器；原显式 bootstrap helper 保留。
+隔离安装测试已从安装目录执行原 local search；这只证明 provider 安装和本地查询，未证明全部署或仿真。
+
 历史 limited-preview normal 的 75-member index 不包含其 mouse representation 所引用的 15 个资源。
 已列成员 hash 核验不能作为传递资产闭包或可移植包证明；canonical 导入以实际 bytes 与许可重核，
 不把旧描绘或旧回放结果升级为新 Registry/复制运行资格。小核对见进度目录 RESULTS 的 2026-09-13 纠正。

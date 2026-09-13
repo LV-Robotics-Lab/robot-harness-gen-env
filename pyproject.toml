@@ -37,7 +37,14 @@ platform = [
 ]
 
 [tool.setuptools.packages.find]
+where = [
+  ".",
+  "self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim",
+]
 include = [
+  "agenticsim",
+  "agenticsim.openxsim",
+  "agenticsim.generation",
   "scene_gen*",
   "demo*",
   "self_improving",

@@ -2,6 +2,7 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 原 Yuxin 依赖的 agenticsim 从原目录随同一 wheel 安装，去掉隐式 simulator bootstrap；隔离安装后的真实本地查询测试补上源目录 PYTHONPATH 曾遮蔽的包装缺口。
 - qualified replay 薄入口随后退役，历史深模块业务/攻击测试直接调用保留；同步脚本贡献者指引和旧资格说明，避免已撤 console 被描述为当前配方。
 - C13 再撤历史 compile campaign 与独立 Qwen replay assessment 两个无活跃消费者的脚本；稳定核心入口和仍被消费的深模块保留。
 - 同步三 Skill 实际执行绑定、单次受管网页检索、显式资产锚定生成设计及不确定性保留规则。

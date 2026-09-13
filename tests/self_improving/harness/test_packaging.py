@@ -18,6 +18,7 @@ SCENE_GEN_PACKAGE = Path("scene_gen")
 SCENE_GEN_RESOURCE_MEMBERS = ("AGENTS.md", "envs/AGENTS.md")
 LEDGER_PACKAGE = Path("self_improving/asset_pipeline/active/asset_reuse/lib")
 LEDGER_MEMBERS = ("__init__.py", "README.md", "conventions.py", "ledger.py")
+AGENTICSIM_SOURCE = Path("self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim")
 QUALIFICATION_PACKAGES = (
     Path("self_improving/harness/qualified_skills/text2env.compile/1.0.0"),
     Path("self_improving/harness/qualified_skills/text2env.replay/1.0.0"),
@@ -63,6 +64,7 @@ def _copy_build_fixture(destination: Path) -> Path:
         *(LEDGER_PACKAGE / name for name in LEDGER_MEMBERS),
         *(package / name for package in QUALIFICATION_PACKAGES for name in QUALIFICATION_MEMBERS),
         *(MEDIA_NATIVE_PACKAGE / name for name in MEDIA_NATIVE_MEMBERS),
+        *(p.relative_to(REPO_ROOT) for p in (REPO_ROOT / AGENTICSIM_SOURCE).rglob("*.py")),
     ):
         target = source / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)

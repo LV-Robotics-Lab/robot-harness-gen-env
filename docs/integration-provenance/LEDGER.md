@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-PROVIDER-INSTALL — 原位打包 Yuxin 的 agenticsim 依赖
+
+- `origin_owner`：Yuxin asset reuse/OpenXSim 来源链；`integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `42d5bb7` 现有 source tree；更早原 upstream/ref 归属按既有 C06 intake 保留。
+- `target_paths`：pyproject.toml、原 agenticsim/__init__.py、test_packaging.py、test_provider_installation.py。
+- `integration_method`：同一 wheel 多源发现，不复制源码；去隐式 simulator 初始化，保留显式 helper。
+- `verification`：contract_pass；隔离实际安装/原本地查询，6 tests；没有新模型/GPU/网络来源资格。
+- `recorded_git_authors`：源文件历史与本提交元数据；第三方所有权、许可和 source refs 不改写。
+
 ## INT-CANONICAL-C13-G2C — 旧 qualified replay bootstrap 退役
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
