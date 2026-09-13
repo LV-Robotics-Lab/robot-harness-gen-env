@@ -41,9 +41,13 @@
 | `run_scene_runtime.py` | SAPIEN/RoboTwin 物理回放 + runtime evidence 采集 + runtime validator。 | `main`、`load_robotwin_args`、`summarize_contacts`、`runtime_support_margin`、`runtime_inside_contained`、`runtime_relation_results`、`head_camera_arrays`、`--precheck-steps`/`--settle-steps`/`--contact-window-steps`/`--video-frames`/`--fps`/`--task-config`/`--robotwin-root` | 需要 RoboTwin checkout；`--precheck-steps 0` 默认有意为之 |
 | `run_100_seed_acceptance.py` | 100-seed 验收批量运行；可选 `--runtime` 触发 SAPIEN。 | `--seed-count`、`--video-seeds`、`--runtime`/`--robotwin-root` | 主路径之上的薄编排 |
 | `run_prompt_matrix.py` | committed prompt 矩阵跨 seed 跑；可选运行时。 | `--matrix tests/fixtures/prompt_matrix.json`、`--runtime-all-seeds`、`--report` | 主路径之上的薄编排 |
-| `run_compile_acceptance.py` | 固定随机种子跑 10 条新生成、5 条已入库资产直接复用和 5 条 Digital Cousins 缺口探测；保留逐 run 收据、CAS、ledger、catalog、转台预览与哈希清单。 | `--out-root`、`--seed` | 只验 compile；OBJ 转台不是 SAPIEN replay，Digital Cousins 缺 catalog 时保留真实 blocker |
 | `run_rendered_critic.py` | 可选 VLM 渲染评判 CLI，对应 `scene_gen/rendered_critic.py`。 | `--resolved-scene`、`--image` x N、`--out` | 相邻路径，非物理证据 |
 | `build_stage5_report.py` | 构建 stage-5 验收报告。 | — | 把运行时报告再聚合成 stage-5 视图，非主编译路径 |
+
+Canonical C13 已从 active tree 撤下历史 `run_compile_acceptance.py` 与离线 Qwen
+`run_replay_vlm_assessment.py` 入口；可从 `d08aaa1` Git 历史恢复，不再作为新运行配方。
+它们的旧深模块与历史测试仍保留；这不是旧资格系统全部退役。稳定核心的 compile/runtime/critic
+入口不变，新的平台实验只从 `x2env` 进入，由 managed Codex 提供视觉建议。
 
 ## `demo/`
 

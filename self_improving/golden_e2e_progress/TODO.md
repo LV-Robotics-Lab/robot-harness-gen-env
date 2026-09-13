@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- C13 G2b 已撤历史 compile campaign/独立 Qwen 两脚本，15 项包装与深模块回归通过；其余旧消费者按调用关系继续退役。
+- 新 S04 fixed d08aaa1 在隔离工作树运行；一次有界 submit，原输入/seed/web-only 不变，结果待收集。
 - 新 S04 fixed427d245 因几何可推导 z 标为 unspecified 再次 blocked（83.07s）；窄分类修复36项通过，
   原失败保留，需固定下一版本验证，不将模型措辞当作成功或手改提案。
 

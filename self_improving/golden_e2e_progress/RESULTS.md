@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C13 G2b 历史脚本入口退役
+
+- 调用点检索未发现 active Python/配置消费者后，删除 `script/run_compile_acceptance.py` 和
+  `script/run_replay_vlm_assessment.py`；原字节保留在 `d08aaa1` Git 历史，可恢复。
+- 包装 seam 先 RED（脚本仍存在），删除后 packaging 3 passed/0.68s；旧 campaign/assessment
+  深模块 12 passed/0.34s。首次回归命令误写测试路径，未执行测试，纠正为实际文件后通过。
+- 稳定核心三个入口保持存在；本片不删除仍有消费者的旧 deep modules，不称 C13 全部完成。
+
 ## 2026-09-13 S04 fixed427d245 与几何派生未知分类修复
 
 - fixed clean `427d24567058902155b6f2437d3129f37247f999`，原请求/图像/seed41/web-only；显式结构默认。

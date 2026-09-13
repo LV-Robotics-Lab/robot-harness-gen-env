@@ -2,6 +2,7 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- C13 再撤历史 compile campaign 与独立 Qwen replay assessment 两个无活跃消费者的脚本；稳定核心入口和仍被消费的深模块保留。
 - 同步三 Skill 实际执行绑定、单次受管网页检索、显式资产锚定生成设计及不确定性保留规则。
 - 父包不再隐式加载旧执行图；新 wheel 撤下两个旧 console，保留仍被消费的深模块。
 - 区分真实 S02 阻断与组件修复，澄清尚未完成冻结矩阵、完整 copy-run、资格、prerelease 和 push。

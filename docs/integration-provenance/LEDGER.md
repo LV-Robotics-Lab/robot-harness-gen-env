@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-G2B — 历史 campaign/Qwen 脚本退役
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；历史脚本原 Git 作者保留。
+- `source_ref`：canonical `d08aaa127735df1cbcf2f601b11e9f912463db0f`。
+- `target_paths`：script/run_compile_acceptance.py、run_replay_vlm_assessment.py；包装测试与代码地图。
+- `integration_method`：实际消费者检索后从 active tree 撤下入口，Git 历史可恢复；保留深模块测试。
+- `verification`：contract_pass；包装 3 项、旧深模块 12 项通过，无新模型/仿真声明。
+- `recorded_git_authors`：各历史文件与本提交元数据；无第三方来源或许可变更。
+
 ## INT-CANONICAL-C05-DERIVED-UNSPECIFIED — 几何可推导字段分类
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
