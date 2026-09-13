@@ -792,14 +792,34 @@ def _audit_child_model_calls(
         ):
             raise ValueError("color_execution_child_model_context_mismatch")
         response = VisualAnswer.model_validate_json(json.dumps(responses[0])).model_dump_json()
-        calls.append((group[0], response))
+        suffix = ""
+        if model == "openai/gpt-5.6-terra":
+            from .deployment import PrivateModelRouter
+
+            expected_route = PrivateModelRouter(api_key_file="/unused-secret").arguments()
+            actual_route = [
+                part
+                for index, value in enumerate(argv[:-1])
+                if value == "-c"
+                and isinstance(argv[index + 1], str)
+                and argv[index + 1].startswith(("model_provider=", "model_providers."))
+                for part in (value, argv[index + 1])
+            ]
+            if actual_route == expected_route:
+                suffix = "\nExact output JSON Schema:\n" + json.dumps(
+                    structured_output_schema(VisualAnswer)
+                )
+        calls.append((group[0], response, suffix))
     if not calls or sum(isinstance(r, dict) and "start_ticks" in r for r in records) != len(calls):
         raise ValueError("color_execution_child_model_execution_mismatch")
     consumed, errors = 0, []
 
     def infer(path, question):
         nonlocal consumed
-        if consumed >= len(calls) or calls[consumed][0] != prefix + question:
+        if consumed >= len(calls) or calls[consumed][0] not in (
+            prefix + question,
+            prefix + question + calls[consumed][2],
+        ):
             errors.append("question mismatch")
             raise ValueError("recorded question mismatch")
         response = calls[consumed][1]
