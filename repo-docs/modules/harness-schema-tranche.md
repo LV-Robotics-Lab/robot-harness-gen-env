@@ -1,5 +1,9 @@
 # Harness Schema Tranche
 
+历史说明：下文描述固定旧版本。canonical 收敛已退役旧执行 Registry、资格加载器、catalog/
+exporter、旧 JSON snapshot 和 qualification 资源（从 `8da345a` 可恢复）。仍被稳定工具和
+ASPIRE 消费的 Python 类型保留；当前入口见 [canonical x2env](canonical-x2env.md)。
+
 PR1 schema tranche 先回答“进程内到底用什么类型说话”，还没有回答“谁来执行 Skill”。
 `self_improving/harness/` 把 Text2Env compile、replay、validate 的边界冻结为严格模型；
 `scene_gen/` 仍拥有 SceneSpec、resolved scene、包 manifest、运行时证据和验证报告的内部格式。

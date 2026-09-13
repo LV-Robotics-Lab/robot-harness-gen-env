@@ -57,9 +57,7 @@ include = [
 scene_gen = ["AGENTS.md", "asset_overrides.yml", "envs/AGENTS.md", "prompts/*.md"]
 "self_improving.harness" = [
   "IMPLEMENTATION_LOG.md",
-  "json_schemas/*.json",
   "native/*.c",
-  "qualified_skills/**/*.json",
 ]
 self_improving = [
   "asset_pipeline/active/asset_reuse/lib/README.md",

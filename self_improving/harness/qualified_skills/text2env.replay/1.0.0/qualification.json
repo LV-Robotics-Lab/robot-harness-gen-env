@@ -1,1 +1,0 @@
-{"deterministic_case_id":"can-on-plate-seed-7-900-120-120-12","regression_command":"python -m self_improving.harness.qualify_replay --settings replay-qualification-settings.json","report_sha256":"0690d305a794b23b3b701379540394f998c06a34d43eb019fc05cdf521dbef53","skill_ref":"text2env.replay@1.0.0","status":"pass"}

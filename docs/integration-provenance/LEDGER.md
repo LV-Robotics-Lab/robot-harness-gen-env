@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-QUALIFICATION-RESOURCES-RETIRE — 旧资格资源退出 active tree
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`8da345a` 可恢复。
+- target_paths：旧qualification/schema_catalog/schemas.qualification_report/exporter/json_schemas/
+  qualified_skills及专属测试、包数据声明。
+- integration_method：删除无生产消费者的旧资源导出链，不重签、不替代原report权威；保留实际消费Python类型。
+- verification：root25项、agent40项；27份canonical合同资源摘要不变；runtime_verification：not_run。
+- recorded_git_authors：固定来源与本提交元数据，原第三方归属不变。
+
 ## INT-CANONICAL-C03-SKILL-EDGES — 三 Skill 公开拒绝边界
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`3f76bd8`。

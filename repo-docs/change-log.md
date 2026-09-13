@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 旧qualification/catalog/exporter和38份资源退出active tree；保留实际消费Python类型，canonical合同摘要不变。
+
 - 预览来源身份区分 Git 与真实安装 distribution，拒读根独立来自部署；25项含离线 wheel 安装测试通过。
 
 - 旧资格执行组14源文件与专属测试退役，混合descriptor测试保留纯schema；75项边界/安装/feed测试通过。

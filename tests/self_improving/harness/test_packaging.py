@@ -21,11 +21,10 @@ LEDGER_MEMBERS = ("__init__.py", "README.md", "conventions.py", "ledger.py")
 FROZEN_ASSERTIONS = Path("self_improving/golden_e2e_progress/physics-assertions-v1.json")
 CANONICAL_SCHEMAS = Path("self_improving/harness/x2env/json_schemas")
 AGENTICSIM_SOURCE = Path("self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim")
-QUALIFICATION_PACKAGES = (
-    Path("self_improving/harness/qualified_skills/text2env.compile/1.0.0"),
-    Path("self_improving/harness/qualified_skills/text2env.replay/1.0.0"),
+RETIRED_RESOURCE_PREFIXES = (
+    "self_improving/harness/qualified_skills/",
+    "self_improving/harness/json_schemas/",
 )
-QUALIFICATION_MEMBERS = ("manifest.json", "qualification.json", "report.json")
 MEDIA_NATIVE_PACKAGE = Path("self_improving/harness/native")
 MEDIA_NATIVE_MEMBERS = ("media_sandbox.c",)
 QUALIFIED_REPLAY_CLI = Path("self_improving/qualified_replay_cli.py")
@@ -66,7 +65,6 @@ def _copy_build_fixture(destination: Path) -> Path:
         *(HARNESS_PACKAGE / name for name in HARNESS_RESOURCE_MEMBERS),
         *(SCENE_GEN_PACKAGE / name for name in SCENE_GEN_RESOURCE_MEMBERS),
         *(LEDGER_PACKAGE / name for name in LEDGER_MEMBERS),
-        *(package / name for package in QUALIFICATION_PACKAGES for name in QUALIFICATION_MEMBERS),
         *(MEDIA_NATIVE_PACKAGE / name for name in MEDIA_NATIVE_MEMBERS),
         *(p.relative_to(REPO_ROOT) for p in (REPO_ROOT / AGENTICSIM_SOURCE).rglob("*.py")),
     ):
@@ -99,7 +97,7 @@ def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_wheel_installs_runtime_source_and_qualification_resources(tmp_path: Path) -> None:
+def test_wheel_installs_runtime_source_without_retired_resources(tmp_path: Path) -> None:
     source = _copy_build_fixture(tmp_path)
     wheelhouse = tmp_path / "wheelhouse"
     wheelhouse.mkdir()
@@ -126,11 +124,6 @@ def test_wheel_installs_runtime_source_and_qualification_resources(tmp_path: Pat
     expected_scene_gen_resources = {
         (SCENE_GEN_PACKAGE / name).as_posix() for name in SCENE_GEN_RESOURCE_MEMBERS
     }
-    expected_qualifications = {
-        (package / name).as_posix()
-        for package in QUALIFICATION_PACKAGES
-        for name in QUALIFICATION_MEMBERS
-    }
     expected_media_native = {
         (MEDIA_NATIVE_PACKAGE / name).as_posix() for name in MEDIA_NATIVE_MEMBERS
     }
@@ -139,7 +132,7 @@ def test_wheel_installs_runtime_source_and_qualification_resources(tmp_path: Pat
         assert expected_members <= members
         assert expected_harness_resources <= members
         assert expected_scene_gen_resources <= members
-        assert expected_qualifications <= members
+        assert not any(name.startswith(RETIRED_RESOURCE_PREFIXES) for name in members)
         assert expected_media_native <= members
         assert QUALIFIED_REPLAY_CLI.as_posix() not in members
         entry_points_member = next(
@@ -152,8 +145,6 @@ def test_wheel_installs_runtime_source_and_qualification_resources(tmp_path: Pat
         }
         assert not RETIRED_CONSOLES & entries
         assert "x2env" in entries
-        for member in expected_qualifications:
-            assert archive.read(member) == (REPO_ROOT / member).read_bytes()
         for member in expected_harness_resources:
             assert archive.read(member) == (REPO_ROOT / member).read_bytes()
         for member in expected_scene_gen_resources:
@@ -199,8 +190,8 @@ assert native_source.is_file()
 assert hashlib.sha256(native_source.read_bytes()).hexdigest() == {MEDIA_NATIVE_SHA256!r}
 """
     _run([sys.executable, "-I", "-c", probe], cwd=installed)
-    for member in expected_qualifications:
-        assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
+    for prefix in RETIRED_RESOURCE_PREFIXES:
+        assert not (installed / prefix).exists()
     for member in expected_harness_resources:
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
     for member in expected_scene_gen_resources:
@@ -210,7 +201,7 @@ assert hashlib.sha256(native_source.read_bytes()).hexdigest() == {MEDIA_NATIVE_S
     assert not (installed / QUALIFIED_REPLAY_CLI).exists()
 
 
-def test_packaging_declares_qualified_skill_resources() -> None:
+def test_packaging_declares_retained_resources_only() -> None:
     configuration = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
 
     package_data = configuration["tool"]["setuptools"]["package-data"]
@@ -218,6 +209,8 @@ def test_packaging_declares_qualified_skill_resources() -> None:
     assert "envs/AGENTS.md" in package_data["scene_gen"]
     assert "IMPLEMENTATION_LOG.md" in package_data["self_improving.harness"]
     assert "asset_pipeline/active/asset_reuse/lib/README.md" in package_data["self_improving"]
-    assert "qualified_skills/**/*.json" in package_data["self_improving.harness"]
+    assert "qualified_skills/**/*.json" not in package_data["self_improving.harness"]
+    assert "json_schemas/*.json" not in package_data["self_improving.harness"]
+    assert "json_schemas/*.json" in package_data["self_improving.harness.x2env"]
     assert "native/*.c" in package_data["self_improving.harness"]
     assert not RETIRED_CONSOLES & configuration["project"]["scripts"].keys()

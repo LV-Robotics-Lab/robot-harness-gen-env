@@ -1,1 +1,0 @@
-{"deterministic_case_id":"generated-purple-hexagonal-pedestal-seed-77","regression_command":"pytest -q tests/self_improving/harness/test_qualify_compile.py","report_sha256":"eb3282cb671a134574b7ae1a565573b86a03e4fe9dd13310b52e930da5b8fdb9","skill_ref":"text2env.compile@1.0.0","status":"pass"}

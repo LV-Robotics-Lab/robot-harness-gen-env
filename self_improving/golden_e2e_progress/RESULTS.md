@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C13 旧资格资源与 schema 导出链退役
+
+- 删除旧 qualification/catalog/report projection/exporter、32份旧 schema JSON、6份旧资格JSON
+  及3份专属测试；package-data 去旧glob。公开 absence先2项RED，再安装/保留类型GREEN。
+- 主线程安装/边界/schema 25 passed/1.74s；子agent40 passed/1.75s，全仓2367 collected/0.68s。
+  canonical schema/API/冻结physics的27文件摘要未变；原字节从 `8da345a` 可恢复。
+- 不迁出一个仅为旧catalog服务的替代report模型。ASPIRE/稳定工具消费的 Python 类型和 native
+  源码保留，余下孤立Store/media/旧snapshot adapter仍待按生产消费者清理；未重签任何旧资格。
+
 ## 2026-09-13 C03 三个 Skills 的缺依赖与串证据拒绝
 
 - 新增公开 invoke 测试：无 compile policy、无 replay executor 均不得生成输出目录；

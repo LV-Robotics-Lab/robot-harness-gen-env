@@ -6,6 +6,8 @@ Workbench assessment 链已退役（18 个源文件，Git 历史可恢复）。�
 事件仅由显式 HARNESS_EVENT_FEED 提供；旧 qualification 深模块/schema/CI 仍在清理，不称全图已消除。
 随后旧 application/Registry/handlers/qualifiers/receipts 与深 CLI 的14文件执行组也已退役；
 纯 schema、稳定 runtime/feed 暂保留，资格资源和其余孤立模块继续按消费者分类，不重签旧资格。
+旧资格资源、schema catalog/exporter及32份旧 JSON snapshot 已退役；保留的是仍被消费的 Python
+类型，不是第二个 public Skill catalog。canonical JSON 合同和冻结物理阈值保持不变。
 
 Provider 安装使用根项目的 `pip install '.[platform]'`（开发可加 `-e`）。现有 Yuxin engine 和
 它实际依赖的三个 `agenticsim` 包从原位置进入同一 wheel；无需为 provider 手写工作区 PYTHONPATH，
