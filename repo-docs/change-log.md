@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 包接口32项攻击回归通过；缺native loader实际调用失败留证，不作为三次真实copy-run成功。
+
 - 必要布局缺值与非critical冲突接入Harness/compile/completion，209项回归通过；保留合法默认与几何推导，真实case待验。
 
 - 库内类别命名快照接受管interpret并留证，44项回归通过；原整词匹配不变，真实S01类别未命中失败保留。

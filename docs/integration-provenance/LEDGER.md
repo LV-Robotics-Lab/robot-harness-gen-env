@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-PACKAGE-ATTACKS — 可迁移资源拒绝边界
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：原Genesis/格式来源不变。
+- source_ref：`a57a0ea`；target_paths：test_package.py；无生产改动。
+- integration_method：真实包build/copy/hash校验攻击及缺native loader失败调用，不替换内部消费者。
+- verification：主线程32项通过；runtime_verification：没有新Genesis成功或合格copy-run。
+- recorded_git_authors：原包实现与本次攻击测试维护分别保留。
+
 ## INT-CANONICAL-C05-DESIGN-READINESS — 缺值不是模型标记
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：既有Genesis/资产来源不变。

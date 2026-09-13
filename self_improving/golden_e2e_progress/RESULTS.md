@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C11/C14 可移植包攻击覆盖
+
+- test_package从9到32项，经真实build/copy/verify测试重哈希后的manifest/schema/重复成员、
+  位姿/关系、GLB外部资源/skins、OBJ缺MTL、URDF未列资源及输出软链；生产未改。
+- 缺native loader测试用真实空运行目录调用run_package，明确failed/simulator_executed=false，
+  保留invocation/result，不以替身模拟Genesis成功。
+- 主线程32 passed/0.46s；独立单文件161/211语句、79/96分支；相对固定5fe测量新覆盖22语句/22分支，
+  单文件百分比不是全组覆盖。记录 `/var/tmp/canonical-package-final.json`，真实三次copy-run仍待执行。
+
 ## 2026-09-13 C05/C08/C11 实际缺值准入
 
 - Harness按必要设计字段而非仅模型critical判断grounding；非critical conflict也必须澄清，原unknown不改写。
