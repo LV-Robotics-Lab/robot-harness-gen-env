@@ -1,5 +1,11 @@
 # 进度与结果
 
+## 2026-09-13 成功交付目的目录保护
+
+- export_completion新增相对目录、根目录、已有用户文件目录与符号目录拒绝测试；原包manifest、
+  workflow和目的用户字节不变。真实CAS/package核验，外部执行仍使用明确fixture，不是新真实case。
+- 10 passed/15.73s，生产实现未改；整体覆盖与copy-run资格不由此授予。
+
 ## 2026-09-13 failure bundle 部分产物导出补齐
 
 - 真实Store提交停止操作后的scene/image/video部分成员，经公开materialize_failure逐字节保留；

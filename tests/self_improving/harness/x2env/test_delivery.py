@@ -81,3 +81,34 @@ def test_export_rejects_drift_without_overwriting(tmp_path, fault):
     with pytest.raises(ValueError):
         export_completion(snapshot, store, output, reuse_existing=True)
     assert target.read_bytes() == b"corrupt"
+
+
+@pytest.mark.parametrize("destination", ["relative", "root", "existing", "symbolic"])
+def test_delivery_refuses_unsafe_or_existing_output_without_mutating_source(tmp_path, destination):
+    from self_improving.harness.x2env.delivery import export_completion
+
+    store, snapshot, completion = finished(tmp_path)
+    source = Path(completion.package_path)
+    manifest_before = (source / "manifest.json").read_bytes()
+    output = tmp_path / "review"
+    error = ValueError
+    if destination == "relative":
+        output = Path("relative-delivery")
+    elif destination == "root":
+        output = Path("/")
+    elif destination == "existing":
+        output.mkdir()
+        (output / "user-owned.txt").write_text("preserve")
+        error = FileExistsError
+    else:
+        real = tmp_path / "untouched"
+        real.mkdir()
+        output.symlink_to(real, target_is_directory=True)
+    with pytest.raises(error):
+        export_completion(snapshot, store, output)
+    assert (source / "manifest.json").read_bytes() == manifest_before
+    assert store.status(snapshot.workflow_id) == snapshot
+    if destination == "existing":
+        assert (output / "user-owned.txt").read_text() == "preserve"
+    if destination == "symbolic":
+        assert output.is_symlink() and list(real.iterdir()) == []
