@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-DYNAMIC-PACKAGE — 包内实测面核验
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness 1c0a07d及增量spec。
+- target_paths：compile/package/package_loader及公开测试；integration_method：v2 proof CAS闭包、复制本项目
+  既有消费者源码及冻结断言，包独立命名空间；不复制第三方vendor或仿真runtime。
+- upstream_owner：Pydantic/NumPy/SciPy/trimesh/Shapely各自保留；外部audit环境显式声明。
+- verification：主线程103项通过，独立Python复制包核验及篡改拒绝；runtime_verification：Genesis copy-run not_run。
+- recorded_git_authors：本项目源码、依赖作者与资产作者分开；静态核验不授sim-ready。
+
 ## INT-CANONICAL-C09-DYNAMIC-COMPILE — 唯一实测面编译
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Shapely/GEOS与trimesh独立保留。

@@ -80,6 +80,15 @@ read_asset_geometry_from_members读取完整变换几何/bounds/visual中心，�
 Registry wrapper只inspect再传入；包内消费者读取已核验相对成员，不构造假Registry/依赖原CAS。
 此片先接编译/可加载包与独立几何核验，动态physical消费者另片接；不能只因v2可解析就授物理通过。
 
+动态compile receipt另存`support_artifacts`相对路径→ArtifactRef映射，覆盖每个support成员的实际bytes；
+旧v1不增加此字段。包导出只能消费这些已绑定CAS bytes并核RuntimeMember hash/size，不能从临时编译
+目录补读、临时重选面或只写JSON字段。纯resolve_measured_layout仍不写CAS；持久化仅属compile操作。
+
+v2包携带本项目既有成员核验/几何consumer的最小Python源码闭包和冻结断言，使用独立包命名空间，
+不从安装中的Harness或原workspace加载consumer。loader预检环境显式需要Pydantic/NumPy/SciPy/
+trimesh/Shapely2.1.2；Genesis仍用原声明运行环境，不复制第三方runtime。v1保持标准库loader行为。
+该声明不等于copy-run通过；须另在隔离新目录执行真实load/step后授予对应profile。
+
 ## 动态支撑的模型补全纵切
 
 保留scene_grounding.v2的直接结构支撑路径及历史重算。实际动态目标使用明确

@@ -115,6 +115,35 @@ def dynamic_stack_inputs(tmp_path, *, offsets=None, reported_box_dimensions=None
     return store, registry, versions, ref, assets
 
 
+def test_dynamic_compile_persists_support_proofs_without_build_directory(tmp_path):
+    import shutil
+
+    from self_improving.harness.x2env.compile import StructuralPolicy, compile_scene
+    from self_improving.harness.x2env.contracts import ArtifactRef
+
+    store, registry, _, scene_ref, assets = dynamic_stack_inputs(tmp_path)
+    output = tmp_path / "compiled"
+    compiled = compile_scene(
+        scene_ref,
+        assets,
+        registry=registry,
+        store=store,
+        output_root=output,
+        policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+        seed=11,
+    )
+    originals = {
+        m.path: (output / m.path).read_bytes()
+        for m in compiled.runtime_scene.members
+        if m.path.startswith("support/")
+    }
+    shutil.rmtree(output)
+    receipt = json.loads(store.read_artifact(compiled.receipt))
+    assert set(receipt["support_artifacts"]) == set(originals)
+    for name, ref in receipt["support_artifacts"].items():
+        assert store.read_artifact(ArtifactRef.model_validate(ref)) == originals[name]
+
+
 def test_compile_dynamic_stack_binds_measured_plane_and_keeps_v1_serialization(tmp_path):
     from self_improving.harness.x2env.compile import CompiledScene, StructuralPolicy, compile_scene
     from self_improving.harness.x2env.genesis_runtime import RuntimeScene, parse_runtime_scene

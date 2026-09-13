@@ -4,6 +4,7 @@ import hashlib
 import json
 import shutil
 import struct
+import subprocess
 
 import pytest
 
@@ -30,6 +31,95 @@ def review_package(tmp_path):
     return copied
 
 
+@pytest.mark.parametrize("attack", [None, "surface", "known_pose", "missing_verifier"])
+def test_dynamic_package_copies_proofs_and_independent_consumer(tmp_path, attack):
+    from pathlib import Path
+
+    import shapely
+
+    from self_improving.harness.x2env.compile import StructuralPolicy, compile_scene
+    from tests.self_improving.harness.x2env.test_compile import dynamic_stack_inputs
+
+    store, registry, _, ref, assets = dynamic_stack_inputs(tmp_path)
+    compiled = compile_scene(
+        ref,
+        assets,
+        registry=registry,
+        store=store,
+        output_root=tmp_path / "build",
+        policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+        seed=11,
+    )
+    shutil.rmtree(tmp_path / "build")
+    output = tmp_path / "dynamic-package"
+    manifest = build_package(
+        compiled,
+        registry=registry,
+        store=store,
+        input_refs={},
+        replay_refs={},
+        assessment_ref=None,
+        output=output,
+    )
+    copied = tmp_path / "isolated-copy"
+    shutil.copytree(output, copied)
+    shutil.rmtree(output)
+    shutil.move(str(tmp_path / "state"), str(tmp_path / "unavailable-state"))
+    assert verify_package(copied) == manifest
+    assert (copied / "support/box.surface.json").is_file()
+    if attack:
+        scene = json.loads((copied / "scene.json").read_bytes())
+        if attack == "known_pose":
+            next(e for e in scene["entities"] if e["id"] == "box")["position_m"][0] += 0.01
+            write_scene_candidate(copied, scene)
+        elif attack == "surface":
+            name = "support/box.surface.json"
+            surface = json.loads((copied / name).read_bytes())
+            surface["plane_z_m"] += 0.01
+            raw = json.dumps(surface).encode()
+            (copied / name).write_bytes(raw)
+            sha = hashlib.sha256(raw).hexdigest()
+            next(m for m in scene["members"] if m["path"] == name).update(
+                sha256=sha, size_bytes=len(raw)
+            )
+            next(b for b in scene["support_bindings"] if b["source_id"] == "box")[
+                "surface_sha256"
+            ] = sha
+            next(m for m in manifest["members"] if m["path"] == name).update(
+                sha256=sha, size_bytes=len(raw)
+            )
+            (copied / "manifest.json").write_text(json.dumps(manifest))
+            write_scene_candidate(copied, scene)
+        else:
+            manifest["members"] = [
+                m for m in manifest["members"] if not m["path"].endswith("/measured_support.py")
+            ]
+            (copied / "manifest.json").write_text(json.dumps(manifest))
+        with pytest.raises(ValueError, match="support"):
+            verify_package(copied)
+        return
+    result = subprocess.run(
+        [
+            __import__("sys").executable,
+            "-I",
+            "-c",
+            "import importlib.util,sys; sys.path.insert(0,sys.argv[3]); "
+            "s=importlib.util.spec_from_file_location('portable',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "m.verify_package(sys.argv[2]); print('independent verification passed')",
+            str(copied / "package_loader.py"),
+            str(copied),
+            str(Path(shapely.__file__).parents[1]),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "independent verification passed"
+
+
 def write_scene_candidate(package, scene, resources=None):
     """Rehash deliberately untrusted candidates so tests reach semantic closure checks."""
     manifest = json.loads((package / "manifest.json").read_bytes())
@@ -46,6 +136,44 @@ def write_scene_candidate(package, scene, resources=None):
         sha256=hashlib.sha256(raw).hexdigest(), size_bytes=len(raw)
     )
     (package / "manifest.json").write_text(json.dumps(manifest))
+
+
+@pytest.mark.parametrize("attack", ["missing", "wrong_member"])
+def test_dynamic_export_rejects_unbound_support_receipt(tmp_path, attack):
+    from self_improving.harness.x2env.compile import StructuralPolicy, compile_scene
+    from tests.self_improving.harness.x2env.test_compile import dynamic_stack_inputs
+
+    store, registry, _, ref, assets = dynamic_stack_inputs(tmp_path)
+    compiled = compile_scene(
+        ref,
+        assets,
+        registry=registry,
+        store=store,
+        output_root=tmp_path / "build",
+        policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+        seed=11,
+    )
+    receipt = json.loads(store.read_artifact(compiled.receipt))
+    if attack == "missing":
+        receipt.pop("support_artifacts")
+    else:
+        receipt["support_artifacts"]["support/box.surface.json"] = ref.model_dump()
+    candidate = compiled.model_copy(
+        update={"receipt": store.write_artifact(json.dumps(receipt).encode(), "application/json")}
+    )
+    output = tmp_path / "rejected"
+    with pytest.raises(ValueError, match="compiled support"):
+        build_package(
+            candidate,
+            registry=registry,
+            store=store,
+            input_refs={},
+            replay_refs={},
+            assessment_ref=None,
+            output=output,
+        )
+    assert not (output / "manifest.json").exists()
+    assert json.loads((output / "export-failure.json").read_bytes())["status"] == "failed"
 
 
 @pytest.mark.parametrize(

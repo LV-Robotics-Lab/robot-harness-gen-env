@@ -6,6 +6,7 @@ Harness c0236bd; no Store, workflow, model or qualification authority lives here
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -13,9 +14,22 @@ import shutil
 import signal
 import struct
 import subprocess
+import sys
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
+
+AUDIT_ROOT = "_support_audit/harness/x2env"
+AUDIT_FILES = (
+    "genesis_runtime.py",
+    "package_loader.py",
+    "measured_support.py",
+    "assets.py",
+    "artifacts.py",
+    "contracts.py",
+    "assessment.py",
+    "genesis_child.py",
+)
 
 
 def _write(path, body):
@@ -63,7 +77,7 @@ def verify_package(root):
         raise ValueError("development package cannot grant qualification")
     scene = json.loads(_safe(root, manifest["scene"]).read_bytes())
     if (
-        scene.get("schema_version") != "x2env.runtime_scene.v1"
+        scene.get("schema_version") not in {"x2env.runtime_scene.v1", "x2env.runtime_scene.v2"}
         or type(scene.get("seed")) is not int
         or not 0 <= scene["seed"] <= 2147483647
     ):
@@ -141,6 +155,27 @@ def verify_package(root):
             for line in path.read_text().splitlines()
         ):
             raise ValueError("unsupported OBJ material closure")
+    if scene["schema_version"] == "x2env.runtime_scene.v2":
+        required = {f"{AUDIT_ROOT}/{name}" for name in (*AUDIT_FILES, "__init__.py")}
+        required.add("_support_audit/golden_e2e_progress/physics-assertions-v1.json")
+        if not required <= seen:
+            raise ValueError("missing package-owned support verifier")
+        namespace = "_x2env_support_" + hashlib.sha256(str(root).encode()).hexdigest()
+        spec = importlib.util.spec_from_file_location(
+            namespace,
+            _safe(root, f"{AUDIT_ROOT}/__init__.py"),
+            submodule_search_locations=[str(_safe(root, AUDIT_ROOT))],
+        )
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[namespace] = module
+        try:
+            spec.loader.exec_module(module)
+            runtime = __import__(f"{namespace}.genesis_runtime", fromlist=["parse_runtime_scene"])
+            runtime._verify(runtime.parse_runtime_scene(scene), root)
+        finally:
+            for key in tuple(sys.modules):
+                if key == namespace or key.startswith(namespace + "."):
+                    del sys.modules[key]
     return manifest
 
 

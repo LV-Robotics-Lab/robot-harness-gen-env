@@ -32,7 +32,9 @@ QfcUxI保留真实双profile，拓扑/reset/物理26项通过；不称新仿真�
 新碰撞候选组件使用固定CoACD身份、controller授权、隔离执行和不可变child登记；67项相关测试通过。
 固定8f420f6真实Plate CoACD探针3.05秒产生13块并登记新版本；共同面不是碰撞保真证明，物理未运行。
 动态编译新增独立RuntimeScene v2，绑定原意图/资产/唯一面选择；同一只读求解器可核复制成员，
-165项相关回归通过。模型v3、动态physical及正式包loader仍待接通，不授任何矩阵成功。
+165项相关回归通过。随后v2 compile持久化support CAS refs，包复制最小项目核验源码和冻结断言；
+独立Python可不读原workspace/CAS核验，相关103项通过。v2 audit环境需Pydantic/NumPy/SciPy/
+trimesh/Shapely2.1.2；Genesis仍用声明环境。模型v3、动态physical及真实copy-run待验，不授矩阵成功。
 S03原视频唯一提交在interpret 600秒超时，无SceneIR或Genesis；输入采样帧与失败包保留。
 70项相关测试通过；此处是authored几何组件，不授实际加载/动态接触。下一片接独立拓扑消费与动态物理；
 详见[增量契约](../../self_improving/golden_e2e_progress/CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)。

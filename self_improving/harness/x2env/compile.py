@@ -393,6 +393,17 @@ def compile_scene(scene_ref, assets, *, registry, store, output_root, policy, se
                 "policy": policy.model_dump(),
                 "defaults_applied": defaults,
                 "physical_evaluated": False,
+                **(
+                    {
+                        "support_artifacts": {
+                            name: store.write_artifact(raw, "application/json").model_dump()
+                            for name, raw in member_data.items()
+                            if name.startswith("support/")
+                        }
+                    }
+                    if isinstance(runtime_scene, RuntimeSceneV2)
+                    else {}
+                ),
             },
             sort_keys=True,
         ).encode(),

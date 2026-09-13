@@ -13,6 +13,7 @@
 | S03 video-only | 受阻 | 单次真实interpret 600s超时；输入采样和失败包保留，无SceneIR或Genesis，不原样重试 |
 | v2多实体生成布局 | 集成接通 | 独立授权与原始transport完成门主审232项通过；待固定真实case |
 | 实测动态支撑 | 集成接通（compile/只读几何） | 主线程165项相关测试通过；动态物理、正式包loader及grounding v3仍待接通 |
+| v2包支撑闭包 | 集成接通 | compile持久化、包内独立consumer及103项相关测试通过；真实Genesis copy-run待验 |
 | 三输入/三来源及12例矩阵 | 集成接通（有限子集） | S02/S03/S04/M04及复杂支撑案例继续；尚无4/4或≥8/12 |
 | 语句/分支覆盖门 | 受阻 | 固定a0499b9六组及root通过；语句92.739%/分支85.064%，缺505行/420分支；继续公开接口攻击测试 |
 | 三次最终copy-run与prerelease/push | 未实现 | 达到冻结门后普通push bingsheng，main PR仍需另授权 |

@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 动态支撑证据持久化与包内独立核验
+
+- public compile删除原build目录后读取support_artifacts先RED（KeyError），现仅v2 receipt持久化
+  全部support成员的CAS refs；纯布局求解仍只读，v1 receipt不加字段。
+- build_package动态闭包不完整先RED，现消费准确refs/hash/size并复制本项目最小核验源码与冻结断言。
+  v2 verifier使用独立包命名空间，不从原workspace/Registry导入；外部audit Python依赖显式记录，
+  Genesis运行环境未更换，第三方runtime未复制。
+- 删除build、移动state、复制包并删除原包后，独立Python -I进程核验通过；仅外部声明Shapely
+  库路径显式加入，项目路径不加入。重哈希假面/已知位置、更删核验成员、缺/错receipt均拒绝。
+  主线程103项相关测试通过/2.90s，Ruff/diff通过；仍非真实Genesis copy-run，物理与资格不升级。
+
+
 ## 2026-09-13 动态支撑编译接线与两项真实运行终态
 
 - 独立RuntimeScene v2绑定原SceneIR、完整AssetVersion、每on边的候选/唯一可行面及实际位姿。

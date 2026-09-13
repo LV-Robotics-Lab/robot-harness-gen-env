@@ -12,7 +12,7 @@ from pathlib import Path
 from .artifacts import artifact_closure
 from .compile import CompiledScene
 from .contracts import ArtifactRef
-from .package_loader import _safe, _write, verify_package
+from .package_loader import AUDIT_FILES, AUDIT_ROOT, _safe, _write, verify_package
 
 MAX_BYTES = 512 * 1024 * 1024
 MAX_MEMBERS = 2048
@@ -153,6 +153,21 @@ def build_package(
                     "ref": ref.model_dump(),
                     "path": name,
                 }
+        if scene.schema_version == "x2env.runtime_scene.v2":
+            receipt = json.loads(read(compiled.receipt)[1])
+            proofs = receipt.get("support_artifacts")
+            if not isinstance(proofs, dict) or set(proofs) != set(wanted) - copied:
+                raise ValueError("compiled support closure incomplete")
+            for name, value in proofs.items():
+                ref, data = read(value)
+                if (
+                    not name.startswith("support/")
+                    or ref.sha256 != wanted[name].sha256
+                    or ref.size_bytes != wanted[name].size_bytes
+                ):
+                    raise ValueError("compiled support member identity differs")
+                put(name, data)
+                copied.add(name)
         if copied != set(wanted):
             raise ValueError("compiled asset closure incomplete")
         for ref in artifact_closure(
@@ -176,6 +191,16 @@ def build_package(
             roots["assessment"] = collect(assessment_ref)
         for filename in ["genesis_child.py", "package_loader.py"]:
             put(filename, Path(__file__).with_name(filename).read_bytes())
+        if scene.schema_version == "x2env.runtime_scene.v2":
+            put(f"{AUDIT_ROOT}/__init__.py", b"")
+            for filename in AUDIT_FILES:
+                put(f"{AUDIT_ROOT}/{filename}", Path(__file__).with_name(filename).read_bytes())
+            put(
+                "_support_audit/golden_e2e_progress/physics-assertions-v1.json",
+                (
+                    Path(__file__).parents[2] / "golden_e2e_progress/physics-assertions-v1.json"
+                ).read_bytes(),
+            )
         runtime = {
             "python": "3.12",
             "python_observed": "3.12.3",
@@ -187,6 +212,19 @@ def build_package(
             "profiles": ["baseline", "half_dt", "load_step_smoke"],
             "renderer": "OSMesa llvmpipe",
         }
+        if scene.schema_version == "x2env.runtime_scene.v2":
+            runtime["package_verifier"] = {
+                "source": "package_owned_support_audit",
+                "python": ">=3.11",
+                "external_dependencies": [
+                    "pydantic>=2.9,<3",
+                    "numpy",
+                    "scipy",
+                    "trimesh",
+                    "shapely==2.1.2",
+                ],
+                "original_workspace_required": False,
+            }
         put("runtime.json", json.dumps(runtime, sort_keys=True).encode())
         put(
             "README.txt",
