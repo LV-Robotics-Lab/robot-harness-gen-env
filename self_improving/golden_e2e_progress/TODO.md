@@ -178,7 +178,7 @@
 
 - 历史交接会话只执行安全停止与交接；当前继续通用实验实现，不启动旧 repair 验收、深验、bootstrap、资格重建或 release 发布。
   接手 prompt 是
-  [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
+  [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](../../docs/history/golden-e2e/9460a4b9ac3825e44b6e6641d5fdafe3034a8a6e/self_improving/golden_e2e_progress/HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
 - 下一会话 active：通用实验管线实际接线。顺序为三模态统一输入/共享场景意图 → local/web/generated
   资产来源 → 规范化与不可变版本登记 → 复用 Genesis compile/replay/observe/validate → 场景/布局与
   资产版本两类有界 fallback → 可迁移包 → 少量真实案例和 Harness 实验入口。

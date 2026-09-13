@@ -1,5 +1,22 @@
 # 进度与结果
 
+## 2026-09-13 C14 历史文档可审阅来源
+
+- 16条历史相对链接指向已退役路径。先尝试固定GitHub链接，12独立URL匿名HEAD全404，
+  未归因未推送或权限；因此不将这些URL算修复。保留逐请求状态与耗时。
+- 将12份固定committed Markdown原bytes放入 docs/history/golden-e2e/ 明确非active归档，
+  manifest列原ref/path/Gitblob/SHA/size；主线程逐件重新核验92,117B完全一致。
+  原旧指令/资格不继承，内部历史相对链接只在原提交上下文有效，不伪称当前可达。
+- 16条读者链接改本地归档；51文档轻量inventory为228存在/0失效，但6远端与1anchor未查，
+  完整docslink门仍待实现，不能据此称最终门全绿。
+
+## 2026-09-13 C13 Alchedata 纯格式切片
+
+- 对 scripts/tests 使用现有Ruff formatter，60文件变化；逐文件以Git HEAD原bytes解析AST，
+  60/60与格式化后完全一致（忽略源码位置），包含报告字符串值与表达式顺序。
+- 真实聚焦35 passed/3 skipped/0.30s；此范围lint诊断由1230降为450，剩余主要为嵌入HTML/
+  CSS长行和import布局，未加排除或改生成报告内容。不是全active lint通过或业务能力提升。
+
 ## 2026-09-13 C14 部署公开接口与首次固定六组结果
 
 - 新增10项 build_harness→submit/resume 测试，真实Store、不可变颜色child及两次预览调用；
@@ -932,12 +949,12 @@
 - 真实Codex 9.801852654s后错误输出单对象cabinet/web意图，遗漏鼠标、粉红色、开放状态和层级
   支撑，unknowns为空；acquire随后`web_asset_not_found`。revision2停止，未compile/replay/validate。
 - 没有本次PNG/MP4/package；完整机器结果、模型JSONL、失败诊断和SHA见
-  [证据笔记](../../docs/evidence/user-open-cabinet-pink-mouse-20260913.md)。这证明当前不能处理该
+  [证据笔记](../../docs/history/golden-e2e/3f7ec31bcc5839bec706892d438eb01a105aaf30/docs/evidence/user-open-cabinet-pink-mouse-20260913.md)。这证明当前不能处理该
   多对象/关节场景，不能用旧媒体或单刚体成功案例替代。
 
 ## 2026-09-13 最终限定回归、完整包复制验收与审阅入口
 
-- [walkthrough](../../repo-docs/walkthroughs/generic-experiment-20260913.md)已逐阶段链接合同/代码、
+- [walkthrough](../../docs/history/golden-e2e/3f7ec31bcc5839bec706892d438eb01a105aaf30/repo-docs/walkthroughs/generic-experiment-20260913.md)已逐阶段链接合同/代码、
   各分支命令与失败、包和媒体；AGENTS.md已指向该页。本轮有限实验版本暂停审阅。
 - 限定回归205 passed、4 skipped、1 failed，20.17秒；唯一失败是旧qualification manifest拒绝
   已改变的registry.py，不重建资格、不宣称全仓通过。161 schema snapshots检查通过。
@@ -1116,7 +1133,7 @@
   绝对路径的 Genesis load/step；不授予 portable standalone、robot policy 或 data collection 能力。
 - 下一 active 是 text/image/video 和 local/web/generated 资产来源的实际接线，不再以单鼠标深度资格
   为主。完整状态表、Gujie 固定来源、两类 fallback、包目标和执行顺序见
-  [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
+  [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](../../docs/history/golden-e2e/9460a4b9ac3825e44b6e6641d5fdafe3034a8a6e/self_improving/golden_e2e_progress/HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
 
 下列章节是历史结果；若与上述交接状态冲突，以上述交接和实际 Git/日志为准。
 

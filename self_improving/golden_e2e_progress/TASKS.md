@@ -45,7 +45,7 @@
 下列原 M2 和 G0–G4 清单保留为历史分解，不再是当前执行队列。当前会话已安全停止单鼠标 repair；
 下一 active 改为 text/image/video 统一输入、local/web/generated 资产来源、现有 Genesis 链、两类
 有界 fallback 和可迁移包的实际接线。直接执行清单以
-[`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)
+[`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](../../docs/history/golden-e2e/9460a4b9ac3825e44b6e6641d5fdafe3034a8a6e/self_improving/golden_e2e_progress/HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)
 和 `TODO.md` 顶部为准；正式 release、历史债务、autoresearch 与 robot policy 继续后置。
 
 ## 历史：M1 已完成首条完整线；原 M2 受限预览

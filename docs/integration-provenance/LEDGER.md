@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C14-HISTORY-LINKS — 固定原文非active归档
+
+- origin_owner / upstream_owner：12份原文各自固定Git历史作者/来源，沿用原文归属。
+- integration_owner：Bingsheng Harness workstream；source_refs：docs/history/golden-e2e/manifest.json逐项列出。
+- integration_method：原committed bytes精确归档，只替换16条读者href，不复活旧业务文件。
+- verification：主线程12份/92,117B/Gitblob/SHA精确相同；runtime_verification：没有新运行时能力。
+- recorded_git_authors：原来源提交及当前链接整合提交分开；HTTP404原因未定，不推断身份/权限。
+
 ## INT-CANONICAL-C13-ALCHEDATA-FORMAT — 保值格式化
 
 - origin_owner / upstream_owner：Alchedata固定来源原作者，沿用既有来源台账，不重新归属。

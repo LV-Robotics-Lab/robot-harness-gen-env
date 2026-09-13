@@ -80,7 +80,7 @@ revision 2，validate 只有 preflight→running，没有 terminal/result/commit
 来源至少做一个小型真实案例，并完成场景/布局与资产版本两类有界 fallback，以及一次复制到新目录
 后的真实 Genesis load/step。正式 qualification、全矩阵、162 份历史债务、autoresearch 和 robot
 policy 后置。完整事实、入口和执行顺序以
-[`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)
+[`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](../../docs/history/golden-e2e/9460a4b9ac3825e44b6e6641d5fdafe3034a8a6e/self_improving/golden_e2e_progress/HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)
 为准；下列长记录均是历史切片，不能覆盖该 active 状态。
 
 `p1_p6_implementation`
@@ -132,37 +132,37 @@ scene closure、binding、runtime lock、static validation 与 compile receipt �
 evidence，并要求四项 exact static checks。compile receipt/output v2 又绑定 canonical input；controlled
 image handler 已在 Registry candidate 中确定性生成单对象 exact-reuse 静态 package，并在 postflight
 重验全部闭包；验收记录见
-[`docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md`](../../docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md)。
+[`docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md`](../../docs/history/golden-e2e/ba92f749f3cd8c2f5ac69c313b7697e8d912b172/docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md)。
 controlled durable application 进一步闭合 caller UUID、SQLite terminal 与无 live application 重启。Gujie
 legacy 鼠标证据经复核只能作为 representation candidate：指定 pass 目录缺失，最接近归档的 runtime source
 identity 为 0/7 匹配且当前 verifier 拒绝旧 physics thresholds。它尚不是 production qualification、Genesis
 runtime/replay 或 MCP image path；详见
-[`docs/evidence/golden-image2env-controlled-application-20260911.md`](../../docs/evidence/golden-image2env-controlled-application-20260911.md)。
+[`docs/evidence/golden-image2env-controlled-application-20260911.md`](../../docs/history/golden-e2e/e5bf6d9e9eaf87b89330ab82ea2b0a21e26447f4/docs/evidence/golden-image2env-controlled-application-20260911.md)。
 15-member mouse bytes 现已由 no-symlink/完整目录检查与稳定 snapshot 迁成 unqualified
 `AssetRepresentationV1`；不同绝对路径、重提和源目录并发变化均不改变已验证输出，见
-[`docs/evidence/golden-legacy-mouse-representation-staging-20260911.md`](../../docs/evidence/golden-legacy-mouse-representation-staging-20260911.md)。
+[`docs/evidence/golden-legacy-mouse-representation-staging-20260911.md`](../../docs/history/golden-e2e/d7246ee83c42c1d97d746ebab45c2086541c2ec2/docs/evidence/golden-legacy-mouse-representation-staging-20260911.md)。
 Genesis asset probe 现已增加 raw load observation 与逐行 contact schema，并把 public snapshot 总数增至
 93；Harness-owned 无相机 CPU backend 已对上述 mouse representation 真实执行 1,000 steps。真实 load
 把 8 个源 collision member 合并为 1 个 loaded geom；1,001 行 trace、989 contact steps、4,040 contacts、
 最大穿透 0.487 mm 与末态 settling 已由 deep verifier 重算，并在第二绝对 CAS 路径不依赖 Genesis/source
 root 严格复验。证据见
-[`docs/evidence/golden-genesis-cpu-asset-probe-20260911.md`](../../docs/evidence/golden-genesis-cpu-asset-probe-20260911.md)。
+[`docs/evidence/golden-genesis-cpu-asset-probe-20260911.md`](../../docs/history/golden-e2e/a8cf4a4c62011b901bf35793f4e218afae8299c6/docs/evidence/golden-genesis-cpu-asset-probe-20260911.md)。
 该93-schema阶段尚没有production issuer/资格；后续运行封闭和单资产签发结果如下。资产资格仍不能
 直接替代production Registry/MCP的Skill资格。
 runtime manifest 前置已把声明根的完整字节写入 CAS，并提供纯读与显式部署重验三方法；其阶段有94份
 公共 schema。它的 `declared_byte_closure_only` 不证明实际运行进程只使用这些根。
 固定`3662ba6`已真实capture166,141成员/8.54GB声明内容，并在第二独立绝对路径/CAS的新进程全量
 重验；staged fresh Genesis probe另完成1,000steps，但仍绑定旧v1 lock。运行记录见
-[`runtime closure`](../../docs/research/genesis-runtime-closure-audit-20260911.md)。下一步必须将manifest、
+[`runtime closure`](../../docs/history/golden-e2e/92ae72f86f9418a0a45b99cc3af78cb1d733a488/docs/research/genesis-runtime-closure-audit-20260911.md)。下一步必须将manifest、
 实际运行入口与probe回执显式绑定，不能把两次各自通过的执行拼成尚不存在的资格链。
 固定`fd50576`新增受约束CPU launcher与execution request/observation/receipt，当前97份schemas。
 正式Producer已在两套独立部署完成1,000steps及strict reload，固定提交集中功能验收通过；
 launcher/child覆盖目标仍有明确缺口。固定`5f78e62`的durable qualification application已通过真实
 签发/重启/幂等及executed恢复三项formal（865.35s），第二CAS/SQLite无Genesis纯读通过；独立
 集中验收通过，真实并发恢复与CAS坏字节拒绝也通过。证据见
-[`单资产资格`](../../docs/evidence/golden-genesis-asset-qualification-20260911.md)与
-[`runtime execution`](../../docs/evidence/golden-runtime-execution-20260911.md)。公共合同见
-[`固定 CPU execution`](../harness/GENESIS_RUNTIME_EXECUTION_CONTRACT.md)。
+[`单资产资格`](../../docs/history/golden-e2e/d8ab41f33501c8b59ce15dad53f76ea876416cf7/docs/evidence/golden-genesis-asset-qualification-20260911.md)与
+[`runtime execution`](../../docs/history/golden-e2e/5ceead34d8e0c89d6280cf987fd204c408317ae2/docs/evidence/golden-runtime-execution-20260911.md)。公共合同见
+[`固定 CPU execution`](../../docs/history/golden-e2e/fd5057625d7a5e986a49867fdf1d540f027c5431/self_improving/harness/GENESIS_RUNTIME_EXECUTION_CONTRACT.md)。
 P6 继续修复资产 staging；autoresearch 只在其
 冻结 benchmark 可以
 真实运行后开始。

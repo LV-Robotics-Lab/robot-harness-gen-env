@@ -132,7 +132,7 @@
   collection 继续后置。
 - 正式 qualification、全矩阵、autoresearch、162 份历史 ledger、全面性能优化、robot policy 和无关
   前端保留但暂停。权威交接为
-  [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
+  [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](../../docs/history/golden-e2e/9460a4b9ac3825e44b6e6641d5fdafe3034a8a6e/self_improving/golden_e2e_progress/HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
 
 ## M1 收口与 fresh observe v3
 
@@ -163,7 +163,7 @@
   仓库整理与开放服务→暂停；P8/E3机器人联调留待其他项目组参与后重新启动。
 - 第一阶段不再以前述`genesis.robot_policy@1`作为交付阻断；旧E3/E4与历史证据保持原义，不把E2
   环境服务冒称旧E4。正式新验收/benchmark与promotion profile合同将在计划批准后同步。
-- 详细计划：[SIM_READY_RELEASE_PLAN.md](SIM_READY_RELEASE_PLAN.md)。
+- 详细计划：[SIM_READY_RELEASE_PLAN.md](../../docs/history/golden-e2e/7c739e36b76c3812cac959546fb7f9e52e4e4340/self_improving/golden_e2e_progress/SIM_READY_RELEASE_PLAN.md)。
 
 ## D001 — Codex 是认知中枢与视觉判读者
 
