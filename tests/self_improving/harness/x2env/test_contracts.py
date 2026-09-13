@@ -49,6 +49,43 @@ def scene_document():
     }
 
 
+def test_empty_model_proposal_is_not_an_explanation():
+    from self_improving.harness.x2env.contracts import SceneIntentProposal
+
+    with pytest.raises(ValidationError, match="proposal requires a scene or explicit unknowns"):
+        SceneIntentProposal(scene=None, unknowns=())
+
+
+@pytest.mark.parametrize(
+    "status,has_proposal,error",
+    [
+        ("completed", False, None),
+        ("completed", True, "model_timeout"),
+        ("failed", True, "model_timeout"),
+        ("failed", False, None),
+        ("blocked", False, ""),
+    ],
+)
+def test_model_result_status_must_match_proposal_and_error(status, has_proposal, error):
+    import json
+
+    from self_improving.harness.x2env.contracts import BackendProposal
+
+    proposal = {"scene": scene_document(), "unknowns": []} if has_proposal else None
+    with pytest.raises(ValidationError, match="advisory requires"):
+        BackendProposal.model_validate_json(
+            json.dumps(
+                {
+                    "status": status,
+                    "proposal": proposal,
+                    "error_code": error,
+                    "evidence": [],
+                    "elapsed_seconds": 0.1,
+                }
+            )
+        )
+
+
 def test_scene_preserves_entity_attributes_reference_frame_and_field_provenance():
     import json
 

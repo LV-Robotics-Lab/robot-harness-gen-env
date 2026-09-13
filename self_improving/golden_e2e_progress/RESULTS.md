@@ -1,5 +1,11 @@
 # 进度与结果
 
+## 2026-09-13 C03 模型结果不能用矛盾状态冒充完成
+
+- 公开 strict contract 增补空 proposal、completed 缺提案/带错误、failed 带提案/缺错误、
+  blocked 空错误等攻击；生产代码未变。contracts/stage/codex 40 passed/2.28s，
+  contracts.py 239语句/42分支均100%；外部模型为测试边界，不计真实成功。
+
 ## 2026-09-13 C13 旧资格资源与 schema 导出链退役
 
 - 删除旧 qualification/catalog/report projection/exporter、32份旧 schema JSON、6份旧资格JSON

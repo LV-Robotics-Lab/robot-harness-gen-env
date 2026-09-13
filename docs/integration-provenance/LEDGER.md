@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C03-MODEL-RESULT-EDGES — 模型回执状态合同
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`e2f909c`。
+- target_paths：test_contracts.py；integration_method：公开Pydantic合同矛盾状态攻击，无生产改动。
+- verification：40项、contracts239语句/42分支100%；runtime_verification：not_run。
+- recorded_git_authors：本提交元数据，未引入第三方源。
+
 ## INT-CANONICAL-C13-QUALIFICATION-RESOURCES-RETIRE — 旧资格资源退出 active tree
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`8da345a` 可恢复。
