@@ -462,6 +462,9 @@ def _audit_repair_reservations(snapshot, store):
             raise ValueError("completion_repair_reservation_budget_mismatch")
         fingerprints.add(reservation.failure_fingerprint)
         base_revision = reservation.base_revision
+        if op.capability == "asset.revise":
+            refs.extend(_audit_local_color(snapshot, store, index, op))
+            continue
         approval = json.loads(store.read_artifact(reservation.approval))
         scene_ref = ArtifactRef.model_validate(approval["scene_ir"])
         diagnosis_ref = ArtifactRef.model_validate(approval["diagnosis"])
@@ -493,8 +496,6 @@ def _audit_repair_reservations(snapshot, store):
         refs.append(reservation.approval)
         if op.status != "succeeded":
             continue
-        if op.capability == "asset.revise":
-            raise ValueError("completion_asset_repair_not_supported")
         rows = [
             (ref, json.loads(store.read_artifact(ref)))
             for ref in snapshot.revisions
@@ -565,6 +566,151 @@ def _audit_repair_reservations(snapshot, store):
             )
         )
     return tuple(dict.fromkeys(refs))
+
+
+def _audit_local_color(snapshot, store, index, operation):
+    """Consume the existing historical color verifier, then bind the committed continuation."""
+    from .local_color_execution import (
+        ColorRepairExecutionResult,
+        verify_color_repair_approval,
+        verify_color_repair_result,
+    )
+    from .resolver import ResolutionResult
+
+    approval = json.loads(store.read_artifact(operation.repair_reservation.approval))
+    if not {"candidate", "proposal"} <= approval.keys():
+        raise ValueError("completion_asset_repair_not_supported")
+    candidate, _, reservation = verify_color_repair_approval(
+        store, workflow_id=snapshot.workflow_id, operation_id=operation.operation_id
+    )
+    if not any(
+        op.capability == "codex.interpret"
+        and op.status == "succeeded"
+        and op.result
+        and candidate.scene_ir in op.result.outputs
+        for op in snapshot.operations[:index]
+    ):
+        raise ValueError("completion_color_initial_scene_not_committed")
+    refs = [reservation.approval]
+    if operation.result:
+        refs.extend(operation.result.outputs)  # Preserve failed/cancelled partial artifacts too.
+    if operation.status != "succeeded":
+        return refs
+    executions = []
+    for ref in operation.result.outputs:
+        if ref.media_type != "application/json":
+            continue
+        body = json.loads(store.read_artifact(ref))
+        if isinstance(body, dict) and {"receipt", "resolved", "child"} <= body.keys():
+            ColorRepairExecutionResult.model_validate_json(store.read_artifact(ref))
+            checked_candidate, result = verify_color_repair_result(
+                store, ref, workflow_id=snapshot.workflow_id
+            )
+            if checked_candidate != candidate:
+                raise ValueError("completion_color_candidate_mismatch")
+            executions.append((ref, result))
+    if len(executions) != 1:
+        raise ValueError("completion_color_execution_not_committed")
+    execution_ref, execution = executions[0]
+    continuations = []
+    for continuation_index, op in enumerate(snapshot.operations[index + 1 :], start=index + 1):
+        if op.capability != "asset.resolve" or op.status != "succeeded" or not op.result:
+            continue
+        for ref in op.result.outputs:
+            if ref.media_type != "application/json":
+                continue
+            body = json.loads(store.read_artifact(ref))
+            if (
+                not isinstance(body, dict)
+                or not {"receipt", "resolved", "pending_color_repairs"} <= body.keys()
+            ):
+                continue
+            resolution = ResolutionResult.model_validate_json(store.read_artifact(ref))
+            receipt = json.loads(store.read_artifact(resolution.receipt))
+            if receipt.get("schema_version") != "x2env.local_color_continuation.v1":
+                continue
+            repair_refs = tuple(ArtifactRef.model_validate(r) for r in receipt["repair_results"])
+            if execution_ref not in repair_refs:
+                continue
+            if ref != snapshot.asset_resolution:
+                raise ValueError("completion_color_continuation_not_current")
+            if (
+                resolution.receipt not in op.result.outputs
+                or resolution.status != "succeeded"
+                or resolution.error_code is not None
+                or resolution.pending_color_repairs
+                or receipt.get("status") != "succeeded"
+                or receipt.get("error_code") is not None
+                or receipt.get("workflow_id") != snapshot.workflow_id
+                or receipt.get("operation_id") != op.operation_id
+                or receipt.get("resolved") != resolution.resolved.model_dump(mode="json")
+                or resolution.resolved.scene_ir != candidate.scene_ir
+                or execution.resolved not in resolution.resolved.assets
+                or len(set(repair_refs)) != len(repair_refs)
+            ):
+                raise ValueError("completion_color_continuation_mismatch")
+            original_ref = ArtifactRef.model_validate(receipt["original_resolution"])
+            original = ResolutionResult.model_validate_json(store.read_artifact(original_ref))
+            origins = [
+                prior
+                for prior in snapshot.operations[:index]
+                if prior.capability == "asset.resolve"
+                and prior.status == "blocked"
+                and prior.result
+                and original_ref in prior.result.outputs
+                and original.receipt in prior.result.outputs
+            ]
+            if (
+                len(origins) != 1
+                or original.error_code != "local_color_repair_pending"
+                or candidate not in original.pending_color_repairs
+                or original.resolved.scene_ir != candidate.scene_ir
+                or any(
+                    asset not in resolution.resolved.assets for asset in original.resolved.assets
+                )
+                or len({asset.entity_id for asset in resolution.resolved.assets})
+                != len(resolution.resolved.assets)
+            ):
+                raise ValueError("completion_color_original_not_committed")
+            repaired = []
+            for repair_ref in repair_refs:
+                other, result = verify_color_repair_result(
+                    store, repair_ref, workflow_id=snapshot.workflow_id
+                )
+                if (
+                    other not in original.pending_color_repairs
+                    or result.resolved not in resolution.resolved.assets
+                ):
+                    raise ValueError("completion_color_continuation_mismatch")
+                repaired.append(other)
+                if not any(
+                    prior.capability == "asset.revise"
+                    and prior.status == "succeeded"
+                    and prior.result
+                    and repair_ref in prior.result.outputs
+                    for prior in snapshot.operations[:continuation_index]
+                ):
+                    raise ValueError("completion_color_execution_order_mismatch")
+            if len(repaired) != len(original.pending_color_repairs) or set(
+                p.entity_id for p in repaired
+            ) != set(p.entity_id for p in original.pending_color_repairs):
+                raise ValueError("completion_color_continuation_incomplete")
+            continuations.append((continuation_index, resolution.resolved))
+            refs.extend((ref, resolution.receipt, original_ref, *repair_refs))
+    if len(continuations) != 1:
+        raise ValueError("completion_color_continuation_not_committed")
+    compiled = CompiledScene.model_validate_json(store.read_artifact(snapshot.compiled_scene))
+    if execution.resolved not in compiled.resolved_assets.assets:
+        raise ValueError("completion_color_compiled_child_mismatch")
+    if not any(
+        op.capability == "x2env.compile"
+        and op.status == "succeeded"
+        and op.result
+        and snapshot.compiled_scene in op.result.outputs
+        for op in snapshot.operations[continuations[0][0] + 1 :]
+    ):
+        raise ValueError("completion_color_compile_order_mismatch")
+    return refs
 
 
 def _verify_grounding(snapshot, store, scene, compiled):

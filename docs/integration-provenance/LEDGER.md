@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-COLOR-COMPLETION — 新版本进入最终包的历史链
+
+- `origin_owner`：原 Yuxin 检索/视觉；`integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `33a7d6f` 单工作流颜色续点与共享审计。
+- `target_paths`：x2env/completion.py、test_completion.py、test_completion_local_color.py。
+- `integration_method`：复用历史 approval/result seam，另核初始场景、原解析、续点和 compiled child；
+  成本含失败/取消，不给未提交 CAS、旧父版本或 postground asset patch 放行。
+- `verification`：contract_pass；主线程70项、子agent相关122项；外部模型/物理fixture明确，不是真实case。
+- `recorded_git_authors`：原引用来源与本提交元数据；无来源许可、模型资格升级。
+
 ## INT-CANONICAL-C13-OLD-ORCHESTRATION — 独立旧控制图退役
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

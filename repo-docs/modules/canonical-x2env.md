@@ -19,7 +19,9 @@ Provider 安装使用根项目的 `pip install '.[platform]'`（开发可加 `-e
 不再次查 local，只对普通缺失实体访问尚未执行的 web/reconstruction。pending 意图不会因此被接受。
 已提交 child 可恢复续接；失联且无结果的修改保守停为 `color_repair_recovery_requires_audit`，
 不重跑或返还预算。历史审计重核原模型输出/进程、批准、几何/许可继承与新预览，供续点和完成门共用。
-这条路径当前通过组件测试；最终包颜色链审计仍在实施，尚无真实模型+Genesis 颜色闭环成功。
+完成门已接入该历史审计，另核原 blocked 解析、已提交续点、实际编译 child 与顺序；支持初始场景及
+grounding 前颜色修订，失败/取消成本和部分产物也进包。当前通过组件测试，尚无真实模型+Genesis
+颜色闭环成功，grounding 后资产修订仍不在此范围。
 
 结构设计补全不等于恢复真实尺度。部署显式授权世界 XY/yaw 后，可复用已声明的桌面厚度/高度；
 局部 on 高度由资产实测几何推导。原 critical 与用户已知数值仍保留，模型输出必须符合逐轴来源；
@@ -37,7 +39,7 @@ Provider 安装使用根项目的 `pip install '.[platform]'`（开发可加 `-e
 修订额度现在可与操作在同一事务预留：失败、取消及重新打开状态库均不返还。该额度针对 workflow
 状态，不是 SceneIR revision；旧历史记录保持可读。controller 新修订强制携带批准和预留，执行器核
 当前 owner/operation 后才写新版本；完成门另核历史预算和批准，把失败/取消记录也放入包。
-前置本地颜色 asset.revise 的完成链仍在独立实施，不混同后置 revise。
+前置本地颜色 asset.revise 的完成链与后置 revise 分开审计，不共用不相容的诊断字段。
 
 资产改色默认不覆盖纹理或顶点色；只有控制器明确批准 `uniform_replace` 才能移除其颜色贡献并设定
 统一 RGBA。必须先通过原引用校验，保留几何与父版本，并登记 child。改色本身不等于视觉匹配或物理通过。

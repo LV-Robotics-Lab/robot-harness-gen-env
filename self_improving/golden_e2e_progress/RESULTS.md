@@ -1,5 +1,18 @@
 # 进度与结果
 
+## 2026-09-13 C11 本地颜色版本的最终包历史链
+
+- public materialize_completion 正例先 RED（旧审批审计错误强取 diagnosis），接共享历史审批/结果
+  审计后 GREEN；前置 asset.revise 与后置 revise 分流，不放宽原后置资产修订限制。
+- 完成门核原已提交 initial/pending scene、local blocked 候选、成功 continuation 的当前指针与完整
+  repaired 集合、旧 partial 保留、实际 compiled child、compile 操作顺序；新CAS JSON未提交不能通过。
+- 10 项新测试包含 initial 与 grounding-before-color 链接、旧 parent 替换、未提交续点指针、跨
+  workflow 审批、CAS 破坏与 failed/cancelled 第二次预留成本，总预算 2 不返还。
+  使用真实 Store/Registry/AssetRevision/Router，模型与双dt物理数据均明确外部替身，不计真实case。
+- 主线程 completion/local-color/delivery/import 四组 70 passed/82.26s；子 agent 相关五组
+  122 passed/88.38s。尚未执行 S01；shared child 视觉回执的进一步模型身份连续性审阅待补，不授资格。
+- Dashboard 三入口再次均 HTTP 404，无 task id、未伪造同步；本地 ledger 持续更新。
+
 ## 2026-09-13 C13 旧 planner/GoldenRun/Qwen 独立图退役
 
 - 删除 18 源文件：harness/system2 七文件、self_improving/system2_* 六模块、golden_run、Qwen

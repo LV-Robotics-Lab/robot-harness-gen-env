@@ -39,6 +39,7 @@ def completed_fixture(
     revision_fault=None,
     reservation_fault=None,
     structural_grounding=False,
+    local_color=False,
 ):
     """Synthetic producer at external execution seam, not a real Genesis run."""
     from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
@@ -59,6 +60,11 @@ def completed_fixture(
     base = tmp_path / "base"
     base.mkdir()
     store, registry, _, scene_ref, _ = inputs(base)
+    if local_color:
+        scene_bytes = store.read_artifact(scene_ref)
+        store = Store(base / "color-state")
+        registry = AssetRegistry(store)
+        scene_ref = store.write_artifact(scene_bytes, "application/json")
     from self_improving.harness.x2env.input import ingest
 
     request = X2EnvRequest(
@@ -67,6 +73,8 @@ def completed_fixture(
     input_bundle = ingest(request, store)
     ir = SceneIR.model_validate_json(store.read_artifact(scene_ref))
     entity = ir.entities[0].model_copy(update={"id": "item"})
+    if local_color:
+        entity = entity.model_copy(update={"color": "pink", "material": "plastic"})
     ir = ir.model_copy(update={"entities": (entity,), "input_sha256": input_bundle.request_sha256})
     if grounding:
         from self_improving.harness.x2env.contracts import Pose, SceneRelation
@@ -139,6 +147,35 @@ def completed_fixture(
         source=AssetSource(kind="local", provider="test", source_ref="fixture", evidence=evidence),
         receipt=evidence,
     )
+    color_snapshot = None
+    if local_color:
+        from tests.self_improving.harness.x2env.test_completion_local_color import (
+            execute_fixture_color,
+        )
+
+        parent_version = version
+        color_scene = ir
+        if grounding:
+            color_scene = ir.model_copy(
+                update={
+                    "entities": tuple(
+                        e.model_copy(
+                            update={
+                                "dimensions": None,
+                                "pose": e.pose.model_copy(
+                                    update={"position": (None, None, None), "yaw_degrees": None}
+                                ),
+                            }
+                        )
+                        for e in ir.entities
+                    )
+                }
+            )
+        color_snapshot, version = execute_fixture_color(
+            store, registry, request, color_scene, version, tmp_path, grounding=grounding
+        )
+        if local_color == "parent":
+            version = parent_version
     runtime = data["scene"]
     prefix = f"assets/item/{version.version_sha256}"
     runtime["scene_ir_sha256"] = scene_ref.sha256
@@ -151,6 +188,10 @@ def completed_fixture(
                 version_sha256=version.version_sha256,
             )
     for member in runtime["members"]:
+        if local_color:
+            actual = next(m for m in version.files if m.path == member["path"])
+            member["sha256"] = actual.artifact.sha256
+            member["size_bytes"] = actual.artifact.size_bytes
         member["path"] = prefix + "/" + member["path"]
     runtime = RuntimeScene.model_validate(runtime)
     runtime_ref = store.write_artifact(runtime.model_dump_json().encode(), "application/json")
@@ -294,7 +335,7 @@ def completed_fixture(
             "sim_ready": False,
         }
     )
-    snapshot = store.submit(request)
+    snapshot = color_snapshot or store.submit(request)
     snapshot = store.claim(snapshot.workflow_id)
     if input_fault == "malformed":
         bundle = put({"fixture_only": True})
@@ -304,6 +345,8 @@ def completed_fixture(
         elif input_fault == "bundle_seed":
             input_bundle = input_bundle.model_copy(update={"seed": request.seed + 1})
         bundle = put(input_bundle.model_dump(mode="json"))
+    if local_color:
+        bundle = color_snapshot.input_bundle
     stages = [
         ("ingest", {}, bundle),
         ("codex.interpret", {"scene_ir": scene_ref}, scene_ref),
@@ -375,6 +418,8 @@ def completed_fixture(
                 }
             )
         pending_ref = put(pending.model_dump(mode="json"))
+        if local_color:
+            pending_ref = color_snapshot.pending_scene_ir
 
         def execution_double(value):
             """Actual short external process, synthetic payload, not Codex qualification."""
@@ -453,6 +498,10 @@ def completed_fixture(
         original_ref = put(original.model_dump(mode="json"))
         initial_assets = resolved.model_copy(update={"scene_ir": pending_ref})
         initial_ref = put(initial_assets.model_dump(mode="json"))
+        if local_color:
+            original_ref = color_snapshot.proposal
+            original = BackendProposal.model_validate_json(store.read_artifact(original_ref))
+            initial_ref = color_snapshot.resolved_assets
         grounded_assets = resolved.model_copy(update={"scene_ir": accepted_ref})
         final_assets = put(grounded_assets.model_dump(mode="json"))
         values = {
@@ -719,6 +768,8 @@ def completed_fixture(
                 ),
             ]
     for index, (stage, fields, ref) in enumerate(stages):
+        if local_color and index < (3 if grounding else 2):
+            continue
         if index:
             if stage == "revise" and reservation_fault != "missing":
                 from self_improving.harness.x2env.contracts import RepairReservation
