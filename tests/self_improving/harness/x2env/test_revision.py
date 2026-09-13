@@ -10,7 +10,8 @@ from self_improving.harness.x2env.diagnosis import DiagnosisProposal, DiagnosisR
 from tests.self_improving.harness.x2env.test_resolver import inputs
 
 
-def test_layout_revision_changes_scene_bytes_and_stops_repeated_failure(tmp_path):
+@pytest.mark.parametrize("yaw", [30.0, None])
+def test_layout_revision_changes_scene_bytes_and_stops_repeated_failure(tmp_path, yaw):
     from self_improving.harness.x2env.revision import apply_revision
 
     store, registry, version, scene_ref, _ = inputs(tmp_path)
@@ -34,7 +35,7 @@ def test_layout_revision_changes_scene_bytes_and_stops_repeated_failure(tmp_path
         scene_patches=(
             ScenePatch(
                 entity_id="box",
-                pose=Pose(frame="world", position=(0.1, None, None), yaw_degrees=30.0),
+                pose=Pose(frame="world", position=(0.1, None, None), yaw_degrees=yaw),
                 joints=(),
             ),
         ),
@@ -55,7 +56,7 @@ def test_layout_revision_changes_scene_bytes_and_stops_repeated_failure(tmp_path
     revised = SceneIR.model_validate_json(store.read_artifact(result.scene_ir))
     assert revised.revision == 1
     assert revised.entities[0].pose.position == (0.1, 0.0, 0.0)
-    assert revised.entities[0].pose.yaw_degrees == 30.0
+    assert revised.entities[0].pose.yaw_degrees == (30.0 if yaw is not None else 0.0)
     assert result.scene_ir != scene_ref and result.assets.scene_ir == result.scene_ir
     assert result.assets.assets == assets.assets
     assert SceneIR.model_validate_json(store.read_artifact(scene_ref)).entities[

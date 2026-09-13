@@ -1,5 +1,11 @@
 # 进度与结果
 
+## 2026-09-13 partial pose 修订保留原 yaw
+
+- nullable yaw 引入后，发现修订将 null 写入原已接受朝向，违反 ScenePatch 的“null 不改动”合同。
+  公开 layout tracer 的 null 分支先 RED；修复为仅显式非 null 时覆盖。修订/状态组 6 passed（0.43s）。
+- x/y/z 保留规则不变，旧场景 bytes 不修改；未授任何新的真实 fallback 成功。
+
 ## 2026-09-13 C11 grounding 完成证据绑定
 
 - 完成门接受同一 workflow 的 codex.ground 场景来源，但同时核原 proposal/pending/asset.resolve、

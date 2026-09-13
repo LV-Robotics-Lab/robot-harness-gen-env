@@ -74,7 +74,8 @@ def apply_revision(
                 old if new is None else new
                 for old, new in zip(entity["pose"]["position"], patch.pose.position, strict=True)
             ]
-            entity["pose"]["yaw_degrees"] = patch.pose.yaw_degrees
+            if patch.pose.yaw_degrees is not None:
+                entity["pose"]["yaw_degrees"] = patch.pose.yaw_degrees
     if document == scene.model_dump(mode="json") and not proposal.asset_patches:
         raise ValueError("revision_has_no_effect")
     for entity_id in seen:
