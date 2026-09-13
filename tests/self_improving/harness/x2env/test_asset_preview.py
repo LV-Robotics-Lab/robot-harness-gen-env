@@ -9,6 +9,139 @@ from PIL import Image
 from tests.self_improving.harness.x2env.test_asset_revision import fixture
 
 
+def multi_collision_version(tmp_path, fault=None):
+    """New registered fixture version; no real decomposition/Genesis claim."""
+    import xml.etree.ElementTree as ET
+
+    store, registry, parent = fixture(tmp_path)
+    contents = {item.path: store.read_artifact(item.artifact) for item in parent.files}
+    document = ET.fromstring(contents["asset.urdf"])
+    body = document.find("link")
+    body.remove(body.find("collision"))
+    raw_collision = contents.pop("collision.obj")
+    for index in range(2):
+        name = f"collision/part-{index}.obj"
+        contents[name] = raw_collision
+        mesh = ET.SubElement(ET.SubElement(ET.SubElement(body, "collision"), "geometry"), "mesh")
+        mesh.set("filename", name)
+    if fault == "joint":
+        ET.SubElement(document, "joint", name="not_supported")
+    if fault == "extra":
+        contents["unused.txt"] = b"not part of URDF closure"
+    if fault == "material":
+        contents["collision/part-0.obj"] += b"\nmtllib material.mtl\n"
+        contents["collision/material.mtl"] = b"newmtl fixture\n"
+    if fault == "material_inline":
+        contents["collision/part-0.obj"] += b"\nusemtl unsupported\n"
+    if fault == "missing_visual":
+        body.remove(body.find("visual"))
+    if fault == "physics":
+        contents["physics.json"] = b'{"mass_kg":-1,"friction":0.5}'
+    if fault == "mixed_geometry":
+        ET.SubElement(body.find("collision/geometry"), "box", size="1 1 1")
+    contents["asset.urdf"] = ET.tostring(document)
+    root = tmp_path / "child"
+    root.mkdir()
+    for name, data in contents.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    report = json.loads(store.read_artifact(parent.normalization_report))
+    report["files"] = [
+        {"path": name, "sha256": hashlib.sha256(data).hexdigest(), "size_bytes": len(data)}
+        for name, data in contents.items()
+    ]
+    child = registry.register(
+        parent.asset_id,
+        parent.category,
+        root,
+        parent.entrypoint,
+        files=tuple(contents),
+        normalization_report=store.write_artifact(json.dumps(report).encode(), "application/json"),
+        license=parent.license,
+        source=parent.source,
+        receipt=parent.receipt,
+        parent_version=parent.version_sha256,
+    )
+    return store, registry, parent, child
+
+
+def test_registered_multi_collision_closure_reaches_preview_runner(tmp_path):
+    from self_improving.harness.x2env.asset_preview import AssetPreviewRenderer
+
+    store, registry, parent, child = multi_collision_version(tmp_path)
+
+    def runner(scene, **kwargs):
+        assert scene.entities[0].version_sha256 == child.version_sha256
+        assert {m.path for m in scene.members} == {m.path for m in child.files}
+        assert (kwargs["package_root"] / "collision/part-0.obj").is_file()
+        output = kwargs["output_dir"]
+        output.mkdir()
+        Image.new("RGB", (8, 8), "red").save(output / "fixture.png")
+        return {
+            "status": "passed",
+            "simulator_executed": True,
+            "fixture_only": True,
+            "media": {
+                "frames": [
+                    {
+                        "path": "fixture.png",
+                        "png_sha256": hashlib.sha256(
+                            (output / "fixture.png").read_bytes()
+                        ).hexdigest(),
+                    }
+                ]
+            },
+        }
+
+    proof = AssetPreviewRenderer(store, {}, tmp_path / "preview", 1, runner=runner).render(child)
+    assert proof.status == "passed", proof.error_code
+    assert registry.inspect(parent.version_sha256) == parent
+    assert json.loads(store.read_artifact(proof.receipt))["physical_profile"] == "not_run"
+
+
+@pytest.mark.parametrize(
+    "fault,error",
+    [
+        ("joint", "unsupported_preview_articulation"),
+        ("extra", "unsupported_preview_asset_closure"),
+        ("material", "unsupported_preview_asset_closure"),
+        ("missing_visual", "unsupported_preview_asset_closure"),
+        ("material_inline", "unsupported OBJ material closure"),
+        ("physics", "invalid supplied physics"),
+        ("mixed_geometry", "unsupported_preview_asset_closure"),
+    ],
+)
+def test_registered_unsupported_closure_never_reaches_runtime(tmp_path, fault, error):
+    from self_improving.harness.x2env.asset_preview import AssetPreviewRenderer
+
+    store, _, _, child = multi_collision_version(tmp_path, fault)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("invalid closure reached runtime")
+
+    proof = AssetPreviewRenderer(store, {}, tmp_path / "preview", 1, runner=forbidden).render(child)
+    assert proof.status == "failed" and proof.image is None
+    assert error in proof.error_code
+
+
+def test_symbolic_preview_root_is_rejected_before_writing(tmp_path):
+    from self_improving.harness.x2env.asset_preview import AssetPreviewRenderer
+
+    store, _, version = fixture(tmp_path)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    link = tmp_path / "symbolic"
+    link.symlink_to(outside, target_is_directory=True)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("symlink reached runtime")
+
+    with pytest.raises(ValueError, match="unsafe_preview_root"):
+        AssetPreviewRenderer(store, {}, link, 1, runner=forbidden).render(version)
+    assert list(outside.iterdir()) == []
+
+
 def test_explicit_git_mismatch_retains_failure_and_never_runs_preview(tmp_path):
     from pathlib import Path
 

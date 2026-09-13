@@ -6,15 +6,16 @@ import mimetypes
 import os
 import time
 import uuid
+import xml.etree.ElementTree as ET
 from io import BytesIO
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Literal
 
 from PIL import Image
 
 from .assets import AssetRegistry, AssetStore, AssetVersion
 from .contracts import ArtifactRef, Model, Sha256
-from .genesis_runtime import RuntimeEntity, RuntimeMember, RuntimeScene, run_scene
+from .genesis_runtime import RuntimeEntity, RuntimeMember, RuntimeScene, _verify, run_scene
 from .source_identity import SourceIdentityPolicy, capture_source_identity
 
 
@@ -28,6 +29,44 @@ class AssetPreviewProof(Model):
 
 def _json(value):
     return json.dumps(value, sort_keys=True, allow_nan=False).encode()
+
+
+def _preview_members(version, store):
+    """Only normalized self-contained visual GLB and collision OBJ dependencies."""
+    members = {item.path: item.artifact for item in version.files}
+    if version.entrypoint != "asset.urdf" or not {"asset.urdf", "physics.json"} <= members.keys():
+        raise ValueError("unsupported_preview_asset_closure")
+    document = ET.fromstring(store.read_artifact(members["asset.urdf"]))
+    if document.findall("joint") or len(document.findall("link")) != 1:
+        raise ValueError("unsupported_preview_articulation")
+    required = {"asset.urdf", "physics.json"}
+    for kind, suffix in (("visual", ".glb"), ("collision", ".obj")):
+        shapes = document.findall(f"link/{kind}")
+        if not shapes:
+            raise ValueError("unsupported_preview_asset_closure")
+        for shape in shapes:
+            geometries = shape.findall("geometry")
+            if (
+                len(geometries) != 1
+                or len(geometries[0]) != 1
+                or geometries[0][0].tag != "mesh"
+            ):
+                raise ValueError("unsupported_preview_asset_closure")
+            mesh = geometries[0][0]
+            name = mesh.get("filename", "") if mesh is not None else ""
+            path = PurePosixPath(name)
+            if (
+                path.is_absolute()
+                or ".." in path.parts
+                or str(path) != name
+                or "\\" in name
+                or path.suffix != suffix
+                or name not in members
+            ):
+                raise ValueError("unsupported_preview_asset_closure")
+            required.add(name)
+    if members.keys() != required:
+        raise ValueError("unsupported_preview_asset_closure")
 
 
 class AssetPreviewRenderer:
@@ -55,6 +94,10 @@ class AssetPreviewRenderer:
     def render(self, version: AssetVersion, *, timeout: int = 600) -> AssetPreviewProof:
         if type(timeout) is not int or not 1 <= timeout <= 600:
             raise ValueError("invalid preview timeout")
+        if not self.root.is_absolute() or any(
+            p.is_symlink() for p in (self.root, *self.root.parents)
+        ):
+            raise ValueError("unsafe_preview_root")
         start = time.monotonic()
         attempt = self.root / str(uuid.uuid4())
         attempt.mkdir(parents=True, exist_ok=False)
@@ -77,16 +120,12 @@ class AssetPreviewRenderer:
             verified = AssetRegistry(self.store).inspect(version.version_sha256)
             if verified != version:
                 raise ValueError("asset_version_mismatch")
-            if {m.path for m in version.files} != {
-                "asset.urdf",
-                "visual.glb",
-                "collision.obj",
-                "physics.json",
-            } or version.entrypoint != "asset.urdf":
-                raise ValueError("unsupported_preview_asset_closure")
+            _preview_members(version, self.store)
             package.mkdir()
             for member in version.files:
-                (package / member.path).write_bytes(self.store.read_artifact(member.artifact))
+                path = package / member.path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(self.store.read_artifact(member.artifact))
                 receipt["package"][member.path] = member.artifact.model_dump(mode="json")
             scope = self.store.write_artifact(
                 _json({"scope": "asset_preview_scope", "version_sha256": version.version_sha256}),
@@ -118,6 +157,7 @@ class AssetPreviewRenderer:
                 scene.model_dump_json().encode(), "application/json"
             )
             receipt["runtime_scene"] = scene_ref.model_dump(mode="json")
+            _verify(scene, package)
             # The child enforces an allowlist of this copied package, outputs and declared runtime.
             # Denials come from deployment, never from a guessed checkout/site-packages root.
             remaining = timeout - (time.monotonic() - start)

@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-MULTI-COLLISION-PREVIEW — 精确候选资源闭包
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis与原资产归属独立。
+- source_ref：Harness0fee25b及碰撞新版本spec；target_paths：asset_preview.py与公开测试。
+- integration_method：Registry不可变版本、URDF精确引用闭包和runtime资源核验，支持多collision相对目录。
+- verification：主线程80项通过，混合geometry误接受先RED后修复；runtime_verification：not_run。
+- recorded_git_authors：来源资产、引擎与Harness整合分别保留；测试runner不计真实仿真。
+
+
 ## INT-CANONICAL-C09-TOPOLOGY-CONSUMER — 独立面拓扑验收
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis实际geom接口独立保留。

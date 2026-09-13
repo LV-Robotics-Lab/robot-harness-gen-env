@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 多collision候选预览接线
+
+- AssetPreviewRenderer从固定四文件限制改为单link URDF精确必要闭包，支持collision/part-N.obj目录；
+  visual仍要求GLB，引用/多余成员/外部OBJ材质/关节/坏physics/符号根拒绝。运行前复用实际runtime资源核验。
+- 主线程发现同geometry内mesh+box仍可进runner，新增公开攻击真实RED后要求每shape恰好一个mesh。
+  最终preview与local颜色闭环80 passed/8.39s，Ruff/diff通过；旧四文件版本保留行为。
+- agent原15项preview及79项邻组通过；首次邻组缺provider PYTHONPATH导致19项fixture失败，
+  原日志canonical-preview-neighbors.log保留，正确配方canonical-preview-neighbors-provider.log通过。
+- 多凸块为明确合成注册fixture，runner是外部边界替身，不授真实分解、Genesis或physical能力。
+
+
 ## 2026-09-13 新PBR准备的S02在模型阶段超时
 
 - 固定b2b63b7，根`/home/jingxiang/bingsheng/canonical-s02-pbr-v2-20260913.QrvPwn`；

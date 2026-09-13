@@ -24,6 +24,8 @@ S02旧229.50秒尝试因实体数组序号unknown路径阻断；严格映射已�
 旧无parts证据明确topology not_run，不能由此授予盘面或动态支撑。新消费器已在1.71秒只读复核
 QfcUxI保留真实双profile，拓扑/reset/物理26项通过；不称新仿真或矩阵案例，原文件未改。
 `measured_support.py`已实现保孔洞共同面域与完整源投影的目标坐标检查，Shapely2.1.2属platform依赖。
+候选预览已支持单link多collision相对成员，仍核精确URDF闭包并拒绝混合geometry/外部材质；
+80项相关回归通过，不是新碰撞分解或真实仿真能力。
 70项相关测试通过；此处是authored几何组件，不授实际加载/动态接触。下一片接独立拓扑消费与动态物理；
 详见[增量契约](../../self_improving/golden_e2e_progress/CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)。
 
