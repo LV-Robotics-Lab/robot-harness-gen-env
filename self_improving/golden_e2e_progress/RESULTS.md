@@ -1,5 +1,27 @@
 # 进度与结果
 
+## 2026-09-13 历史 normal 包资产闭包表述纠正（只读小核对）
+
+- 仅重读旧 normal review-package 的 index/representation，不重跑 v4、runtime seal 或 8.5 GB 闭包。
+  index SHA256 仍为 `36805ab55ea9a0c44c13da63e875a029b192d394ed0b0e5f9738fc23d18cc0a4`，75 members。
+- 包内 representation `4e8b74a03ebd00b3a09f457880c5d89ca28d2f7bb8dde9707c0e862b8a740f43`
+  指向 15 个 mouse 资源、合计声明 5,326,332 bytes；这些资源与 index 的 SHA 集合交集为 **0/15**。
+  subject 另引用 source_record `a7d20cc64d171f1a720fdeefe0d38130a4d85eef3b90b9300241bc790592f21c`。
+- 因而“75 个已列成员的 bytes/hash 核验”不能推导“鼠标资产传递闭包已全部在包中”。旧 render/回放
+  历史不改写，但该包不作为 canonical S01 的完整资产或许可来源，也不授 standalone/copy-run。
+- S01 已只读核清 PolyPizza CC0 原页/下载/四成员 normalized 资产，待新 Store 登记；原来源是
+  官方 URL 调研下载而非搜索成功，尺寸/质量/摩擦为 supplied 设计值，不称实物测量；尚未启动真实 S01。
+
+## 2026-09-13 模型超时只读对照的结论边界
+
+- 三次 S04 规范化提示（仅替换新 attempt 路径和 request digest）同 SHA256
+  `ac13af4c34c3c2e9d86e0269a0a92d2224506620a3a5abfe75f8ac59f2315855`；成功返回提案的两次和
+  WASmJr 超时使用相同 6,932-byte schema `d153c7b8b0a6935a5c308468fda3894b69599afc0df1afd81078579ccbc6de02`、
+  同图像/模型/executable，interpret/_invoke 未变化。cwd 是独立 attempt，不是项目源码目录。
+- 成功请求也没有中途推理事件；失败缺少 usage/服务端时点，无法区分排队、传输等待或推理长尾。
+  结束时重新登记 stdout 会改变 mtime，不能据最终 mtime 推导事件发生时间；只能用运行中的采样观察。
+- 没有读取凭据或改配置，没有新增模型请求；不把分类修复归为超时原因，也不宣称已修复超时。
+
 ## 2026-09-13 C13 G2c 旧 qualified replay bootstrap 退役
 
 - 删除 `script/run_qualified_replay.py`，最后字节仍在 `33a7d6f` Git 历史。旧 deep main 的

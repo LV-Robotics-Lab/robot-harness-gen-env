@@ -1,5 +1,9 @@
 # Canonical x2env（收敛实施中）
 
+历史 limited-preview normal 的 75-member index 不包含其 mouse representation 所引用的 15 个资源。
+已列成员 hash 核验不能作为传递资产闭包或可移植包证明；canonical 导入以实际 bytes 与许可重核，
+不把旧描绘或旧回放结果升级为新 Registry/复制运行资格。小核对见进度目录 RESULTS 的 2026-09-13 纠正。
+
 本地颜色修复已接入同一个 Harness workflow：local 暂停后，受管模型给颜色建议，controller
 预留成本 1 并执行新版本、新预览及原视觉校验；只有 MATCH 才续行。续点重核已提交回执和子版本，
 不再次查 local，只对普通缺失实体访问尚未执行的 web/reconstruction。pending 意图不会因此被接受。
