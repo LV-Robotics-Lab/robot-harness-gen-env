@@ -25,6 +25,8 @@ GitHub Actions CI 工作流定义。在受支持的 Python 版本上跑基于 fi
 - 统一入口是 `script/run_self_improving_tests.sh`；新增 canonical 测试须更新 `x2env_test_groups.py` 显式归属。
 - 验收使用同源六组的成功测量，逐业务文件语句/分支100%；检查 `pending-gates.json`，未执行门不计通过。
 - CI 制品只上传日志、JUnit、结果与覆盖测量；隔离临时环境和fixtures不上传。
+- 第五组额外保留reader-docs.json，本地链接/anchor、历史bytes与有界公共HTTP分别报告；
+  未执行远端不是通过。源码身份也覆盖这些读者文档与归档manifest，不能跨docs变更复用测量。
 - 提交前用 action 校验器校验 YAML 语法。
 
 ### Common Patterns（常见模式）

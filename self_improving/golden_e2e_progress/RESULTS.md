@@ -1,5 +1,21 @@
 # 进度与结果
 
+## 2026-09-13 C14 实际 reader docs 门与隔离 CI 依赖
+
+- 新checker使用markdown-it-py 4.2.0解析真实inline/reference/escaped/HTML链接与标题锚点，
+  fenced code不作链接；归档核manifest/SHA/size/Gitblob/未列Markdown/安全路径。
+  默认remote明确not_run，显式公共HTTP逐URL15秒子进程、逐跳公网限制，未执行不写pass。
+- 首次显式检查5URL真实200，旧README私网部署链接在连接前拒绝；其“current available”
+  无当前证据，改为明确历史地址/当前未验证，而非假称远端通过。原失败保留。
+- 主线程再检查52文档、243本地链接/锚点、12份归档、5公共HTTP全部通过，wall2.17秒；
+  `/var/tmp/canonical-reader-docs-reviewed-20260913.json`。这是开发检查，不冒充固定最终CI。
+- 第五组pytest前接实际文档门并上传reader-docs.json；source identity新增docs/progress/archive，
+  四条未跟踪文档变更攻击先RED再GREEN。checker/CI/absence主线程39 passed/1.33s。
+- 新独立 `/var/tmp/canonical-ci-python313.BmJ3Cc/venv` 使用明确Python3.13.12与只读依赖路径，
+  不执行旧editable hooks、不修改shared .venv；单独coverage hook只在COVERAGE_PROCESS_START启用。
+  两absence测试保-S且按实际依赖根加载，先在新env两RED后两环境各4项通过；未把本地3.13说成CI3.11/3.12。
+  完整六组/最终core覆盖仍须固定新版运行，full-active lint门在单独收尾。
+
 ## 2026-09-13 C13 Stage5 与 AgenticSim 保值维护
 
 - 两范围288条lint清零，43份Python改动：37份Python3.11 AST完全一致，6份仅import变化，

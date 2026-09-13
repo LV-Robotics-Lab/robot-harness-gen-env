@@ -1,14 +1,44 @@
 """Retired qualified execution graph stays absent; stable lower-level modules stay usable."""
 
 import os
-import site
 import subprocess
 import sys
+from importlib.util import find_spec
 from pathlib import Path
 
 
 def test_old_qualified_execution_modules_are_absent(tmp_path):
     root = Path(__file__).resolve().parents[3]
+    # Resolve the actual dependency locations, including path-only .pth environments.
+    # The child keeps -S: no editable finder or other site startup hook is executed.
+    dependencies = (
+        "pydantic",
+        "pydantic_core",
+        "annotated_types",
+        "typing_extensions",
+        "typing_inspection",
+        "flask",
+        "werkzeug",
+        "jinja2",
+        "click",
+        "itsdangerous",
+        "markupsafe",
+        "blinker",
+        "yaml",
+        "PIL",
+    )
+    dependency_roots = []
+    for name in dependencies:
+        spec = find_spec(name)
+        if spec is None:
+            # Transitive requirements vary across supported dependency versions.
+            assert name not in {"pydantic", "flask", "yaml", "PIL"}, name
+            continue
+        assert spec.origin is not None, name
+        origin = Path(spec.origin).resolve()
+        directory = origin.parent.parent if spec.submodule_search_locations else origin.parent
+        if str(directory) not in dependency_roots:
+            dependency_roots.append(str(directory))
     modules = (
         "self_improving.harness.application",
         "self_improving.harness.compile_cli",
@@ -38,7 +68,10 @@ def test_old_qualified_execution_modules_are_absent(tmp_path):
         "self_improving.validate_v2_snapshot",
     )
     program = f"""
+import sys
 from importlib.util import find_spec
+assert sys.flags.no_site == 1
+assert not any(name.startswith('__editable__') for name in sys.modules)
 for name in {modules!r}:
     assert find_spec(name) is None, name
 from self_improving.harness import runtime_assets, runtime_capability, runtime_events
@@ -50,7 +83,7 @@ assert callable(main) and callable(create_app)
     result = subprocess.run(
         [sys.executable, "-S", "-c", program],
         cwd=tmp_path,
-        env={**os.environ, "PYTHONPATH": os.pathsep.join((str(root), *site.getsitepackages()))},
+        env={**os.environ, "PYTHONPATH": os.pathsep.join((str(root), *dependency_roots))},
         capture_output=True,
         text=True,
         timeout=30,

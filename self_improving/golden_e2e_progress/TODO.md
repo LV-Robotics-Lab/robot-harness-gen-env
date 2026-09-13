@@ -4,6 +4,9 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- reader docs公共checker与group5接通，开发检查52文档/243本地链接/12归档/5公共HTTP通过；最终固定CI待跑。
+- 专用CI Python3.13依赖环境就绪，原shared/runtime未改；root四模块39项通过。全active lint最后汇总与core覆盖并行推进。
+
 - bound-schema S01在289秒内进入真实候选资产预览后因rgba transport schema HTTP400失败；原证据83成员已保留。
 - 同型固定tuple输出投影已修，60项主线程复核通过；固定新版本后仅一次S01验证，不重试旧workflow。
 

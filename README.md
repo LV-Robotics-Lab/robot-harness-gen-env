@@ -238,8 +238,9 @@ python -m demo.app --host 0.0.0.0 --port 8765
 The demo queues GPU work, accepts text and a seed, and exposes only registered
 screenshots, video, manifests, and validation evidence from each job.
 
-The current lab-network deployment is available at
-[`http://100.64.0.6:8765`](http://100.64.0.6:8765).
+The address recorded for a previous lab-only deployment (`http://100.64.0.6:8765`)
+is historical, not a public endpoint. Its current availability is unverified;
+use the launch command above for your own deployment.
 
 ## Optional Rendered Critic
 

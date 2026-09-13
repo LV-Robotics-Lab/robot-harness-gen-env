@@ -44,6 +44,12 @@ SOURCE_ROOTS = (
     "tests",
     "script",
     ".github",
+    "README.md",
+    "AGENTS.md",
+    "repo-docs",
+    "docs/contracts",
+    "docs/history/golden-e2e",
+    "self_improving/golden_e2e_progress",
     "pyproject.toml",
     ":(glob)self_improving/*.py",
     "self_improving/harness",
@@ -54,7 +60,7 @@ SOURCE_ROOTS = (
     "self_improving/asset_pipeline/active/web",
     "self_improving/asset_pipeline/active/shared/openxsim",
 )
-PENDING_GATES = ("full_active_ruff_scope_and_legacy_debt", "reader_docs_local_links")
+PENDING_GATES = ("full_active_ruff_scope_and_legacy_debt",)
 ACTIVE = (
     ("self_improving/stage5/tests", ".", (".", "self_improving/stage5")),
     (
@@ -219,6 +225,21 @@ def worker(root: Path, group: str, output: Path) -> int:
         inventory = subprocess.run([sys.executable, "-m", "self_improving", "--json"], cwd=root)
         if inventory.returncode:
             return inventory.returncode
+    if group == "5":
+        docs = subprocess.run(
+            [
+                sys.executable,
+                str(root / "script/check_reader_docs.py"),
+                "--root",
+                str(root),
+                "--check-remote",
+                "--output",
+                str(output / "reader-docs.json"),
+            ],
+            cwd=root,
+        )
+        if docs.returncode:
+            return docs.returncode
     if group == "root":
         commands = (TestCommand(root, (), plan["1"][0].pythonpath),)
     else:

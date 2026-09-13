@@ -129,6 +129,7 @@ def test_ci_keeps_six_groups_and_independent_root():
             pattern.rsplit("/", 1)[-1]
             in {
                 "pending-gates.json",
+                "reader-docs.json",
                 "log.txt",
                 "result.json",
                 "junit-*.xml",
@@ -149,6 +150,10 @@ def test_ci_keeps_six_groups_and_independent_root():
         "demo/new.py",
         "self_improving/asset_pipeline/active/asset_reuse/lib/new.py",
         "self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim/new.py",
+        "repo-docs/new.md",
+        "docs/contracts/new.md",
+        "docs/history/golden-e2e/new.json",
+        "self_improving/golden_e2e_progress/new.md",
     ],
 )
 def test_source_identity_binds_untracked_active_source_bytes(tmp_path, relative):
@@ -200,3 +205,29 @@ def test_public_merge_command_is_bounded_and_retains_missing_group_failure(tmp_p
     assert receipt["status"] == "failed"
     assert receipt["seconds"] == 1770 and receipt["cleanup_seconds"] == 30
     assert "missing_group:1" in (tmp_path / "merge/log.txt").read_text()
+
+
+def test_docs_group_stops_on_real_missing_reader_documents_before_tests(tmp_path):
+    import shutil
+
+    from script.x2env_test_groups import ACTIVE, CANONICAL, GROUPS, worker
+
+    # Only a rejection fixture: these placeholders must never become a successful suite receipt.
+    for names in GROUPS.values():
+        for name in names.split():
+            path = tmp_path / CANONICAL / f"test_{name}.py"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch()
+    for directory, _, _ in ACTIVE:
+        path = tmp_path / directory / "test_placeholder.py"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+    script = tmp_path / "script/check_reader_docs.py"
+    script.parent.mkdir()
+    shutil.copyfile(Path(__file__).resolve().parents[2] / "script/check_reader_docs.py", script)
+    output = tmp_path / "result"
+    output.mkdir()
+    assert worker(tmp_path, "5", output) != 0
+    report = json.loads((output / "reader-docs.json").read_text())
+    assert report["local_links"] == report["archive_bytes"] == "failed"
+    assert not list(output.glob("junit-*.xml"))

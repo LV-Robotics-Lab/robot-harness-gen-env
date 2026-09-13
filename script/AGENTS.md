@@ -16,6 +16,7 @@
 | `run_rendered_critic.py` | CLI：对 resolved 场景 + 预览图跑可选 VLM 渲染评判 |
 | `build_stage5_report.py` | CLI：构建 stage-5 验收报告 |
 | `run_self_improving_tests.sh` | 限时测试入口：六组、独立 root 与覆盖归并；参数和当前门见 `x2env_test_groups.py --help` |
+| `check_reader_docs.py` | 解析真实Markdown链接/锚点并核历史归档bytes；默认远端not_run，第五组显式有界HTTP检查 |
 
 ## Subdirectories（子目录）
 无。
@@ -33,6 +34,8 @@
 - 改测试归属或 CI 时读取 Golden E2E 计划第12节和 `x2env_test_groups.py`。每组和归并独立限时，
   使用新证据目录；只有同源完整六组测量可合并，canonical 业务语句/分支门为100%。
   外部执行边界精确列于脚本，pending 非覆盖门不算已通过。
+- 第五组在pytest前执行reader docs门；报告区分local/archive/remote，远端未查不得写完整通过。
+  历史归档仅核manifest成员，不把原文内部旧相对链接或旧指令当active契约。
 - 改动后用 `--help` 校验脚本的 CLI 表面。
 
 ### Common Patterns（常见模式）
@@ -48,5 +51,6 @@
 ### External（外部）
 - 标准库 `argparse`；无第三方 CLI 框架
 - RoboTwin + SAPIEN（仅运行时，CI 中不安装）
+- markdown-it-py（dev extra，仅文档检查器；不进入仿真运行时要求）
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

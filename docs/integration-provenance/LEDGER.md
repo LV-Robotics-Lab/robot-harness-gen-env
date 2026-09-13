@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C14-READER-GATE — 可执行读者文档验证
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：markdown-it-py MIT原作者。
+- source_ref：`17324c7` 前置开发基线；target_paths：check_reader_docs.py、CI/group/test launcher、dev extra。
+- integration_method：真实Markdown解析、固定历史bytes核验、显式有界公共HTTP；不信任旧私网部署声明。
+- verification：39项聚焦及52文档/243本地/12archive/5HTTP开发检查通过；runtime_verification：无新仿真。
+- recorded_git_authors：原文来源、parser上游与本次检查器作者分开；CI新env仅测试依赖，不授runtime资格。
+
 ## INT-CANONICAL-C13-STAGE-RUNTIME-LINT — 保留层样式收敛
 
 - origin_owner / upstream_owner：Stage5与AgenticSim既有固定来源作者；integration_owner：Bingsheng Harness workstream。
