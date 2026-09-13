@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-TEXT-ASSET-SCALE — 几何设计与媒体布局分流
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `d08aaa1` classifier、`cc125cd` grounding-before-color 完成链。
+- `target_paths`：x2env/design_plan.py、test_design_plan.py、test_grounding.py。
+- `integration_method`：asset_anchor 采用实际 Registry 维度而非媒体估计；media_layout 仍要求媒体。
+- `verification`：contract_pass；主线程75项、子agent相关85项；外部模型替身，不授真实S01通过。
+- `recorded_git_authors`：本提交与原来源元数据；资产来源/许可/固定矩阵不变。
+
 ## INT-CANONICAL-C11-COLOR-COMPLETION — 新版本进入最终包的历史链
 
 - `origin_owner`：原 Yuxin 检索/视觉；`integration_owner`：Bingsheng Harness workstream。

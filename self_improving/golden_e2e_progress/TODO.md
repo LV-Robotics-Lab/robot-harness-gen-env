@@ -4,6 +4,7 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- S01 文本未知资产尺寸的通用设计缺口已补：实际 Registry 几何无需媒体，未知布局仍拒；75 项主线程相关测试通过。真实 S01 仍待新固定源码运行。
 - 前置 local color→continuation→compile→完成包历史链已接通组件测试，主线程70项通过；准备固定真实S01前，补text-only资产尺寸派生不应要求图片的通用缺口。
 - C13 旧 System 2/GoldenRun/Qwen/未接路由 assessment 独立组已退役；旧 Workbench compile 的 app/static 消费者需先下线，再退旧 qualification/schema/CI。稳定 SAPIEN工具与只读feed保留。
 - C13/C14 provider wheel 缺依赖已修复：隔离安装后原 Yuxin 本地检索通过；6 项包装测试通过，不依赖工作区 provider 路径。全 CLI/runtime 安装闭包仍需独立核验。

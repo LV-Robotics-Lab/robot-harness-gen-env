@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C05 文本未知尺寸采用 Registry 设计尺度
+
+- 冻结 S01 未指定 mouse 尺寸；旧 classifier 拒绝 unspecified，且即使 asset_anchor 固定值已由
+  Registry 提供仍错误要求媒体。public text-only tracer 先 RED/grounding_requires_clarification。
+- 最小实现仅改 classifier：未知尺寸的 asset_anchor 可设计，requires_media 仅由 media_layout
+  决定。原 grounding 的 Registry fixed values/known-axis 检查保持；未改 prompt、阈值或类别规则。
+- 原 unknown 保留，关闭 policy/冲突/未知 XY-yaw 无图/已知尺寸覆盖仍拒绝。主线程设计+ground+
+  compile 48 passed/2.01s，pipeline 27 passed/1.34s；子agent加完成链85 passed/20.34s。
+  初次命令误写不存在 pipeline 测试文件未执行，随后按实际文件路径运行；无新真实 S01 结果。
+
 ## 2026-09-13 C11 本地颜色版本的最终包历史链
 
 - public materialize_completion 正例先 RED（旧审批审计错误强取 diagnosis），接共享历史审批/结果

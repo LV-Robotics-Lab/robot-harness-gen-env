@@ -117,7 +117,8 @@ def classify_design_unknowns(proposal, policy, structural_policy=None):
             raise ValueError("grounding_unknown_field_not_designable")
         if unknown.reason_kind == "unspecified":
             if any(
-                r.basis not in {"deployment_structural_default", "on_geometry_derived"}
+                r.basis
+                not in {"deployment_structural_default", "on_geometry_derived", "asset_anchor"}
                 for r in selected
             ):
                 raise ValueError("grounding_requires_clarification")
@@ -146,5 +147,7 @@ def classify_design_unknowns(proposal, policy, structural_policy=None):
     return DesignPlan(
         resolved_unknown_indices=tuple(indices),
         rules=tuple(rules),
-        requires_media=any(r.basis in {"media_layout", "asset_anchor"} for r in rules),
+        # Asset dimensions are immutable registry geometry adopted as design scale,
+        # not metric information inferred from input media. Layout still needs pixels.
+        requires_media=any(r.basis == "media_layout" for r in rules),
     )

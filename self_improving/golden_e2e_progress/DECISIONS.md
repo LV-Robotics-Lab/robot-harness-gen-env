@@ -1,5 +1,13 @@
 # 稳定决策
 
+## 2026-09-13 文本资产尺寸设计不冒充媒体观测
+
+- 在显式开启的 asset-anchored simulation 策略下，foreground 未知尺寸可以采用实际 Registry
+  几何尺寸；它是仿真设计选择，不是从文字或图像测得实物尺度，不需要伪造媒体。
+- 仅严格匹配 null 尺寸轴的 asset_anchor 可以处理 unspecified；未知 XY/yaw 的 media_layout
+  继续要求媒体。已知尺寸轴、关系、冲突与默认禁用策略的边界不变，不改冻结 S01 输入。
+- 老固定代码的 design_plan.requires_media 可能与新合同不同；旧回执保留原源码验证，不回填升级。
+
 ## 2026-09-13 本地颜色续点与历史包复用边界
 
 - 前置颜色修复保留原 local mismatch 与原 pending 场景；只有已提交的新版本、新预览及原 a6 MATCH

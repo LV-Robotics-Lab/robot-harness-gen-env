@@ -66,6 +66,26 @@ def test_exact_structural_defaults_and_on_height_are_classified(tmp_path, height
     assert proposal.unknowns[0].critical
 
 
+def test_unknown_foreground_dimension_axis_is_geometry_design_not_media(tmp_path):
+    from self_improving.harness.x2env.compile import StructuralPolicy
+    from self_improving.harness.x2env.contracts import SceneIntentProposal
+    from self_improving.harness.x2env.design_plan import classify_design_unknowns
+
+    raw = intent(tmp_path).model_dump(mode="json")
+    raw["scene"]["entities"][1]["dimensions"][1] = None
+    raw["unknowns"].append({**raw["unknowns"][0], "field": "scene.entities.object.dimensions[1]"})
+    proposal = SceneIntentProposal.model_validate_json(json.dumps(raw))
+    plan = classify_design_unknowns(
+        proposal, policy(), StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5)
+    )
+    assert not plan.requires_media
+    anchors = [rule for rule in plan.rules if rule.basis == "asset_anchor"]
+    assert [(rule.entity_id, rule.path, rule.value) for rule in anchors] == [
+        ("object", "dimensions[1]", None)
+    ]
+    assert proposal.unknowns[-1].reason_kind == "unspecified" and proposal.unknowns[-1].critical
+
+
 @pytest.mark.parametrize(
     "fault", ["conflict", "category", "frame", "known_axis", "multiple_support", "unknown_xy"]
 )

@@ -13,8 +13,24 @@ from tests.self_improving.harness.x2env.test_codex import executable
 from tests.self_improving.harness.x2env.test_local_catalog import fixture
 
 
-@pytest.mark.parametrize("fault", [None, "default", "derived", "known_height", "no_media_layout"])
-def test_text_structural_design_uses_real_geometry_and_fixed_policy(tmp_path, fault):
+@pytest.mark.parametrize(
+    "fault",
+    [
+        None,
+        "default",
+        "derived",
+        "known_height",
+        "no_media_layout",
+        "no_media_yaw",
+        "known_dimension",
+        "conflict",
+        "disabled",
+    ],
+)
+@pytest.mark.parametrize("dimension_reason", [None, "unspecified", "scale_unobservable"])
+def test_text_structural_design_uses_real_geometry_and_fixed_policy(
+    tmp_path, fault, dimension_reason
+):
     from self_improving.harness.x2env.compile import StructuralPolicy
     from self_improving.harness.x2env.grounding import SceneDesignPolicy, ground_scene
 
@@ -38,12 +54,16 @@ def test_text_structural_design_uses_real_geometry_and_fixed_policy(tmp_path, fa
     support, obj = scene["entities"]
     support["dimensions"] = [0.8, 0.6, None]
     support["pose"]["position"] = [None, None, None]
-    obj["dimensions"] = [0.05, 0.06, 0.07]
+    obj["dimensions"] = None if dimension_reason else [0.05, 0.06, 0.07]
     obj["pose"] = {"frame": "support", "position": [-0.15, 0.1, None], "yaw_degrees": 45}
     if fault == "known_height":
         obj["pose"]["position"][2] = 0.2
     if fault == "no_media_layout":
         obj["pose"]["position"][0] = None
+    if fault == "no_media_yaw":
+        obj["pose"]["yaw_degrees"] = None
+    if fault == "known_dimension":
+        obj["dimensions"] = [0.051, None, None]
     provenance = [{"source": "text", "input_sha256": bundle.text.sha256, "kind": "explicit"}]
     for entity in scene["entities"]:
         entity["provenance"] = {k: provenance for k in entity["provenance"]}
@@ -71,7 +91,19 @@ def test_text_structural_design_uses_real_geometry_and_fixed_policy(tmp_path, fa
                 "provenance": provenance,
             }
         )
+    if dimension_reason:
+        unknowns.append(
+            {
+                "field": "scene.entities.object.dimensions",
+                "reason_kind": dimension_reason,
+                "critical": True,
+                "reason": "user did not specify foreground size",
+                "provenance": provenance,
+            }
+        )
     proposal["proposal"]["unknowns"] = unknowns
+    if fault == "conflict":
+        unknowns[-1]["reason_kind"] = "conflict"
     assets = json.loads(store.read_artifact(old_assets))
     assets["scene_ir"] = put(scene).model_dump()
     response = {
@@ -103,7 +135,7 @@ def test_text_structural_design_uses_real_geometry_and_fixed_policy(tmp_path, fa
         put(proposal),
         put(assets),
         SceneDesignPolicy(
-            enabled=True,
+            enabled=fault != "disabled",
             structural_defaults_enabled=True,
             world_anchor_xy=(0, 0),
             world_anchor_yaw_degrees=0,
@@ -119,8 +151,14 @@ def test_text_structural_design_uses_real_geometry_and_fixed_policy(tmp_path, fa
             "derived": "grounding_changed_authoritative_design_value",
             "known_height": "known_height_conflicts_with_on_geometry",
             "no_media_layout": "grounding_requires_media",
+            "no_media_yaw": "grounding_requires_media",
+            "known_dimension": "grounding_changed_explicit_axis",
+            "conflict": "grounding_requires_clarification",
+            "disabled": "design_grounding_disabled",
         }[fault]
         assert result.status == "blocked" and result.error_code == expected
+        if fault in {"conflict", "disabled", "no_media_layout", "no_media_yaw"}:
+            assert not (tmp_path / "text-attempt" / "invocation.json").exists()
     else:
         assert result.status == "completed", result
         assert result.proposed_scene.entities[1].pose.position == (-0.15, 0.1, 0.035)
@@ -129,6 +167,16 @@ def test_text_structural_design_uses_real_geometry_and_fixed_policy(tmp_path, fa
         assert receipt["structural_policy"]["thickness_m"] == 0.04
         assert receipt["original_unknowns"][0]["critical"]
         assert not receipt["design_plan"]["requires_media"]
+        if dimension_reason:
+            assert result.proposed_scene.entities[1].dimensions == (0.05, 0.06, 0.07)
+            assert receipt["original_unknowns"][-1]["reason_kind"] == dimension_reason
+            assert receipt["original_unknowns"][-1]["critical"]
+            assert receipt["fixed_values"]["object.dimensions[1]"] == 0.06
+            assert receipt["real_world_scale_recovered"] is False
+            assert any(
+                change["normalization_report"] and change["media_selection"] is None
+                for change in receipt["changes"]
+            )
         assert (
             json.loads((tmp_path / "text-attempt" / "invocation.json").read_bytes())["media"] == []
         )
