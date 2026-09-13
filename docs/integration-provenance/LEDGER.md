@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-S02-INDEX-PATH — 原模型字段准入失败
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Cesium资产/Yuxin检索分别保留。
+- source_ref：Harness `17d32ecd9a5085c0907fe9d381c646159ba7aec6`；原proposal及运行hash见RESULTS。
+- integration_method：image-only公共submit，真实managed Codex；未改媒体、proposal或失败终态。
+- verification：主线程核summary/hash；runtime_verification：229.50s后blocked，未进入Genesis。
+- limitation：序号unknown路径尚需按原场景严格映射；不得以此称S02或local来源新成功。
+- recorded_git_authors：源码作者、第三方资产作者与用户媒体署名分开，不推断自然人映射。
+
 ## INT-CANONICAL-S01-COPY-RUN — 拒读原来源后重新加载
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis及CreativeTrio资产独立保留。

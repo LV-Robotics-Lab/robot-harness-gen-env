@@ -1,5 +1,9 @@
 # Canonical x2env（收敛实施中）
 
+最新S02 image-only开发尝试在229.50秒后于设计准入阻断：模型用了合法的实体数组序号unknown路径，
+旧classifier仅识别实体ID路径。原proposal和失败包保留，尚未执行该case的资产查询或Genesis；
+严格路径映射修复在进行，不能把interpret成功算成S02环境成功。
+
 多实体动态支撑尚在实施：当前整体凸包碰撞体不能证明凹盘底，类型门也不能直接删除。
 新child已接逐geom实际有向三角面与authored URDF核对，123项相关测试通过；真实新版运行待验。
 旧顶点审计明确topology not_run，不能由此授予盘面或动态支撑。

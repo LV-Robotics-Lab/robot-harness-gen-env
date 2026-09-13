@@ -1,5 +1,20 @@
 # 进度与结果
 
+## 2026-09-13 S02 序号字段路径导致的真实阻断
+
+- 固定clean `17d32ecd9a5085c0907fe9d381c646159ba7aec6`，corrected31osM1一次公共image-only提交；
+  workflow `04dc9378-6e6d-4d9a-ae69-e72ddeb1b1bb` blocked/clarification_required，revision2、owner=null。
+  外层229.499050s，CLI229.329101s，exit2，reaped=true，无信号、重试或cleanup错误。
+- ingest和真实Codex interpret成功；未进入资产检索、预览、ground、compile或Genesis，不计S02通过。
+  原proposal `97acb439f718cecca98382291e81682d57f8106913e2613b29df5f24b024c62c`
+  使用 `scene.entities[0].dimensions` 等序号字段；旧classifier仅建实体ID路径，导致设计准入拒绝。
+  修复须按同一原scene有界解析，保留原unknown行与规则授权，不改模型输出或旧失败终态。
+- 根 `/home/jingxiang/bingsheng/canonical-s02-local-image-corrected-20260913.31osM1`；
+  `requested-output/failure`保留输入、原proposal、transport与日志，没有environment package或新视频。
+  主线程读取run-summary并重核SHA `d3cfd874d77fbf78ea80fb820ab3ea53d40c9f58d6d42f6e779d333f7cd68b3d`。
+- Cesium方块署名与用户媒体x2env1.0授权分开；此前署名有误的A5hnHk仅准备、从未submit，保留不覆盖。
+  dashboard三入口复查均HTTP404，未伪造远端任务更新。
+
 ## 2026-09-13 S01 包隔离复制运行与独立物理复算
 
 - 新根 `/home/jingxiang/bingsheng/canonical-s01-copy-run-20260913.hmSDIW`，从S01包复制186成员及
