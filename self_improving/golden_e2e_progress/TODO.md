@@ -12,6 +12,7 @@
 | 碰撞不可变新版本 | 真实通过（operator分解子集） | Plate 3.05s生成13凸块并登记；保真/物理仍not_run，未接controller修复 |
 | S03 video-only | 受阻 | 单次真实interpret 600s超时；输入采样和失败包保留，无SceneIR或Genesis，不原样重试 |
 | v2多实体生成布局 | 集成接通 | 独立授权与原始transport完成门主审232项通过；待固定真实case |
+| v3动态布局 | 集成接通（producer/完成门） | 102项主线程相关回归通过；父推进前独立审核、真实模型动态案例待补 |
 | 实测动态支撑 | 集成接通（compile/物理consumer） | 主线程136项assessment/package回归通过；grounding v3审阅与真实动态Genesis待验 |
 | v2包支撑闭包 | 集成接通 | compile持久化、包内独立consumer及103项相关测试通过；真实Genesis copy-run待验 |
 | 三输入/三来源及12例矩阵 | 集成接通（有限子集） | S02/S03/S04/M04及复杂支撑案例继续；尚无4/4或≥8/12 |

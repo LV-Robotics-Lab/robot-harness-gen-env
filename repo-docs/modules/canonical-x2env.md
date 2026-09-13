@@ -37,7 +37,8 @@ QfcUxI保留真实双profile，拓扑/reset/物理26项通过；不称新仿真�
 trimesh/Shapely2.1.2，包内README与runtime.json均列明；Genesis仍用声明环境。
 动态physical consumer随后接到同一评估器：每帧当前目标坐标、完整带孔面域、指定接触pair与实际拓扑，
 冻结阈值不变，136项assessment/package相关测试通过；仍仅证据消费测试。
-模型v3、真实动态仿真及copy-run待验，不授矩阵成功。
+模型v3已接明确授权/choices/候选与完成门独立重算，102项主线程相关测试通过；模型不提交Z，
+真实几何求解补高度。独立全证据审核仍在完成门，父推进前审核另片补；真实动态模型/仿真及copy-run待验。
 S03原视频唯一提交在interpret 600秒超时，无SceneIR或Genesis；输入采样帧与失败包保留。
 70项相关测试通过；此处是authored几何组件，不授实际加载/动态接触。下一片接独立拓扑消费与动态物理；
 详见[增量契约](../../self_improving/golden_e2e_progress/CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)。

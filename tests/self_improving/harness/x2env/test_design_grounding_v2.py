@@ -335,7 +335,7 @@ def test_generated_layout_harness_commits_three_entity_design(
         ("duplicate_id", "grounding_changed_entities"),
         ("extent", "generated_extent_out_of_bounds"),
         ("position", "generated_position_out_of_bounds"),
-        ("dynamic_target", "unsupported_dynamic_support_geometry"),
+        ("dynamic_target", "unsupported_on_coordinate_frame"),
         ("world_unknown_z", "unsupported_on_coordinate_frame"),
         ("conflict", "grounding_requires_clarification"),
         ("missing_identity", "grounding_unknown_field_not_designable"),

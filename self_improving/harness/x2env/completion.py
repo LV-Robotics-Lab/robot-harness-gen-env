@@ -916,7 +916,7 @@ def _verify_grounding_origin(snapshot, store, scene, compiled):
         return json.loads(store.read_artifact(ref))
 
     receipt = read(snapshot.grounding)
-    if receipt.get("schema_version") == "x2env.scene_grounding.v2":
+    if receipt.get("schema_version") in {"x2env.scene_grounding.v2", "x2env.scene_grounding.v3"}:
         return _verify_generated_grounding(snapshot, store, scene, compiled, receipt)
     if receipt.get("proposed_scene", {}).get("revision") != scene.revision:
         raise ValueError("completion_grounding_revision_chain_not_verified")
@@ -1207,6 +1207,18 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
         classify_generated_design,
     )
 
+    measured = receipt["schema_version"] == "x2env.scene_grounding.v3"
+    version = "v3" if measured else "v2"
+    if measured:
+        from .design_grounding_v3 import (
+            MeasuredLayoutValues,
+            bind_measured_assets,
+            build_measured_candidate,
+            classify_measured_design,
+            finalize_measured_scene,
+        )
+    values_model = MeasuredLayoutValues if measured else GroundingValuesV2
+
     def read(ref):
         return json.loads(store.read_artifact(ref))
 
@@ -1268,10 +1280,11 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
     authorizations = [
         r
         for r in authorizations
-        if isinstance(r, dict) and r.get("schema_version") == "x2env.design_authorization.v2"
+        if isinstance(r, dict)
+        and r.get("schema_version") == "x2env.design_authorization." + version
     ]
     expected_authorization = {
-        "schema_version": "x2env.design_authorization.v2",
+        "schema_version": "x2env.design_authorization." + version,
         "workflow_id": snapshot.workflow_id,
         "operation_id": operation.operation_id,
         "proposal_ref": snapshot.proposal.model_dump(),
@@ -1286,8 +1299,12 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
     ):
         raise ValueError("completion_grounding_authorization_mismatch")
     policy = GeneratedLayoutPolicy.model_validate_json(json.dumps(receipt["policy"]))
-    plan = classify_generated_design(original.proposal, policy, compiled.policy)
-    bindings, fixed = bind_generated_assets(store, base, assets, plan)
+    plan = (classify_measured_design if measured else classify_generated_design)(
+        original.proposal, policy, compiled.policy
+    )
+    bindings, fixed = (bind_measured_assets if measured else bind_generated_assets)(
+        store, base, assets, plan
+    )
     for key, value in {
         "design_plan": plan,
         "asset_bindings": bindings,
@@ -1312,10 +1329,11 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
     contexts = [
         r
         for r in records
-        if isinstance(r, dict) and r.get("schema_version") == "x2env.generated_layout_context.v2"
+        if isinstance(r, dict)
+        and r.get("schema_version") == "x2env.generated_layout_context." + version
     ]
     expected_context = {
-        "schema_version": "x2env.generated_layout_context.v2",
+        "schema_version": "x2env.generated_layout_context." + version,
         "bundle_ref": snapshot.input_bundle.model_dump(),
         "seed": bundle.seed,
         "original_proposal": original.proposal.model_dump(mode="json"),
@@ -1403,8 +1421,7 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
         or invocation.get("requested_reasoning_effort") != "max"
         or invocation.get("server_effective_effort_verified") is not False
         or not _execution_shas([process, terminal])
-        or read(transport_refs["proposal.schema.json"])
-        != structured_output_schema(GroundingValuesV2)
+        or read(transport_refs["proposal.schema.json"]) != structured_output_schema(values_model)
         or json.dumps(expected_context).encode()
         not in store.read_artifact(transport_refs["prompt.txt"])
     ):
@@ -1443,15 +1460,48 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
     original_records = [read(r) for r in original.evidence if r.media_type == "application/json"]
     if not (_execution_shas(records) & _execution_shas(original_records)):
         raise ValueError("completion_grounding_missing_model_execution")
-    value = GroundingValuesV2.model_validate_json(
-        store.read_artifact(transport_refs["proposal.json"])
-    )
-    raw_values = [r for r in records if isinstance(r, dict) and set(r) == {"entities"}]
+    value = values_model.model_validate_json(store.read_artifact(transport_refs["proposal.json"]))
+    raw_values = [
+        r
+        for r in records
+        if isinstance(r, dict) and set(r) == {"choices" if measured else "entities"}
+    ]
     if raw_values != [value.model_dump(mode="json")]:
         raise ValueError("completion_grounding_model_output_mismatch")
-    reconstructed, choices = apply_generated_values(
-        base, value, policy, plan, bindings, fixed, bundle
-    )
+    if measured:
+        from .compile import resolve_measured_layout
+
+        candidate = build_measured_candidate(base, value, policy, plan, fixed)
+        candidate_ref = ArtifactRef.model_validate(receipt["candidate_scene_ref"])
+        if (
+            candidate_ref.model_dump() not in receipt["evidence"]
+            or store.read_artifact(candidate_ref) != candidate.model_dump_json().encode()
+        ):
+            raise ValueError("completion_grounding_candidate_mismatch")
+        resolved = resolve_measured_layout(
+            candidate_ref,
+            assets.model_copy(update={"scene_ir": candidate_ref}),
+            registry=AssetRegistry(store),
+            store=store,
+            policy=compiled.policy,
+            seed=bundle.seed,
+        )
+        proofs = receipt.get("geometry_proofs")
+        if not isinstance(proofs, dict) or set(proofs) != set(resolved["support_proofs"]):
+            raise ValueError("completion_grounding_geometry_proof_mismatch")
+        for name, raw in resolved["support_proofs"].items():
+            proof_ref = ArtifactRef.model_validate(proofs[name])
+            if (
+                proof_ref.model_dump() not in receipt["evidence"]
+                or store.read_artifact(proof_ref) != raw
+            ):
+                raise ValueError("completion_grounding_geometry_proof_mismatch")
+        reconstructed = finalize_measured_scene(base, resolved["scene"], bundle)
+        choices = value.model_dump(mode="json")["choices"]
+    else:
+        reconstructed, choices = apply_generated_values(
+            base, value, policy, plan, bindings, fixed, bundle
+        )
     if reconstructed != scene or choices != receipt.get("design_choices"):
         raise ValueError("completion_grounding_changed_semantics")
 

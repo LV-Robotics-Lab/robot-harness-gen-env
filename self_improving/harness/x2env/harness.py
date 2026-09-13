@@ -680,6 +680,7 @@ class Harness:
         import json
 
         from .compile import ResolvedAssetSet
+        from .contracts import BackendProposal
 
         self._remaining()
         snapshot = self._store.begin_operation(snapshot, "codex.ground")
@@ -687,11 +688,20 @@ class Harness:
         authorization = ()
         try:
             if getattr(self._scene_design_policy, "mode", None) == "generated_layout":
+                from .design_grounding_v3 import has_measured_support
+
+                original = BackendProposal.model_validate_json(
+                    self._store.read_artifact(snapshot.proposal)
+                )
+                authorization_version = (
+                    "v3" if has_measured_support(original.proposal.scene) else "v2"
+                )
                 authorization = (
                     self._store.write_artifact(
                         json.dumps(
                             {
-                                "schema_version": "x2env.design_authorization.v2",
+                                "schema_version": "x2env.design_authorization."
+                                + authorization_version,
                                 "workflow_id": snapshot.workflow_id,
                                 "operation_id": operation.operation_id,
                                 "proposal_ref": snapshot.proposal.model_dump(mode="json"),

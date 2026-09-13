@@ -1,5 +1,19 @@
 # 进度与结果
 
+## 2026-09-13 受限动态布局v3及完成门独立重算
+
+- 实际动态目标进入明确v3授权/context/receipt，模型choices只覆盖允许缺失XY/yaw/结构长宽；
+  已知值、资产尺寸、关系和Z不可提交。真实candidate bytes写CAS后调用与compile共享只读solver，
+  Z由唯一实测面计算；真变化字段追加准确inferred出处，不声称媒体尺度恢复。
+- controller仍同一codex.ground操作；完成门重核原授权、具名原始transport、candidate及面证据，
+  缺回放明确拒绝交付。主线程102项ground/完成门邻组通过8.66s，schema/CI映射21项通过1.26s。
+  agent142项通过9.25s、旧完成门111项通过112.81s；证据`/var/tmp/canonical-grounding-v3.Twsg3v`。
+- 新schema snapshots由原exporter生成，新两测试模块纳入组2/5，无新增Skill或第二workflow。
+  测试模型为明确外部程序替身，不授真实模型/Genesis或矩阵通过。
+- 限制：producer当前先typed/几何校验后推进；独立全transport重核在最终完成门。
+  尚未增加父推进前独立审核，不把该时点已实现；下一片复用同一审计逻辑补齐。
+
+
 ## 2026-09-13 动态目标的独立物理证据消费
 
 - 同一evaluate_physics/assess_scene接受明确v2，面映射精确核target版本/序列化SHA；实际包先重算面，

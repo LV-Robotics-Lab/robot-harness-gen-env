@@ -65,8 +65,14 @@ def needs_design_grounding(scene, structural_policy=None):
 def classify_design_unknowns(proposal, policy, structural_policy=None):
     if getattr(policy, "mode", None) == "generated_layout":
         from .design_grounding_v2 import classify_generated_design
+        from .design_grounding_v3 import classify_measured_design, has_measured_support
 
-        return classify_generated_design(proposal, policy, structural_policy)
+        classifier = (
+            classify_measured_design
+            if has_measured_support(proposal.scene)
+            else classify_generated_design
+        )
+        return classifier(proposal, policy, structural_policy)
     if not policy.enabled or proposal.scene is None:
         raise ValueError("design_grounding_disabled")
     scene = proposal.scene

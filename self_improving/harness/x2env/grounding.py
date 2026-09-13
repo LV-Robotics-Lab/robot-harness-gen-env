@@ -82,8 +82,20 @@ def ground_scene(
         policy.get("mode") if isinstance(policy, dict) else getattr(policy, "mode", None)
     ) == "generated_layout":
         from .design_grounding_v2 import ground_generated_scene
+        from .design_grounding_v3 import ground_measured_scene, has_measured_support
 
-        return ground_generated_scene(
+        try:
+            original = BackendProposal.model_validate_json(store.read_artifact(proposal_ref))
+        except (ValueError, OSError, KeyError, TypeError):
+            original = None  # Original producer records the structured parse/read failure.
+        producer = (
+            ground_measured_scene
+            if original is not None
+            and original.proposal is not None
+            and has_measured_support(original.proposal.scene)
+            else ground_generated_scene
+        )
+        return producer(
             bundle_ref,
             proposal_ref,
             assets_ref,

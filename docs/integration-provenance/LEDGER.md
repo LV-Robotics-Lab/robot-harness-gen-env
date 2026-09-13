@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C08-MEASURED-GROUNDING-V3 — 模型选择与几何高度分离
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness53fe5b1及增量spec。
+- upstream_owner：Codex后端、几何依赖分别保留；integration_method：同producer传输实现、受限choices、
+  真实candidate CAS和只读solver；独立v3 controller授权/完成门重算，不建第二workflow。
+- target_paths：design_grounding_v3、既有ground/design/controller/completion/schema及相应tests/snapshots。
+- verification：主线程102项与schema/分组21项通过，旧完成门111项agent回归通过；runtime_verification：not_run。
+- limitation：独立全证据重验目前在完成门，父推进前新审核另片补；recorded_git_authors：模型与Harness作者分开。
+
 ## INT-CANONICAL-C09-DYNAMIC-PHYSICS — 逐帧目标坐标核验
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness da2dbd0与冻结physics断言。

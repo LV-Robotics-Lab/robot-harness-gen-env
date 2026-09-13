@@ -17,7 +17,7 @@ CANONICAL = "tests/self_improving/harness/x2env"
 GROUPS = {
     "1": "acceptance_contract capabilities contracts input schema_export "
     "structured_schema stage_contracts",
-    "2": "codex design_plan design_workflow design_grounding_v2 diagnosis grounding "
+    "2": "codex design_plan design_workflow design_grounding_v2 design_grounding_v3 diagnosis grounding "
     "harness_completion harness_lifecycle "
     "harness_repair_budget local_color_harness operation_recovery pipeline repair_reservations "
     "revision revision_reservation revision_state skill_execution store_contract_edges",
@@ -27,7 +27,7 @@ GROUPS = {
     "reconstruction_resolver resolver search_advisory source_router web_resolver yuxin_adapter "
     "yuxin_package_migration",
     "4": "assessment compile genesis_runtime measured_support observation replay",
-    "5": "cli completion completion_local_color completion_v2 delivery deployment deployment_edges "
+    "5": "cli completion completion_local_color completion_v2 completion_v3 delivery deployment deployment_edges "
     "failure_bundle import_boundary "
     "package publisher source_identity",
 }

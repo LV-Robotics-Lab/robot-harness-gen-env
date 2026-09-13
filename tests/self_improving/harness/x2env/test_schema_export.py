@@ -8,6 +8,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[4]
 
 
+def test_measured_layout_schema_cannot_offer_height_or_asset_size_fields(tmp_path):
+    import jsonschema
+    import pytest
+
+    from self_improving.harness.x2env.schema_export import export
+
+    export(tmp_path)
+    schema = json.loads((tmp_path / "MeasuredLayoutValues.codex.json").read_bytes())
+    valid = {"choices": [{"entity_id": "box", "path": "pose.position[0]", "value": 0.2}]}
+    jsonschema.validate(valid, schema)
+    for path in ("pose.position[2]", "dimensions[2]", "frame", "relations"):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate({"choices": [{**valid["choices"][0], "path": path}]}, schema)
+    assert (tmp_path / "MeasuredLayoutValues.json").is_file()
+    assert "MeasuredLayoutValues" in (tmp_path / "api-fields.md").read_text()
+
+
 def test_export_exposes_versioned_generated_layout_values_and_strict_transport(tmp_path):
     from self_improving.harness.x2env.schema_export import export
 

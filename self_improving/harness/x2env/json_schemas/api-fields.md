@@ -144,3 +144,4 @@ Generated; edit Python contracts, not this file.
 | X2EnvRequest | idempotency_key | true |
 | X2EnvRequest | output_dir | true |
 | GroundingValuesV2 | entities | true |
+| MeasuredLayoutValues | choices | true |

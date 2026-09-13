@@ -55,6 +55,10 @@ class GroundingValuesV2(Model):
 
 def classify_generated_design(proposal, policy, structural_policy=None):
     """Enumerate authority from real missing fields, never trust advisory critical flags."""
+    return _classify_design(proposal, policy, structural_policy, dynamic_support=False)
+
+
+def _classify_design(proposal, policy, structural_policy, *, dynamic_support):
     policy = GeneratedLayoutPolicy.model_validate(policy)
     if not policy.enabled or proposal.scene is None:
         raise ValueError("design_grounding_disabled")
@@ -77,7 +81,7 @@ def classify_generated_design(proposal, policy, structural_policy=None):
             if len(on) != 1 or on[0].target == entity.id:
                 raise ValueError("unsupported_grounding_support")
             target = by_id[on[0].target]
-            if target.role != "structural_support":
+            if target.role != "structural_support" and not dynamic_support:
                 raise ValueError("unsupported_dynamic_support_geometry")
             if entity.pose.frame not in ("world", target.id):
                 raise ValueError("unsupported_on_coordinate_frame")
@@ -312,6 +316,33 @@ def ground_generated_scene(
     timeout=600,
     structural_policy=None,
 ):
+    return _ground_generated_scene(
+        bundle_ref,
+        proposal_ref,
+        assets_ref,
+        policy,
+        store=store,
+        backend=backend,
+        output_root=output_root,
+        timeout=timeout,
+        structural_policy=structural_policy,
+        measured=False,
+    )
+
+
+def _ground_generated_scene(
+    bundle_ref,
+    proposal_ref,
+    assets_ref,
+    policy,
+    *,
+    store,
+    backend,
+    output_root,
+    timeout,
+    structural_policy,
+    measured,
+):
     from .grounding import GroundingResult
 
     if type(timeout) is not int or not 1 <= timeout <= 600:
@@ -333,6 +364,17 @@ def ground_generated_scene(
     choices = []
     chosen = None
     unknowns = []
+    candidate_ref = None
+    geometry_proofs = {}
+    version = "v3" if measured else "v2"
+    if measured:
+        from .design_grounding_v3 import (
+            MeasuredLayoutValues,
+            bind_measured_assets,
+            build_measured_candidate,
+            classify_measured_design,
+            finalize_measured_scene,
+        )
 
     def record(name, raw, media_type="application/json"):
         (root / name).write_bytes(raw)
@@ -351,14 +393,18 @@ def ground_generated_scene(
         unknowns = [u.model_dump(mode="json") for u in original.proposal.unknowns]
         if structural_policy is not None:
             structural_policy = StructuralPolicy.model_validate(structural_policy)
-        plan = classify_generated_design(original.proposal, policy, structural_policy)
+        plan = (classify_measured_design if measured else classify_generated_design)(
+            original.proposal, policy, structural_policy
+        )
         assets = ResolvedAssetSet.model_validate_json(store.read_artifact(assets_ref))
         if (
             base.input_sha256 != bundle.request_sha256
             or SceneIR.model_validate_json(store.read_artifact(assets.scene_ir)) != base
         ):
             raise ValueError("unbound_grounding_intent")
-        bindings, fixed = bind_generated_assets(store, base, assets, plan)
+        bindings, fixed = (bind_measured_assets if measured else bind_generated_assets)(
+            store, base, assets, plan
+        )
         if bundle.images or bundle.video:
             from .deployment import select_reconstruction_image
 
@@ -377,7 +423,7 @@ def ground_generated_scene(
         elif bundle.text is None:
             raise ValueError("grounding_missing_input")
         context = {
-            "schema_version": "x2env.generated_layout_context.v2",
+            "schema_version": "x2env.generated_layout_context." + version,
             "bundle_ref": bundle_ref.model_dump(),
             "seed": bundle.seed,
             "original_proposal": original.proposal.model_dump(mode="json"),
@@ -406,6 +452,15 @@ def ground_generated_scene(
             "Geometry centres are used except structural position is the top-surface centre. "
             "No physical, license, qualification or success claims.\n" + json.dumps(context)
         )
+        if measured:
+            prompt = (
+                "Choose exactly the simulation_design_choice fields listed in design_plan. "
+                "Return choices only: entity_id/path/value. Never return Z, asset dimensions, "
+                "known fields, frame, relations, support surfaces or success claims. "
+                "Keep original semantics and attached-media relative layout. Choices must fit "
+                "the explicit policy ranges; deterministic measured geometry computes height.\n"
+                + json.dumps(context)
+            )
         if (
             not backend.executable.is_absolute()
             or hashlib.sha256(backend.executable.read_bytes()).hexdigest() != backend.executable_sha
@@ -415,20 +470,43 @@ def ground_generated_scene(
             root,
             prompt,
             [{"path": str(root / "input.png")}] if chosen else [],
-            GroundingValuesV2,
+            MeasuredLayoutValues if measured else GroundingValuesV2,
             record,
             timeout,
             started,
         )
-        values = GroundingValuesV2.model_validate_json(raw)
-        scene, choices = apply_generated_values(base, values, policy, plan, bindings, fixed, bundle)
+        if measured:
+            from .compile import resolve_measured_layout
+
+            values = MeasuredLayoutValues.model_validate_json(raw)
+            candidate = build_measured_candidate(base, values, policy, plan, fixed)
+            candidate_ref = record("candidate-scene.json", candidate.model_dump_json().encode())
+            resolved = resolve_measured_layout(
+                candidate_ref,
+                assets.model_copy(update={"scene_ir": candidate_ref}),
+                registry=AssetRegistry(store),
+                store=store,
+                policy=structural_policy,
+                seed=bundle.seed,
+            )
+            scene = finalize_measured_scene(base, resolved["scene"], bundle)
+            choices = values.model_dump(mode="json")["choices"]
+            for name, proof in resolved["support_proofs"].items():
+                geometry_proofs[name] = record(
+                    "geometry-" + name.replace("/", "-"), proof
+                ).model_dump()
+        else:
+            values = GroundingValuesV2.model_validate_json(raw)
+            scene, choices = apply_generated_values(
+                base, values, policy, plan, bindings, fixed, bundle
+            )
         status = "completed"
     except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         error = str(exc)
         scene = None
         record("error.json", json.dumps({"reason": error}).encode())
     body = {
-        "schema_version": "x2env.scene_grounding.v2",
+        "schema_version": "x2env.scene_grounding." + version,
         "status": status,
         "error_code": error,
         "bundle_ref": bundle_ref.model_dump(),
@@ -465,6 +543,11 @@ def ground_generated_scene(
         },
         "wall_seconds": time.monotonic() - started,
     }
+    if measured:
+        body.update(
+            candidate_scene_ref=candidate_ref.model_dump() if candidate_ref else None,
+            geometry_proofs=geometry_proofs,
+        )
     receipt = record("receipt.json", json.dumps(body, sort_keys=True).encode())
     return GroundingResult(
         status=status,
