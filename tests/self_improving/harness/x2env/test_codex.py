@@ -144,6 +144,14 @@ def test_unknown_is_advisory_and_logs_bound_input_and_model(tmp_path):
     assert invocation["requested_reasoning_effort"] == "max"
     assert invocation["server_effective_effort_verified"] is False
     assert argv[argv.index("--sandbox") + 1] == "read-only"
+    output_schema = json.loads((tmp_path / "attempt" / "proposal.schema.json").read_bytes())
+    assert (
+        output_schema["$defs"]["SceneIR"]["properties"]["input_sha256"]["const"]
+        == bundle.request_sha256
+    )
+    assert output_schema["$defs"]["FieldProvenance"]["properties"]["input_sha256"]["enum"] == [
+        bundle.text.sha256
+    ]
     process = json.loads((tmp_path / "attempt" / "process.json").read_text())
     assert process["start_ticks"] > 0
     assert process["pgid"] == process["pid"]
@@ -259,6 +267,10 @@ def test_video_advisory_uses_verified_original_frames(tmp_path):
         path, hashlib.sha256(path.read_bytes()).hexdigest(), "test-double", store
     ).interpret(bundle, output_root=tmp_path / "attempt", timeout=10)
     assert result.status == "completed"
+    schema = json.loads((tmp_path / "attempt" / "proposal.schema.json").read_bytes())
+    assert schema["$defs"]["FieldProvenance"]["properties"]["input_sha256"]["enum"] == [
+        bundle.video.source.sha256
+    ]
     invocation = json.loads((tmp_path / "attempt" / "invocation.json").read_text())
     assert [m["frame_index"] for m in invocation["media"]] == [0, 1, 2, 3]
     sequence = json.loads(store.read_artifact(bundle.video.sequence))
@@ -266,6 +278,56 @@ def test_video_advisory_uses_verified_original_frames(tmp_path):
         f["sha256"] for f in sequence["frames"]
     ]
     assert all((tmp_path / "attempt" / f"video-{i}.png").is_file() for i in range(4))
+
+
+@pytest.mark.parametrize("source", ["text", "image", "wrong_pair"])
+def test_bound_hash_enum_does_not_replace_source_index_verification(tmp_path, source):
+    from PIL import Image
+
+    from self_improving.harness.x2env.codex import CodexBackend
+    from self_improving.harness.x2env.contracts import InputMedia
+
+    image = tmp_path / "image.png"
+    Image.new("RGB", (4, 3), "red").save(image)
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(
+            text="an object",
+            images=(InputMedia(path=str(image)),),
+            seed=1,
+            idempotency_key="pair",
+            output_dir=str(tmp_path),
+        ),
+        store,
+    )
+    use_image = source != "text"
+    response = {
+        "scene": None,
+        "unknowns": [
+            {
+                "field": "dimensions",
+                "reason": "unknown",
+                "critical": True,
+                "provenance": [
+                    {
+                        "source": "image" if use_image else "text",
+                        "kind": "inferred",
+                        "input_sha256": bundle.text.sha256
+                        if source != "image"
+                        else bundle.images[0].source.sha256,
+                        "media_index": 0 if use_image else None,
+                    }
+                ],
+            }
+        ],
+    }
+    path = executable(tmp_path, response)
+    result = CodexBackend(
+        path, hashlib.sha256(path.read_bytes()).hexdigest(), "double", store
+    ).interpret(bundle, output_root=tmp_path / "attempt", timeout=10)
+    assert result.status == ("failed" if source == "wrong_pair" else "completed")
+    if source == "wrong_pair":
+        assert result.error_code == "proposal_input_mismatch"
 
 
 @pytest.mark.parametrize("tool", [False, True])

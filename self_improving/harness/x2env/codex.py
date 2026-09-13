@@ -349,7 +349,9 @@ class CodexBackend:
                     ensure_ascii=False,
                 )
             )
-            raw = self._invoke(root, prompt, images, SceneIntentProposal, record, timeout, started)
+            raw = self._invoke(
+                root, prompt, images, SceneIntentProposal, record, timeout, started, bundle=bundle
+            )
             proposal = SceneIntentProposal.model_validate_json(raw)
             if proposal.scene and (
                 proposal.scene.input_sha256 != bundle.request_sha256 or proposal.scene.revision != 0
@@ -456,7 +458,7 @@ class CodexBackend:
             elapsed_seconds=elapsed,
         )
 
-    def _invoke(self, root, prompt, images, schema, record, timeout, started):
+    def _invoke(self, root, prompt, images, schema, record, timeout, started, *, bundle=None):
         """One restricted transport for all advisory schemas; no workflow authority."""
         failure = None
         cancellation = None
@@ -464,7 +466,7 @@ class CodexBackend:
         record("prompt.txt", prompt.encode(), "text/plain")
         record(
             "proposal.schema.json",
-            json.dumps(structured_output_schema(schema)).encode(),
+            json.dumps(structured_output_schema(schema, bundle=bundle)).encode(),
         )
         argv = [
             str(self.executable),

@@ -6,7 +6,9 @@ from pathlib import Path
 from . import contracts
 
 
-def structured_output_schema(model: type[contracts.Model]) -> dict:
+def structured_output_schema(
+    model: type[contracts.Model], *, bundle: contracts.InputBundle | None = None
+) -> dict:
     """Strict transport projection; nullable fields remain present, not omitted."""
     schema = model.model_json_schema()
 
@@ -22,6 +24,24 @@ def structured_output_schema(model: type[contracts.Model]) -> dict:
                 visit(value)
 
     visit(schema)
+    if bundle is not None:
+        if model is not contracts.SceneIntentProposal or not isinstance(
+            bundle, contracts.InputBundle
+        ):
+            raise ValueError("invalid_schema_binding_context")
+        bundle = contracts.InputBundle.model_validate_json(bundle.model_dump_json())
+        sources = [bundle.text.sha256] if bundle.text else []
+        sources.extend(image.source.sha256 for image in bundle.images)
+        if bundle.video:
+            sources.append(bundle.video.source.sha256)
+        if not sources:
+            raise ValueError("empty_schema_binding_sources")
+        scene = schema["$defs"]["SceneIR"]["properties"]
+        scene["input_sha256"]["const"] = bundle.request_sha256
+        scene["revision"]["const"] = 0
+        schema["$defs"]["FieldProvenance"]["properties"]["input_sha256"]["enum"] = sorted(
+            set(sources)
+        )
     return schema
 
 

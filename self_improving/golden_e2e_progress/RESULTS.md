@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 C05 请求绑定的模型身份约束
+
+- 一次固定624d493的完整schema/max探针仅把文本改为a table，98.831566秒exit0返回4947B JSON，
+  完整schema通过但一处尺寸出处SHA转置，后端正确proposal_input_mismatch。无业务Store/仿真。
+  证据 `/home/jingxiang/bingsheng/canonical-codex-table-probe-20260913.596ROq/audit.json`，
+  SHA `ba3eac693bac9d998fe16c8c0a0d91f4ac8a7669acdaff36052faf05d7a65dd5`。
+- 针对真实错误，interpret transport为请求SHA/revision加const，为原来源SHA加去重enum；
+  静态Python/public合同不变，其他模型角色投影不变；错误模型/空来源/非法上下文拒绝。
+  来源类型与SHA的错误搭配仍后置拒绝，不自动纠正模型证据，不授予资格。
+- schema与backend公开接口先RED后GREEN，主线程7模块104 passed/6.09s，agent8模块166 passed/
+  12.09s；静态schema check通过。尚未执行此实现的真实S01，不称超时修复已验证。
+
 ## 2026-09-13 C13 Yuxin 来源 lint 切片
 
 - asset_reuse/web完整范围44条lint清零；除已独立提交的ledger兼容修复，24文件AST完全等价，

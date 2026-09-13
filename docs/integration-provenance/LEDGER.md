@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-BOUND-IDENTITY — 模型输出身份有限选择
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：OpenAI Codex。
+- source_ref：`624d493` table探针；target_paths：codex.py、schema_export.py及公开tests。
+- integration_method：同一interpret transport约束已知请求/来源SHA，不改静态合同或后置真实性门。
+- verification：root104项、agent166项；runtime_verification：旧探针返回但出处错，本实现真实业务待验。
+- recorded_git_authors：原模块与当前提交元数据；不声称服务端原因或已解决600秒超时。
+
 ## INT-CANONICAL-C13-YUXIN-LINT — 来源保值维护
 
 - origin_owner：Yuxin资产复用来源；upstream_owner：既有Isaac/SAPIEN/Objaverse来源不变。
