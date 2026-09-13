@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- 六组/root/merge独立限时CI已接，自身11项通过；固定HEAD后跑真实各组，补全active lint和docslink pending门。
+
 - 唯一Codex transport现显式max；中性真实兼容探针6.323s通过、156项组件测试通过，不声称修复业务timeout。固定下一版本后验证真实case。
 
 - compile公开边界与显式结构值53项通过，118语句/46分支100%；无新仿真通过，整体core仍待六组测量。

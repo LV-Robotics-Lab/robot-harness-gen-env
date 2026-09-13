@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 六组、独立root与merge均接限时执行与日志/测量；11项入口测试通过，真正全组和lint/docslink门仍待验。
+
 - 同一内部Codex transport显式请求max，记录请求值但不授服务端力度证明；156项测试和中性兼容探针通过。
 
 - 孤立旧Store/media/runtime/snapshot九模块和专属native退役；465项主线程保留层回归通过，六组CI仍在收敛。

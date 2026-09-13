@@ -15,7 +15,7 @@
 | `run_prompt_matrix.py` | CLI：跨 seed 跑 committed prompt 矩阵，可选 SAPIEN 运行时 |
 | `run_rendered_critic.py` | CLI：对 resolved 场景 + 预览图跑可选 VLM 渲染评判 |
 | `build_stage5_report.py` | CLI：构建 stage-5 验收报告 |
-| `run_self_improving_tests.sh` | 统一测试入口：对 Harness 与 snapshot-aware validation adapter 强制 100% 语句及分支覆盖 |
+| `run_self_improving_tests.sh` | 限时测试入口：六组、独立 root 与覆盖归并；参数和当前门见 `x2env_test_groups.py --help` |
 
 ## Subdirectories（子目录）
 无。
@@ -29,8 +29,10 @@
 - 平台新实验从 canonical `x2env` 进入；历史 campaign、Qwen assessment、qualified replay 脚本入口已退役，旧配方使用对应固定 Git 历史。进展见根 AGENTS 指向的 Golden E2E 目录。
 
 ### Testing Requirements（测试要求）
-- 场景脚本覆盖来自 `tests/scene_gen/`；保留的历史 qualified replay 深模块由 `tests/self_improving/test_qualified_replay_cli.py` 直接调用和攻击测试覆盖，不恢复旧 launcher。
-- `run_self_improving_tests.sh` 同时覆盖 `self_improving.harness` 与 `self_improving.validate_v2_snapshot`，两者合并后的语句与分支覆盖率必须保持 100%。
+- 场景脚本覆盖来自 `tests/scene_gen/`；旧 qualified replay 执行与资格图已退役，固定历史从 Git 恢复。
+- 改测试归属或 CI 时读取 Golden E2E 计划第12节和 `x2env_test_groups.py`。每组和归并独立限时，
+  使用新证据目录；只有同源完整六组测量可合并，canonical 业务语句/分支门为100%。
+  外部执行边界精确列于脚本，pending 非覆盖门不算已通过。
 - 改动后用 `--help` 校验脚本的 CLI 表面。
 
 ### Common Patterns（常见模式）

@@ -1,5 +1,19 @@
 # 进度与结果
 
+## 2026-09-13 C13/C14 六组 CI 与独立 root/归并限时入口
+
+- run_self_improving_tests.sh 复用单脚本声明六组归属；新增未分类canonical测试立即失败，
+  原六个active外部测试根/cwd/PYTHONPATH保留。root `pytest -q` 独立执行；每组与归并均
+  1770秒INT+30秒清理，NEW输出保存日志/JUnit/coverage/状态，不上传tmp虚拟环境或fixture树。
+- 合并要求完整六份成功测量、JUnit与同HEAD/dirty/diff/sourcebytes；覆盖所有canonical，
+  仅Gujie/Yuxin adapter与genesis_child三外部执行文件单列，其余每文件语句/分支100%，
+  excluded_lines也拒绝。这比冻结计划最低core范围更严格，没有隐藏业务分支。
+- root自身测试11 passed/0.40s，包括真实小失败/timeout进程、缺组归并与外部源变更；
+  新未跟踪scene_gen/demo/provider变更先4RED后GREEN。schema check接group1且本地通过；
+  YAML解析、bash-n、ruff/diff通过，actionlint未安装未声称执行。
+- 此处未执行真正六组/root/归并；全active lint和文档链接检查明确写入pending-gates为not_run，
+  尚非最终CI全绿或资格。不将测试脚本自身绿当业务覆盖绿。
+
 ## 2026-09-13 C05 显式 maximum 合规与受限传输探针
 
 - 同固定 f35/exe/gpt-6-astra，无图无tools的39B/174B中性探针先6.923394s完成；单变量增加

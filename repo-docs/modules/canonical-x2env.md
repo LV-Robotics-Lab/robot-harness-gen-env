@@ -1,5 +1,9 @@
 # Canonical x2env（收敛实施中）
 
+测试从 `script/run_self_improving_tests.sh` 执行六组、独立root与merge；每组独立30分钟总预算。
+同源六份测量才可归并，业务文件语句/分支必须100%。当前只是入口与自身测试通过，
+全active lint/docslink仍列pending，真实全组结果和资格另见进度账。
+
 内部 Codex 所有角色通过唯一 transport 显式请求 `model_reasoning_effort="max"`；拒绝时不降级。
 回执记录请求值与实际argv，但不把CLI接受配置描述成服务端有效力度已验证；旧未指定回执不回填。
 

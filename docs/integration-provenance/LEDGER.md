@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-BOUNDED-CI — 六组测试与覆盖归并
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`624d493` 原统一测试脚本。
+- target_paths：script/x2env_test_groups.py、shell入口、ci.yml与公开测试。
+- integration_method：保留原active根和解释器路径，六组测量同源归并；每执行shard独立预算。
+- verification：root11项自身测试；runtime_verification：未执行真正全组，lint/docslink pending。
+- recorded_git_authors：原脚本与本提交元数据；upstream_owner：pytest/coverage/GitHub Actions 原作者。
+
 ## INT-CANONICAL-C05-EXPLICIT-MAX — 受管理后端可审计最大力度
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：OpenAI Codex。

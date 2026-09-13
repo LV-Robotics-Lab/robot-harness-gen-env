@@ -9,7 +9,7 @@ GitHub Actions CI 工作流定义。在受支持的 Python 版本上跑基于 fi
 ## Key Files（关键文件）
 | File | Description |
 |------|-------------|
-| `ci.yml` | CI：在 Python 3.11 & 3.12、ubuntu-latest 上初始化 submodule，并跑核心与 self-improving 全量离线测试。 |
+| `ci.yml` | CI：Python 3.11/3.12 的六组与独立 root 测试，以及同版本覆盖归并；保留限时日志与测量。 |
 
 ## Subdirectories（子目录）
 无。
@@ -22,11 +22,13 @@ GitHub Actions CI 工作流定义。在受支持的 Python 版本上跑基于 fi
 
 ### Testing Requirements（测试要求）
 - push 会触发 CI 运行；合并前确认工作流为绿。
-- 统一入口是 `script/run_self_improving_tests.sh`；新增模块时同步扩展该脚本。
+- 统一入口是 `script/run_self_improving_tests.sh`；新增 canonical 测试须更新 `x2env_test_groups.py` 显式归属。
+- 验收使用同源六组的成功测量，逐业务文件语句/分支100%；检查 `pending-gates.json`，未执行门不计通过。
+- CI 制品只上传日志、JUnit、结果与覆盖测量；隔离临时环境和fixtures不上传。
 - 提交前用 action 校验器校验 YAML 语法。
 
 ### Common Patterns（常见模式）
-- 通过 `pip install -e '.[dev,demo]'` 安装；用 `pytest -q` 跑套件。
+- 安装含 `platform` 的开发依赖；每测试组、独立 `pytest -q` 与覆盖归并各有1770秒加30秒清理预算。
 
 ## Dependencies（依赖）
 
