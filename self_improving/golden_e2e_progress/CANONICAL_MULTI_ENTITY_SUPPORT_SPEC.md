@@ -57,6 +57,29 @@ controller approval绑定parent、明确policy和approved；模型不能自己�
 本纵切只授权组件实现与小型真实CPU分解验证，后续controller资产修复路由须另片接入并记录预算。
 旧默认normalize_mesh整体凸包行为不变；没有新资格、真实重建或矩阵通过主张。
 
+首片的succeeded仅指合法碰撞候选生成/登记与共同支撑面可用。必须另记
+`collision_preservation_status=not_run`和`physical_evaluated=false`：visual与collision的交集保孔，
+并不证明collision自身没有填孔。若无共同面则失败且保candidate；若有面也不能授整体保真性。
+完整保真及具体支撑适用性仍由后续独立几何/实际加载/接触/穿透门判定，不能用共同域存在制造pass。
+
+## 版本化动态支撑运行载荷
+
+旧RuntimeScene v1字段、序列化和静态矩形判据保持原样；增加独立RuntimeSceneV2，
+schema_version=x2env.runtime_scene.v2，support_profile=measured_single_support_dag.v1。
+统一parse_runtime_scene按明确schema_version分派，不能向旧载荷补默认字段造成历史digest漂移。
+CompiledScene用判别union；只有实际动态目标on边才生成v2，旧compile receipt不改。
+
+RuntimeSupportBinding逐on绑定source_id/target_id及kind(structural_top|measured_surface)，
+动态目标携target_version_sha256/target_asset_record_path/surface_path/surface_sha256/
+selection_receipt_path。所有相对路径必须被RuntimeMember的hash/size覆盖，结构目标相应项为null。
+资产record复用完整AssetVersion；surface复用MeasuredSupportSurface，不重复编造平面高度/域。
+首片selection仅unique_feasible；多可行面无授权选择即ambiguous，不选最高或首面。
+
+共享纯measure_support_surfaces_from_members(asset_record,read_member(path)->bytes)与
+read_asset_geometry_from_members读取完整变换几何/bounds/visual中心，先核成员hash/size。
+Registry wrapper只inspect再传入；包内消费者读取已核验相对成员，不构造假Registry/依赖原CAS。
+此片先接编译/可加载包与独立几何核验，动态physical消费者另片接；不能只因v2可解析就授物理通过。
+
 ## 坐标、图与动态物理
 
 - 保留SceneIR前景几何中心、结构上表面中心、normalized URDF XY中心/Z底面约定。

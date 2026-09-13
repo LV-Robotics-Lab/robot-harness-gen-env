@@ -53,6 +53,10 @@ classify_design_unknowns保留原unknown行与标记；规则有内容时原unkn
 
 ## 冻结验收seam
 
+动态包纯几何seam为`measure_support_surfaces_from_members(asset_record,read_member)`和
+`read_asset_geometry_from_members(asset_record,read_member)`；Registry与包共享同一测量逻辑，
+不mock内部测量或制造Registry。测试成员篡改/完整变换/源底面，v1字节不变及v2歧义/图/选面拒绝。
+
 C09碰撞新版本纵切增加`decompose_collision(parent_version, *, registry, store, backend, policy,
 approval, output_root, timeout)`，仅新不可变候选，不授物理能力；外部CPU分解使用显式backend seam。
 测试真实Registry/CAS、完整visual变换、父字节不变、审批绑定、错误块拒绝、失败日志及有界超时；
