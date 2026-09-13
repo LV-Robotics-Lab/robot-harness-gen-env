@@ -9,6 +9,33 @@ ROOT = Path(__file__).resolve().parents[4]
 PROGRESS = ROOT / "self_improving/golden_e2e_progress"
 
 
+def test_matrix_v2_keeps_history_and_all_required_delivery_gates():
+    import hashlib
+
+    matrix = json.loads((PROGRESS / "qualification-matrix-v2.json").read_text())
+    assert (
+        hashlib.sha256((PROGRESS / "qualification-matrix-v1.json").read_bytes()).hexdigest()
+        == (matrix["historical_matrix"]["sha256"])
+    )
+    assert [case["prompt"] for case in matrix["cases"]] == [
+        "在桌面放一个粉红色鼠标。",
+        None,
+        None,
+        "参考图片，在桌面放一个蓝色方块，颜色以文字要求为准。",
+    ]
+    assert all(case["source_policy"] == "default" for case in matrix["cases"])
+    assert matrix["execution"]["case_total_seconds"] == 1200
+    for gate in (
+        "active_tests_passed",
+        "bounded_fallback_and_failure_records_verified",
+        "idempotency_timeout_cancel_and_supported_recovery_verified",
+        "public_entry_and_executable_documentation",
+        "normal_git_push_and_user_edits_preserved",
+        "no_unresolved_critical_business_defects",
+    ):
+        assert matrix["blocking_gates"][gate] is True
+
+
 def test_matrix_preserves_approved_twelve_cases_and_difficulty():
     matrix = json.loads((PROGRESS / "qualification-matrix-v1.json").read_text())
     assert [c["id"] for c in matrix["cases"]] == [

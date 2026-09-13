@@ -84,6 +84,12 @@
     "retain_all_failures_and_partial_artifacts": true
   },
   "blocking_gates": {
+    "active_tests_passed": true,
+    "bounded_fallback_and_failure_records_verified": true,
+    "idempotency_timeout_cancel_and_supported_recovery_verified": true,
+    "public_entry_and_executable_documentation": true,
+    "normal_git_push_and_user_edits_preserved": true,
+    "no_unresolved_critical_business_defects": true,
     "all_four_current_cases_succeeded": true,
     "minimum_current_successful_packages_copied_and_run": 1,
     "real_physical_and_visual_results_separate": true,
