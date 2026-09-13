@@ -1,5 +1,25 @@
 # 进度与结果
 
+## 2026-09-13 动态支撑编译接线与两项真实运行终态
+
+- 独立RuntimeScene v2绑定原SceneIR、完整AssetVersion、每on边的候选/唯一可行面及实际位姿。
+  compile与只读resolve_measured_layout共用求解；缺失Z取真实几何，不信任报告尺寸或第一平面。
+  包成员前置核验可以不依赖原Registry/CAS；旧v1序列化不变。主线程编译/runtime/几何及相邻
+  package/replay/schema测试165 passed/3.05s。agent原128项/2.22s证据
+  `/var/tmp/canonical-dynamic-support-compile.VKBU7n/final-scope.xml`。
+  此片不授动态physical、正式package loader或模型grounding v3，三者仍需接入。
+- 真实Plate CoACD：固定8f420f6，`/var/tmp/canonical-plate-coacd-30FzZHZB/summary.json`，
+  3.051214s、13凸块、候选登记成功且共同面可用；parent/visual/physics/license未改。
+  新版本f640bb84a465a6a9c8a3afb141beeeea7e10c80cd80e9f84e406dc7093456e6d。
+  输入Kay Lousberg CC0 Plate；30cm×30cm×3cm、0.2kg及摩擦0.5均operator仿真参数非实测。
+  首次预检误用source.html在原生调用前失败，改为实际plate-source.html后仅一次原生调用。
+  collision_preservation_status=not_run、physical_evaluated=false，不授web/Gujie或矩阵成功。
+- S03固定b2b63b7唯一提交：workflow115e2e34-baaa-44bb-aace-cb605aeda8eb，
+  `/home/jingxiang/bingsheng/canonical-s03-pbr-v2-20260913.WH31zS/run-summary.json`；
+  600.682115s后failed/model_timeout，revision2，ingest成功、interpret失败，无SceneIR/资产/Genesis。
+  failure bundle保留8张输入采样帧，不是输出环境图片；进程reaped、exit1，无外层清理错误或重试。
+
+
 ## 2026-09-13 有界碰撞新版本组件与真实PBR探针
 
 - 新collision_decomposition/collision_child要求controller精确授权、固定CoACD版本/库/解释器身份；

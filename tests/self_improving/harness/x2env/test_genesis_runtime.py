@@ -11,6 +11,76 @@ from self_improving.harness.x2env.genesis_child import audit_geometry, audit_loa
 from self_improving.harness.x2env.genesis_runtime import RuntimeScene, run_scene
 
 
+@pytest.mark.parametrize(
+    "fault", [None, "surface", "selection", "asset_record", "position", "intent_dimensions"]
+)
+def test_dynamic_support_preflight_recomputes_copied_geometry_before_runtime(tmp_path, fault):
+    import shutil
+
+    from self_improving.harness.x2env.compile import StructuralPolicy, compile_scene
+    from tests.self_improving.harness.x2env.test_compile import dynamic_stack_inputs
+
+    source = tmp_path / "source"
+    source.mkdir()
+    store, registry, versions, ref, assets = dynamic_stack_inputs(source)
+    compiled = compile_scene(
+        ref,
+        assets,
+        registry=registry,
+        store=store,
+        output_root=source / "compiled",
+        policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+        seed=11,
+    )
+    package = tmp_path / "copy"
+    shutil.copytree(source / "compiled", package)
+    # Deliberately remove the original state/Registry and build assets from reach.
+    source.rename(tmp_path / "original-not-used")
+    payload = compiled.runtime_scene.model_dump(mode="json")
+    edge = next(b for b in payload["support_bindings"] if b["source_id"] == "box")
+    if fault in {"surface", "selection", "asset_record"}:
+        name = edge[
+            {
+                "surface": "surface_path",
+                "selection": "selection_receipt_path",
+                "asset_record": "target_asset_record_path",
+            }[fault]
+        ]
+        doc = json.loads((package / name).read_bytes())
+        if fault == "surface":
+            doc["plane_z_m"] += 0.1
+        elif fault == "selection":
+            doc["candidate_surface_sha256s"] = []
+        else:
+            doc["category"] = "forged"
+        raw = json.dumps(doc).encode()
+        (package / name).write_bytes(raw)
+        sha = hashlib.sha256(raw).hexdigest()
+        for m in payload["members"]:
+            if m["path"] == name:
+                m.update(sha256=sha, size_bytes=len(raw))
+        if fault == "surface":
+            edge["surface_sha256"] = sha
+    if fault == "position":
+        payload["entities"][0]["position_m"][2] += 0.1
+    if fault == "intent_dimensions":
+        name = payload["scene_ir_path"]
+        doc = json.loads((package / name).read_bytes())
+        doc["entities"][0]["dimensions"] = [0.2, 0.2, 0.2]
+        raw = json.dumps(doc).encode()
+        (package / name).write_bytes(raw)
+        sha = hashlib.sha256(raw).hexdigest()
+        payload["scene_ir_sha256"] = sha
+        for member in payload["members"]:
+            if member["path"] == name:
+                member.update(sha256=sha, size_bytes=len(raw))
+    result = run_scene(payload, package_root=package, runtime_roots={}, output_dir=tmp_path / "out")
+    assert not result["simulator_executed"]
+    assert result["error_code"] == (
+        "invalid_runtime_request" if fault else "missing_runtime_dependency"
+    )
+
+
 def test_scene_lifecycle_resets_built_state_before_zero_velocity_audit(tmp_path):
     import numpy as np
 

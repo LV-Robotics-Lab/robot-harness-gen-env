@@ -1,5 +1,16 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-DYNAMIC-COMPILE — 唯一实测面编译
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Shapely/GEOS与trimesh独立保留。
+- source_ref：Harness 8f420f6及多实体增量spec；target_paths：compile/genesis_runtime/measured_support与三测试。
+- integration_method：同一纯求解器、完整相对成员核验、独立v2载荷，旧v1字节不变。
+- verification：主线程165项相关回归通过；runtime_verification：动态Genesis not_run，不升级模型或物理门。
+- recorded_git_authors：上游算法与Harness整合作者分开记录。
+- 原生分解补充：固定8f420f6、30FzZHZB真实CoACD 3.05s，13块；Plate来源
+  https://poly.pizza/m/rTXpwR22g1，Kay Lousberg、CC0-1.0；输入hash/网页位于隔离intake记录，
+  不使用用户x2env1.0署名。此为operator分解，不是Harness web/Gujie矩阵成功；保真与物理未验。
+
 ## INT-CANONICAL-C09-COLLISION-CANDIDATE — 受控不可变碰撞候选
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：CoACD、trimesh、Shapely独立保留。

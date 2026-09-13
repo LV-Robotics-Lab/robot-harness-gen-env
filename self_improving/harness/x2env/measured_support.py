@@ -4,7 +4,9 @@ The caller selects among measured planes; this module never chooses the highest 
 Polygon operations preserve holes and reject invalid geometry without repair.
 """
 
+import hashlib
 import io
+import json
 import math
 import numbers
 import xml.etree.ElementTree as ET
@@ -117,9 +119,48 @@ def _urdf_vector(raw):
     return np.asarray(_numeric_vector(value, 3, "invalid_support_mesh: invalid URDF transform"))
 
 
-def _parts(version, store):
+def _verified_members(asset_record, read_member):
+    from .assets import AssetVersion
+
+    version = AssetVersion.model_validate(asset_record)
+    digest = hashlib.sha256(
+        json.dumps(
+            version.model_dump(mode="json", exclude={"version_sha256"}),
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode()
+    ).hexdigest()
+    if digest != version.version_sha256:
+        raise ValueError("support_asset_identity_mismatch")
+    raw_members = {}
+    for member in version.files:
+        path = PurePosixPath(member.path)
+        if (
+            not member.path
+            or path.is_absolute()
+            or ".." in path.parts
+            or str(path) != member.path
+            or "\\" in member.path
+            or ":" in member.path
+            or member.path in raw_members
+        ):
+            raise ValueError("support_asset_identity_mismatch: unsafe member")
+        raw = read_member(member.path)
+        if (
+            not isinstance(raw, bytes)
+            or len(raw) != member.artifact.size_bytes
+            or hashlib.sha256(raw).hexdigest() != member.artifact.sha256
+        ):
+            raise ValueError("support_asset_identity_mismatch")
+        raw_members[member.path] = raw
+    if version.entrypoint not in raw_members:
+        raise ValueError("support_asset_identity_mismatch: missing entrypoint")
+    return version, raw_members
+
+
+def _parts(version, read_member):
     members = {m.path: m.artifact for m in version.files}
-    document = ET.fromstring(store.read_artifact(members[version.entrypoint]))
+    document = ET.fromstring(read_member(version.entrypoint))
     if document.findall("joint") or len(document.findall("link")) != 1:
         raise ValueError("unsupported_articulation")
     result = {"visual": [], "collision": []}
@@ -143,7 +184,7 @@ def _parts(version, store):
             transform[:3, :3] = Rotation.from_euler("xyz", rpy).as_matrix() @ np.diag(scale)
             transform[:3, 3] = xyz
             scene = trimesh.load(
-                io.BytesIO(store.read_artifact(members[name])),
+                io.BytesIO(read_member(name)),
                 file_type=PurePosixPath(name).suffix[1:],
                 force="scene",
                 process=False,
@@ -195,7 +236,45 @@ def measure_support_surfaces(version_sha256, *, registry, store):
     No automatic plane selection, mesh repair, convexification, or runtime execution.
     """
     version = registry.inspect(version_sha256)
-    parts = _parts(version, store)
+    refs = {m.path: m.artifact for m in version.files}
+    return measure_support_surfaces_from_members(
+        version, lambda name: store.read_artifact(refs[name])
+    )
+
+
+def read_asset_geometry_from_members(asset_record, read_member):
+    """Verify an immutable record and return complete URDF-local authored geometry.
+
+    The member reader can be CAS-backed or package-relative; it has no Registry authority.
+    Geometry centre is the complete visual bounds centre, not the URDF origin.
+    """
+    version, members = _verified_members(asset_record, read_member)
+    parts = _parts(version, members.__getitem__)
+    geometry, bounds = {}, {}
+    for kind in ("visual", "collision"):
+        triangles = np.asarray([tri for tri, _ in parts[kind]])
+        vertices = triangles.reshape(-1, 3)
+        bounds[kind] = np.asarray([vertices.min(axis=0), vertices.max(axis=0)])
+        geometry[kind] = [
+            {
+                "local_vertices_m": vertices.tolist(),
+                "faces": np.arange(len(vertices)).reshape(-1, 3).tolist(),
+            }
+        ]
+    full = np.concatenate([bounds["visual"], bounds["collision"]])
+    return {
+        "geometry_parts": geometry,
+        "visual_center_m": bounds["visual"].mean(axis=0).tolist(),
+        "bounds_m": [full.min(axis=0).tolist(), full.max(axis=0).tolist()],
+        "visual_bounds_m": bounds["visual"].tolist(),
+        "collision_bounds_m": bounds["collision"].tolist(),
+    }
+
+
+def measure_support_surfaces_from_members(asset_record, read_member):
+    """Measure all candidates from verified relative member bytes, without a Registry."""
+    version, members = _verified_members(asset_record, read_member)
+    parts = _parts(version, members.__getitem__)
     surfaces = []
     for z, visual in _planes(parts["visual"]):
         matches = [
@@ -225,7 +304,7 @@ def measure_support_surfaces(version_sha256, *, registry, store):
         )
         surfaces.append(
             MeasuredSupportSurface(
-                version_sha256=version_sha256,
+                version_sha256=version.version_sha256,
                 plane_z_m=z,
                 polygons=rings,
                 member_bindings=tuple((m.path, m.artifact.sha256) for m in version.files),
@@ -253,6 +332,62 @@ def _pose(value):
     ):
         raise ValueError("invalid_support_pose")
     return position, Rotation.from_quat(q[[1, 2, 3, 0]]).as_matrix()
+
+
+def select_unique_support_surface(surfaces, *, source_geometry, source_pose, target_pose, known_z):
+    """Choose only a uniquely feasible authored plane; never highest/first.
+
+    Positions are URDF-origin world coordinates. Unknown Z is the sole computed axis.
+    The returned pose is a geometric proposal, not a contact/physics verdict.
+    """
+    if type(known_z) is not bool:
+        raise ValueError("invalid known_z selection constraint")
+    src, sr = _pose(source_pose)
+    target, tr = _pose(target_pose)
+    if not np.allclose(tr[:, 2], [0, 0, 1], atol=1e-6):
+        raise ValueError("unsupported_nonhorizontal_surface")
+    triangles = np.concatenate(
+        [
+            _triangles(part["local_vertices_m"], part["faces"])
+            for kind in ("visual", "collision")
+            for part in source_geometry["geometry_parts"][kind]
+        ]
+    )
+    minimum = float((triangles.reshape(-1, 3) @ sr.T)[:, 2].min())
+    candidates, feasible = [], []
+    for surface in surfaces:
+        raw = surface.model_dump_json().encode()
+        sha = hashlib.sha256(raw).hexdigest()
+        candidates.append(sha)
+        required_z = float(target[2] + surface.plane_z_m - minimum)
+        if known_z and abs(float(src[2]) - required_z) > TOLERANCE_M:
+            continue
+        candidate_pose = {
+            "position_m": [float(src[0]), float(src[1]), float(src[2]) if known_z else required_z],
+            "orientation_wxyz": list(source_pose["orientation_wxyz"]),
+        }
+        result = evaluate_support_footprint(
+            surface,
+            source_geometry_parts=source_geometry["geometry_parts"],
+            source_pose=candidate_pose,
+            target_pose=target_pose,
+        )
+        if result["status"] == "passed":
+            feasible.append((surface, candidate_pose, sha))
+    if len(feasible) > 1:
+        raise ValueError("ambiguous_support_surface")
+    if not feasible:
+        raise ValueError("no_feasible_support_surface: known Z or complete footprint conflict")
+    surface, pose, sha = feasible[0]
+    return (
+        surface,
+        pose,
+        {
+            "candidate_surface_sha256s": candidates,
+            "feasible_surface_sha256s": [sha],
+            "selected_surface_sha256": sha,
+        },
+    )
 
 
 def evaluate_support_footprint(surface, *, source_geometry_parts, source_pose, target_pose):

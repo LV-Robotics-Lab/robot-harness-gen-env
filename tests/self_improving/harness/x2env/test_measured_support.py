@@ -92,6 +92,56 @@ def pose(x=0.0, y=0.0, z=0.0):
     return {"position_m": [x, y, z], "orientation_wxyz": [1.0, 0.0, 0.0, 0.0]}
 
 
+def test_package_member_reader_measures_same_surface_without_registry(tmp_path):
+    from self_improving.harness.x2env.measured_support import (
+        measure_support_surfaces,
+        measure_support_surfaces_from_members,
+        read_asset_geometry_from_members,
+    )
+
+    mesh = trimesh.creation.box(extents=[0.8, 0.6, 0.2])
+    registry, store, version = registered(tmp_path, mesh, transform=("xyz", "1 2 3"))
+    members = {m.path: store.read_artifact(m.artifact) for m in version.files}
+    measured = measure_support_surfaces_from_members(version, members.__getitem__)
+    assert measured == measure_support_surfaces(
+        version.version_sha256, registry=registry, store=store
+    )
+    geometry = read_asset_geometry_from_members(version, members.__getitem__)
+    assert geometry["visual_center_m"] == pytest.approx([1, 2, 3])
+    assert np.asarray(geometry["bounds_m"]) == pytest.approx(
+        np.array([[0.6, 1.7, 2.9], [1.4, 2.3, 3.1]])
+    )
+    members["visual.obj"] += b"# tampered\n"
+    with pytest.raises(ValueError, match="support_asset_identity_mismatch"):
+        measure_support_surfaces_from_members(version, members.__getitem__)
+
+
+def test_surface_selection_never_accepts_multiple_feasible_candidates(tmp_path):
+    from self_improving.harness.x2env.measured_support import (
+        measure_support_surfaces,
+        select_unique_support_surface,
+    )
+
+    registry, store, version = registered(tmp_path, rectangle(-0.5, -0.5, 0.5, 0.5))
+    surface = measure_support_surfaces(version.version_sha256, registry=registry, store=store)[0]
+    geometry = {"geometry_parts": parts(rectangle(-0.1, -0.1, 0.1, 0.1, 0))}
+    # A duplicate candidate is still ambiguous input, not a reason to choose first.
+    with pytest.raises(ValueError, match="ambiguous_support_surface"):
+        select_unique_support_surface(
+            (surface, surface),
+            source_geometry=geometry,
+            source_pose=pose(),
+            target_pose=pose(),
+            known_z=False,
+        )
+    chosen, actual_pose, receipt = select_unique_support_surface(
+        (surface,), source_geometry=geometry, source_pose=pose(), target_pose=pose(), known_z=False
+    )
+    assert chosen == surface
+    assert actual_pose["position_m"] == pytest.approx([0, 0, 0.1])
+    assert receipt["feasible_surface_sha256s"] == [receipt["selected_surface_sha256"]]
+
+
 def test_convex_source_interior_crossing_hole_is_rejected(tmp_path):
     from self_improving.harness.x2env.measured_support import (
         evaluate_support_footprint,
