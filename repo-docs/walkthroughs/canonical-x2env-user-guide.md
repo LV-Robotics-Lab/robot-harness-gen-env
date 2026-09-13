@@ -64,7 +64,10 @@ git check-ignore .x2env-private/router-key
   },
   "scene_design_policy": {
     "mode": "generated_layout",
-    "enabled": true
+    "enabled": true,
+    "structural_defaults_enabled": true,
+    "world_anchor_xy": [0, 0],
+    "world_anchor_yaw_degrees": 0
   },
   "local_enabled": true,
   "genesis": {
