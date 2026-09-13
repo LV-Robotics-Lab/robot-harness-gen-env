@@ -483,7 +483,7 @@ def test_pinned_provider_bytes_and_symlink_ancestors_rejected(tmp_path):
 
 
 @pytest.mark.parametrize("query", ["vessel", "https://example.org/asset.glb"])
-def test_deployed_web_search_uses_one_managed_advisory_without_rewriting_category(
+def test_deployed_web_search_binds_one_revision_and_stops_repeated_query(
     tmp_path, monkeypatch, query
 ):
     """Real Harness/transport/engine, explicit process and HTTP boundary doubles only."""
@@ -566,14 +566,20 @@ def test_deployed_web_search_uses_one_managed_advisory_without_rewriting_categor
         for r in records
         if isinstance(r, dict) and r.get("schema_version") == "x2env.search_advisory.v1"
     ]
-    assert len(advisory_records) == 1
-    receipt = advisory_records[0]
+    assert len(advisory_records) == (2 if query == "vessel" else 1)
+    receipt = next(r for r in advisory_records if "previous_failure" not in r)
     assert receipt["original_category"] == "box"
     assert receipt["external_agent_executed"] is True
     assert snapshot.compiled_scene is None
     if query == "vessel":
         assert receipt["status"] == "completed" and receipt["query"] == query
         assert len(calls) == 1
+        assert any(
+            isinstance(r, dict) and r.get("reason") == "repeated_search_query"
+            for doc in records
+            if isinstance(doc, dict)
+            for r in doc.get("candidates", [])
+        )
         assert any(
             isinstance(r, dict) and r.get("query") == query and r.get("category") == "box"
             for r in records

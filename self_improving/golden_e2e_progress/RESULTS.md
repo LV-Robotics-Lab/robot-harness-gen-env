@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 重建第四例实际越过获取门
+
+- d4c6a5e / 15dc259c-b085-4ff8-8596-8553b88b1c36，259.017125秒，failed / scene_compile_failed。
+- ingest 0.292892秒、interpret 62.865123秒、asset.resolve 182.093707秒、ground 10.684430秒均成功；
+  compile 0.026453秒失败，原因unsupported_structural_color（table颜色light brown）。无场景replay或最终包。
+- 新生成、颜色、Genesis预览、视觉候选评估成功；失败导出已包含预览媒体/资产证据，不是E2E通过。
+- 命令/summary：`/home/jingxiang/bingsheng/runtime/harness/p1-evidence/reconstruction-04/`；
+  失败包：`/home/jingxiang/bingsheng/runtime/harness/outputs/p1-reconstruction-04/failure/`。
+- 根测试2417 passed/1 skipped，283.92秒，root-compact.log/xml；执行期间有新增web切片，
+  不是同源冻结全库资格；web增量另有119项通过。未超时。
+
 ## 2026-09-13 重建第三例与存储修复
 
 - reconstruction-03终态blocked，299.796203秒，artifact graph byte budget exceeded；生成、颜色覆盖及预览完成，视觉未执行。

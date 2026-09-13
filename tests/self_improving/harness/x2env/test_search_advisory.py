@@ -36,6 +36,53 @@ def test_managed_search_query_preserves_original_entity_and_evidence(tmp_path):
     assert store.read_artifact(scene_ref) == raw
 
 
+@pytest.mark.parametrize("fault", [None, "scene", "entity", "status"])
+def test_revised_search_is_bound_to_previous_failed_entity_evidence(tmp_path, fault):
+    from self_improving.harness.x2env.search_advisory import plan_search
+
+    store, _, _, scene_ref, _ = inputs(tmp_path)
+    entity = SceneIR.model_validate_json(store.read_artifact(scene_ref)).entities[0]
+    failure = store.write_artifact(
+        json.dumps(
+            {
+                "status": "succeeded" if fault == "status" else "blocked",
+                "resolved": {
+                    "scene_ir": {} if fault == "scene" else scene_ref.model_dump(),
+                    "assets": [],
+                },
+                "unresolved_entities": [] if fault == "entity" else [entity.id],
+                "error_code": "web_assets_unresolved",
+                "candidates": [{"entity_id": entity.id, "error_code": "unsupported mesh"}],
+            }
+        ).encode(),
+        "application/json",
+    )
+    program = executable(
+        tmp_path, {"query": "different description", "reason": "failed candidates"}
+    )
+    backend = CodexBackend(
+        program, hashlib.sha256(program.read_bytes()).hexdigest(), "double", store
+    )
+    result = plan_search(
+        backend,
+        scene_ref,
+        entity,
+        store=store,
+        output_root=tmp_path / "revision",
+        timeout=10,
+        previous_failure=failure,
+    )
+    if fault:
+        assert result.status == "failed"
+        assert not (tmp_path / "revision/process.json").exists()
+        return
+    assert result.status == "completed"
+    receipt = json.loads(store.read_artifact(result.receipt))
+    assert receipt["previous_failure"] == failure.model_dump()
+    context = json.loads((tmp_path / "revision/context.json").read_bytes())
+    assert context["previous_failure"]["error_code"] == "web_assets_unresolved"
+
+
 @pytest.mark.parametrize(
     "fault", ["url", "authority", "tools", "entity", "missing_backend", "cross_store"]
 )

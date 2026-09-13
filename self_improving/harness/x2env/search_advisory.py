@@ -41,7 +41,16 @@ class SearchAdvisoryResult(Model):
     error_code: str | None = None
 
 
-def plan_search(backend, scene_ir, entity, *, store: ArtifactStore, output_root, timeout=600):
+def plan_search(
+    backend,
+    scene_ir,
+    entity,
+    *,
+    store: ArtifactStore,
+    output_root,
+    timeout=600,
+    previous_failure: ArtifactRef | None = None,
+):
     """Caller supplies remaining budget; one existing managed backend invocation at most."""
     root = Path(output_root)
     if type(timeout) is not int or not 1 <= timeout <= 600:
@@ -82,6 +91,15 @@ def plan_search(backend, scene_ir, entity, *, store: ArtifactStore, output_root,
                 "geometry and visual checks"
             ),
         }
+        if previous_failure is not None:
+            failure = json.loads(store.read_artifact(previous_failure))
+            if (
+                failure.get("status") != "blocked"
+                or failure.get("resolved", {}).get("scene_ir") != scene_ir.model_dump()
+                or entity.id not in failure.get("unresolved_entities", [])
+            ):
+                raise ValueError("unbound_search_failure")
+            context["previous_failure"] = failure
         record("context.json", json.dumps(context, sort_keys=True).encode())
         prompt = (
             "You advise the Harness on one broad, concise lexical search query "
@@ -91,9 +109,11 @@ def plan_search(backend, scene_ir, entity, *, store: ArtifactStore, output_root,
             "the query is not a replacement SceneIR category. "
             "Return one query using letters, digits, spaces, underscores or hyphens only, "
             "and a short reason. Do not return a URL, filename, selected asset, license, "
-            "qualification or execution receipt. Do not use tools. There is one search call, "
-            "no iterative alternate-query retries. Context:\n"
-            + json.dumps(context, ensure_ascii=False)
+            "qualification or execution receipt. Do not use tools. "
+            "When previous_failure is present, this is the final bounded query revision. "
+            "Use its failed candidates and previous query to choose a different lexical "
+            "description of the SAME requested entity, not another object. Otherwise this "
+            "is the initial query. Context:\n" + json.dumps(context, ensure_ascii=False)
         )
         raw = backend._invoke(root, prompt, [], SearchQuery, record, timeout, start)
         proposal = SearchQuery.model_validate_json(raw)
@@ -101,7 +121,14 @@ def plan_search(backend, scene_ir, entity, *, store: ArtifactStore, output_root,
     except FileNotFoundError as exc:
         status, error = "blocked", "blocked_external_resource"
         record("error.json", json.dumps({"reason": str(exc)}).encode())
-    except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+    except (
+        ValueError,
+        OSError,
+        KeyError,
+        TypeError,
+        AttributeError,
+        subprocess.SubprocessError,
+    ) as exc:
         known = {
             "unbound_search_entity",
             "search_store_mismatch",
@@ -120,6 +147,7 @@ def plan_search(backend, scene_ir, entity, *, store: ArtifactStore, output_root,
                 "schema_version": "x2env.search_advisory.v1",
                 "status": status,
                 "error_code": error,
+                **({"previous_failure": previous_failure.model_dump()} if previous_failure else {}),
                 "authority": "search_query_advisory_only",
                 "scene_ir": scene_ir.model_dump(),
                 "entity": entity.model_dump(mode="json"),

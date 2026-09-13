@@ -55,6 +55,104 @@ class ProviderDouble:
         return ProviderFetchResult(status="succeeded", source_path=str(path), receipt=ref)
 
 
+@pytest.mark.parametrize("second_match", [False, True])
+def test_web_query_revision_stops_after_one_retry_and_retains_both_receipts(tmp_path, second_match):
+    from self_improving.harness.x2env.codex import CodexBackend
+    from self_improving.harness.x2env.search_advisory import plan_search
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+    from tests.self_improving.harness.x2env.test_codex import executable
+
+    store, registry, _, scene, image = inputs(tmp_path)
+    program = executable(tmp_path, {"query": "alternative name", "reason": "broader search"})
+    backend = CodexBackend(
+        program, hashlib.sha256(program.read_bytes()).hexdigest(), "double", store
+    )
+    calls = []
+
+    class EmptyProvider(ProviderDouble):
+        def search(self, entity, source, limit, *, query=None):
+            calls.append(query)
+            ref = store.write_artifact(
+                json.dumps(
+                    {
+                        "entity_id": entity.id,
+                        "category": entity.category,
+                        "query": query,
+                    }
+                ).encode(),
+                "application/json",
+            )
+            if second_match and query is not None:
+                return super().search(entity, source, limit).model_copy(update={"receipt": ref})
+            return ProviderSearchResult(
+                status="blocked",
+                candidates=(),
+                receipt=ref,
+                error_code="asset_not_found",
+            )
+
+    resolver = WebAssetResolver(
+        store,
+        registry,
+        EmptyProvider(store, tmp_path),
+        VisualDouble(store),
+        preview_double(store, image),
+        prepared(store, scene),
+        retry_query_port=lambda entity, failure: plan_search(
+            backend,
+            scene,
+            entity,
+            store=store,
+            output_root=tmp_path / "query",
+            timeout=10,
+            previous_failure=failure,
+        ),
+    )
+    result = resolver.resolve(
+        scene,
+        allowed_sources=("web",),
+        allow_cousin=False,
+        output_root=tmp_path / "resolve",
+    )
+    assert result.status == ("succeeded" if second_match else "blocked")
+    assert bool(result.resolved.assets) == second_match
+    assert calls == [None, "alternative name"]
+    receipt = json.loads(store.read_artifact(result.receipt))
+    assert len(receipt["attempts"]) == 2 and receipt["query_revisions"] == 1
+    assert (tmp_path / "resolve/receipt.json").is_file()
+    assert (tmp_path / "resolve/query-revision/receipt.json").is_file()
+
+
+@pytest.mark.parametrize("error", ["blocked_license", "provider_offline", "resolver_timeout"])
+def test_web_external_failure_never_spends_query_revision(tmp_path, error):
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+
+    class Unavailable:
+        def search(self, *args, **kwargs):
+            return ProviderSearchResult(
+                status="blocked",
+                candidates=(),
+                error_code=error,
+                receipt=store.write_artifact(b"{}", "application/json"),
+            )
+
+    def forbidden(*args):
+        raise AssertionError("resource failure must not retry the model")
+
+    result = WebAssetResolver(
+        store,
+        registry,
+        Unavailable(),
+        None,
+        None,
+        None,
+        retry_query_port=forbidden,
+    ).resolve(scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    assert result.error_code == error and not result.resolved.assets
+
+
 @pytest.mark.parametrize(
     "override",
     [

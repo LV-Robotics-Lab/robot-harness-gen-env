@@ -22,13 +22,110 @@ from .search_advisory import SearchAdvisoryResult, SearchQuery
 
 
 class WebAssetResolver:
-    def __init__(self, store, registry, provider, backend, preview, prepare, *, query_port=None):
+    def __init__(
+        self,
+        store,
+        registry,
+        provider,
+        backend,
+        preview,
+        prepare,
+        *,
+        query_port=None,
+        retry_query_port=None,
+    ):
         self.store, self.registry, self.provider = store, registry, provider
         self.backend, self.preview, self.prepare = backend, preview, prepare
         self.query_port = query_port
+        self.retry_query_port = retry_query_port
 
     def resolve(
         self, scene_ir, *, allowed_sources, allow_cousin, output_root, timeout=600, entity_ids=None
+    ):
+        started = time.monotonic()
+        args = dict(allowed_sources=allowed_sources, allow_cousin=allow_cousin)
+        first = self._resolve_once(
+            scene_ir,
+            **args,
+            output_root=output_root,
+            timeout=timeout,
+            entity_ids=entity_ids,
+            started=started,
+        )
+        # Only acquisition mismatch is retriable, not credentials, bad evidence or timeouts.
+        retriable = {
+            "asset_not_found",
+            "web_assets_unresolved",
+            "visual_mismatch",
+            "unsupported material fields",
+            "unsupported nondefault texture sampler",
+            "unsupported GLB extensions; material/geometry loss is not allowed",
+            "unsupported skinned/animated mesh: articulation cannot be flattened",
+        }
+        if self.retry_query_port is None or first.status != "blocked":
+            return first
+        previous = json.loads(self.store.read_artifact(first.receipt))
+        reasons = [r["error_code"] for r in previous["candidates"] if r.get("error_code")]
+        if first.error_code not in retriable or any(e not in retriable for e in reasons):
+            return first
+        remaining = int(timeout - (time.monotonic() - started))
+        if remaining < 1:
+            return first
+
+        def query(entity):
+            return self.retry_query_port(entity, first.receipt)
+
+        # Reuse the same acquisition implementation; this instance has no retry port.
+        second = WebAssetResolver(
+            self.store,
+            self.registry,
+            self.provider,
+            self.backend,
+            self.preview,
+            self.prepare,
+            query_port=query,
+        )._resolve_once(
+            scene_ir,
+            **args,
+            output_root=Path(output_root) / "query-revision",
+            timeout=remaining,
+            entity_ids=tuple(previous["unresolved_entities"]),
+            previous_failure=first.receipt,
+            excluded_candidates={
+                r["candidate"]["candidate_id"] for r in previous["candidates"] if "candidate" in r
+            },
+        )
+        assets = (*first.resolved.assets, *second.resolved.assets)
+        resolved = ResolvedAssetSet(scene_ir=scene_ir, assets=assets)
+        receipt = self.store.write_artifact(
+            json.dumps(
+                {
+                    "status": second.status,
+                    "error_code": second.error_code,
+                    "resolved": resolved.model_dump(mode="json"),
+                    "query_revisions": 1,
+                    "attempts": [first.model_dump(mode="json"), second.model_dump(mode="json")],
+                    "wall_seconds": time.monotonic() - started,
+                },
+                sort_keys=True,
+            ).encode(),
+            "application/json",
+        )
+        (Path(output_root) / "query-revisions.json").write_bytes(self.store.read_artifact(receipt))
+        return second.model_copy(update={"resolved": resolved, "receipt": receipt})
+
+    def _resolve_once(
+        self,
+        scene_ir,
+        *,
+        allowed_sources,
+        allow_cousin,
+        output_root,
+        timeout=600,
+        entity_ids=None,
+        started=None,
+        excluded_candidates=(),
+        previous_failure=None,
     ):
         root = Path(output_root)
         if (
@@ -43,7 +140,7 @@ class WebAssetResolver:
         ):
             raise ValueError("invalid web resolver configuration")
         root.mkdir(parents=True, exist_ok=False)
-        start = time.monotonic()
+        start = time.monotonic() if started is None else started
         deadline = start + timeout
         records, assets = [], []
         error, unresolved = None, []
@@ -88,6 +185,18 @@ class WebAssetResolver:
                     )
                     artifact_closure(self.store, (advisory.receipt,))
                     query_record = json.loads(self.store.read_artifact(advisory.receipt))
+                    if previous_failure is not None:
+                        if query_record.get("previous_failure") != previous_failure.model_dump():
+                            raise ValueError("unbound_search_revision")
+                        previous = json.loads(self.store.read_artifact(previous_failure))
+                        old_queries = {
+                            r["query_advisory"]["query"].casefold()
+                            for r in previous["candidates"]
+                            if r.get("entity_id") == entity.id
+                            and r.get("query_advisory", {}).get("query")
+                        }
+                        if advisory.query and advisory.query.casefold() in old_queries:
+                            raise ValueError("repeated_search_query")
                     expected = {
                         "schema_version": "x2env.search_advisory.v1",
                         "authority": "search_query_advisory_only",
@@ -149,7 +258,7 @@ class WebAssetResolver:
                 unresolved.append(entity.id)
                 error = "invalid_provider_evidence"
                 continue
-            seen = set()
+            seen = set(excluded_candidates)
             for index, candidate in enumerate(search.candidates[:8]):
                 if candidate.candidate_id in seen:
                     continue

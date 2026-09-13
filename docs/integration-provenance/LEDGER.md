@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-WEB-QUERY-REVISION
+
+- origin_owner：Yuxin asset_reuse engine；integration_owner：Bingsheng Harness workstream。
+- upstream_owner：OpenXSim/各provider与资产许可作者分别保留；recorded_git_authors见Git元数据。
+- source_refs：d4c6a5e及web-solid-box-02真实失败；target_paths：web_resolver/search_advisory/deployment。
+- integration_method：同一resolver最多一次失败回执绑定的Codex词法修订，共享原时限，只搜未解决实体，
+  跳过已尝试candidate；原category不改，无固定同义词或URL映射。权限/许可/超时不触发重试。
+- lifecycle：integrated；verification：contract_pass；runtime_verification：修正后真实web待运行。
+
 ## INT-CANONICAL-RUNTIME-EVIDENCE-SIZE
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis及固定Gujie来源不变。

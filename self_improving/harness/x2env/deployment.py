@@ -335,7 +335,7 @@ class _RequestResolver:
                     timeout=remaining(),
                 )
 
-            def query(entity):
+            def query(entity, previous_failure=None):
                 return plan_search(
                     self.backend,
                     scene_ir,
@@ -343,10 +343,18 @@ class _RequestResolver:
                     store=self.store,
                     output_root=root / "search-advisory" / str(uuid.uuid4()),
                     timeout=remaining(),
+                    previous_failure=previous_failure,
                 )
 
             return WebAssetResolver(
-                self.store, registry, provider, self.backend, preview, prepare, query_port=query
+                self.store,
+                registry,
+                provider,
+                self.backend,
+                preview,
+                prepare,
+                query_port=query,
+                retry_query_port=query,
             )
 
         web = _ConfiguredSource(self.store, web_factory) if config.web else None

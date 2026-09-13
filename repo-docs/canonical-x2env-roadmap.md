@@ -21,6 +21,10 @@
 完整E2E仍受视觉语义、许可、材质/动画范围等限制，逐次失败见[P1记录](../docs/evidence/canonical-p0-p1-20260913.md)。
 因此下一步是解决实际完成门缺口，不是重新从零写provider/重建adapter。
 
+当前web增加最多一次失败回执绑定的检索词修订，共享原资产阶段时限；重复词/候选停止，
+许可与外部资源错误不触发模型重试。重建第四例已越过资产获取与视觉门，但compile因自由文本
+结构颜色`light brown`无法解析而失败；需要补颜色数值契约，不能用专用词表或丢弃颜色绕过。
+
 资产搜索继续复用 Yuxin engine，围绕现有 `WebConfig` 接入固定 provider config、许可记录及所需索引。先在隔离目录完成一次真实下载、规范化、Registry 登记、Genesis replay/validate；记录作者、许可、来源 URL、原始 bytes 和新版本。许可或服务不可用保留受阻，不绕过来源检查。
 
 重建继续从固定 Gujie/替代后端的 adapter seam 接入。先确认外部 API、source commit、解释器/配置/模型 pin、授权和资源可用，再让同一 Harness 执行新几何获取。必须证明新 digest 在运行前不在库中，完成规范化和场景运行；旧 mesh 复制和简单形状代替不能计作重建成功。
