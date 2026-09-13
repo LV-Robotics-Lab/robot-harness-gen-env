@@ -1,5 +1,21 @@
 # 进度与结果
 
+## 2026-09-13 推送后文档补全与检查
+
+- 新增 [文档总入口](../../repo-docs/canonical-x2env.md)、Python/CLI API、测试手册、
+  部署与资产接入、后续开发计划；扩展使用指南并同步 README、AGENTS 和进度入口。
+  内容依据当前 callsite，区分现有接口、真实 matrix v2 子集和后续计划。
+- 基线为远端 f80e2a82，原工作区整理记录已由原任务独立提交 fc956af；本轮只改文档。
+- 本地文档链接、历史归档 bytes、schema 快照和 CLI help 检查通过；远端文档 HTTP 全检未运行。
+- 根 `pytest -q` 在旧 Python 3.13 环境运行 252.44 秒：2252 passed、152 failed、1 skipped，
+  exit 1，未超时。失败栈显示缺少 `shapely`，以及旧 `1_asset_reuse` 的 ignored 缓存目录
+  触发迁移断言；已只读确认两项环境前置条件并补入测试手册。不改共享环境、不清理旧目录、
+  不把该结果称为全测试通过，也不覆盖此前 f80e2a82 的冻结 CI 结果。
+- 失败摘录（非完整日志，终端输出曾截断）：
+  `/var/tmp/x2env-docs-validation-20260913.W8JQgv/failure-excerpts.txt`。
+- 模型、Genesis、coverage 全矩阵本轮未运行；不新增能力资格，不创建 main PR。
+  文档按用户授权正常提交并 push bingsheng；实际提交/远端确认由最终 Git 输出记录。
+
 ## 2026-09-13 普通 push 后工作区归档
 
 - 新用户授权下，143 个证据目录、27 个文件、两份修改保护备份已集中到

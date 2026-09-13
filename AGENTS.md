@@ -51,6 +51,8 @@ task, TODO, decision, and result ledgers before reporting progress.
 For the current matrix v2 implementation walkthrough, runtime evidence, or push decision, read
 `self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md`.
 For user setup and public CLI recipes, read `repo-docs/walkthroughs/canonical-x2env-user-guide.md`.
+For Python/CLI API, testing, backend/asset integration, or the next development plan, start at
+`repo-docs/canonical-x2env.md` and follow its task-specific guide.
 
 When incorporating behavior from Bingsheng, Gujie, or Yuxin, also read
 `docs/integration-provenance/README.md` and update `docs/integration-provenance/LEDGER.md` in the

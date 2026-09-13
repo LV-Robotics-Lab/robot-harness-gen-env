@@ -2,6 +2,15 @@
 
 更新时间：2026-09-13
 
+## 当前：推送后文档补全
+
+- [x] 核对远端 bingsheng=f80e2a82、matrix v2 审计和当前 CLI/API。
+- [x] 保留此前目录整理的 7 份台账；原任务已独立提交 fc956af，本轮接续该提交。
+- [x] 完成使用、API、测试、部署/资产接入与 roadmap；本地链接/schema/help 通过。
+- [x] 根测试 2252 passed、152 failed、1 skipped；环境缺 shapely 和旧 ignored 目录问题已记录，未伪报全绿。
+- [ ] 文档独立提交并正常 push bingsheng；最终 Git/远端输出为完成证据。
+- 本轮只更新文档；不重跑模型/Genesis，不创建 main PR。dashboard 三入口仍为 HTTP 404。
+
 ## Push 后另行授权的目录整理
 
 - [x] 读取实际 Git/进程/入口依赖；冻结 115 个本地工作树和 116 个 refs 清单。

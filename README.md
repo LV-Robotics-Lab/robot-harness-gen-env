@@ -1,5 +1,17 @@
 # Robot Harness Gen-Env and Self-Improving Platform
 
+For the current multimodal Genesis workflow, start with the
+[Canonical x2env documentation](repo-docs/canonical-x2env.md):
+[user guide](repo-docs/walkthroughs/canonical-x2env-user-guide.md),
+[Python/CLI API](repo-docs/canonical-x2env-api.md),
+[deployment and integration](repo-docs/canonical-x2env-integration.md),
+[testing](repo-docs/canonical-x2env-testing.md), and
+[development roadmap](repo-docs/canonical-x2env-roadmap.md).
+Matrix v2 verified four simple input cases with local assets and one isolated package replay.
+Web/reconstruction deployment, complex scenes, robot policies and data collection have separate
+unfulfilled verification requirements. The following `/gen-env` instructions describe the retained
+RoboTwin/SAPIEN compiler, not the Genesis CLI.
+
 `/gen-env` compiles bounded natural-language requests into deterministic,
 RoboTwin-loadable scene packages and validates them in SAPIEN before they can
 enter the Robot Harness command loop.

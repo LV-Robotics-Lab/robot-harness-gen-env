@@ -4,6 +4,11 @@
 Genesis 回放、观测、诊断与输出。用户不直接操作 Codex CLI/MCP，也没有第二套外部 agent 工作流。
 这是开发实验入口，不是已认证的机器人策略测试或数据采集服务。
 
+配套手册：[文档总览](../canonical-x2env.md)、[Python/CLI API](../canonical-x2env-api.md)、
+[部署与资产接入](../canonical-x2env-integration.md)、[测试与包回放](../canonical-x2env-testing.md)、
+[后续开发计划](../canonical-x2env-roadmap.md)。API 手册描述当前可调用签名；旧计划中的
+`Harness.from_deployment`、顶层类导出和 clarification CLI 参数并非当前入口。
+
 ## 先确认版本和资源
 
 以下命令以 Linux、Python 3.13 的独立环境为例。项目元数据允许 Python >=3.11，

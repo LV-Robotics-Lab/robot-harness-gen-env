@@ -1,8 +1,10 @@
 # Robot Harness /gen-env 中文 Repo Docs
 
-Canonical x2env正在收敛实施，当前能力与旧路径的区别见[Canonical x2env](modules/canonical-x2env.md)。
-安装、私密部署配置、四种输入和故障排查见[用户操作指南](walkthroughs/canonical-x2env-user-guide.md)。
-以下旧System 2/MCP/Qwen页面不代表新的默认控制关系；最终文档清理仍待C14。
+当前 Genesis 路径从 [Canonical x2env 文档入口](canonical-x2env.md)开始：
+[使用](walkthroughs/canonical-x2env-user-guide.md)、[API](canonical-x2env-api.md)、
+[部署与接入](canonical-x2env-integration.md)、[测试](canonical-x2env-testing.md)、
+[后续开发](canonical-x2env-roadmap.md)。matrix v2 已完成四简单例与一次隔离复制运行并推送 bingsheng。
+以下稳定 `/gen-env` 和旧 System 2/MCP/Qwen 页面保留各自范围；旧模型编排不代表新的默认控制关系。
 
 这个仓库有两层。稳定核心是确定性的 `/gen-env` 编译器：一句受限的中英双语自然语言进来，被编译成 RoboTwin 可加载的场景包，然后才允许进入命令循环。它的路径是 `text -> 类型化 SceneSpec -> 资产 grounding -> 目标局部 support/containment 求解 -> 哈希绑定的 resolved 包 -> RoboTwin/SAPIEN 回放 -> 运行时门控`。外围 `self_improving/` 再组织选择、采集、训练、评估、诊断、记忆、资产复用与跨仿真适配，但不能绕过核心契约。看 [一条真实路径](walkthroughs/one-real-run.md) 可以走完稳定核心；平台边界见 [Self-Improving 平台](modules/self-improving-platform.md)。
 

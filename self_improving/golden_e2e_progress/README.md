@@ -6,6 +6,8 @@
 
 ## 文件地图
 
+- [Canonical 文档总览](../../repo-docs/canonical-x2env.md)：当前用户/API/测试/接入/roadmap 的阅读入口。
+
 - `CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md`：本轮实施walkthrough、真实案例与复制运行、最终push审计入口；当前状态以文内明确结论为准。
 
 - `CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md`：C08/C09动态支撑拓扑、真实面域与多实体设计补全增量契约；尚未实现的能力不升级为通过。

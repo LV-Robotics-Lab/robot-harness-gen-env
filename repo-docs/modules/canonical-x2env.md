@@ -1,4 +1,10 @@
-# Canonical x2env（收敛实施中）
+# Canonical x2env：实现演进记录
+
+当前使用、API、接入、测试与开发方向以[文档入口](../canonical-x2env.md)为准。
+matrix v2 四个简单例及 S01 隔离复制已通过，`f80e2a82` 已推送；精确证据见
+[最终审计](../../self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)。
+下文是实现时逐次追加的记录，包括曾经的失败和“待验”描述，不能作为当前待办队列，
+也不能把某次组件通过扩大为全部场景通过。
 
 当前验收以用户2026-09-13新授权matrix v2为准：四个简单真实workflow、至少一个本次成功包copy-run、
 关键流程测试和完整交付审计；单次核验20分钟，两小时内给出可push/不可push。旧4+4+4、三来源成功及
