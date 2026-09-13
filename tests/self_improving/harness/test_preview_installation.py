@@ -8,6 +8,59 @@ from tests.self_improving.harness.test_provider_installation import (
 )
 
 
+def test_wheel_inside_git_checkout_keeps_installed_identity_and_record_checks(installed_provider):
+    root, python, _ = installed_provider
+    probe = r"""
+import pathlib, subprocess, sysconfig
+from importlib import metadata
+from self_improving.harness.x2env import asset_preview
+from self_improving.harness.x2env.source_identity import GitSourcePolicy, capture_source_identity
+root = pathlib.Path.cwd()
+module = pathlib.Path(asset_preview.__file__).parent
+assert module.is_relative_to(pathlib.Path(sysconfig.get_paths()['purelib']))
+assert not (root / '.git').exists()
+def git(*args):
+    return subprocess.run(['git', '-C', str(root), *args], check=True,
+                          capture_output=True, text=True).stdout.strip()
+try:
+    git('init')
+    (root / 'unrelated.txt').write_text('This Git project does not own the installed package.\n')
+    git('add', 'unrelated.txt')
+    git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid',
+        'commit', '-m', 'unrelated parent repository')
+    identity = capture_source_identity(module)
+    assert identity.kind == 'installed_distribution', identity
+    try:
+        capture_source_identity(module, policy=GitSourcePolicy(root=str(root)))
+    except ValueError as exc:
+        assert str(exc) == 'source_git_root_mismatch', exc
+    else:
+        raise AssertionError('explicit Git accepted a noncanonical installed package')
+    dist = metadata.distribution('robot-harness-gen-env')
+    metadata_path = next(pathlib.Path(dist.locate_file(f)) for f in dist.files
+                         if str(f).endswith('.dist-info/METADATA'))
+    for member in (module / 'genesis_child.py', metadata_path):
+        original = member.read_bytes()
+        try:
+            member.write_bytes(original + b'\n# installed-source tamper\n')
+            try:
+                capture_source_identity(module)
+            except ValueError as exc:
+                assert str(exc) == 'source_record_member_mismatch', exc
+            else:
+                raise AssertionError('ancestor Git bypassed installed member verification')
+        finally:
+            member.write_bytes(original)
+finally:
+    if (root / '.git').exists():
+        (root / '.git').rename(root / 'finished-ancestor-git-metadata')
+"""
+    try:
+        _run([str(python), "-I", "-B", "-c", probe], cwd=root)
+    except subprocess.CalledProcessError as exc:
+        raise AssertionError(exc.stderr) from exc
+
+
 def test_installed_preview_records_distribution_without_denying_site_packages(installed_provider):
     root, python, _ = installed_provider
     probe = r"""

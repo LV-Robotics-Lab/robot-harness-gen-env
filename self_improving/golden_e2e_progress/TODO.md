@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- wheel-in-checkout来源误判已由真实攻击修复，26项复核通过；固定d5f52d5六组CI进行中，其结果仍绑定旧固定源码不回填。
+
 - 六组/root/merge独立限时CI已接，自身11项通过；固定HEAD后跑真实各组，补全active lint和docslink pending门。
 
 - 唯一Codex transport现显式max；中性真实兼容探针6.323s通过、156项组件测试通过，不声称修复业务timeout。固定下一版本后验证真实case。

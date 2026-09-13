@@ -22,6 +22,8 @@ CapabilityRegistry固定精确版本与digest；AssetRegistry只管理不可变�
 核当前 distribution 的成员/原始 RECORD/METADATA，可固定 RECORD 摘要，但不把自描述 RECORD
 当作原 wheel 签名。所有记录仅 development provenance；denied_roots 独立显式传给两条预览装配，
 不得把推算出的 site-packages 整体当成工作区拒读，也不据此授予 runtime 或 release 资格。
+自动 Git 必须对应实际 canonical 源目录，安装在仓库内的虚拟环境仍核 distribution/RECORD；
+显式 Git 的不匹配继续拒绝，canonical 源位置的损坏Git不切模式。
 
 编译seam消费固定SceneIR artifact、ResolvedAssetSet、seed和显式StructuralPolicy，不获取资产。
 SceneIR坐标约定：foreground为几何中心，结构支撑frame为上表面中心；normalized URDF原点为

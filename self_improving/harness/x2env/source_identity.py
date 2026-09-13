@@ -88,12 +88,19 @@ def capture_source_identity(
 ) -> GitSourceIdentity | InstalledSourceIdentity:
     """Bind on-disk preview members; explicit Git failures never select another source.
 
-    Auto respects checkout markers, including broken ones. Explicit installed mode instead
-    requires distribution ownership, so unrelated ancestor markers do not select its identity.
+    Auto recognizes Git only at this repository's canonical source layout, including broken
+    markers there. An installed package nested inside a checkout retains distribution ownership.
     No claim is made about the original wheel archive or the full dependency environment.
     """
     module_root = Path(module_root).resolve(strict=True)
-    checkout = next((p for p in (module_root, *module_root.parents) if (p / ".git").exists()), None)
+    checkout = next(
+        (
+            p
+            for p in module_root.parents
+            if p / "self_improving/harness/x2env" == module_root and (p / ".git").exists()
+        ),
+        None,
+    )
     if isinstance(policy, InstalledSourcePolicy):
         return _installed(module_root, policy)
     if isinstance(policy, GitSourcePolicy):

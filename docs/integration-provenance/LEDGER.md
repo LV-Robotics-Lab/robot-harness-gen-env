@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C14-INSTALLED-ANCESTOR — 安装源不借无关Git身份
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`3f76bd8` 初版来源身份。
+- target_paths：source_identity.py及Git/真实wheel安装测试；integration_method：以本仓库源布局限定自动Git选择。
+- verification：root26项；runtime_verification：实际wheel，无GPU，RECORD篡改不可改走祖先Git。
+- recorded_git_authors：本提交元数据，不新增第三方来源或发行资格声明。
+
 ## INT-CANONICAL-C13-BOUNDED-CI — 六组测试与覆盖归并
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`624d493` 原统一测试脚本。

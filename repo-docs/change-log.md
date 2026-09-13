@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 真实wheel-in-checkout攻击修复安装源误借祖先Git身份的问题，26项Git/安装/装配测试通过。
+
 - 六组、独立root与merge均接限时执行与日志/测量；11项入口测试通过，真正全组和lint/docslink门仍待验。
 
 - 同一内部Codex transport显式请求max，记录请求值但不授服务端力度证明；156项测试和中性兼容探针通过。

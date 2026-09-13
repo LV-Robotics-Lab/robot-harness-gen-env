@@ -48,6 +48,11 @@ def test_real_git_pin_and_dirty_sources_are_observed_without_qualification(tmp_p
         "package_loader.py",
         "source_identity.py",
     }
+    (module / "untracked-development-note.txt").write_text("untracked source work\n")
+    untracked = capture_source_identity(module, policy=policy)
+    assert untracked.head == head and untracked.dirty is True
+    assert untracked.status_sha256 != identity.status_sha256
+    assert untracked.members == identity.members
     (module / "genesis_child.py").write_text("# modified source\n")
     changed = capture_source_identity(module, policy=policy)
     assert changed.head == head and changed.dirty is True
@@ -58,7 +63,7 @@ def test_real_git_pin_and_dirty_sources_are_observed_without_qualification(tmp_p
         )
 
 
-def test_broken_checkout_marker_never_silently_selects_installed_distribution(tmp_path):
+def test_broken_canonical_checkout_marker_never_selects_installed_distribution(tmp_path):
     from self_improving.harness.x2env.source_identity import capture_source_identity
 
     module = tmp_path / "broken/self_improving/harness/x2env"

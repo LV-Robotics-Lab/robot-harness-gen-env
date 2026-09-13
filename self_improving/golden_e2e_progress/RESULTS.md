@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C14 修复 wheel-in-checkout 的身份误判
+
+- 真实隔离wheel放在有效Git祖先下先RED：旧auto记录仅含unrelated.txt的Git HEAD，未记录
+  installed身份。最小修复仅识别精确canonical源布局的Git，普通venv仍严格核RECORD。
+- 新正例及child/METADATA篡改均通过，显式Git不能指向无关祖先；canonical损坏Git仍拒，
+  真实源码dirty/untracked指纹保留。默认/tmp安装测试已可通过，未移除宿主损坏标记。
+- 主线程与子agent四组26项通过；边界仅development provenance，极端site-packages本身
+  被创建成canonical布局Git仍不作为发行认证，固定installed/RECORD策略保持可用。
+
 ## 2026-09-13 C13/C14 六组 CI 与独立 root/归并限时入口
 
 - run_self_improving_tests.sh 复用单脚本声明六组归属；新增未分类canonical测试立即失败，

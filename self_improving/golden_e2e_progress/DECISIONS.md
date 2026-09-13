@@ -12,8 +12,9 @@
 - 预览的 Git/installed 身份只记录实际执行源；部署可 pin commit 或原始 RECORD digest，
   不能由模型选择身份模式。未固定的 RECORD 只证明安装成员内部一致，不是发行签名。
 - denied_roots 使用独立部署值，不通过 __file__ 层数推算并误拒整个 site-packages。
-- 显式 Git 失败不切模式。测试宿主 /tmp 存在既有损坏 .git，auto 会拒；隔离安装验证使用
-  无此祖先污染的新 /var/tmp 目录，不删除宿主标记，也不把失败隐藏成自动成功。
+- 显式 Git 失败不切模式。自动识别只接受与本仓库 canonical 源布局对应的 Git 根；
+  无关祖先的 Git（包括宿主 /tmp 既有损坏标记）不能抢走 installed 身份。初版过宽祖先
+  检查已由真实 wheel-in-checkout 攻击修正，未删除任何宿主标记。
 
 ## 2026-09-13 文本资产尺寸设计不冒充媒体观测
 

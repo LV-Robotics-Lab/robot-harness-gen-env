@@ -28,6 +28,8 @@ Provider 安装使用根项目的 `pip install '.[platform]'`（开发可加 `-e
 预览现在记录真实 Git 或 installed distribution 的五成员源码身份；部署可固定 commit/RECORD，
 但内部一致的 RECORD 不等于原 wheel 签名。`genesis.source_identity` 与 `genesis.denied_roots`
 分开配置，显式 Git 失败不降级，安装目录不会被猜成工作区整体拒读；这里只授予开发来源记录。
+自动Git还须匹配实际canonical源码布局：位于仓库内的虚拟环境仍用installed身份，
+无关祖先Git不能使安装成员绕过RECORD校验。需要固定安装身份时由部署显式选择installed/pin。
 
 历史 limited-preview normal 的 75-member index 不包含其 mouse representation 所引用的 15 个资源。
 已列成员 hash 核验不能作为传递资产闭包或可移植包证明；canonical 导入以实际 bytes 与许可重核，
