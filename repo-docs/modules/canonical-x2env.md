@@ -1,5 +1,8 @@
 # Canonical x2env（收敛实施中）
 
+完成 replay 后因缺少内部诊断 backend 停住的请求，在部署补齐后可从 observe/diagnose 续行；
+不会重跑已完成回放或刷新原图片时间。原确定性失败、澄清和终态不会据此自动重试。
+
 本地候选纯颜色失配可形成待修订建议，但原 mismatch 仍保留。建议只含原色名和 RGBA；
 类别、材质、名称 veto 或未知判断不进入该通路。resolver/controller 的新版本复核接线仍在实施。
 

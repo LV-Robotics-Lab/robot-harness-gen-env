@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 replay 后续点恢复
+
+- 原 _resume 只要已有 replay_result 就返回，导致补齐内部诊断 backend 后仍无法观察。
+  公开 Harness 重开 tracer 先 RED；现在只对 active 或明确 fresh_observation 缺资源续点 claim，
+  从已有 observation/diagnosis/validation 推进，不重放已完成 Genesis、不改媒体时间。
+- 未补 backend、澄清/确定性失败及终态仍不自动重试。pipeline/预算/进程恢复 52 passed（8.86s）。
+  测试渲染与诊断均明确外部替身，不算真实恢复成功。
+
 ## 2026-09-13 S04 联网输入开发运行：结构设计关键未知
 
 - 固定 clean `109b0c53f8dce987eed6b21b9c675f5afbce9b9f`；原 S04 文本/图像、seed41、web-only，

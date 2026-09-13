@@ -62,7 +62,7 @@ def test_resume_budget_reaches_managed_model(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("missing_width", [False, True])
 @pytest.mark.parametrize("with_replay", [False, True])
-@pytest.mark.parametrize("with_diagnosis", [False, True])
+@pytest.mark.parametrize("with_diagnosis", [False, True, "resume"])
 @pytest.mark.parametrize("contextual", [False, True])
 def test_single_workflow_advances_from_model_to_resolver_and_compile(
     tmp_path, missing_width, with_replay, with_diagnosis, contextual, monkeypatch
@@ -183,7 +183,7 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
     harness = Harness(
         tmp_path / "state",
         backend_factory=lambda store: (
-            DiagnosticDouble(store) if with_diagnosis else AdvisoryDouble()
+            DiagnosticDouble(store) if with_diagnosis is True else AdvisoryDouble()
         ),
         resolver_factory=None
         if contextual
@@ -210,6 +210,15 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
         "x2env.validate",
     }
     snapshot = harness.resume(handle.workflow_id, timeout=10)
+    if with_diagnosis == "resume" and with_replay and not missing_width:
+        assert snapshot.status == "blocked" and snapshot.required_resources == (
+            "fresh_observation",
+        )
+        before = snapshot.operations
+        harness = Harness(tmp_path / "state", backend_factory=DiagnosticDouble)
+        snapshot = harness.resume(handle.workflow_id, timeout=8)
+        assert snapshot.observation is not None
+        assert snapshot.operations[: len(before)] == before
     assert snapshot.scene_ir in snapshot.operations[1].result.outputs
     from self_improving.harness.x2env.store import Store
 

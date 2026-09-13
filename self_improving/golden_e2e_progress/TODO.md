@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- replay 之后补齐诊断 backend 的续点已接 public resume，保留原回放和时间；52 项相关测试通过，未授真实恢复。
+
 - S04 fixed109b0c5 真实开发运行 blocked/clarification_required（72.51s），未进入web；结构defaults/on-z
   通用分类与精确单轴field处理正在实现，原proposal/失败不变。三次有界transport对照不能确定S02超时根因。
 

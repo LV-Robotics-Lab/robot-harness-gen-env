@@ -125,7 +125,24 @@ class Harness:
             if snapshot.status != "active":
                 return snapshot
             return self._validate(snapshot)
-        if existing.stop_reason == "clarification_required" or existing.replay_result is not None:
+        if existing.replay_result is not None:
+            can_continue = existing.status == "active" or (
+                existing.stop_reason == "blocked_external_resource"
+                and existing.required_resources == ("fresh_observation",)
+            )
+            if not can_continue or not callable(
+                getattr(self._backend, "assess_and_diagnose", None)
+            ):
+                return existing
+            snapshot = self._store.claim(workflow_id)
+            if snapshot.status != "active":
+                return snapshot
+            if snapshot.diagnosis is not None:
+                return self._validate(snapshot)
+            if snapshot.observation is not None:
+                return self._diagnose(snapshot)
+            return self._observe(snapshot)
+        if existing.stop_reason == "clarification_required":
             return existing
         if existing.compiled_scene is not None and self._replay_executor is None:
             return existing
