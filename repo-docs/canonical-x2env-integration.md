@@ -186,6 +186,8 @@ provider 返回候选后还须满足 HTTPS、支持格式以及逐资产许可�
 它不是给任意 web URL 强行填写许可证的白名单。
 
 web 结果还会进入模型准备建议、规范化、Registry、真实资产预览和视觉选择；检索命中不等于环境成功。
+GLB 准备建议中的 `up_axis` 表示源文件轴，固定为格式规定的 Y；`dimensions_m` 则是目标 Z-up
+场景的 XYZ 尺寸。两者不可混用。其他格式仍由准备建议给出源轴并保存依据。
 定位失败应依次读 search receipt 的 `tiers_consulted`、`provider_errors`、`provider_stats`、
 候选许可、fetch receipt、规范化/视觉结果。当前 matrix v2 没有执行 web 来源成功案例，
 部署完成后应独立用一个许可明确的小资产验证下载到入库全过程，记录真实网络错误和耗时。

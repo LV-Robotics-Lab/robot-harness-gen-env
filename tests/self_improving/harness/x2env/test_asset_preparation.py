@@ -46,6 +46,8 @@ def test_prepare_binds_known_dimensions_source_bytes_and_actual_model_attempt(tm
     log = json.loads(store.read_artifact(result.receipt))
     assert log["external_agent_executed"] is True and log["model"] == "test-double"
     assert "not_measured_real_object" in (tmp_path / "attempt" / "prompt.txt").read_text()
+    schema = json.loads((tmp_path / "attempt" / "proposal.schema.json").read_text())
+    assert schema["properties"]["up_axis"]["const"] == "Y"
 
 
 @pytest.mark.parametrize("fault", ["dimensions", "axis", "mass", "authority", "tools"])

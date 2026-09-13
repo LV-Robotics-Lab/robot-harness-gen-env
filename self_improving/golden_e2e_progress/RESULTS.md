@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 P1 web 首例真实失败及修复
+
+- 公共CLI默认来源请求“在桌面上放一个盒子。”，seed53，workflow cf91adcc-9290-49e0-a5c0-528a651659fc。
+- 113.252692秒，exit2/blocked；local未命中，Yuxin实际搜索下载成功，但两候选模型均把源GLB填为Z-up。
+  preparation/error.json为preparation_changed_format_axis；最后未配置的重建使父stop_reason为source_adapter_not_connected。
+- 原日志/失败交付：`/home/jingxiang/bingsheng/runtime/harness/p1-evidence/web-01/`、`outputs/p1-web-01/`。
+- 修复：GLB准备schema限制Y，prompt明确源轴与目标轴。原失败不改；新schema公开接口测试先RED。
+- P0新增测试遗漏CI分组被现有库存测试抓住；补入第五组，保留完整测试库存，未扩大排除。
+
 ## 2026-09-13 P0/P1 部署检查切片
 
 - 当前执行计划：CANONICAL_P0_P1_PLAN_20260913.md。实际入口未配置 web/reconstruction，check 约0.0012秒。

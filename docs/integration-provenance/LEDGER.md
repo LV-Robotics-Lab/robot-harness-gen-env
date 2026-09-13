@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-WEB-PREPARATION-AXIS — 格式事实进入模型输出契约
+
+- origin_owner：Yuxin asset_reuse provider；upstream_owner：Khronos glTF 格式及各下载资产作者。
+- integration_owner：Bingsheng Harness workstream；recorded_git_authors：以本功能提交元数据为准。
+- source_refs：Harness a0fc1e0；provider配置 glTF-Sample-Assets@90d7ede14c7e280af263824604b427a1ca02cb66。
+- integration_method：继续直接调用唯一引擎；asset_preparation 的 GLB 输出限制源 up_axis=Y，明确其不同于目标Z-up尺寸。
+- verification：真实首例下载成功、两候选被 preparation_changed_format_axis 拒绝；保留原失败。公开prepare接口反例先RED，后通过。
+- lifecycle：integrated；verification：contract_pass；runtime_verification：修正后完整web案例待运行。
+- evidence：runtime/harness/p1-evidence/web-01；workflow cf91adcc-9290-49e0-a5c0-528a651659fc。
+
 ## INT-CANONICAL-MATRIX-V2-REAL — 四简单例及隔离交付
 
 - source_refs：S01 da78d40、S02/S03 e754ff9、S04 9d5909b；具体workflow/输入/资产/媒体/版本在v2结果索引。

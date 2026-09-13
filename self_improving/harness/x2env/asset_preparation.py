@@ -64,6 +64,12 @@ class PreparationResult(Model):
     error_code: str | None = None
 
 
+class GlbPreparationValues(PreparationValues):
+    """The source coordinate convention is a format fact, not a model estimate."""
+
+    up_axis: Literal["Y"]
+
+
 def prepare_asset(backend, scene_ir, entity, candidate, fetched, *, output_root, timeout):
     if type(timeout) is not int or not 1 <= timeout <= 600:
         raise ValueError("deadline must be an integer within 1..600 seconds")
@@ -138,14 +144,16 @@ def prepare_asset(backend, scene_ir, entity, candidate, fetched, *, output_root,
             "axes, finite plausible mass_kg and friction, as estimates not measurements. Preserve "
             "geometry aspect ratio; do not make arbitrary non-uniform scaling. Source mesh bounds "
             "are source mesh coordinates, not measured real-world size. "
-            "GLB is Y-up by glTF format. "
+            "up_axis describes the SOURCE mesh, not the target dimensions or Genesis. "
+            "For GLB it MUST be Y by glTF format, even though target dimensions are Z-up. "
             "For an explicit requested color provide RGBA and exactly its color name; otherwise "
             "leave base_color and declared_color null. No receipt, authority, license, "
             "Skill success "
             "or physical validation claims. Do not change thresholds. Context:\n"
             + json.dumps(context)
         )
-        raw_response = backend._invoke(root, prompt, [], PreparationValues, record, timeout, start)
+        response_schema = GlbPreparationValues if path.suffix.lower() == ".glb" else PreparationValues
+        raw_response = backend._invoke(root, prompt, [], response_schema, record, timeout, start)
         values = PreparationValues.model_validate_json(raw_response)
         known = entity.dimensions or (None, None, None)
         for wanted, actual in zip(known, values.dimensions_m, strict=True):
