@@ -1,5 +1,18 @@
 # canonical x2env 验收合同
 
+## 当前生效：用户批准 matrix v2 两小时窗口
+
+[qualification-matrix-v2.json](qualification-matrix-v2.json) 为当前执行输入及门禁权威。
+UTC 起点 `2026-09-13T06:25:09Z`，硬截止 `2026-09-13T08:25:09Z`；单次完整 case
+最多 1200 秒并受全局剩余时间限制。四简单真实案例全部通过，且至少一个本窗口成功包在新目录
+实际拒读原 workspace/CAS/资产后 load/reset/step 并产生新图片、连续视频和检查报告，才满足本窗口门。
+新成功不能以历史包或候选 preview 替代。默认来源策略不等于预先指定 local/web 成功。
+
+≥8/12、三来源成功、三个不同包 copy-run、core 100% 为非阻断测量项，必须报告实际数值、
+未运行和失败，不可声称旧完整资格已满足；物理阈值、许可、闭包、fresh observation 和真实模型
+证据仍不降低。active 测试/lint/文档和正常 push 等未冲突要求保留。
+原 v1 数据不变；以下为历史完整合同，其中冲突的范围/预算门不再阻断本窗口。
+
 状态：accepted_matrix_v1_frozen。权威为已批准实施计划和用户允许替代重建后端的补充。
 
 ## 固定输入与计分

@@ -1,0 +1,115 @@
+{
+  "schema_version": "x2env.qualification_matrix.v2",
+  "status": "accepted_two_hour_simple_case_window",
+  "approval_basis": "2026-09-13 explicit user scope revision; Q65",
+  "historical_matrix": {
+    "path": "qualification-matrix-v1.json",
+    "sha256": "6272ca667c7df611d4ce68c3aa8fef92bdc9ab1d27ecea68deed6cee3130384d",
+    "unchanged": true,
+    "historical_results_not_relabelled": true
+  },
+  "window": {
+    "started_at": "2026-09-13T06:25:09Z",
+    "hard_deadline": "2026-09-13T08:25:09Z",
+    "total_seconds": 7200,
+    "includes_preparation_review_and_cleanup": true,
+    "deadline_resets_on_failure": false
+  },
+  "media": [
+    {
+      "logical_path": "inputs/centered-red-cube.png",
+      "staging_source": "/home/jingxiang/bingsheng/generic-experiment-v2-20260913.1QrGYD/inputs/centered-red-cube.png",
+      "bytes": 30643,
+      "sha256": "a4c62f05001d759a43aa0bf0964bde7e7ee5df08ae546e21d6ba2e182ef27202"
+    },
+    {
+      "logical_path": "inputs/centered-red-cube.mp4",
+      "staging_source": "/home/jingxiang/bingsheng/generic-experiment-v2-20260913.1QrGYD/inputs/centered-red-cube.mp4",
+      "bytes": 14899,
+      "sha256": "7400aa21cb455c6efb142d96d2f1632d5329cf759aeb01ba498ed39e21dc5df8"
+    }
+  ],
+  "cases": [
+    {
+      "id": "S01",
+      "seed": 11,
+      "modality": "text",
+      "prompt": "在桌面放一个粉红色鼠标。",
+      "media": [],
+      "source_policy": "default",
+      "purpose": "One pink mouse supported by a table; no injected dimensions or pose.",
+      "required": true
+    },
+    {
+      "id": "S02",
+      "seed": 23,
+      "modality": "image",
+      "prompt": null,
+      "media": ["inputs/centered-red-cube.png"],
+      "source_policy": "default",
+      "purpose": "Interpret the actual reference image without hidden user text.",
+      "required": true
+    },
+    {
+      "id": "S03",
+      "seed": 37,
+      "modality": "video",
+      "prompt": null,
+      "media": ["inputs/centered-red-cube.mp4"],
+      "source_policy": "default",
+      "purpose": "Recover a static environment from the original video, not actions; this purpose is not user text.",
+      "required": true
+    },
+    {
+      "id": "S04",
+      "seed": 41,
+      "modality": "multimodal",
+      "prompt": "参考图片，在桌面放一个蓝色方块，颜色以文字要求为准。",
+      "media": ["inputs/centered-red-cube.png"],
+      "source_policy": "default",
+      "purpose": "Preserve the reference object category and bind explicit blue text override with provenance.",
+      "required": true
+    }
+  ],
+  "execution": {
+    "controller": "Harness",
+    "model_proposals": "real_managed_backend_only",
+    "manually_prefilled_proposal": false,
+    "source_strategy": "existing default Harness order and license gates; no case-specific forced source",
+    "case_total_seconds": 1200,
+    "shutdown_grace_seconds": 30,
+    "sigint_at_seconds": 1170,
+    "also_bounded_by_remaining_window": true,
+    "unchanged_case_automatic_retry": false,
+    "retain_all_failures_and_partial_artifacts": true
+  },
+  "blocking_gates": {
+    "all_four_current_cases_succeeded": true,
+    "minimum_current_successful_packages_copied_and_run": 1,
+    "real_physical_and_visual_results_separate": true,
+    "real_continuous_media_required": true,
+    "license_and_transitive_closure_required": true,
+    "copy_run_denies_original_workspace_cas_assets": true,
+    "copy_run_uses_declared_runtime_only": true,
+    "copy_run_requires_new_outputs_and_checks": true,
+    "historical_success_or_preview_substitution": false
+  },
+  "nonblocking_measurements": {
+    "total_success_target": {"minimum": 8, "denominator": 12, "blocking": false},
+    "source_success_target": {"sources": ["local", "licensed_web", "reconstruction"], "blocking": false},
+    "distinct_copy_run_target": {"minimum": 3, "blocking": false},
+    "core_coverage_target": {"statement_percent": 100, "branch_percent": 100, "blocking": false},
+    "report_observed_denominators_failures_and_not_run": true,
+    "v1_and_v2_scores_must_not_be_silently_combined": true
+  },
+  "retained_boundaries": {
+    "physics_assertions": "physics-assertions-v1.json",
+    "physical_thresholds_unchanged": true,
+    "fresh_observation_and_evidence_binding_required": true,
+    "dynamic_support_expansion_required_in_window": false,
+    "development_success_is_release_qualification": false,
+    "robot_policy_evaluated": false,
+    "data_collection_evaluated": false,
+    "main_pr_authorized": false
+  }
+}
