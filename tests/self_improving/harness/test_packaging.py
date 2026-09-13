@@ -33,7 +33,11 @@ MEDIA_NATIVE_SHA256 = hashlib.sha256(
 
 
 def test_legacy_campaign_and_qwen_entrypoints_are_not_active_commands():
-    for name in ("run_compile_acceptance.py", "run_replay_vlm_assessment.py"):
+    for name in (
+        "run_compile_acceptance.py",
+        "run_replay_vlm_assessment.py",
+        "run_qualified_replay.py",
+    ):
         assert not (REPO_ROOT / "script" / name).exists()
     # Canonical consolidation does not retire the stable core's entrypoints.
     for name in ("generate_scene.py", "run_scene_runtime.py", "run_rendered_critic.py"):

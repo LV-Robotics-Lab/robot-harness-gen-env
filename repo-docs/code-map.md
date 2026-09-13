@@ -48,6 +48,8 @@ Canonical C13 已从 active tree 撤下历史 `run_compile_acceptance.py` 与离
 `run_replay_vlm_assessment.py` 入口；可从 `d08aaa1` Git 历史恢复，不再作为新运行配方。
 它们的旧深模块与历史测试仍保留；这不是旧资格系统全部退役。稳定核心的 compile/runtime/critic
 入口不变，新的平台实验只从 `x2env` 进入，由 managed Codex 提供视觉建议。
+`run_qualified_replay.py` 薄 bootstrap 随后也已撤下（最后字节在 `33a7d6f`），历史深模块测试改为直接调用，
+不再维护另一个旧 launcher；深模块与旧资格资源尚有消费者，继续单独清理。
 
 ## `demo/`
 

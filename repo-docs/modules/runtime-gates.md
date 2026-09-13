@@ -81,17 +81,18 @@ fail closed，不退回宿主 Pillow/动态 FFmpeg。资格化工具链使用最
 [`docs/evidence/replay-production-qualification-20260902.md`](../../docs/evidence/replay-production-qualification-20260902.md)。
 它仍不替代独立 validate 与 promotion evidence，不能由 replay 成功推出 `publishable=true`。
 
-## 固定资格回放怎样启动
+## 历史固定资格回放（入口已退役）
 
-`script/run_qualified_replay.py` 是薄适配器，深实现位于
-`self_improving.qualified_replay_cli`；安装包同时把
-`robot-harness-run-qualified-replay` 直接映射到同一个 `main`，不再复制 parser 或 wrapper。命令只接受
+Canonical C13 已撤下 `script/run_qualified_replay.py` 和安装映射
+`robot-harness-run-qualified-replay`。新平台请求使用 `x2env`；以下仅解释固定 Git 历史中的旧行为，
+不是当前启动配方。仍被历史消费者使用的深实现 `self_improving.qualified_replay_cli` 及其攻击测试保留。
+原命令只接受
 一次精确拼写的 `--settings`；设置文件只给部署侧
 CAS、资产根、解释器、capability、媒体工具、delegated cgroup、全新 state root 与 timeout，不能
 覆盖 Skill、版本、资格 bundle、源码根、runner 或 replay input。执行输入只从已验证资格中固定的
 kernel Invocation 重建，因此这是一个 operator-only 固定案例入口，不是通用 replay 命令。
 
-console entry 只提供稳定、可发现的调用名，不让普通 wheel 变成 fresh-machine deployment：运行仍要求
+原 console entry 不让普通 wheel 变成 fresh-machine deployment：历史运行要求
 既有资格所绑定的外部 CAS、资产、工具、runtime runner 和 delegated cgroup 均在原部署中可用。
 
 设置以同一 FD 做最多 64 KiB 的稳定读取；state leaf 由 `mkdirat` 线性化竞争，并持有父目录与目录

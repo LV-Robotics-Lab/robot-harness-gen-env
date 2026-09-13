@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import runpy
 import stat
 import subprocess
 import sys
@@ -39,7 +38,15 @@ from self_improving.harness.schemas import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "script" / "run_qualified_replay.py"
+# Explicit test-only invocation of the retained deep module. There is no active
+# legacy launcher, and tests must not load a different editable checkout.
+DEEP_COMMAND = [
+    sys.executable,
+    "-I",
+    "-c",
+    f"import sys; sys.path.insert(0, {str(ROOT)!r}); "
+    "from self_improving.qualified_replay_cli import main; raise SystemExit(main())",
+]
 
 RUN_ID = UUID("79000000-0000-4000-8000-000000000001")
 STARTED_AT = datetime(2026, 9, 2, 1, 2, 3, tzinfo=timezone.utc)
@@ -282,7 +289,7 @@ def _materialized_settings_document(tmp_path: Path) -> dict[str, object]:
 
 def test_help_exposes_only_the_fixed_qualified_case_settings_seam() -> None:
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--help"],
+        [*DEEP_COMMAND, "--help"],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -298,72 +305,14 @@ def test_help_exposes_only_the_fixed_qualified_case_settings_seam() -> None:
     assert "Traceback" not in completed.stderr
 
 
-def test_help_loads_the_current_checkout_from_an_unrelated_working_directory(
-    tmp_path: Path,
-) -> None:
-    environment = os.environ.copy()
-    environment.pop("PYTHONPATH", None)
-
-    completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--help"],
-        cwd=tmp_path,
-        env=environment,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-
-    assert completed.returncode == 0
-    assert "fixed qualified replay case" in completed.stdout
-    assert completed.stderr == ""
-
-
-def test_wrapper_import_is_inert_and_exposes_the_deep_main() -> None:
-    namespace = runpy.run_path(str(SCRIPT), run_name="qualified_replay_wrapper")
-
-    assert namespace["main"] is cli.main
-
-
 def test_distribution_retires_legacy_qualified_replay_console() -> None:
     configuration = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert "robot-harness-run-qualified-replay" not in configuration["project"]["scripts"]
 
 
-def test_checkout_bootstrap_precedes_a_conflicting_pythonpath_package(
-    tmp_path: Path,
-) -> None:
-    poison = tmp_path / "poison"
-    package = poison / "self_improving"
-    package.mkdir(parents=True)
-    (package / "__init__.py").write_text(
-        "raise RuntimeError('wrong self_improving distribution')\n",
-        encoding="utf-8",
-    )
-    environment = os.environ.copy()
-    environment["PYTHONPATH"] = str(poison)
-
-    completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--help"],
-        cwd=tmp_path,
-        env=environment,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-
-    source = SCRIPT.read_text(encoding="utf-8")
-    assert source.index("sys.path.insert(0, str(_CHECKOUT_ROOT))") < source.index(
-        "from self_improving.qualified_replay_cli"
-    )
-    assert completed.returncode == 0
-    assert "fixed qualified replay case" in completed.stdout
-    assert "wrong self_improving distribution" not in completed.stderr
-    assert completed.stderr == ""
-
-
 def test_invalid_command_line_never_echoes_unknown_values() -> None:
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--operator-token=/private/do-not-print"],
+        [*DEEP_COMMAND, "--operator-token=/private/do-not-print"],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -448,7 +397,7 @@ def test_settings_locator_must_be_a_canonical_absolute_regular_file(tmp_path: Pa
     relative = os.path.relpath(settings, ROOT)
 
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--settings", relative],
+        [*DEEP_COMMAND, "--settings", relative],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -472,7 +421,7 @@ def test_settings_locator_symlink_loop_is_a_sanitized_input_error(tmp_path: Path
     second.symlink_to(first.name)
 
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--settings", str(first)],
+        [*DEEP_COMMAND, "--settings", str(first)],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -494,7 +443,7 @@ def test_settings_manifest_requires_the_exact_fixed_launch_fields(tmp_path: Path
     settings.write_text("{}\n", encoding="utf-8")
 
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--settings", str(settings)],
+        [*DEEP_COMMAND, "--settings", str(settings)],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -530,7 +479,7 @@ def test_settings_manifest_rejects_non_strict_json(
     settings.write_text(payload + "\n", encoding="utf-8")
 
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--settings", str(settings)],
+        [*DEEP_COMMAND, "--settings", str(settings)],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -568,7 +517,7 @@ def test_settings_reader_is_bounded_and_maps_deep_json_to_input_error(
     settings.write_bytes(payload)
 
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--settings", str(settings)],
+        [*DEEP_COMMAND, "--settings", str(settings)],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -673,7 +622,7 @@ def test_settings_values_use_strict_path_root_and_timeout_types(
     settings.write_text(json.dumps(document) + "\n", encoding="utf-8")
 
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--settings", str(settings)],
+        [*DEEP_COMMAND, "--settings", str(settings)],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -695,7 +644,7 @@ def test_unrepresentably_large_timeout_is_a_sanitized_input_error(tmp_path: Path
     settings.write_text(json.dumps(document) + "\n", encoding="utf-8")
 
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--settings", str(settings)],
+        [*DEEP_COMMAND, "--settings", str(settings)],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -733,7 +682,7 @@ def test_launch_path_type_and_freshness_attacks_fail_closed(
     settings.write_text(json.dumps(document) + "\n", encoding="utf-8")
 
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--settings", str(settings)],
+        [*DEEP_COMMAND, "--settings", str(settings)],
         cwd=ROOT,
         check=False,
         capture_output=True,
@@ -769,7 +718,7 @@ def test_fresh_state_root_cannot_overlap_source_or_operator_trees(
     settings.write_text(json.dumps(document) + "\n", encoding="utf-8")
 
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), "--settings", str(settings)],
+        [*DEEP_COMMAND, "--settings", str(settings)],
         cwd=ROOT,
         check=False,
         capture_output=True,

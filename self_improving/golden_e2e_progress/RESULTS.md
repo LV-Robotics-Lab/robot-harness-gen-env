@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C13 G2c 旧 qualified replay bootstrap 退役
+
+- 删除 `script/run_qualified_replay.py`，最后字节仍在 `33a7d6f` Git 历史。旧 deep main 的
+  设置/资格/持久化与攻击断言不删除，测试改成隔离 Python 进程直接导入该深模块。
+- 撤下三个仅验证旧 wrapper 导入/cwd/PYTHONPATH bootstrap 的测试，以已退役文件缺席检查替代；
+  不在业务代码新增替代 launcher。包装 seam 先 RED，最后包装+深模块 65 passed/5.16s。
+- 按 writing-for-agents 同步 script/AGENTS 的当前入口与测试指针；reader-facing runtime-gates
+  明确旧资格启动说明为历史，安装映射早已退役。旧深模块/资格资源未全部退役，C13 仍未完成。
+
 ## 2026-09-13 C10 local 颜色单 workflow 续接
 
 - 同一 journal 保留初始 blocked asset.resolve、codex.asset_color、成本 1 asset.revise、成功

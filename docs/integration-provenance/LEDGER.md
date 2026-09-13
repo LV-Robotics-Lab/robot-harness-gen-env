@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-G2C — 旧 qualified replay bootstrap 退役
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `33a7d6f`；wrapper 的原提交/作者在 Git 历史中保留。
+- `target_paths`：script/run_qualified_replay.py、script/AGENTS.md、原 CLI 测试与包装测试。
+- `integration_method`：撤 active wrapper，旧深模块业务断言直接调用保留，不创建新业务入口。
+- `verification`：contract_pass；65 项通过，无真实 replay 或资格变化。
+- `recorded_git_authors`：历史文件与本提交元数据；来源许可不变。
+
 ## INT-CANONICAL-C10-COLOR-CONTINUATION — 原 local 之后的受控新版本续点
 
 - `origin_owner`：Yuxin 原检索/a6；`integration_owner`：Bingsheng Harness workstream。
