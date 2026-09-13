@@ -686,6 +686,7 @@ class Harness:
         snapshot = self._store.begin_operation(snapshot, "codex.ground")
         operation = snapshot.operations[-1]
         authorization = ()
+        returned_evidence = ()
         try:
             if getattr(self._scene_design_policy, "mode", None) == "generated_layout":
                 from .design_grounding_v3 import has_measured_support
@@ -745,6 +746,9 @@ class Harness:
                 / operation.operation_id,
                 timeout=self._remaining(),
             )
+            returned_evidence = (
+                (grounded.receipt,) if authorization and authorization_version == "v3" else ()
+            )
             if grounded.status != "completed" or grounded.proposed_scene is None:
                 code = grounded.error_code or "grounding_missing_scene"
                 return self._store.complete_operation(
@@ -758,6 +762,17 @@ class Harness:
                     snapshot.input_bundle,
                     status="blocked",
                     reason=code,
+                )
+            if authorization and authorization_version == "v3":
+                from .completion import audit_pending_measured_grounding
+
+                audit_pending_measured_grounding(
+                    snapshot,
+                    self._store,
+                    authorization[0],
+                    grounded,
+                    expected_policy=self._scene_design_policy,
+                    structural_policy=self._compile_policy,
                 )
             scene = self._store.write_artifact(
                 grounded.proposed_scene.model_dump_json().encode(), "application/json"
@@ -793,7 +808,7 @@ class Harness:
                     ToolResult(
                         operation_id=operation.operation_id,
                         status="failed",
-                        outputs=(*authorization, error_ref),
+                        outputs=(*authorization, *returned_evidence, error_ref),
                         error_code="grounding_failed",
                     ),
                     snapshot.input_bundle,

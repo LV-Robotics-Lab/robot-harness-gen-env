@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 v3采纳前只读独立审核
+
+- 同一active codex.ground操作先核真实controller授权、显式部署policy、原模型transport、candidate与几何，
+  再写采纳SceneIR及推进状态；与完成门共用内容审核，未构造成功operation或回滚历史。
+- 失真typed后端结果先RED（旧流程推进succeeded），现拒绝且不写采纳scene、不执行compile；
+  保留原receipt、authorization及错误。null/list receipt攻击同样结构化拒绝。
+- 83项回归通过53.91s、额外v1完成门1项通过1.97s；主线程补攻击后的v3组20项通过4.03s。
+  证据`/var/tmp/canonical-grounding-v3.Twsg3v`。默认Python缺Shapely时两个Harness测试无ground操作；
+  显式加入已声明`/var/tmp/canonical-shapely-2.1.2.TgCNjK/site`后通过，不安装或更换runtime。
+- 生命周期及小目录SHA inventory证明审核只读；无真实模型/Genesis执行，不授矩阵或发布资格。
+
 ## 2026-09-13 v2观测/诊断接线与真实盘底失败
 
 - 两处旧v1硬解析使动态观察/诊断先RED；现共用严格版本parser，原hash/时间/物理门不改。
@@ -25,8 +36,7 @@
   agent142项通过9.25s、旧完成门111项通过112.81s；证据`/var/tmp/canonical-grounding-v3.Twsg3v`。
 - 新schema snapshots由原exporter生成，新两测试模块纳入组2/5，无新增Skill或第二workflow。
   测试模型为明确外部程序替身，不授真实模型/Genesis或矩阵通过。
-- 限制：producer当前先typed/几何校验后推进；独立全transport重核在最终完成门。
-  尚未增加父推进前独立审核，不把该时点已实现；下一片复用同一审计逻辑补齐。
+- 当时限制：独立全transport重核仅在完成门；随后由上方采纳前审核切片补齐，历史证据不回填。
 
 
 ## 2026-09-13 动态目标的独立物理证据消费

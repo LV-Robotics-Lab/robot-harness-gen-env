@@ -83,7 +83,8 @@ def test_managed_grounding_v3_persists_actual_candidate_and_geometric_proofs(tmp
     assert "measured support" in actual[-1].note
 
 
-def test_harness_commits_v3_authorization_and_managed_grounding(tmp_path, monkeypatch):
+@pytest.mark.parametrize("forged", [False, True])
+def test_harness_commits_v3_authorization_and_managed_grounding(tmp_path, monkeypatch, forged):
     from PIL import Image
 
     from self_improving.harness.x2env import package_loader
@@ -136,9 +137,47 @@ def test_harness_commits_v3_authorization_and_managed_grounding(tmp_path, monkey
             },
         )
     )
+    if forged:
+        # Explicit untrusted backend boundary; valid typed result, dishonest final scene.
+        from self_improving.harness.x2env.codex import CodexBackend
+
+        real_ground = CodexBackend.ground_scene
+
+        def bad_ground(self, *args, **kwargs):
+            result = real_ground(self, *args, **kwargs)
+            assert result.status == "completed"
+            entity = result.proposed_scene.entities[1]
+            modified = entity.model_copy(
+                update={
+                    "pose": entity.pose.model_copy(
+                        update={"position": (0.2, *entity.pose.position[1:])}
+                    )
+                }
+            )
+            scene = result.proposed_scene.model_copy(
+                update={
+                    "entities": (
+                        result.proposed_scene.entities[0],
+                        modified,
+                        *result.proposed_scene.entities[2:],
+                    )
+                }
+            )
+            return result.model_copy(update={"proposed_scene": scene})
+
+        monkeypatch.setattr(CodexBackend, "ground_scene", bad_ground)
     handle = harness.submit(request)
     result = harness.resume(handle.workflow_id, timeout=30)
+    assert any(op.capability == "codex.ground" for op in result.operations), result.stop_reason
     ground = next(op for op in result.operations if op.capability == "codex.ground")
+    if forged:
+        assert ground.status == "failed"
+        assert result.scene_ir is None and result.compiled_scene is None
+        assert not any(op.capability == "x2env.compile" for op in result.operations)
+        records = [json.loads(store.read_artifact(ref)) for ref in ground.result.outputs]
+        assert any(r.get("schema_version") == "x2env.scene_grounding.v3" for r in records)
+        assert any(r.get("detail") == "completion_grounding_binding_mismatch" for r in records)
+        return
     assert ground.status == "succeeded", result.stop_reason
     records = [json.loads(store.read_artifact(ref)) for ref in ground.result.outputs]
     authorization = next(

@@ -5,7 +5,7 @@ import json
 import pytest
 
 
-def pending_completion(tmp_path, fault):
+def pending_completion(tmp_path, fault, *, before_ground_commit=False):
     from self_improving.harness.x2env.assets import AssetRegistry
     from self_improving.harness.x2env.compile import (
         ResolvedAssetSet,
@@ -98,6 +98,8 @@ def pending_completion(tmp_path, fault):
             ground_ref = put(receipt)
             outputs = (ground_ref, scene_ref, rebound_ref, put(auth))
             fields = dict(grounding=ground_ref, scene_ir=scene_ref, resolved_assets=rebound_ref)
+            if before_ground_commit:
+                return store, snapshot, outputs[-1], grounded
         snapshot = store.complete_operation(
             snapshot,
             ToolResult(operation_id=operation.operation_id, status="succeeded", outputs=outputs),
@@ -106,6 +108,79 @@ def pending_completion(tmp_path, fault):
             **fields,
         )
     return store, snapshot
+
+
+@pytest.mark.parametrize("body", [None, []])
+def test_pending_audit_rejects_nonobject_receipt_without_state_change(tmp_path, body):
+    from self_improving.harness.x2env.compile import StructuralPolicy
+    from self_improving.harness.x2env.completion import audit_pending_measured_grounding
+    from self_improving.harness.x2env.design_grounding_v2 import GeneratedLayoutPolicy
+
+    store, snapshot, authorization, grounded = pending_completion(
+        tmp_path, None, before_ground_commit=True
+    )
+    altered = grounded.model_copy(
+        update={"receipt": store.write_artifact(json.dumps(body).encode(), "application/json")}
+    )
+    with pytest.raises(ValueError, match="completion_grounding_binding_mismatch"):
+        audit_pending_measured_grounding(
+            snapshot,
+            store,
+            authorization,
+            altered,
+            expected_policy=GeneratedLayoutPolicy(enabled=True),
+            structural_policy=StructuralPolicy(
+                thickness_m=0.04, surface_height_m=0.75, friction=0.5
+            ),
+        )
+    assert store.status(snapshot.workflow_id) == snapshot
+
+
+def test_pending_audit_is_read_only_and_requires_actual_running_snapshot(tmp_path):
+    import hashlib
+
+    from self_improving.harness.x2env.compile import StructuralPolicy
+    from self_improving.harness.x2env.completion import audit_pending_measured_grounding
+    from self_improving.harness.x2env.design_grounding_v2 import GeneratedLayoutPolicy
+
+    store, snapshot, authorization, grounded = pending_completion(
+        tmp_path, None, before_ground_commit=True
+    )
+
+    def inventory():
+        return {
+            str(p): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in tmp_path.rglob("*")
+            if p.is_file()
+        }
+
+    before = inventory()
+    args = dict(
+        expected_policy=GeneratedLayoutPolicy(enabled=True),
+        structural_policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+    )
+    audit_pending_measured_grounding(snapshot, store, authorization, grounded, **args)
+    assert store.status(snapshot.workflow_id) == snapshot
+    assert inventory() == before
+    with pytest.raises(ValueError, match="current_running_operation"):
+        audit_pending_measured_grounding(
+            snapshot.model_copy(update={"revision": snapshot.revision + 1}),
+            store,
+            authorization,
+            grounded,
+            **args,
+        )
+    with pytest.raises(ValueError, match="authorization_mismatch"):
+        audit_pending_measured_grounding(
+            snapshot,
+            store,
+            authorization,
+            grounded,
+            **{
+                **args,
+                "expected_policy": GeneratedLayoutPolicy(enabled=True, position_abs_max_m=1),
+            },
+        )
 
 
 @pytest.mark.parametrize(

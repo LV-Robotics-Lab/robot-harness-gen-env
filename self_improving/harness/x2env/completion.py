@@ -1199,25 +1199,8 @@ def _verify_grounding_origin(snapshot, store, scene, compiled):
 
 def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
     """Recompute v2 layout against independent controller and immutable geometry evidence."""
-    from .design_grounding_v2 import (
-        GeneratedLayoutPolicy,
-        GroundingValuesV2,
-        apply_generated_values,
-        bind_generated_assets,
-        classify_generated_design,
-    )
-
     measured = receipt["schema_version"] == "x2env.scene_grounding.v3"
     version = "v3" if measured else "v2"
-    if measured:
-        from .design_grounding_v3 import (
-            MeasuredLayoutValues,
-            bind_measured_assets,
-            build_measured_candidate,
-            classify_measured_design,
-            finalize_measured_scene,
-        )
-    values_model = MeasuredLayoutValues if measured else GroundingValuesV2
 
     def read(ref):
         return json.loads(store.read_artifact(ref))
@@ -1298,9 +1281,151 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
         or receipt.get("structural_policy") != expected_authorization["structural_policy"]
     ):
         raise ValueError("completion_grounding_authorization_mismatch")
-    policy = GeneratedLayoutPolicy.model_validate_json(json.dumps(receipt["policy"]))
+    _audit_generated_content(
+        store=store,
+        receipt=receipt,
+        original=original,
+        bundle_ref=snapshot.input_bundle,
+        assets=assets,
+        scene=scene,
+        explicit_policy=receipt["policy"],
+        structural_policy=compiled.policy,
+        measured=measured,
+    )
+
+
+def audit_pending_measured_grounding(
+    snapshot, store, authorization_ref, grounded, *, expected_policy, structural_policy
+):
+    """Read-only v3 adoption gate on the actual running operation, before state advancement."""
+    if (
+        store.status(snapshot.workflow_id) != snapshot
+        or snapshot.status != "active"
+        or not snapshot.operations
+        or snapshot.operations[-1].status != "running"
+        or snapshot.operations[-1].capability != "codex.ground"
+    ):
+        raise ValueError("grounding_audit_requires_current_running_operation")
+    operation = snapshot.operations[-1]
+    authorization = json.loads(store.read_artifact(authorization_ref))
+    expected = dict(
+        schema_version="x2env.design_authorization.v3",
+        workflow_id=snapshot.workflow_id,
+        operation_id=operation.operation_id,
+        proposal_ref=snapshot.proposal.model_dump(),
+        pending_scene_ref=snapshot.pending_scene_ir.model_dump(),
+        assets_ref=snapshot.resolved_assets.model_dump(),
+        policy=expected_policy.model_dump(mode="json"),
+        structural_policy=structural_policy.model_dump(mode="json"),
+    )
+    if authorization != expected:
+        raise ValueError("completion_grounding_authorization_mismatch")
+    artifact_closure(
+        store,
+        (
+            snapshot.input_bundle,
+            snapshot.proposal,
+            snapshot.resolved_assets,
+            authorization_ref,
+            grounded.receipt,
+        ),
+    )
+    receipt = json.loads(store.read_artifact(grounded.receipt))
+    if grounded.status != "completed" or grounded.proposed_scene is None:
+        raise ValueError("completion_grounding_binding_mismatch")
+    expected_receipt = dict(
+        schema_version="x2env.scene_grounding.v3",
+        status="completed",
+        error_code=None,
+        bundle_ref=snapshot.input_bundle.model_dump(),
+        proposal_ref=snapshot.proposal.model_dump(),
+        assets_ref=snapshot.resolved_assets.model_dump(),
+        policy=expected["policy"],
+        structural_policy=expected["structural_policy"],
+        proposed_scene=grounded.proposed_scene.model_dump(mode="json"),
+        real_world_scale_recovered=False,
+        authority="advisory_design_only",
+    )
+    if not isinstance(receipt, dict) or any(
+        receipt.get(key) != value for key, value in expected_receipt.items()
+    ):
+        raise ValueError("completion_grounding_binding_mismatch")
+    original = BackendProposal.model_validate_json(store.read_artifact(snapshot.proposal))
+    assets = ResolvedAssetSet.model_validate_json(store.read_artifact(snapshot.resolved_assets))
+    if (
+        original.status != "completed"
+        or original.proposal.scene is None
+        or assets.scene_ir != snapshot.pending_scene_ir
+        or SceneIR.model_validate_json(store.read_artifact(assets.scene_ir))
+        != original.proposal.scene
+    ):
+        raise ValueError("completion_grounding_asset_binding_mismatch")
+    for capability, ref in (
+        ("codex.interpret", snapshot.proposal),
+        ("codex.interpret", assets.scene_ir),
+        ("asset.resolve", snapshot.resolved_assets),
+    ):
+        if not any(
+            op.capability == capability
+            and op.status == "succeeded"
+            and op.result
+            and ref in op.result.outputs
+            for op in snapshot.operations[:-1]
+        ):
+            raise ValueError("completion_grounding_source_not_committed")
+    _audit_generated_content(
+        store=store,
+        receipt=receipt,
+        original=original,
+        bundle_ref=snapshot.input_bundle,
+        assets=assets,
+        scene=grounded.proposed_scene,
+        explicit_policy=expected["policy"],
+        structural_policy=structural_policy,
+        measured=True,
+    )
+    if store.status(snapshot.workflow_id) != snapshot:
+        raise ValueError("grounding_audit_requires_current_running_operation")
+
+
+def _audit_generated_content(
+    *,
+    store,
+    receipt,
+    original,
+    bundle_ref,
+    assets,
+    scene,
+    explicit_policy,
+    structural_policy,
+    measured,
+):
+    from .design_grounding_v2 import (
+        GeneratedLayoutPolicy,
+        GroundingValuesV2,
+        apply_generated_values,
+        bind_generated_assets,
+        classify_generated_design,
+    )
+
+    if measured:
+        from .design_grounding_v3 import (
+            MeasuredLayoutValues,
+            bind_measured_assets,
+            build_measured_candidate,
+            classify_measured_design,
+            finalize_measured_scene,
+        )
+    values_model = MeasuredLayoutValues if measured else GroundingValuesV2
+    version = "v3" if measured else "v2"
+    base = original.proposal.scene
+
+    def read(ref):
+        return json.loads(store.read_artifact(ref))
+
+    policy = GeneratedLayoutPolicy.model_validate_json(json.dumps(explicit_policy))
     plan = (classify_measured_design if measured else classify_generated_design)(
-        original.proposal, policy, compiled.policy
+        original.proposal, policy, structural_policy
     )
     bindings, fixed = (bind_measured_assets if measured else bind_generated_assets)(
         store, base, assets, plan
@@ -1314,7 +1439,7 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
     }.items():
         if receipt.get(key) != value:
             raise ValueError("completion_grounding_design_recomputation_mismatch")
-    bundle = InputBundle.model_validate_json(store.read_artifact(snapshot.input_bundle))
+    bundle = InputBundle.model_validate_json(store.read_artifact(bundle_ref))
     if base.input_sha256 != bundle.request_sha256:
         raise ValueError("completion_grounding_input_mismatch")
     if not isinstance(receipt.get("evidence"), list) or any(
@@ -1334,11 +1459,11 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
     ]
     expected_context = {
         "schema_version": "x2env.generated_layout_context." + version,
-        "bundle_ref": snapshot.input_bundle.model_dump(),
+        "bundle_ref": bundle_ref.model_dump(),
         "seed": bundle.seed,
         "original_proposal": original.proposal.model_dump(mode="json"),
         "policy": policy.model_dump(mode="json"),
-        "structural_policy": compiled.policy.model_dump(mode="json"),
+        "structural_policy": structural_policy.model_dump(mode="json"),
         "asset_bindings": bindings,
         "design_plan": plan,
         "fixed_values": fixed,
@@ -1483,7 +1608,7 @@ def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
             assets.model_copy(update={"scene_ir": candidate_ref}),
             registry=AssetRegistry(store),
             store=store,
-            policy=compiled.policy,
+            policy=structural_policy,
             seed=bundle.seed,
         )
         proofs = receipt.get("geometry_proofs")

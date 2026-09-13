@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C08-PRECOMMIT-AUDIT — v3采纳前独立审核
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：91da764的v3完成门审核。
+- recorded_git_authors：基线Git记录Bingsheng Xie <xieziyin_shangshu@outlook.com>；不据此推断自然人映射。
+- upstream_owner：Codex传输及几何依赖各自保留；无外部源码复制。
+- target_paths：completion.py/harness.py及v3专用测试；integration_method：分离真实阶段准入与共享内容重核，
+  采纳前使用running操作及独立controller参数，完成门继续检查committed lineage。
+- verification：83项回归与v1单测通过；补null/list回执攻击后v3组20项通过；只读inventory通过。
+  runtime_verification：not_run，外部程序为显式测试替身；来源与执行资格不由审核成功替代。
+
 ## INT-CANONICAL-C10-DYNAMIC-OBSERVATION — 版本化场景消费
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness91da764/53fe5b1。
@@ -16,7 +26,8 @@
   真实candidate CAS和只读solver；独立v3 controller授权/完成门重算，不建第二workflow。
 - target_paths：design_grounding_v3、既有ground/design/controller/completion/schema及相应tests/snapshots。
 - verification：主线程102项与schema/分组21项通过，旧完成门111项agent回归通过；runtime_verification：not_run。
-- limitation：独立全证据重验目前在完成门，父推进前新审核另片补；recorded_git_authors：模型与Harness作者分开。
+- 当时limitation：仅完成门重验；后续PRECOMMIT-AUDIT条目补齐采纳前时点，旧证据不回填。
+  recorded_git_authors：模型与Harness作者分开。
 
 ## INT-CANONICAL-C09-DYNAMIC-PHYSICS — 逐帧目标坐标核验
 
