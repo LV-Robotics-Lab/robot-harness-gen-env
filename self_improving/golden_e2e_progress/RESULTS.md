@@ -14,7 +14,8 @@
 - 失败摘录（非完整日志，终端输出曾截断）：
   `/var/tmp/x2env-docs-validation-20260913.W8JQgv/failure-excerpts.txt`。
 - 模型、Genesis、coverage 全矩阵本轮未运行；不新增能力资格，不创建 main PR。
-  文档按用户授权正常提交并 push bingsheng；实际提交/远端确认由最终 Git 输出记录。
+  文档提交 70d4ec4 已正常 push 至 origin/worktree/bingsheng（f80e2a8 → 70d4ec4），
+  随后仅追加本完成台账；dashboard 三入口复查仍为 HTTP 404，未伪报同步。
 
 ## 2026-09-13 普通 push 后工作区归档
 

@@ -8,7 +8,7 @@
 - [x] 保留此前目录整理的 7 份台账；原任务已独立提交 fc956af，本轮接续该提交。
 - [x] 完成使用、API、测试、部署/资产接入与 roadmap；本地链接/schema/help 通过。
 - [x] 根测试 2252 passed、152 failed、1 skipped；环境缺 shapely 和旧 ignored 目录问题已记录，未伪报全绿。
-- [ ] 文档独立提交并正常 push bingsheng；最终 Git/远端输出为完成证据。
+- [x] 文档独立提交 70d4ec4 并正常 push bingsheng；远端从 f80e2a8 前进至 70d4ec4。
 - 本轮只更新文档；不重跑模型/Genesis，不创建 main PR。dashboard 三入口仍为 HTTP 404。
 
 ## Push 后另行授权的目录整理
