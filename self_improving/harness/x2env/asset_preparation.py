@@ -152,7 +152,9 @@ def prepare_asset(backend, scene_ir, entity, candidate, fetched, *, output_root,
             "or physical validation claims. Do not change thresholds. Context:\n"
             + json.dumps(context)
         )
-        response_schema = GlbPreparationValues if path.suffix.lower() == ".glb" else PreparationValues
+        response_schema = (
+            GlbPreparationValues if path.suffix.lower() == ".glb" else PreparationValues
+        )
         raw_response = backend._invoke(root, prompt, [], response_schema, record, timeout, start)
         values = PreparationValues.model_validate_json(raw_response)
         known = entity.dimensions or (None, None, None)

@@ -29,7 +29,8 @@ GROUPS = {
     "reconstruction_resolver resolver search_advisory source_router web_resolver yuxin_adapter "
     "yuxin_package_migration",
     "4": "assessment compile genesis_runtime measured_support observation replay",
-    "5": "cli preflight completion completion_local_color completion_v2 completion_v3 delivery deployment "
+    "5": "cli preflight completion completion_local_color completion_v2 completion_v3 "
+    "delivery deployment "
     "deployment_edges "
     "failure_bundle import_boundary "
     "package publisher source_identity",
