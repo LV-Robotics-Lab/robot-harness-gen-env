@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C04-STORE-EDGES — 持久状态与恢复错误边界
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`c236724`。
+- target_paths：test_store_contract_edges.py；integration_method：真实Store/SQLite/子进程，只有两类OS异常用边界替身。
+- verification：root134项、Store及AssetRegistry415语句/182分支100%；runtime_verification：无模型/Genesis。
+- recorded_git_authors：本提交元数据，无新第三方来源；全目录采集中断与此聚焦结果分别记账。
+
 ## INT-CANONICAL-C13-ORPHAN-RUNTIME-RETIRE — 孤立旧执行依赖图
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`e2f909c` 可恢复。

@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C04 Store 与 AssetRegistry 完整聚焦覆盖
+
+- 新增15个真实Store公开边界：未知workflow、终态claim幂等、缺结果拒写、僵尸/复用PID、
+  错PGID/命令/路径、恢复异常。仅 `/proc` 消失/畸形两种外部OS异常用明确替身，不mock Store或SQLite。
+- root完整聚焦134 passed/6.92s；Store260语句/114分支与AssetRegistry155语句/68分支均100%。
+  AssetRegistry原已覆盖，无冗余测试或生产改动；agent同组134 passed/6.94s。
+- agent先前全canonical覆盖运行在既有并发reservation测试处无进展，约4分钟后准确SIGINT/
+  SIGTERM停止；单例有/无coverage和完整聚焦组随后均通过，未找到生产根因。
+  不用旧JSON并集冒充此次全套覆盖，也不把中断全目录算pass。
+
 ## 2026-09-13 C13 孤立旧 Store、媒体和 snapshot adapter 退役
 
 - 确认含相对/动态导入在内无保留生产消费者后，删除旧 run_store/golden_store/assets/
