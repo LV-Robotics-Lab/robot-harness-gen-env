@@ -1,0 +1,68 @@
+{
+  "$defs": {
+    "GeneratedEntityValues": {
+      "additionalProperties": false,
+      "properties": {
+        "dimensions": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "frame": {
+          "title": "Frame",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "position": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Position",
+          "type": "array"
+        },
+        "yaw_degrees": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Yaw Degrees",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "dimensions",
+        "frame",
+        "position",
+        "yaw_degrees"
+      ],
+      "title": "GeneratedEntityValues",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "entities": {
+      "items": {
+        "$ref": "#/$defs/GeneratedEntityValues"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Entities",
+      "type": "array"
+    }
+  },
+  "required": [
+    "entities"
+  ],
+  "title": "GroundingValuesV2",
+  "type": "object"
+}

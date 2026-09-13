@@ -15,6 +15,7 @@ from pydantic import Field, model_validator
 
 from .compile import StructuralPolicy
 from .contracts import ArtifactRef, Model, Sha256
+from .design_grounding_v2 import GeneratedLayoutPolicy
 from .grounding import SceneDesignPolicy
 from .source_identity import SourceIdentityPolicy
 
@@ -112,7 +113,7 @@ class Deployment(Model):
     state_dir: str
     codex: CodexConfig | None = None
     compile_policy: StructuralPolicy | None = None
-    scene_design_policy: SceneDesignPolicy = SceneDesignPolicy()
+    scene_design_policy: SceneDesignPolicy | GeneratedLayoutPolicy = SceneDesignPolicy()
     local_enabled: bool = True
     genesis: GenesisConfig | None = None
     web: WebConfig | None = None

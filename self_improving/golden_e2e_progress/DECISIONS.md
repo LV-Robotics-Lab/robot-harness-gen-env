@@ -1,5 +1,17 @@
 # 稳定决策
 
+## 2026-09-13 v2生成布局授权与传输独立绑定
+
+- 新GeneratedLayoutPolicy必须显式mode/enabled，旧SceneDesignPolicy与缺mode配置保留v1。
+  Harness缺显式compile policy时在ground模型前阻断，不以组件可补值推断workflow具备编译配置。
+- controller在调用模型前固定design_authorization.v2，经实际operation outputs提交；
+  completion从该独立记录及原proposal/Registry/compiled policy重算，不让receipt自授设计权限。
+- v2记录具名prompt/schema/invocation/process/terminal/events/stderr/response引用；完成门核
+  同attempt路径、严格无工具命令、max请求、schema/context和唯一原始数值输出。异常传输结构返回明确失败。
+- 原scene序号字段只按同一实体顺序精确映射授权路径，原unknown行不改；负数、越界、前导零、
+  任意父路径不获授权。已知数字不clamp，生成范围下界必须严格小于上界。
+- 首片仅直接结构on、多实体独立尺寸；首图/首视频帧沿旧选择，不授H03末帧或动态支撑能力。
+
 ## 2026-09-13 重置能力的证据范围
 
 - 初始场景重置与步进后恢复是不同能力：实际build后调用reset只能证明前者，不能替代运动后状态恢复。

@@ -78,6 +78,22 @@ def ground_scene(
     structural_policy=None,
 ):
     """One bounded managed-model call; all explicit axes and semantic fields immutable."""
+    if (
+        policy.get("mode") if isinstance(policy, dict) else getattr(policy, "mode", None)
+    ) == "generated_layout":
+        from .design_grounding_v2 import ground_generated_scene
+
+        return ground_generated_scene(
+            bundle_ref,
+            proposal_ref,
+            assets_ref,
+            policy,
+            store=store,
+            backend=backend,
+            output_root=output_root,
+            timeout=timeout,
+            structural_policy=structural_policy,
+        )
     policy = SceneDesignPolicy.model_validate(policy)
     if type(timeout) is not int or not 1 <= timeout <= 600:
         raise ValueError("invalid grounding timeout")

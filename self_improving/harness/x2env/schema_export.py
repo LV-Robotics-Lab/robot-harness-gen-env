@@ -60,6 +60,8 @@ def structured_output_schema(
 
 
 def export(output: Path, *, check: bool = False) -> tuple[str, ...]:
+    from .design_grounding_v2 import GroundingValuesV2
+
     models = sorted(
         (
             value
@@ -70,6 +72,7 @@ def export(output: Path, *, check: bool = False) -> tuple[str, ...]:
         ),
         key=lambda model: model.__name__,
     )
+    models.append(GroundingValuesV2)
     files = {}
     rows = [
         "# Canonical x2env API fields",
@@ -91,6 +94,10 @@ def export(output: Path, *, check: bool = False) -> tuple[str, ...]:
         json.dumps(
             structured_output_schema(contracts.SceneIntentProposal), indent=2, sort_keys=True
         )
+        + "\n"
+    )
+    files["GroundingValuesV2.codex.json"] = (
+        json.dumps(structured_output_schema(GroundingValuesV2), indent=2, sort_keys=True)
         + "\n"
     )
     drift = []

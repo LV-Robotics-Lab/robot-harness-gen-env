@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C08-GENERATED-LAYOUT-V2 — 多实体独立资产设计
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Codex后端、Yuxin/Gujie候选来源分别保留。
+- source_ref：Harness基线e269e4a及已批准多实体增量spec；target_paths：design_grounding_v2/grounding/design_plan/deployment/harness/completion/schema_export及对应tests/schema。
+- integration_method：显式部署模式、既有controller/Store/Registry、独立授权与具名原始transport重算；不建第二workflow或public Skill。
+- verification：原序号拒绝、过宽父路径、等宽范围、畸形传输等实际RED后修复；主线程最终数字见RESULTS。
+- runtime_verification：无新增真实多实体/模型/Genesis，外部执行测试使用明确替身；动态支撑/H03末帧不授予。
+- recorded_git_authors：模型建议、原provider作者与本次Harness整合责任分开保留，不重写上游归属。
+
 ## INT-CANONICAL-C09-RESET-DUAL-PROBE — 固定新版真实动作
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis及Cesium资产独立保留。

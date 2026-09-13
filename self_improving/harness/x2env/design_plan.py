@@ -20,6 +20,15 @@ class DesignPlan(Model):
     requires_media: bool
 
 
+def canonical_design_field(scene, field):
+    """Resolve only exact, in-bounds original-scene index prefixes; never mutate input."""
+    for index, entity in enumerate(scene.entities):
+        prefix = f"scene.entities[{index}]."
+        if field.startswith(prefix):
+            return "scene.entities." + entity.id + "." + field[len(prefix) :]
+    return field
+
+
 def needs_design_grounding(scene, structural_policy=None):
     """Find design gaps beyond explicit compile defaults and measured asset geometry."""
     if scene is None:
@@ -54,6 +63,10 @@ def needs_design_grounding(scene, structural_policy=None):
 
 
 def classify_design_unknowns(proposal, policy, structural_policy=None):
+    if getattr(policy, "mode", None) == "generated_layout":
+        from .design_grounding_v2 import classify_generated_design
+
+        return classify_generated_design(proposal, policy, structural_policy)
     if not policy.enabled or proposal.scene is None:
         raise ValueError("design_grounding_disabled")
     scene = proposal.scene
@@ -141,7 +154,7 @@ def classify_design_unknowns(proposal, policy, structural_policy=None):
     for i, unknown in enumerate(proposal.unknowns):
         if unknown.reason_kind == "conflict":
             raise ValueError("grounding_requires_clarification")
-        selected = paths.get(unknown.field)
+        selected = paths.get(canonical_design_field(scene, unknown.field))
         # Retain the original bounded wildcard contract; expand only existing entities.
         if unknown.field in {"scene.entities[*].dimensions", "scene.entities[*].pose"}:
             field = unknown.field.split("].")[1]

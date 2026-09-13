@@ -1,5 +1,20 @@
 # 进度与结果
 
+## 2026-09-13 v2显式多实体生成布局接线
+
+- GeneratedLayoutPolicy默认关闭；旧v1和缺mode配置不改。1..8实体、多个结构支撑、每前景独立
+  Registry尺寸，未知结构长宽/XY/yaw有界选择；已知数值不clamp，未知Z仅由显式policy或自身尺寸推导。
+- Harness在模型前写独立授权并要求compile policy；completion从真实operation outputs重核原
+  proposal/资产/规则/固定值，重建完整SceneIR。具名8项transport绑定路径/无工具argv/max/schema/
+  context/原始输出及进程terminal；不能将任意entities记录插入真实进程旁冒充建议。
+- S02合法序号字段错误有真实RED后严格原序列映射，负索引/越界/前导零/任意父路径拒绝；
+  原unknown行与critical不改。主审发现等宽范围违反spec，DID NOT RAISE后改为严格递增。
+- 非object模型events/item造成未捕获AttributeError的三种实际攻击已修；非法argv返回明确错误码。
+- 主线程最终232 passed/90.08s（completion/v2/design/ground/deployment/schema），Ruff/diff及schema check通过。
+  新GroundingValuesV2及strict transport快照导出，新增测试分别进入第2/5组。
+- 真实Store/Registry/mesh，模型/外部runtime用明确替身；没有真实多实体或矩阵通过主张。
+  动态支撑/inside/关节仍拒绝；媒体沿首图/首个已验证视频帧，不授H03末帧。
+
 ## 2026-09-13 固定新 reset child 真实双时间步通过
 
 - 固定clean `a57f248da9849de8c44d9b03b73c2b430bd98a72`，新根

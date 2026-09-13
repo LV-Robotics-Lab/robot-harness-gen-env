@@ -1,10 +1,26 @@
 """The public schema exporter detects snapshots drifting from Python contracts."""
 
+import json
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
+
+
+def test_export_exposes_versioned_generated_layout_values_and_strict_transport(tmp_path):
+    from self_improving.harness.x2env.schema_export import export
+
+    export(tmp_path)
+    schema = json.loads((tmp_path / "GroundingValuesV2.json").read_text())
+    transport = json.loads((tmp_path / "GroundingValuesV2.codex.json").read_text())
+    assert schema["properties"]["entities"]["maxItems"] == 8
+    assert schema["properties"]["entities"]["minItems"] == 1
+    assert "prefixItems" not in json.dumps(transport)
+    assert transport["additionalProperties"] is False
+    assert "GroundingValuesV2" in (tmp_path / "api-fields.md").read_text()
+    (tmp_path / "GroundingValuesV2.codex.json").write_text("{}")
+    assert export(tmp_path, check=True) == ("GroundingValuesV2.codex.json",)
 
 
 def test_export_interface_reports_missing_and_changed_files_without_repairing(tmp_path):

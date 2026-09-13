@@ -143,3 +143,4 @@ Generated; edit Python contracts, not this file.
 | X2EnvRequest | constraints | false |
 | X2EnvRequest | idempotency_key | true |
 | X2EnvRequest | output_dir | true |
+| GroundingValuesV2 | entities | true |

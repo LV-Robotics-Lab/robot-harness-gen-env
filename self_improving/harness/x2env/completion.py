@@ -916,6 +916,8 @@ def _verify_grounding_origin(snapshot, store, scene, compiled):
         return json.loads(store.read_artifact(ref))
 
     receipt = read(snapshot.grounding)
+    if receipt.get("schema_version") == "x2env.scene_grounding.v2":
+        return _verify_generated_grounding(snapshot, store, scene, compiled, receipt)
     if receipt.get("proposed_scene", {}).get("revision") != scene.revision:
         raise ValueError("completion_grounding_revision_chain_not_verified")
     expected = {
@@ -1193,6 +1195,304 @@ def _verify_grounding_origin(snapshot, store, scene, compiled):
             old.pose.yaw_degrees is not None and old.pose.yaw_degrees != entity.pose.yaw_degrees
         ):
             raise ValueError("completion_grounding_changed_explicit_axis")
+
+
+def _verify_generated_grounding(snapshot, store, scene, compiled, receipt):
+    """Recompute v2 layout against independent controller and immutable geometry evidence."""
+    from .design_grounding_v2 import (
+        GeneratedLayoutPolicy,
+        GroundingValuesV2,
+        apply_generated_values,
+        bind_generated_assets,
+        classify_generated_design,
+    )
+
+    def read(ref):
+        return json.loads(store.read_artifact(ref))
+
+    expected = {
+        "status": "completed",
+        "error_code": None,
+        "bundle_ref": snapshot.input_bundle.model_dump(),
+        "proposal_ref": snapshot.proposal.model_dump(),
+        "proposed_scene": scene.model_dump(mode="json"),
+        "real_world_scale_recovered": False,
+        "authority": "advisory_design_only",
+    }
+    if any(receipt.get(k) != v for k, v in expected.items()):
+        raise ValueError("completion_grounding_binding_mismatch")
+    original = BackendProposal.model_validate_json(store.read_artifact(snapshot.proposal))
+    if original.status != "completed" or original.proposal.scene is None:
+        raise ValueError("completion_grounding_original_proposal_missing")
+    base = original.proposal.scene
+    asset_ref = ArtifactRef.model_validate(receipt["assets_ref"])
+    assets = ResolvedAssetSet.model_validate_json(store.read_artifact(asset_ref))
+    rebound = ResolvedAssetSet.model_validate_json(store.read_artifact(snapshot.resolved_assets))
+    if (
+        SceneIR.model_validate_json(store.read_artifact(assets.scene_ir)) != base
+        or assets.assets != rebound.assets
+        or rebound != compiled.resolved_assets
+        or rebound.scene_ir != snapshot.scene_ir
+    ):
+        raise ValueError("completion_grounding_asset_binding_mismatch")
+    ground_ops = [
+        (i, op)
+        for i, op in enumerate(snapshot.operations)
+        if op.capability == "codex.ground"
+        and op.status == "succeeded"
+        and op.result
+        and all(
+            ref in op.result.outputs
+            for ref in (snapshot.grounding, snapshot.scene_ir, snapshot.resolved_assets)
+        )
+    ]
+    if len(ground_ops) != 1:
+        raise ValueError("completion_grounding_not_committed")
+    index, operation = ground_ops[0]
+    for capability, ref in (
+        ("codex.interpret", snapshot.proposal),
+        ("codex.interpret", assets.scene_ir),
+        ("asset.resolve", asset_ref),
+    ):
+        if not any(
+            op.capability == capability
+            and op.status == "succeeded"
+            and op.result
+            and ref in op.result.outputs
+            for op in snapshot.operations[:index]
+        ):
+            raise ValueError("completion_grounding_source_not_committed")
+    authorizations = [
+        read(ref) for ref in operation.result.outputs if ref.media_type == "application/json"
+    ]
+    authorizations = [
+        r
+        for r in authorizations
+        if isinstance(r, dict) and r.get("schema_version") == "x2env.design_authorization.v2"
+    ]
+    expected_authorization = {
+        "schema_version": "x2env.design_authorization.v2",
+        "workflow_id": snapshot.workflow_id,
+        "operation_id": operation.operation_id,
+        "proposal_ref": snapshot.proposal.model_dump(),
+        "pending_scene_ref": assets.scene_ir.model_dump(),
+        "assets_ref": asset_ref.model_dump(),
+        "policy": receipt["policy"],
+        "structural_policy": compiled.policy.model_dump(mode="json"),
+    }
+    if (
+        authorizations != [expected_authorization]
+        or receipt.get("structural_policy") != expected_authorization["structural_policy"]
+    ):
+        raise ValueError("completion_grounding_authorization_mismatch")
+    policy = GeneratedLayoutPolicy.model_validate_json(json.dumps(receipt["policy"]))
+    plan = classify_generated_design(original.proposal, policy, compiled.policy)
+    bindings, fixed = bind_generated_assets(store, base, assets, plan)
+    for key, value in {
+        "design_plan": plan,
+        "asset_bindings": bindings,
+        "fixed_values": fixed,
+        "original_unknowns": [u.model_dump(mode="json") for u in original.proposal.unknowns],
+        "resolved_unknowns": plan["resolved_unknown_indices"],
+    }.items():
+        if receipt.get(key) != value:
+            raise ValueError("completion_grounding_design_recomputation_mismatch")
+    bundle = InputBundle.model_validate_json(store.read_artifact(snapshot.input_bundle))
+    if base.input_sha256 != bundle.request_sha256:
+        raise ValueError("completion_grounding_input_mismatch")
+    records = [
+        read(ArtifactRef.model_validate(ref))
+        for ref in receipt["evidence"]
+        if ref.get("media_type") == "application/json"
+    ]
+    contexts = [
+        r
+        for r in records
+        if isinstance(r, dict) and r.get("schema_version") == "x2env.generated_layout_context.v2"
+    ]
+    expected_context = {
+        "schema_version": "x2env.generated_layout_context.v2",
+        "bundle_ref": snapshot.input_bundle.model_dump(),
+        "seed": bundle.seed,
+        "original_proposal": original.proposal.model_dump(mode="json"),
+        "policy": policy.model_dump(mode="json"),
+        "structural_policy": compiled.policy.model_dump(mode="json"),
+        "asset_bindings": bindings,
+        "design_plan": plan,
+        "fixed_values": fixed,
+        "media_selection": receipt.get("media_selection"),
+        "real_world_scale_recovered": False,
+    }
+    if contexts != [expected_context]:
+        raise ValueError("completion_grounding_design_context_mismatch")
+    from .schema_export import structured_output_schema
+
+    names = {
+        "prompt.txt",
+        "proposal.schema.json",
+        "invocation.json",
+        "process.json",
+        "process-terminal.json",
+        "codex.jsonl",
+        "codex.stderr",
+        "proposal.json",
+    }
+    transport = receipt.get("transport", {})
+    if set(transport) != names or any(ref not in receipt["evidence"] for ref in transport.values()):
+        raise ValueError("completion_grounding_transport_unbound")
+    transport_refs = {name: ArtifactRef.model_validate(ref) for name, ref in transport.items()}
+    invocation = read(transport_refs["invocation.json"])
+    process = read(transport_refs["process.json"])
+    terminal = read(transport_refs["process-terminal.json"])
+    if not all(isinstance(record, dict) for record in (invocation, process, terminal)):
+        raise ValueError("completion_grounding_transport_unbound")
+    if not isinstance(process.get("attempt_root"), str):
+        raise ValueError("completion_grounding_transport_unbound")
+    attempt = Path(process.get("attempt_root", ""))
+    argv = invocation.get("argv", [])
+    if (
+        not isinstance(argv, list)
+        or not argv
+        or any(not isinstance(argument, str) for argument in argv)
+        or not attempt.is_absolute()
+        or not Path(argv[0]).is_absolute()
+    ):
+        raise ValueError("completion_grounding_transport_unbound")
+    expected_argv = [
+        argv[0],
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--ignore-user-config",
+        "--ignore-rules",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "read-only",
+        "--model",
+        "gpt-6-astra",
+        "-c",
+        'model_reasoning_effort="max"',
+        "--output-schema",
+        str(attempt / "proposal.schema.json"),
+        "-c",
+        "features.shell_tool=false",
+        "-c",
+        "features.multi_agent=false",
+        "-c",
+        "mcp_servers={}",
+        "--output-last-message",
+        str(attempt / "proposal.json"),
+    ]
+    expected_images = (
+        [{"path": str(attempt / "input.png")}] if receipt.get("media_selection") else []
+    )
+    for image in expected_images:
+        expected_argv.extend(["-i", image["path"]])
+    expected_argv.append("-")
+    if (
+        argv != expected_argv
+        or invocation.get("media") != expected_images
+        or invocation.get("requested_reasoning_effort") != "max"
+        or invocation.get("server_effective_effort_verified") is not False
+        or not _execution_shas([process, terminal])
+        or read(transport_refs["proposal.schema.json"])
+        != structured_output_schema(GroundingValuesV2)
+        or json.dumps(expected_context).encode()
+        not in store.read_artifact(transport_refs["prompt.txt"])
+    ):
+        raise ValueError("completion_grounding_transport_context_mismatch")
+    events = [
+        json.loads(line)
+        for line in store.read_artifact(transport_refs["codex.jsonl"]).splitlines()
+        if line.strip()
+    ]
+    if any(
+        not isinstance(event, dict)
+        or not isinstance(event.get("type"), str)
+        or ("item" in event and not isinstance(event["item"], dict))
+        for event in events
+    ):
+        raise ValueError("completion_grounding_transport_event_invalid")
+    if not any(e.get("type") == "turn.completed" for e in events) or any(
+        e.get("item", {}).get("type")
+        in {"command_execution", "mcp_tool_call", "web_search", "collab_tool_call", "file_change"}
+        for e in events
+    ):
+        raise ValueError("completion_grounding_transport_incomplete")
+    media = receipt.get("media_selection")
+    if media is None:
+        if bundle.text is None or bundle.images or bundle.video:
+            raise ValueError("completion_grounding_media_missing")
+        store.read_artifact(bundle.text)
+    else:
+        _verify_generated_media(store, bundle, assets, base, media)
+    original_records = [read(r) for r in original.evidence if r.media_type == "application/json"]
+    if not (_execution_shas(records) & _execution_shas(original_records)):
+        raise ValueError("completion_grounding_missing_model_execution")
+    value = GroundingValuesV2.model_validate_json(
+        store.read_artifact(transport_refs["proposal.json"])
+    )
+    raw_values = [r for r in records if isinstance(r, dict) and set(r) == {"entities"}]
+    if raw_values != [value.model_dump(mode="json")]:
+        raise ValueError("completion_grounding_model_output_mismatch")
+    reconstructed, choices = apply_generated_values(
+        base, value, policy, plan, bindings, fixed, bundle
+    )
+    if reconstructed != scene or choices != receipt.get("design_choices"):
+        raise ValueError("completion_grounding_changed_semantics")
+
+
+def _verify_generated_media(store, bundle, assets, base, media):
+    from io import BytesIO
+
+    from PIL import Image
+
+    image_ref = ArtifactRef.model_validate(media["image"])
+    pixels_png = store.read_artifact(image_ref)
+    selection = json.loads(store.read_artifact(ArtifactRef.model_validate(media["provenance"])))
+    expected = {
+        "scene_ir": assets.scene_ir.model_dump(),
+        "entity_id": base.entities[0].id,
+        "request_sha256": bundle.request_sha256,
+    }
+    if bundle.images:
+        expected.update(
+            selection_basis="first_canonical_input_image",
+            image_index=0,
+            source_ref=bundle.images[0].source.model_dump(),
+        )
+        if image_ref != bundle.images[0].canonical:
+            raise ValueError("completion_grounding_media_binding_mismatch")
+    elif bundle.video:
+        sequence = json.loads(store.read_artifact(bundle.video.sequence))
+        frames = sequence.get("frames", [])
+        if (
+            sequence.get("source") != bundle.video.source.model_dump()
+            or sequence.get("full_decode") is not True
+            or len(frames) != bundle.video.frame_count
+            or not frames
+            or frames[0].get("index") != 0
+        ):
+            raise ValueError("completion_grounding_video_sequence_mismatch")
+        with Image.open(BytesIO(pixels_png)) as png:
+            if png.size != (bundle.video.width, bundle.video.height):
+                raise ValueError("completion_grounding_video_pixels_mismatch")
+            pixels = png.convert("RGB").tobytes()
+        digest = hashlib.sha256(pixels).hexdigest()
+        if len(pixels) != frames[0].get("size_bytes") or digest != frames[0].get("sha256"):
+            raise ValueError("completion_grounding_video_pixels_mismatch")
+        expected.update(
+            selection_basis="first_verified_decoded_video_frame",
+            frame_index=0,
+            frame_sha256=digest,
+            sequence_ref=bundle.video.sequence.model_dump(),
+            source_ref=bundle.video.source.model_dump(),
+            full_frame_count=bundle.video.frame_count,
+        )
+    else:
+        raise ValueError("completion_grounding_fabricated_media")
+    if any(selection.get(k) != v for k, v in expected.items()):
+        raise ValueError("completion_grounding_media_binding_mismatch")
 
 
 def _execution_shas(records):

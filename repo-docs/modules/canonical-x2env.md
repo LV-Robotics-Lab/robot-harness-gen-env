@@ -1,5 +1,11 @@
 # Canonical x2env（收敛实施中）
 
+显式`generated_layout`模式增加最多8实体的生成设计：每前景独立绑定Registry尺寸，结构长宽与未知XY/yaw
+在部署授权范围内选择；已知数字/实体/关系/frame不改。v1默认及旧配置保持原行为。
+controller留独立授权，完成门重算原输入、资产、设计规则和原始模型传输；缺编译policy先阻断。
+合法序号unknown路径按原scene映射而不改原行。此片仅直接结构on，动态目标拒绝；首图/首视频帧
+选择不等于H03末帧支持。新增业务接线尚不授真实多实体或矩阵资格。
+
 新worker已接显式build→reset，replay保存动作日志，assessment独立核claim、hash、动作/进程时间及
 loaded/step0零速度；历史无证明维持not_run。152项回归通过，新reset在固定a57f248实际双dt小测
 122.65秒通过且物理26/26；visual和步进后恢复未验，不计S02或qualification。

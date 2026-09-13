@@ -68,6 +68,7 @@ def completed_fixture(
     structural_grounding=False,
     local_color=False,
     empty_grounding_unknowns=False,
+    generated_grounding=False,
 ):
     """Synthetic producer at external execution seam, not a real Genesis run."""
     from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
@@ -137,6 +138,36 @@ def completed_fixture(
                         provenance=entity.provenance.pose,
                     ),
                 ),
+            }
+        )
+    if generated_grounding:
+        from self_improving.harness.x2env.contracts import FieldProvenance
+
+        derived = FieldProvenance(
+            source="text",
+            input_sha256=input_bundle.text.sha256,
+            kind="inferred",
+            note="Explicit generated simulation design; not real-world scale recovery.",
+        )
+        ir = ir.model_copy(
+            update={
+                "entities": tuple(
+                    e.model_copy(
+                        update={
+                            "provenance": e.provenance.model_copy(
+                                update={
+                                    key: (*getattr(e.provenance, key), derived)
+                                    for key in (
+                                        ("pose",)
+                                        if e.role == "foreground"
+                                        else ("dimensions", "pose")
+                                    )
+                                }
+                            )
+                        }
+                    )
+                    for e in ir.entities
+                )
             }
         )
     ground_ir = ir
@@ -477,6 +508,28 @@ def completed_fixture(
                     )
                 }
             )
+        if generated_grounding:
+            pending = pending.model_copy(
+                update={
+                    "entities": tuple(
+                        e.model_copy(
+                            update={
+                                "provenance": e.provenance.model_copy(
+                                    update={
+                                        key: getattr(e.provenance, key)[:-1]
+                                        for key in (
+                                            ("pose",)
+                                            if e.role == "foreground"
+                                            else ("dimensions", "pose")
+                                        )
+                                    }
+                                )
+                            }
+                        )
+                        for e in pending.entities
+                    )
+                }
+            )
         if structural_grounding and grounding_fault == "known_axis":
             pending = pending.model_copy(
                 update={
@@ -496,10 +549,111 @@ def completed_fixture(
         if local_color:
             pending_ref = color_snapshot.pending_scene_ir
 
-        def execution_double(value):
+        transport_records = {}
+
+        def execution_double(value, context=None):
             """Actual short external process, synthetic payload, not Codex qualification."""
             import subprocess
             import sys
+
+            if generated_grounding:
+                from self_improving.harness.x2env.design_grounding_v2 import GroundingValuesV2
+                from self_improving.harness.x2env.schema_export import structured_output_schema
+
+                executable = tmp_path / "synthetic-codex"
+                executable.write_text(
+                    f"#!{sys.executable}\nimport json,sys,pathlib\n"
+                    "p=json.load(sys.stdin)\n"
+                    "pathlib.Path(sys.argv[sys.argv.index('--output-last-message')+1])"
+                    ".write_text(json.dumps(p['fixture_answer']))\n"
+                    "print(json.dumps({'type':'turn.completed'}))\n"
+                )
+                executable.chmod(0o700)
+                attempt = tmp_path / ("ground-model" if context else "original-model")
+                attempt.mkdir(exist_ok=True)
+                payload = json.dumps({"context": context, "fixture_answer": value}).encode()
+                schema = json.dumps(structured_output_schema(GroundingValuesV2)).encode()
+                argv = [
+                    str(executable),
+                    "exec",
+                    "--json",
+                    "--ephemeral",
+                    "--ignore-user-config",
+                    "--ignore-rules",
+                    "--skip-git-repo-check",
+                    "--sandbox",
+                    "read-only",
+                    "--model",
+                    "gpt-6-astra",
+                    "-c",
+                    'model_reasoning_effort="max"',
+                    "--output-schema",
+                    str(attempt / "proposal.schema.json"),
+                    "-c",
+                    "features.shell_tool=false",
+                    "-c",
+                    "features.multi_agent=false",
+                    "-c",
+                    "mcp_servers={}",
+                    "--output-last-message",
+                    str(attempt / "proposal.json"),
+                    "-",
+                ]
+                (attempt / "proposal.schema.json").write_bytes(schema)
+                process = subprocess.Popen(
+                    argv,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    start_new_session=True,
+                    cwd=attempt,
+                )
+                stat = Path(f"/proc/{process.pid}/stat").read_text()
+                output, errors = process.communicate(payload, timeout=10)
+                assert process.returncode == 0 and not errors
+                docs = {
+                    "prompt.txt": (payload, "text/plain"),
+                    "proposal.schema.json": (schema, "application/json"),
+                    "invocation.json": (
+                        json.dumps(
+                            {
+                                "argv": argv,
+                                "media": [],
+                                "requested_reasoning_effort": "max",
+                                "server_effective_effort_verified": False,
+                            }
+                        ).encode(),
+                        "application/json",
+                    ),
+                    "process.json": (
+                        json.dumps(
+                            {
+                                "pid": process.pid,
+                                "pgid": process.pid,
+                                "start_ticks": int(stat.rsplit(")", 1)[1].split()[19]),
+                                "attempt_root": str(attempt),
+                                "executable_sha256": hashlib.sha256(
+                                    executable.read_bytes()
+                                ).hexdigest(),
+                            }
+                        ).encode(),
+                        "application/json",
+                    ),
+                    "process-terminal.json": (
+                        json.dumps(
+                            {"pid": process.pid, "returncode": 0, "reaped": True, "failure": None}
+                        ).encode(),
+                        "application/json",
+                    ),
+                    "codex.jsonl": (output, "text/plain"),
+                    "codex.stderr": (errors, "text/plain"),
+                    "proposal.json": ((attempt / "proposal.json").read_bytes(), "application/json"),
+                }
+                transport_records.clear()
+                transport_records.update(
+                    {name: store.write_artifact(data, mime) for name, (data, mime) in docs.items()}
+                )
+                return tuple(transport_records.values())
 
             process = subprocess.Popen(
                 [
@@ -659,9 +813,116 @@ def completed_fixture(
             if grounding_fault == "plan":
                 body["design_plan"]["rules"][0]["value"] = 0.9
             ground_ref = put(body)
+        if generated_grounding:
+            from self_improving.harness.x2env.design_grounding_v2 import (
+                GeneratedLayoutPolicy,
+                GroundingValuesV2,
+                apply_generated_values,
+                bind_generated_assets,
+                classify_generated_design,
+            )
+
+            policy = GeneratedLayoutPolicy(
+                enabled=True,
+                structural_defaults_enabled=True,
+                world_anchor_xy=(0, 0),
+                world_anchor_yaw_degrees=0,
+            )
+            plan = classify_generated_design(original.proposal, policy, compiled.policy)
+            bindings, fixed = bind_generated_assets(
+                store,
+                pending,
+                ResolvedAssetSet.model_validate_json(store.read_artifact(initial_ref)),
+                plan,
+            )
+            computed, choices = apply_generated_values(
+                pending,
+                GroundingValuesV2.model_validate_json(json.dumps(values)),
+                policy,
+                plan,
+                bindings,
+                fixed,
+                input_bundle,
+            )
+            assert computed == accepted
+            body = json.loads(store.read_artifact(ground_ref))
+            body.update(
+                schema_version="x2env.scene_grounding.v2",
+                policy=policy.model_dump(mode="json"),
+                asset_bindings=bindings,
+                design_plan=plan,
+                fixed_values=fixed,
+                design_choices=choices,
+                media_selection=None,
+                resolved_unknowns=plan["resolved_unknown_indices"],
+            )
+            context = {
+                "schema_version": "x2env.generated_layout_context.v2",
+                "bundle_ref": bundle.model_dump(),
+                "seed": input_bundle.seed,
+                "original_proposal": original.proposal.model_dump(mode="json"),
+                **{
+                    k: body[k]
+                    for k in (
+                        "policy",
+                        "structural_policy",
+                        "asset_bindings",
+                        "design_plan",
+                        "fixed_values",
+                        "media_selection",
+                        "real_world_scale_recovered",
+                    )
+                },
+            }
+            body["evidence"] = [r.model_dump() for r in execution_double(values, context)] + [
+                put(context).model_dump()
+            ]
+            body["transport"] = {name: ref.model_dump() for name, ref in transport_records.items()}
+            ground_ref = put(body)
         if grounding_fault:
             body = json.loads(store.read_artifact(ground_ref))
-            if grounding_fault == "model":
+            if grounding_fault == "v2_transport_response":
+                wrong = {
+                    "entities": [
+                        {**values["entities"][0], "position": [0.2, 0, 0.05]},
+                        values["entities"][1],
+                    ]
+                }
+                body["evidence"].append(put(wrong).model_dump())
+            elif grounding_fault == "v2_transport_missing":
+                body.pop("transport")
+            elif grounding_fault.startswith("v2_event_"):
+                malicious = {
+                    "v2_event_list": [],
+                    "v2_event_null": None,
+                    "v2_event_item_null": {"type": "item.completed", "item": None},
+                }[grounding_fault]
+                payload = json.dumps(malicious) + '\n{"type":"turn.completed"}\n'
+                changed = store.write_artifact(payload.encode(), "text/plain").model_dump()
+                body["evidence"].append(changed)
+                body["transport"]["codex.jsonl"] = changed
+            elif grounding_fault in {"v2_transport_path", "v2_argv_nonstring"}:
+                invocation = json.loads(
+                    store.read_artifact(
+                        ArtifactRef.model_validate(body["transport"]["invocation.json"])
+                    )
+                )
+                if grounding_fault == "v2_argv_nonstring":
+                    invocation["argv"][0] = {"path": "/untrusted/executable"}
+                else:
+                    invocation["argv"][invocation["argv"].index("--output-last-message") + 1] = (
+                        "/different/proposal.json"
+                    )
+                changed = put(invocation).model_dump()
+                body["evidence"].append(changed)
+                body["transport"]["invocation.json"] = changed
+            elif grounding_fault == "v2_geometry":
+                body["asset_bindings"][0]["dimensions_m"][2] = 0.3
+            elif grounding_fault == "v2_fixed":
+                body["fixed_values"]["item.pose.position[2]"] = 0.2
+            elif grounding_fault == "v2_unknown_indices":
+                body["resolved_unknowns"] = []
+            elif grounding_fault == "model":
                 body["evidence"] = body["evidence"][-1:]
             elif grounding_fault in {"executable", "pid", "ticks", "sha"}:
                 process = json.loads(
@@ -940,12 +1201,28 @@ def completed_fixture(
             else:
                 snapshot = store.begin_operation(snapshot, stage)
         ref = ref or next(iter(fields.values()))
+        extra_outputs = ()
+        if generated_grounding and stage == "codex.ground":
+            authorization = {
+                "schema_version": "x2env.design_authorization.v2",
+                "workflow_id": snapshot.workflow_id,
+                "operation_id": snapshot.operations[-1].operation_id,
+                "proposal_ref": original_ref.model_dump(),
+                "pending_scene_ref": pending_ref.model_dump(),
+                "assets_ref": initial_ref.model_dump(),
+                "policy": policy.model_dump(mode="json"),
+                "structural_policy": compiled.policy.model_dump(mode="json"),
+            }
+            if grounding_fault == "authorization":
+                authorization["policy"] = {**authorization["policy"], "position_abs_max_m": 2.0}
+            if grounding_fault != "missing_authorization":
+                extra_outputs = (put(authorization),)
         snapshot = store.complete_operation(
             snapshot,
             ToolResult(
                 operation_id=snapshot.operations[-1].operation_id,
                 status="succeeded",
-                outputs=tuple(dict.fromkeys((ref, *fields.values()))),
+                outputs=tuple(dict.fromkeys((ref, *fields.values(), *extra_outputs))),
             ),
             bundle,
             status="active",

@@ -677,12 +677,52 @@ class Harness:
         return self._ground(snapshot) if snapshot.pending_scene_ir else self._compile(snapshot)
 
     def _ground(self, snapshot):
+        import json
+
         from .compile import ResolvedAssetSet
 
         self._remaining()
         snapshot = self._store.begin_operation(snapshot, "codex.ground")
         operation = snapshot.operations[-1]
+        authorization = ()
         try:
+            if getattr(self._scene_design_policy, "mode", None) == "generated_layout":
+                authorization = (
+                    self._store.write_artifact(
+                        json.dumps(
+                            {
+                                "schema_version": "x2env.design_authorization.v2",
+                                "workflow_id": snapshot.workflow_id,
+                                "operation_id": operation.operation_id,
+                                "proposal_ref": snapshot.proposal.model_dump(mode="json"),
+                                "pending_scene_ref": snapshot.pending_scene_ir.model_dump(
+                                    mode="json"
+                                ),
+                                "assets_ref": snapshot.resolved_assets.model_dump(mode="json"),
+                                "policy": self._scene_design_policy.model_dump(mode="json"),
+                                "structural_policy": self._compile_policy.model_dump(mode="json")
+                                if self._compile_policy
+                                else None,
+                            },
+                            sort_keys=True,
+                        ).encode(),
+                        "application/json",
+                    ),
+                )
+                if self._compile_policy is None:
+                    return self._store.complete_operation(
+                        snapshot,
+                        ToolResult(
+                            operation_id=operation.operation_id,
+                            status="blocked",
+                            outputs=authorization,
+                            error_code="missing_structural_policy",
+                        ),
+                        snapshot.input_bundle,
+                        status="blocked",
+                        reason="missing_structural_policy",
+                        required_resources=("compile_policy",),
+                    )
             grounded = self._backend.ground_scene(
                 snapshot.input_bundle,
                 snapshot.proposal,
@@ -702,7 +742,7 @@ class Harness:
                     ToolResult(
                         operation_id=operation.operation_id,
                         status="blocked",
-                        outputs=(grounded.receipt,),
+                        outputs=(grounded.receipt, *authorization),
                         error_code=code,
                     ),
                     snapshot.input_bundle,
@@ -724,7 +764,7 @@ class Harness:
                 ToolResult(
                     operation_id=operation.operation_id,
                     status="succeeded",
-                    outputs=(grounded.receipt, scene, assets_ref),
+                    outputs=(grounded.receipt, scene, assets_ref, *authorization),
                 ),
                 snapshot.input_bundle,
                 status="active",
@@ -733,6 +773,23 @@ class Harness:
                 grounding=grounded.receipt,
             )
         except (ValueError, OSError, KeyError, TypeError) as error:
+            if authorization:
+                error_ref = self._store.write_artifact(
+                    json.dumps({"error_code": "grounding_failed", "detail": str(error)}).encode(),
+                    "application/json",
+                )
+                return self._store.complete_operation(
+                    snapshot,
+                    ToolResult(
+                        operation_id=operation.operation_id,
+                        status="failed",
+                        outputs=(*authorization, error_ref),
+                        error_code="grounding_failed",
+                    ),
+                    snapshot.input_bundle,
+                    status="failed",
+                    reason="grounding_failed",
+                )
             return self._stage_failure(snapshot, "grounding_failed", error)
         return self._compile(snapshot)
 

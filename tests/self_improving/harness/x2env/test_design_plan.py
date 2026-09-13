@@ -64,6 +64,62 @@ def policy():
     )
 
 
+def test_original_scene_index_paths_resolve_without_rewriting_unknowns(tmp_path):
+    from self_improving.harness.x2env.compile import StructuralPolicy
+    from self_improving.harness.x2env.design_plan import classify_design_unknowns
+
+    proposal = intent(tmp_path)
+    paths = (
+        "scene.entities[0].dimensions",
+        "scene.entities[0].pose.position",
+        "scene.entities[1].pose.position[2]",
+    )
+    proposal = proposal.model_copy(
+        update={
+            "unknowns": tuple(
+                old.model_copy(update={"field": path})
+                for old, path in zip(proposal.unknowns, paths, strict=True)
+            )
+        }
+    )
+    original = proposal.model_dump_json()
+    plan = classify_design_unknowns(
+        proposal, policy(), StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5)
+    )
+    assert plan.resolved_unknown_indices == (0, 1, 2)
+    assert proposal.model_dump_json() == original
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "scene.entities[-1].pose",
+        "scene.entities[2].pose",
+        "scene.entities[00].pose",
+        "scene.entities[0]suffix.pose",
+        "scene.entities[0].category",
+        "scene.entities[0].pose.position[3]",
+        "scene.entities[0].pose.position[-1]",
+    ],
+)
+def test_index_paths_do_not_expand_authority(tmp_path, path):
+    from self_improving.harness.x2env.compile import StructuralPolicy
+    from self_improving.harness.x2env.design_plan import classify_design_unknowns
+
+    proposal = intent(tmp_path)
+    proposal = proposal.model_copy(
+        update={
+            "unknowns": (proposal.unknowns[0].model_copy(update={"field": path, "critical": True}),)
+        }
+    )
+    with pytest.raises(ValueError):
+        classify_design_unknowns(
+            proposal,
+            policy(),
+            StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+        )
+
+
 @pytest.mark.parametrize("unknown_mode", ["noncritical", "omitted"])
 def test_actual_missing_geometry_and_defaults_do_not_depend_on_unknown_flags(
     tmp_path, unknown_mode
