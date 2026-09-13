@@ -116,7 +116,10 @@ def classify_design_unknowns(proposal, policy, structural_policy=None):
         if not selected:
             raise ValueError("grounding_unknown_field_not_designable")
         if unknown.reason_kind == "unspecified":
-            if any(r.basis != "deployment_structural_default" for r in selected):
+            if any(
+                r.basis not in {"deployment_structural_default", "on_geometry_derived"}
+                for r in selected
+            ):
                 raise ValueError("grounding_requires_clarification")
         elif unknown.reason_kind not in {"scale_unobservable", "pose_unobservable"}:
             raise ValueError("grounding_requires_clarification")

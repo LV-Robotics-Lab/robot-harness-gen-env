@@ -40,11 +40,20 @@ def policy():
     )
 
 
-def test_exact_structural_defaults_and_on_height_are_classified(tmp_path):
+@pytest.mark.parametrize("height_reason", ["pose_unobservable", "unspecified"])
+def test_exact_structural_defaults_and_on_height_are_classified(tmp_path, height_reason):
     from self_improving.harness.x2env.compile import StructuralPolicy
     from self_improving.harness.x2env.design_plan import classify_design_unknowns
 
     proposal = intent(tmp_path)
+    proposal = proposal.model_copy(
+        update={
+            "unknowns": (
+                *proposal.unknowns[:2],
+                proposal.unknowns[2].model_copy(update={"reason_kind": height_reason}),
+            )
+        }
+    )
     plan = classify_design_unknowns(
         proposal, policy(), StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5)
     )
@@ -58,7 +67,7 @@ def test_exact_structural_defaults_and_on_height_are_classified(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "fault", ["conflict", "category", "frame", "known_axis", "multiple_support"]
+    "fault", ["conflict", "category", "frame", "known_axis", "multiple_support", "unknown_xy"]
 )
 def test_unrelated_or_conflicting_unknown_is_not_design_authority(tmp_path, fault):
     from self_improving.harness.x2env.compile import StructuralPolicy
@@ -75,6 +84,9 @@ def test_unrelated_or_conflicting_unknown_is_not_design_authority(tmp_path, faul
         raw["scene"]["entities"][0]["dimensions"][2] = 0.1
     if fault == "multiple_support":
         raw["scene"]["relations"].append(raw["scene"]["relations"][0])
+    if fault == "unknown_xy":
+        raw["scene"]["entities"][1]["pose"]["position"][0] = None
+        raw["unknowns"][2].update(field="scene.entities.object.pose", reason_kind="unspecified")
     from self_improving.harness.x2env.contracts import SceneIntentProposal
 
     with pytest.raises(ValueError):

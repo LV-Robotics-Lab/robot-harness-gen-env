@@ -1,5 +1,20 @@
 # 进度与结果
 
+## 2026-09-13 S04 fixed427d245 与几何派生未知分类修复
+
+- fixed clean `427d24567058902155b6f2437d3129f37247f999`，原请求/图像/seed41/web-only；显式结构默认。
+  workflow `b9fa1379-9496-4d69-a437-1266314289b2` blocked/clarification_required，
+  ingest 0.019478s、interpret 82.719821s、CLI 82.935626s、外层 83.065178s。
+- 原提案语义与用户数值正确，但将 local cube z 标为 critical unspecified；旧分类器只容许部署默认的
+  unspecified，拒绝了已有唯一 on 关系可推导的高度。未查 web、未 grounding/Genesis，无新媒体/环境。
+- 证据 `/home/jingxiang/bingsheng/canonical-s04-design-20260913.jxn3ak`：audit SHA256
+  `9e15e0e38ffcab5919855a488532760c2262b0960c41ccd70b5821e983365698`；run SHA256
+  `ef65f5d826a9d9633877beacdfea38f5ebda6759ec5c2bd27484e0356bae85f5`；failure manifest
+  `7bd53533954d4ff061cad16b6da046fc60a6b5e1a272ed19ad7dd4ae1fd4131b`。原失败与提案不改写。
+- public classifier 先 RED 后 GREEN：只有已分类 deployment_structural_default/on_geometry_derived
+  允许 unspecified；未知 XY、frame 冲突、多个支撑与已知轴仍拒绝。三组 36 passed（1.70s）。
+  completion 使用同分类器重核规则，但本片未执行新的真实运行或授资格。
+
 ## 2026-09-13 C10 本地颜色新版本执行与新视觉复核
 
 - execute_color_repair 核当前 asset.revise/live owner/head、共享预留、精确批准、原候选与已提交模型建议；

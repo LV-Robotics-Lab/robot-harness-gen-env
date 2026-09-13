@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-DERIVED-UNSPECIFIED — 几何可推导字段分类
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `cd74b42` classifier；真实 S04 fixed `427d24567058902155b6f2437d3129f37247f999`。
+- `target_paths`：x2env/design_plan.py、test_design_plan.py。
+- `integration_method`：仅有明确 on 几何依据的字段可消费 unspecified，不放宽语义缺失或未知 XY。
+- `verification`：contract_pass；36 tests。原 S04 blocked，未查网或仿真；全证据见 RESULTS。
+- `recorded_git_authors`：本提交元数据；未升级旧运行与来源许可。
+
 ## INT-CANONICAL-C10-LOCAL-COLOR-EXECUTION — 预留批准后的新版本复核
 
 - `origin_owner`：Yuxin 原 a6_verify；新受控执行 `integration_owner` 为 Bingsheng Harness workstream。
