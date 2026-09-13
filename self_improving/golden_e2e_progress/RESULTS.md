@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 C05 意图输出精简实验准备
+
+- tBWgI7真实成功interpret原JSON 9795B，移除排版空白后6580B；20条出处note共1025字符。
+  重复SHA仍是合同字段，不删减；bytes差值不作为token或耗时节省实测。
+- 仅新增两句提示：本阶段抽取意图，后续Harness处理grounding/资产/仿真；紧凑JSON、简短note，
+  保留全部出处及歧义/冲突/override解释。无长度硬截断、不降max、schema与后置关联门不变。
+- 已有公开interpret测试增加提示约束先RED后GREEN；主线程53 passed/4.56s。
+  首次主线程误写不存在的test_codex_lifecycle.py，未执行测试；改为实际test_harness_lifecycle.py。
+  真实性能结果待固定新版一次S01验证，不称已解决超时。
+- 同期completion三模块63 passed/92.01s，551语句缺97、314分支、75 partial；这是聚焦测量，
+  core100%仍未达到。固定5fe0225六组在独立树与专用环境执行中，不混合开发测量。
+
 ## 2026-09-13 C14 完整 active lint 接第六组
 
 - LINT_ROOTS显式包含稳定层、platform入口/harness/Stage5/Alchedata/runtime、asset_reuse/web及

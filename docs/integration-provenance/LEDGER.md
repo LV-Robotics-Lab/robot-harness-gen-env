@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-CONCISE-INTENT — 有界提示性能实验
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Codex CLI原作者。
+- source_ref：`5fe0225dc435115f9920f2ddd45f2003feb32109`；target_paths：x2env/codex.py及公开interpret测试。
+- integration_method：只增两句角色范围/简短输出提示，保完整字段、来源和未知项，不改max或成功门。
+- verification：主线程53项通过；runtime_verification：真实性能待测，不将历史成功调用合并为新case通过。
+- recorded_git_authors：既有transport来源与当前提示维护提交分别保留。
+
 ## INT-CANONICAL-C14-ACTIVE-LINT-GATE — 实际全范围检查
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Ruff原作者。

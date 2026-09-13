@@ -339,7 +339,14 @@ class CodexBackend:
                 "scale, pose_unobservable for unavailable metric pose, conflict for contradictory "
                 "inputs, unsupported for unsupported requirements, missing_required_semantics for "
                 "missing identity/relations, otherwise unspecified. Keep critical flags truthful; "
-                "never clear them to force execution. Unknown yaw is null, not zero.\n"
+                "never clear them to force execution. Unknown yaw is null, not zero. "
+                "Perform intent extraction only; later Harness stages handle grounding, asset "
+                "resolution and simulation, so record unresolved values and their truthful "
+                "unknowns rather than planning or solving those stages here. "
+                "Return compact JSON and keep each provenance note concise, avoiding repetition of "
+                "values already present in typed fields while retaining every required provenance "
+                "record and any explanation needed for ambiguity, conflict or an explicit "
+                "override.\n"
                 + json.dumps(
                     {
                         "bundle": bundle.model_dump(mode="json"),

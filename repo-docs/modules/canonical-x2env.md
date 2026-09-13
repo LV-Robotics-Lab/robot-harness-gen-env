@@ -1,11 +1,13 @@
 # Canonical x2env（收敛实施中）
 
 测试从 `script/run_self_improving_tests.sh` 执行六组、独立root与merge；每组独立30分钟总预算。
-同源六份测量才可归并，业务文件语句/分支必须100%。当前只是入口与自身测试通过，
-全active lint/docslink仍列pending，真实全组结果和资格另见进度账。
+同源六份测量才可归并，业务文件语句/分支必须100%。全active lint与reader docs检查已实际接入，
+不再列为未实现；固定源码的真实全组结果和资格仍须分别验收，详见进度账。
 
 内部 Codex 所有角色通过唯一 transport 显式请求 `model_reasoning_effort="max"`；拒绝时不降级。
 回执记录请求值与实际argv，但不把CLI接受配置描述成服务端有效力度已验证；旧未指定回执不回填。
+interpret提示要求只抽取意图、返回紧凑JSON和简短出处说明；全部实体、未知项及来源关联校验仍保留。
+这是有界性能实验，不限制说明长度、不删出处或降低max，尚未证明能消除长尾超时。
 
 旧 System 2 planner/dispatcher、GoldenRun、独立 Qwen replay assessment，以及仅 Python 消费的
 Workbench assessment 链已退役（18 个源文件，Git 历史可恢复）。稳定 SAPIEN runtime 工具与只读

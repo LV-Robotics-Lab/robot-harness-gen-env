@@ -130,6 +130,16 @@ def test_unknown_is_advisory_and_logs_bound_input_and_model(tmp_path):
     prompt = (tmp_path / "attempt" / "prompt.txt").read_text()
     assert "invent dimensions or silently resolve conflicting media" in prompt
     assert "Unknown yaw is null, not zero" in prompt
+    assert (
+        "Perform intent extraction only; later Harness stages handle grounding, asset "
+        "resolution and simulation, so record unresolved values and their truthful unknowns "
+        "rather than planning or solving those stages here."
+    ) in prompt
+    assert (
+        "Return compact JSON and keep each provenance note concise, avoiding repetition of "
+        "values already present in typed fields while retaining every required provenance "
+        "record and any explanation needed for ambiguity, conflict or an explicit override."
+    ) in prompt
     manifest = json.loads(store.read_artifact(result.evidence[-1]))
     assert manifest["model"] == "test-double"
     assert manifest["requested_reasoning_effort"] == "max"
