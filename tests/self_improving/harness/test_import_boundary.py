@@ -27,6 +27,15 @@ def test_old_qualified_execution_modules_are_absent(tmp_path):
         "self_improving.harness.qualification",
         "self_improving.harness.schemas.qualification_report",
         "self_improving.harness.schema_catalog",
+        "self_improving.harness.run_store",
+        "self_improving.harness.golden_store",
+        "self_improving.harness.assets",
+        "self_improving.harness.package_store",
+        "self_improving.harness.runtime_executor",
+        "self_improving.harness.media_verifier",
+        "self_improving.harness.media_sandbox",
+        "self_improving.harness.validate_v2",
+        "self_improving.validate_v2_snapshot",
     )
     program = f"""
 from importlib.util import find_spec
@@ -54,6 +63,6 @@ def test_old_qualification_and_schema_resources_are_absent():
     assert not (root / "script/export_harness_schemas.py").exists()
     for directory in ("json_schemas", "qualified_skills"):
         assert not list((root / "self_improving/harness" / directory).rglob("*.json"))
-    assert (root / "self_improving/harness/native/media_sandbox.c").is_file()
+    assert not (root / "self_improving/harness/native/media_sandbox.c").exists()
     assert list((root / "self_improving/harness/x2env/json_schemas").glob("*.json"))
     assert (root / "self_improving/golden_e2e_progress/physics-assertions-v1.json").is_file()

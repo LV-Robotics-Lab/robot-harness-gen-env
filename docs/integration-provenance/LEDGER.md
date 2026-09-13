@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-ORPHAN-RUNTIME-RETIRE — 孤立旧执行依赖图
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`e2f909c` 可恢复。
+- target_paths：旧Store/admission/package/runtime/media/validate九模块、native C及7份专属tests。
+- integration_method：逐消费者确认后退役；保留混合schema、稳定runtime/CAS/events/staging及ASPIRE。
+- verification：root465项，agent729通过/1跳过；canonical资源摘要不变；runtime_verification：not_run。
+- recorded_git_authors：固定Git来源及本提交元数据；第三方来源归属不重写。
+
 ## INT-CANONICAL-C03-MODEL-RESULT-EDGES — 模型回执状态合同
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`e2f909c`。

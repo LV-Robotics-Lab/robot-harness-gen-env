@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- C13 孤立旧Store/media/snapshot九模块及专属native已退役，root465项通过；六组CI与独立root测试入口正在实现。
+
 - S01 fixed f35ea18已failed/model_timeout（600.773s），无SceneIR或Genesis；原现场保留，不原样重跑。受管模型诊断与C13/core覆盖并行继续。
 
 - 公共 contracts 239语句/42分支100%，40项相关测试通过；整体core覆盖尚未完成。

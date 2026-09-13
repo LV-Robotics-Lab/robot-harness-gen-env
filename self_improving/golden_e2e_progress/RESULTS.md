@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 C13 孤立旧 Store、媒体和 snapshot adapter 退役
+
+- 确认含相对/动态导入在内无保留生产消费者后，删除旧 run_store/golden_store/assets/
+  package_store/runtime_executor/media_verifier/media_sandbox/validate_v2 与 validate_v2_snapshot
+  九模块、旧native C和7份专属测试；混合validate_v2测试保留14个参数化纯schema用例。
+- 新absence先2项RED；root保留runtime/事件/安装等465 passed/6.03s；agent扩大回归
+  729 passed/1 skipped/7.81s，asset_repair另72 passed，全仓1777 collected/0.61s。
+- canonical合同/冻结physics的27文件摘要不变。稳定runtime_assets/capability/events、CAS、
+  event_journal、staging/repair与ASPIRE类型保持；删除源可从 `e2f909c` 恢复。
+  原测试脚本的旧coverage引用尚待六分组收敛，不将本切片称最终CI全绿。
+
 ## 2026-09-13 S01 fixed f35ea18：真实 model_timeout，未进入资产阶段
 
 - 源码 `f35ea18dd51902edb52f7d791ae6de75511de1f8`，独立工作树始终clean；冻结S01文本/seed11/

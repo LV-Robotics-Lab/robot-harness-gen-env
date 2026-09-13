@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
 import shutil
 import subprocess
@@ -24,14 +23,10 @@ AGENTICSIM_SOURCE = Path("self_improving/asset_pipeline/active/shared/openxsim/s
 RETIRED_RESOURCE_PREFIXES = (
     "self_improving/harness/qualified_skills/",
     "self_improving/harness/json_schemas/",
+    "self_improving/harness/native/",
 )
-MEDIA_NATIVE_PACKAGE = Path("self_improving/harness/native")
-MEDIA_NATIVE_MEMBERS = ("media_sandbox.c",)
 QUALIFIED_REPLAY_CLI = Path("self_improving/qualified_replay_cli.py")
 RETIRED_CONSOLES = {"robot-harness-compile", "robot-harness-run-qualified-replay"}
-MEDIA_NATIVE_SHA256 = hashlib.sha256(
-    (REPO_ROOT / MEDIA_NATIVE_PACKAGE / MEDIA_NATIVE_MEMBERS[0]).read_bytes()
-).hexdigest()
 
 
 def test_legacy_campaign_and_qwen_entrypoints_are_not_active_commands():
@@ -65,7 +60,6 @@ def _copy_build_fixture(destination: Path) -> Path:
         *(HARNESS_PACKAGE / name for name in HARNESS_RESOURCE_MEMBERS),
         *(SCENE_GEN_PACKAGE / name for name in SCENE_GEN_RESOURCE_MEMBERS),
         *(LEDGER_PACKAGE / name for name in LEDGER_MEMBERS),
-        *(MEDIA_NATIVE_PACKAGE / name for name in MEDIA_NATIVE_MEMBERS),
         *(p.relative_to(REPO_ROOT) for p in (REPO_ROOT / AGENTICSIM_SOURCE).rglob("*.py")),
     ):
         target = source / relative_path
@@ -124,16 +118,12 @@ def test_wheel_installs_runtime_source_without_retired_resources(tmp_path: Path)
     expected_scene_gen_resources = {
         (SCENE_GEN_PACKAGE / name).as_posix() for name in SCENE_GEN_RESOURCE_MEMBERS
     }
-    expected_media_native = {
-        (MEDIA_NATIVE_PACKAGE / name).as_posix() for name in MEDIA_NATIVE_MEMBERS
-    }
     with zipfile.ZipFile(wheel) as archive:
         members = set(archive.namelist())
         assert expected_members <= members
         assert expected_harness_resources <= members
         assert expected_scene_gen_resources <= members
         assert not any(name.startswith(RETIRED_RESOURCE_PREFIXES) for name in members)
-        assert expected_media_native <= members
         assert QUALIFIED_REPLAY_CLI.as_posix() not in members
         entry_points_member = next(
             name for name in members if name.endswith(".dist-info/entry_points.txt")
@@ -148,8 +138,6 @@ def test_wheel_installs_runtime_source_without_retired_resources(tmp_path: Path)
         for member in expected_harness_resources:
             assert archive.read(member) == (REPO_ROOT / member).read_bytes()
         for member in expected_scene_gen_resources:
-            assert archive.read(member) == (REPO_ROOT / member).read_bytes()
-        for member in expected_media_native:
             assert archive.read(member) == (REPO_ROOT / member).read_bytes()
 
     installed = tmp_path / "installed"
@@ -171,7 +159,6 @@ def test_wheel_installs_runtime_source_without_retired_resources(tmp_path: Path)
     probe = f"""
 import importlib
 import importlib.resources
-import hashlib
 import pathlib
 import sys
 
@@ -184,10 +171,6 @@ for module_name in ("conventions", "ledger"):
 resources = importlib.resources.files(package)
 for resource_name in {LEDGER_MEMBERS!r}:
     assert resources.joinpath(resource_name).is_file()
-distribution_resources = importlib.resources.files("self_improving")
-native_source = distribution_resources.joinpath("harness", "native", "media_sandbox.c")
-assert native_source.is_file()
-assert hashlib.sha256(native_source.read_bytes()).hexdigest() == {MEDIA_NATIVE_SHA256!r}
 """
     _run([sys.executable, "-I", "-c", probe], cwd=installed)
     for prefix in RETIRED_RESOURCE_PREFIXES:
@@ -195,8 +178,6 @@ assert hashlib.sha256(native_source.read_bytes()).hexdigest() == {MEDIA_NATIVE_S
     for member in expected_harness_resources:
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
     for member in expected_scene_gen_resources:
-        assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
-    for member in expected_media_native:
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
     assert not (installed / QUALIFIED_REPLAY_CLI).exists()
 
@@ -212,5 +193,5 @@ def test_packaging_declares_retained_resources_only() -> None:
     assert "qualified_skills/**/*.json" not in package_data["self_improving.harness"]
     assert "json_schemas/*.json" not in package_data["self_improving.harness"]
     assert "json_schemas/*.json" in package_data["self_improving.harness.x2env"]
-    assert "native/*.c" in package_data["self_improving.harness"]
+    assert "native/*.c" not in package_data["self_improving.harness"]
     assert not RETIRED_CONSOLES & configuration["project"]["scripts"].keys()

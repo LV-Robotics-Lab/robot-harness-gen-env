@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 孤立旧Store/media/runtime/snapshot九模块和专属native退役；465项主线程保留层回归通过，六组CI仍在收敛。
+
 - 旧qualification/catalog/exporter和38份资源退出active tree；保留实际消费Python类型，canonical合同摘要不变。
 
 - 预览来源身份区分 Git 与真实安装 distribution，拒读根独立来自部署；25项含离线 wheel 安装测试通过。
