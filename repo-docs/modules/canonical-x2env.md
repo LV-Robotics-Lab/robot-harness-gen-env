@@ -19,6 +19,7 @@ Provider 安装使用根项目的 `pip install '.[platform]'`（开发可加 `-e
 不再次查 local，只对普通缺失实体访问尚未执行的 web/reconstruction。pending 意图不会因此被接受。
 已提交 child 可恢复续接；失联且无结果的修改保守停为 `color_repair_recovery_requires_audit`，
 不重跑或返还预算。历史审计重核原模型输出/进程、批准、几何/许可继承与新预览，供续点和完成门共用。
+子版本视觉还逐次绑定同一模型/执行身份、新图、问题与回答，通过原 a6 重算判断；历史审计不再次调用模型。
 完成门已接入该历史审计，另核原 blocked 解析、已提交续点、实际编译 child 与顺序；支持初始场景及
 grounding 前颜色修订，失败/取消成本和部分产物也进包。当前通过组件测试，尚无真实模型+Genesis
 颜色闭环成功，grounding 后资产修订仍不在此范围。

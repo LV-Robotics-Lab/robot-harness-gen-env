@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-COLOR-VISUAL-AUDIT — 子版本视觉身份连续性
+
+- origin_owner：Yuxin 原 a6 视觉消费逻辑；integration_owner：Bingsheng Harness workstream。
+- source_ref：canonical `faf7dc0` 与原 asset_reuse/a6_verify；第三方及原作者归属不变。
+- target_paths：x2env/local_color_execution.py 及专属测试。
+- integration_method：历史回答经原 a6 重新消费；模型、进程、新图片、问题顺序和回答绑定。
+- verification：主线程93项组件测试通过；runtime_verification：真实颜色闭环未执行。
+- recorded_git_authors：以原来源及本提交 Git 元数据为准，不推断自然人映射。
+
+
 ## INT-CANONICAL-C13-WORKBENCH-RETIRE — 旧资格写入口消费者退役
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

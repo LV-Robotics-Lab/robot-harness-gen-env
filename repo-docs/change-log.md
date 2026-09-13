@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 颜色子版本视觉审计逐次绑定真实调用记录，并由原 a6 重算结果；93项组件测试通过，真实闭环仍待验证。
+
 - 旧 Workbench compile 写入口及对应审计/预览控件退役，事件流只取显式 feed；稳定 jobs/critic 与活动板保留，45 项含实际 Chrome 的测试通过。
 - C13 退役 18 个旧 System 2/GoldenRun/Qwen/未接路由 assessment 源文件及 17 个专属测试；保留稳定 runtime/feed，旧指南标历史，尚未删除仍被 Workbench compile 消费的资格链。
 - 原 Yuxin 依赖的 agenticsim 从原目录随同一 wheel 安装，去掉隐式 simulator bootstrap；隔离安装后的真实本地查询测试补上源目录 PYTHONPATH 曾遮蔽的包装缺口。

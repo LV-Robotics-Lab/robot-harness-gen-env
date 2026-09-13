@@ -273,7 +273,17 @@ def execute_color_repair(
             raise FileNotFoundError(
                 assessment.error_code or "managed_codex_asset_assessment_required"
             )
-        _verify_child_assessment(store, assessment, child, proof.image, entity.category)
+        _verify_child_assessment(
+            store,
+            assessment,
+            child,
+            proof.image,
+            entity.category,
+            model=backend.model,
+            executable_sha=backend.executable_sha,
+            want_color=entity.color,
+            want_material=entity.material,
+        )
         resolved = ResolvedAsset(
             entity_id=entity.id,
             version_sha256=child.version_sha256,
@@ -613,11 +623,24 @@ def verify_color_repair_result(
         raise ValueError("color_history_preview_mismatch")
     with Image.open(BytesIO(store.read_artifact(proof.image))) as image:
         image.verify()
-    _verify_child_assessment(store, assessment, child, proof.image, candidate.version.category)
+    identity = read(proposal.receipt)
+    _verify_child_assessment(
+        store,
+        assessment,
+        child,
+        proof.image,
+        candidate.version.category,
+        model=identity.get("model"),
+        executable_sha=identity.get("executable_sha256"),
+        want_color=candidate.requested_color,
+        want_material=candidate.requested_material,
+    )
     return candidate, result
 
 
-def _verify_child_assessment(store, assessment, child, image, category):
+def _verify_child_assessment(
+    store, assessment, child, image, category, *, model, executable_sha, want_color, want_material
+):
     def read(ref):
         return json.loads(store.read_artifact(ref))
 
@@ -652,3 +675,153 @@ def _verify_child_assessment(store, assessment, child, image, category):
         raise ValueError("color_execution_child_assessment_mismatch")
     if verdict.verdict != "match":
         raise ValueError("color_execution_child_visual_mismatch")
+    _audit_child_model_calls(
+        store,
+        assessment,
+        image,
+        child,
+        category,
+        model,
+        executable_sha,
+        want_color,
+        want_material,
+        detail,
+    )
+
+
+def _audit_child_model_calls(
+    store, assessment, image, child, category, model, sha, want_color, want_material, detail
+):
+    """Reconsume recorded Codex responses through original a6; no external inference.
+
+    Transport layout is CodexBackend.assess_asset_candidates/_invoke. Only the two
+    image-path fields are relocated to a temporary file containing verified CAS bytes.
+    """
+    from tempfile import TemporaryDirectory
+    from types import SimpleNamespace
+
+    from self_improving.asset_pipeline.active.asset_reuse.lib.a6_verify import verify_candidate
+
+    from .asset_advisory import VisualAnswer
+    from .schema_export import structured_output_schema
+
+    receipt = json.loads(store.read_artifact(assessment.receipt))
+    if (
+        not isinstance(model, str)
+        or not model
+        or receipt.get("model") != model
+        or receipt.get("executable_sha256") != sha
+    ):
+        raise ValueError("color_execution_child_model_identity_mismatch")
+    prefix = (
+        "You are the Harness advisory visual backend. Use no tools. Answer the "
+        "following question about the attached actual candidate image. Return "
+        "the supplied JSON schema, null for unasked scalar fields and empty "
+        "lists for unasked list fields. Do not claim simulation or acquisition "
+        "success. Candidate input SHA256: " + image.sha256 + "\n"
+    )
+    records = []
+    for ref in assessment.evidence:
+        raw = store.read_artifact(ref)
+        records.append(
+            json.loads(raw)
+            if ref.media_type == "application/json"
+            else raw.decode()
+            if ref.media_type == "text/plain"
+            else None
+        )
+    starts = [
+        i
+        for i, value in enumerate(records)
+        if isinstance(value, str)
+        and value.startswith("You are the Harness advisory visual backend.")
+    ]
+    calls, identities = [], set()
+    for i, start in enumerate(starts):
+        group = records[start : starts[i + 1] if i + 1 < len(starts) else len(records)]
+        objects = [value for value in group if isinstance(value, dict)]
+        invocations = [value for value in objects if "argv" in value]
+        processes = [value for value in objects if "start_ticks" in value]
+        terminals = [value for value in objects if "reaped" in value]
+        responses = [value for value in objects if set(value) == set(VisualAnswer.model_fields)]
+        if (
+            len(invocations) != 1
+            or len(processes) != 1
+            or len(terminals) != 1
+            or len(responses) != 1
+            or not _executed([*processes, *terminals], sha)
+            or structured_output_schema(VisualAnswer) not in objects
+        ):
+            raise ValueError("color_execution_child_model_execution_mismatch")
+        if (
+            objects.index(invocations[0]) >= objects.index(processes[0])
+            or objects.index(processes[0]) >= objects.index(terminals[0])
+            or objects.index(terminals[0]) >= objects.index(responses[0])
+            or (processes[0]["pid"], processes[0]["start_ticks"]) in identities
+        ):
+            raise ValueError("color_execution_child_model_execution_mismatch")
+        identities.add((processes[0]["pid"], processes[0]["start_ticks"]))
+        invocation = invocations[0]
+        argv, media = invocation.get("argv"), invocation.get("media")
+
+        def argument(flag):
+            if (
+                not isinstance(argv, list)
+                or argv.count(flag) != 1
+                or argv.index(flag) + 1 >= len(argv)
+            ):
+                return None
+            return argv[argv.index(flag) + 1]
+
+        if (
+            not isinstance(argv, list)
+            or argv.count("--model") != 1
+            or argv.index("--model") + 1 >= len(argv)
+            or argv[argv.index("--model") + 1] != model
+            or not isinstance(media, list)
+            or len(media) != 1
+            or media[0].get("input_sha256") != image.sha256
+            or media[0].get("path") != detail.get("image")
+            or argument("-i") != media[0].get("path")
+            or argument("--output-last-message")
+            != str(Path(processes[0].get("attempt_root", "")) / "proposal.json")
+            or argument("--output-schema")
+            != str(Path(processes[0].get("attempt_root", "")) / "proposal.schema.json")
+            or detail.get("thumbnail") != detail.get("image")
+            or not group[0].startswith(prefix)
+        ):
+            raise ValueError("color_execution_child_model_context_mismatch")
+        response = VisualAnswer.model_validate_json(json.dumps(responses[0])).model_dump_json()
+        calls.append((group[0], response))
+    if not calls or sum(isinstance(r, dict) and "start_ticks" in r for r in records) != len(calls):
+        raise ValueError("color_execution_child_model_execution_mismatch")
+    consumed, errors = 0, []
+
+    def infer(path, question):
+        nonlocal consumed
+        if consumed >= len(calls) or calls[consumed][0] != prefix + question:
+            errors.append("question mismatch")
+            raise ValueError("recorded question mismatch")
+        response = calls[consumed][1]
+        consumed += 1
+        return response
+
+    with TemporaryDirectory(prefix="x2env-child-visual-audit-") as directory:
+        path = Path(directory) / "preview.png"
+        path.write_bytes(store.read_artifact(image))
+        replayed = verify_candidate(
+            SimpleNamespace(
+                candidate_id=child.version_sha256,
+                name=child.asset_id,
+                metadata={"thumbnail": str(path)},
+            ),
+            category,
+            infer=infer,
+            model_name=model,
+            want_color=want_color,
+            want_material=want_material,
+        )
+        replayed["image"] = detail.get("image")
+        replayed["thumbnail"] = detail.get("thumbnail")
+    if errors or consumed != len(calls) or replayed != detail:
+        raise ValueError("color_execution_child_model_context_mismatch")

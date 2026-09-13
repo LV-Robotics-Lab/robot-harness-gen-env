@@ -16,6 +16,86 @@ from tests.self_improving.harness.x2env.test_local_color_advisory import color_i
 from tests.self_improving.harness.x2env.test_resolver import preview_proof
 
 
+@pytest.mark.parametrize("fault", ["model", "process", "image", "response", "missing_call"])
+def test_history_rejects_rebound_child_model_identity(tmp_path, fault):
+    from self_improving.harness.x2env.local_color_execution import verify_color_repair_result
+    from tests.self_improving.harness.x2env.test_source_router import (
+        continuation_inputs,
+        start_continuation,
+    )
+
+    store, _, snapshot, _, execution, _ = continuation_inputs(tmp_path)
+
+    def put(value):
+        return store.write_artifact(json.dumps(value).encode(), "application/json")
+
+    old = execution.assessment
+    body = json.loads(store.read_artifact(old.receipt))
+    refs = list(old.evidence)
+    if fault == "model":
+        body["model"] = "different-managed-model"
+    elif fault == "missing_call":
+        starts = [
+            i
+            for i, ref in enumerate(refs)
+            if ref.media_type == "text/plain"
+            and store.read_artifact(ref).startswith(b"You are the Harness advisory visual backend.")
+        ]
+        assert len(starts) >= 2
+        end = refs.index(old.verdicts[0].detail)
+        refs = refs[: starts[-1]] + refs[end:]
+        body["evidence"] = [ref.model_dump() for ref in refs if ref != old.receipt]
+    else:
+        changed = False
+        for index, ref in enumerate(refs):
+            if ref.media_type != "application/json":
+                continue
+            value = json.loads(store.read_artifact(ref))
+            if not isinstance(value, dict):
+                continue
+            if fault == "process" and "start_ticks" in value:
+                value["executable_sha256"] = "f" * 64
+            elif fault == "image" and "argv" in value:
+                value["media"][0]["input_sha256"] = "f" * 64
+            elif fault == "response" and "colors" in value and "object" in value:
+                value["colors"] = ["blue"]
+            else:
+                continue
+            refs[index] = put(value)
+            changed = True
+            break
+        assert changed
+        body["evidence"] = [ref.model_dump() for ref in refs if ref != old.receipt]
+    receipt = put(body)
+    assessment = old.model_copy(
+        update={
+            "receipt": receipt,
+            "evidence": tuple(receipt if ref == old.receipt else ref for ref in refs),
+        }
+    )
+    evidence = []
+    for ref in execution.evidence:
+        if ref == execution.receipt:
+            continue
+        if ref.media_type == "application/json" and json.loads(
+            store.read_artifact(ref)
+        ) == old.model_dump(mode="json"):
+            ref = put(assessment.model_dump(mode="json"))
+        evidence.append(ref)
+    result_body = json.loads(store.read_artifact(execution.receipt))
+    result_body["assessment"] = assessment.model_dump(mode="json")
+    result_body["evidence"] = [ref.model_dump() for ref in evidence]
+    receipt = put(result_body)
+    execution = execution.model_copy(
+        update={"assessment": assessment, "receipt": receipt, "evidence": (*evidence, receipt)}
+    )
+    execution_ref = put(execution.model_dump(mode="json"))
+    snapshot = start_continuation(store, snapshot, execution, execution_ref)
+    expected = "identity" if fault == "model" else "execution" if fault == "process" else "context"
+    with pytest.raises(ValueError, match=f"^color_execution_child_model_{expected}_mismatch$"):
+        verify_color_repair_result(store, execution_ref, workflow_id=snapshot.workflow_id)
+
+
 @pytest.mark.parametrize(
     "fault",
     [
@@ -109,6 +189,14 @@ def test_public_history_audit_requires_bound_committed_execution(tmp_path, fault
             store, execution_ref, workflow_id=snapshot.workflow_id
         )
         assert checked == execution and candidate.parent_version == checked.child.parent_version
+        assert (
+            sum(
+                ref.media_type == "application/json"
+                and "start_ticks" in json.loads(store.read_artifact(ref))
+                for ref in checked.assessment.evidence
+            )
+            >= 2
+        )  # Original a6 may ask multiple questions; history must consume every call.
 
 
 @pytest.mark.parametrize("status", ["failed", "cancelled"])
