@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 重建颜色与刚体意图修复
+
+- reconstruction-02：f19597ef-d51a-445e-9e4f-a673fbc0c6c2，252.450571秒/blocked。
+  数值mesh闭包通过；真实视觉识别computer mouse，但白/灰与pink要求不符，attribute_mismatch。
+- 重建规划增加绑定SceneIR的base_color/declared_color，RGB为Codex估计，规范化沿用已有显式色覆盖；
+  这不是纹理恢复或隐面补全。规划与实际规范化两公开seam反例先RED后GREEN，错名/缺色/越界拒绝。
+- web-solid-box-01 60.441891秒、web-block-01 65.751284秒均clarification_required；模型将“无开口/实心”
+  编为空joint_positions的specified articulation。interpret prompt明确无运动关节则null，不替模型修改返回值。
+
 ## 2026-09-13 P1 新几何与大型证据遍历
 
 - reconstruction-01：259.105236秒/blocked，workflow5005d918-718f-49a3-b3eb-5ebccf9e0eee。

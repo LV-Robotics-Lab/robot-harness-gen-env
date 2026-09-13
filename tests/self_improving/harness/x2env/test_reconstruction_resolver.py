@@ -12,7 +12,7 @@ from tests.self_improving.harness.x2env.test_resolver import VisualDouble, input
 from tests.self_improving.harness.x2env.test_web_resolver import preview_double
 
 
-@pytest.mark.parametrize("fault", [None, "license", "geometry", "visual", "image"])
+@pytest.mark.parametrize("fault", [None, "license", "geometry", "visual", "image", "color"])
 def test_reconstruction_requires_authorized_actual_geometry_and_visual_pass(tmp_path, fault):
     from self_improving.harness.x2env.reconstruction_resolver import (
         ReconstructionImage,
@@ -20,6 +20,10 @@ def test_reconstruction_requires_authorized_actual_geometry_and_visual_pass(tmp_
     )
 
     store, registry, _, scene, image = inputs(tmp_path)
+    if fault == "color":
+        payload = json.loads(store.read_artifact(scene))
+        payload["entities"][0]["color"] = "pink"
+        scene = store.write_artifact(json.dumps(payload).encode(), "application/json")
     answer = {
         "box_xyxy": [0.0, 0.0, 2.0, 2.0],
         "point_coords": [],
@@ -29,6 +33,8 @@ def test_reconstruction_requires_authorized_actual_geometry_and_visual_pass(tmp_
         "friction": 0.6,
         "reason": "test double",
     }
+    if fault == "color":
+        answer.update(base_color=[1.0, 0.5, 0.75, 1.0], declared_color="pink")
     path = executable(tmp_path, answer)
     backend = CodexBackend(
         path, hashlib.sha256(path.read_bytes()).hexdigest(), "test-double", store
@@ -96,7 +102,7 @@ def test_reconstruction_requires_authorized_actual_geometry_and_visual_pass(tmp_
         allow_cousin=False,
         output_root=tmp_path / "resolve",
     )
-    if fault:
+    if fault and fault != "color":
         assert result.status == "blocked" and not result.resolved.assets
         receipt = json.loads(store.read_artifact(result.receipt))
         if fault != "image":
@@ -108,3 +114,6 @@ def test_reconstruction_requires_authorized_actual_geometry_and_visual_pass(tmp_
             version.source.kind == "reconstruction"
             and version.license.attribution == "Fixture Author"
         )
+        if fault == "color":
+            normalization = json.loads(store.read_artifact(version.normalization_report))
+            assert normalization["color_override_rgba"] == [1.0, 0.5, 0.75, 1.0]

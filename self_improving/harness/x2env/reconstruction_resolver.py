@@ -157,6 +157,7 @@ class ReconstructionResolver:
                     up_axis="Y",
                     mass_kg=plan.parameters.mass_kg,
                     friction=plan.parameters.friction,
+                    color_rgba=plan.parameters.base_color,
                 )
                 version = self.registry.register(
                     f"reconstructed-{entity.id}-{generated.geometry.sha256[:12]}",

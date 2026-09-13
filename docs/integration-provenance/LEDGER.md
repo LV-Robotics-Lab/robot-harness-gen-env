@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-RECONSTRUCTION-COLOR
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：固定Gujie/SAM2/TRELLIS来源不变。
+- source_refs：5e7116d及其真实reconstruction-02白灰鼠标预览；recorded_git_authors见各提交。
+- integration_method：既有模型重建规划产生有界RGBA，色名必须吻合SceneIR，交现有normalize_mesh显式均匀色覆盖。
+- lifecycle：integrated；verification：contract_pass；runtime_verification：修复后新例待运行。
+- boundary：模型颜色估计不作原图纹理/隐面颜色重建，不修改原始生成GLB或旧资产版本。
+
 ## INT-CANONICAL-P1-RECONSTRUCTION-DEPLOYMENT
 
 - origin_owner：Gujie x2env窄重建接口；upstream_owner：Meta SAM2/DINO、Microsoft TRELLIS、NVIDIA FlexiCubes/Kaolin。

@@ -6,7 +6,9 @@
 示例中的 `/absolute/...`、SHA、来源声明必须替换为实际内容；它们不是已经部署的资源。
 
 截至 matrix v2，四种输入、local 来源、颜色资产修订及有限 Genesis 桌面场景真实通过；
-web 和 Gujie reconstruction 的 adapter 已接入路由，但本轮部署未配置和验证其外部资源。
+web 和 Gujie reconstruction 的 adapter 已接入路由。后续P1已配置本机外部资源并运行案例，
+已证明真实下载及新几何/登记/Genesis预览子集，完整E2E仍有失败；见
+[P1记录](../docs/evidence/canonical-p0-p1-20260913.md)。
 详细证据见[本轮审计](../self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)。
 安装本 Python 包不等于部署了全部来源，也不授予通用重建、机器人策略或数据采集能力。
 
@@ -225,13 +227,17 @@ text-only 请求缺少重建图片会返回 `missing_reconstruction_image`。
 不能把一个输入的授权当成全部用户媒体的通行证。
 
 外部命令实际接收 masked RGBA、输出目录、runtime、质量、摩擦和 seed；
+重建准备可为SceneIR指定颜色提供RGBA估计及准确色名，规范化时显式均匀色覆盖并记录来源。
+这是颜色设计，不是从图像恢复纹理；原始生成GLB保持，新规范化资产单独登记。
 adapter 核对输入/分割 RGBA/新 `geometry.glb` 的哈希与后端身份，随后仍需规范化、入库和预览。
 模型权重/代码许可单独保存，不代表资产物理检查通过。
 adapter 子进程只继承有限环境变量（如 PATH、库路径、locale、CUDA 可见设备），
 不要假定任意服务 token 会自动传入。缺文件通常返回 `blocked_external_resource`，
 身份不符返回 `deployment_identity_mismatch`，后端或输出证据错误有独立日志和 receipt。
 
-本轮 matrix v2 没有配置并验证该路径，不能把以上可调用接口称为通用重建真实通过。
+历史 matrix v2 没有配置并验证该路径。后续P1已真实执行分割和TRELLIS新几何、规范化登记与
+Genesis资产预览；第一次完整工作流因大JSON证据遍历受阻，修复及后续结果见P1记录。
+这不能称为任意图像/视频的通用场景重建通过。
 首次接入应先证实固定后端可执行，再跑一个新输入的 Harness 全链路，保留全部资源/失败记录。
 
 ## 7. 扩展能力与应用嵌入

@@ -16,6 +16,7 @@ from .adapters.reconstruction import SegmentationProposal
 from .contracts import ArtifactRef, Model, SceneIR
 
 Dimension = Annotated[float, Field(ge=0.0001, le=100)]
+ColorUnit = Annotated[float, Field(ge=0, le=1)]
 
 
 class ReconstructionValues(Model):
@@ -28,6 +29,8 @@ class ReconstructionValues(Model):
     mass_kg: float = Field(ge=0.000001, le=100000)
     friction: float = Field(ge=0, le=10)
     reason: str = Field(min_length=1, max_length=4000)
+    base_color: tuple[ColorUnit, ColorUnit, ColorUnit, ColorUnit] | None = None
+    declared_color: str | None = None
 
 
 class ReconstructionParameters(Model):
@@ -42,6 +45,9 @@ class ReconstructionParameters(Model):
     mass_basis: Literal["codex_estimate"] = "codex_estimate"
     friction_basis: Literal["codex_estimate"] = "codex_estimate"
     evidence: ArtifactRef
+    base_color: tuple[ColorUnit, ColorUnit, ColorUnit, ColorUnit] | None = None
+    declared_color: str | None = None
+    color_basis: Literal["codex_estimate"] | None = None
 
 
 class ReconstructionPlanResult(Model):
@@ -112,6 +118,9 @@ def plan_reconstruction(backend, scene_ir, entity, image_ref, *, output_root, ti
                 "Preserve all known SceneIR dimension axes exactly; estimate only unknown target "
                 "dimensions in normalized Z-up X/Y/Z meters and plausible mass_kg/friction. These "
                 "are estimates, not measurements. No license, receipt, qualification, "
+                "When the entity requests a color, return base_color RGBA and exactly its "
+                "declared_color name for normalization; otherwise leave both null. This is "
+                "a uniform color estimate, not recovered texture or hidden-surface detail. "
                 "Skill success "
                 "or execution authority. Return only the static schema. Context:\n"
                 + json.dumps(context)
@@ -126,6 +135,11 @@ def plan_reconstruction(backend, scene_ir, entity, image_ref, *, output_root, ti
                 start,
             )
             values = ReconstructionValues.model_validate_json(response)
+            if entity.color:
+                if values.base_color is None or values.declared_color != entity.color:
+                    raise ValueError("reconstruction_changed_requested_color")
+            elif values.base_color is not None or values.declared_color is not None:
+                raise ValueError("reconstruction_added_unrequested_color")
             box = values.box_xyxy
             if box and not (0 <= box[0] < box[2] <= width and 0 <= box[1] < box[3] <= height):
                 raise ValueError("invalid_segmentation_box")
@@ -200,6 +214,9 @@ def plan_reconstruction(backend, scene_ir, entity, image_ref, *, output_root, ti
             mass_kg=values.mass_kg,
             friction=values.friction,
             evidence=receipt,
+            base_color=values.base_color,
+            declared_color=values.declared_color,
+            color_basis="codex_estimate" if values.base_color is not None else None,
         )
     return ReconstructionPlanResult(
         status=status,
