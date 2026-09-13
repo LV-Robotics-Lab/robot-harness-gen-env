@@ -9,6 +9,33 @@ from PIL import Image
 from tests.self_improving.harness.x2env.test_asset_revision import fixture
 
 
+def test_explicit_git_mismatch_retains_failure_and_never_runs_preview(tmp_path):
+    from pathlib import Path
+
+    from self_improving.harness.x2env.asset_preview import AssetPreviewRenderer
+    from self_improving.harness.x2env.source_identity import GitSourcePolicy
+
+    store, _, version = fixture(tmp_path)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("source pin failure reached runtime")
+
+    proof = AssetPreviewRenderer(
+        store,
+        {},
+        tmp_path / "preview",
+        1,
+        runner=forbidden,
+        source_identity_policy=GitSourcePolicy(
+            root=str(Path(__file__).resolve().parents[4]), expected_commit="0" * 40
+        ),
+    ).render(version)
+    assert proof.status == "failed" and proof.image is None
+    assert proof.error_code == "source_git_commit_mismatch"
+    receipt = json.loads(store.read_artifact(proof.receipt))
+    assert not receipt["package"] and not receipt["outputs"]
+
+
 def test_preview_binds_actual_version_package_and_runtime_image(tmp_path):
     from self_improving.harness.x2env.asset_preview import AssetPreviewRenderer
 

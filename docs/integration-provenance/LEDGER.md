@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C14-PREVIEW-SOURCE — 安装身份与拒读策略分离
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`8da345a` 旧预览实现。
+- target_paths：x2env/source_identity.py、asset_preview.py、deployment.py 与对应安装/契约测试。
+- integration_method：固定自身源成员并验证 Git 或安装 distribution；独立传入拒读目录。
+- verification：主线程25项；runtime_verification：安装测试 runner 明确替身，不代表真实 Genesis。
+- recorded_git_authors：见原来源及本提交；upstream_owner：Python packaging/Pydantic 原作者不变。
+
 ## INT-CANONICAL-C13-QUALIFIED-EXECUTION-RETIRE — 旧执行权威删除
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；原作者及第三方归属保留 Git 历史。

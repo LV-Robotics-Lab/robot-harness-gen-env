@@ -17,6 +17,12 @@ CapabilityRegistry固定精确版本与digest；AssetRegistry只管理不可变�
 
 ## 外部adapter seams
 
+预览来源身份与运行拒读目录分开：GenesisConfig.source_identity 仅由部署选择 Git 或 installed
+策略，预览固定核自身五个执行源成员。Git 的显式 root/commit 失败不得退到 installed；installed
+核当前 distribution 的成员/原始 RECORD/METADATA，可固定 RECORD 摘要，但不把自描述 RECORD
+当作原 wheel 签名。所有记录仅 development provenance；denied_roots 独立显式传给两条预览装配，
+不得把推算出的 site-packages 整体当成工作区拒读，也不据此授予 runtime 或 release 资格。
+
 编译seam消费固定SceneIR artifact、ResolvedAssetSet、seed和显式StructuralPolicy，不获取资产。
 SceneIR坐标约定：foreground为几何中心，结构支撑frame为上表面中心；normalized URDF原点为
 XY中心/Z底面，编译器做显式偏移。仅未给出的结构厚度/世界原点可使用部署policy，并记录defaults；

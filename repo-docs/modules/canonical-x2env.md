@@ -13,6 +13,9 @@ Provider 安装使用根项目的 `pip install '.[platform]'`（开发可加 `-e
 隔离安装测试已从安装目录执行原 local search；这只证明 provider 安装和本地查询，未证明全部署或仿真。
 同一 wheel 也携带冻结物理断言与 canonical schema，platform 声明 SciPy；隔离测试可从安装目录
 消费这些资源和 CLI/三个 Skills。安装后的真实 Genesis preview/replay 仍须另验。
+预览现在记录真实 Git 或 installed distribution 的五成员源码身份；部署可固定 commit/RECORD，
+但内部一致的 RECORD 不等于原 wheel 签名。`genesis.source_identity` 与 `genesis.denied_roots`
+分开配置，显式 Git 失败不降级，安装目录不会被猜成工作区整体拒读；这里只授予开发来源记录。
 
 历史 limited-preview normal 的 75-member index 不包含其 mouse representation 所引用的 15 个资源。
 已列成员 hash 核验不能作为传递资产闭包或可移植包证明；canonical 导入以实际 bytes 与许可重核，

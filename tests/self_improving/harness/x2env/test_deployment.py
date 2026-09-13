@@ -8,6 +8,28 @@ from self_improving.harness.x2env.contracts import X2EnvRequest
 from self_improving.harness.x2env.deployment import build_harness, load_deployment
 
 
+def test_deployment_parses_explicit_source_policy_without_changing_runtime_roots(tmp_path):
+    from self_improving.harness.x2env.deployment import Deployment
+
+    roots = {
+        name: str(tmp_path / name)
+        for name in ("interpreter", "stdlib", "distributions", "native", "genesis")
+    }
+    config = Deployment.model_validate(
+        {
+            "state_dir": str(tmp_path / "state"),
+            "genesis": {
+                "runtime_roots": roots,
+                "denied_roots": (str(tmp_path / "denied"),),
+                "source_identity": {"kind": "installed", "expected_record_sha256": "a" * 64},
+            },
+        }
+    )
+    assert config.genesis.source_identity.kind == "installed"
+    assert config.genesis.runtime_roots.model_dump() == roots
+    assert config.genesis.denied_roots == (str(tmp_path / "denied"),)
+
+
 def test_request_resolver_continuation_reuses_assembly_without_local_queries(tmp_path):
     from self_improving.harness.x2env.contracts import InputBundle
     from self_improving.harness.x2env.deployment import Deployment, _RequestResolver

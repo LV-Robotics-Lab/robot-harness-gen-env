@@ -16,6 +16,7 @@ from pydantic import Field, model_validator
 from .compile import StructuralPolicy
 from .contracts import ArtifactRef, Model, Sha256
 from .grounding import SceneDesignPolicy
+from .source_identity import SourceIdentityPolicy
 
 
 class CodexConfig(Model):
@@ -54,6 +55,7 @@ class RuntimeRoots(Model):
 class GenesisConfig(Model):
     runtime_roots: RuntimeRoots
     denied_roots: tuple[str, ...] = ()
+    source_identity: SourceIdentityPolicy | None = None
 
     @model_validator(mode="after")
     def scoped(self):
@@ -166,7 +168,12 @@ def build_harness(config):
             from .asset_preview import AssetPreviewRenderer
 
             return AssetPreviewRenderer(
-                store, config.genesis.runtime_roots.model_dump(), output_root, seed
+                store,
+                config.genesis.runtime_roots.model_dump(),
+                output_root,
+                seed,
+                denied_roots=config.genesis.denied_roots,
+                source_identity_policy=config.genesis.source_identity,
             ).render
 
     return Harness(
@@ -224,6 +231,8 @@ class _RequestResolver:
                 config.genesis.runtime_roots.model_dump(),
                 root / "previews",
                 self.request.seed,
+                denied_roots=config.genesis.denied_roots,
+                source_identity_policy=config.genesis.source_identity,
             ).render
 
         def remaining():

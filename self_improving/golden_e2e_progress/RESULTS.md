@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 C14 预览的安装身份与拒读分离
+
+- 旧预览忽略 Git 命令失败并以 __file__ 推算工作区；wheel 下会留下空 HEAD 且误拒
+  site-packages。新 source_identity 核真实 Git 或 distribution 身份，五成员 bytes 摘要绑定；
+  原始 RECORD 摘要不经 read_text 换行归一化。身份失败在 runtime 前生成结构化失败。
+- 两个 deployment 预览装配透传同一显式 denied_roots 与 source_identity 策略；不改变
+  Gujie 固定源或五个 runtime roots，不授予正式资格。
+- 主线程四组25 passed/3.68s，包括真实离线 wheel/隔离安装、真实 Git、损坏成员/METADATA/
+  RECORD、显式 Git 不能 fallback；外部 runner 为明确无GPU替身，未新增真实仿真能力。
+  安装测试在新 /var/tmp 目录执行，宿主 /tmp 损坏 .git 保留未动。
+
 ## 2026-09-13 C13 旧资格执行权威退役
 
 - 真实消费者检索确认旧 application/Registry/compile-replay handlers/qualifiers/receipts/深 CLI

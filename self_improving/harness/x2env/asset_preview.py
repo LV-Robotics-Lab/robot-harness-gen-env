@@ -4,7 +4,6 @@ import hashlib
 import json
 import mimetypes
 import os
-import subprocess
 import time
 import uuid
 from io import BytesIO
@@ -16,6 +15,7 @@ from PIL import Image
 from .assets import AssetRegistry, AssetStore, AssetVersion
 from .contracts import ArtifactRef, Model, Sha256
 from .genesis_runtime import RuntimeEntity, RuntimeMember, RuntimeScene, run_scene
+from .source_identity import SourceIdentityPolicy, capture_source_identity
 
 
 class AssetPreviewProof(Model):
@@ -32,7 +32,15 @@ def _json(value):
 
 class AssetPreviewRenderer:
     def __init__(
-        self, store: AssetStore, runtime_roots, root: Path, seed: int, *, runner=run_scene
+        self,
+        store: AssetStore,
+        runtime_roots,
+        root: Path,
+        seed: int,
+        *,
+        runner=run_scene,
+        denied_roots=(),
+        source_identity_policy: SourceIdentityPolicy | None = None,
     ):
         self.store, self.runtime_roots, self.root, self.seed = (
             store,
@@ -41,6 +49,8 @@ class AssetPreviewRenderer:
             seed,
         )
         self.runner = runner
+        self.denied_roots = tuple(denied_roots)
+        self.source_identity_policy = source_identity_policy
 
     def render(self, version: AssetVersion, *, timeout: int = 600) -> AssetPreviewProof:
         if type(timeout) is not int or not 1 <= timeout <= 600:
@@ -60,23 +70,10 @@ class AssetPreviewRenderer:
             "package": {},
             "outputs": outputs,
         }
-        workspace = Path(__file__).resolve().parents[3]
-        identity = {}
-        for name, args in (
-            ("head", ["rev-parse", "HEAD"]),
-            ("status", ["status", "--porcelain"]),
-            ("diff", ["diff", "HEAD", "--binary"]),
-        ):
-            result = subprocess.run(["git", "-C", str(workspace), *args], capture_output=True)
-            identity[name + "_sha256"] = hashlib.sha256(result.stdout).hexdigest()
-            if name == "head":
-                identity["head"] = result.stdout.decode().strip()
-        identity["executed_source_sha256"] = {
-            name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
-            for name in ("asset_preview.py", "genesis_runtime.py", "genesis_child.py")
-        }
-        receipt["identity"] = identity
         try:
+            receipt["identity"] = capture_source_identity(
+                Path(__file__).parent, policy=self.source_identity_policy
+            ).model_dump(mode="json")
             verified = AssetRegistry(self.store).inspect(version.version_sha256)
             if verified != version:
                 raise ValueError("asset_version_mismatch")
@@ -122,7 +119,7 @@ class AssetPreviewRenderer:
             )
             receipt["runtime_scene"] = scene_ref.model_dump(mode="json")
             # The child enforces an allowlist of this copied package, outputs and declared runtime.
-            # Deny the workspace: build-time code/assets are not runtime inputs.
+            # Denials come from deployment, never from a guessed checkout/site-packages root.
             remaining = timeout - (time.monotonic() - start)
             if remaining <= 0:
                 raise ValueError("preview_timeout")
@@ -132,7 +129,7 @@ class AssetPreviewRenderer:
                 runtime_roots=self.runtime_roots,
                 output_dir=output,
                 profile="load_step_smoke",
-                denied_roots=(workspace,),
+                denied_roots=self.denied_roots,
                 timeout_seconds=remaining,
             )
             receipt["runtime_result"] = result
