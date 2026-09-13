@@ -37,6 +37,7 @@ def completed_fixture(
     grounding_fault=None,
     revised=False,
     revision_fault=None,
+    reservation_fault=None,
 ):
     """Synthetic producer at external execution seam, not a real Genesis run."""
     from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
@@ -618,7 +619,95 @@ def completed_fixture(
             ]
     for index, (stage, fields, ref) in enumerate(stages):
         if index:
-            snapshot = store.begin_operation(snapshot, stage)
+            if stage == "revise" and reservation_fault != "missing":
+                from self_improving.harness.x2env.contracts import RepairReservation
+
+                # Real Store reservation; synthetic revision payload is not qualification.
+                healthy = json.loads(store.read_artifact(revision.receipt))
+                if reservation_fault in {"failed_budget", "cancelled_budget"}:
+                    failed_approval = put(
+                        {
+                            "authority": "harness_controller",
+                            "approved": True,
+                            "workflow_id": snapshot.workflow_id,
+                            "base_revision": snapshot.revision,
+                            "input_bundle": bundle.model_dump(),
+                            "scene_ir": snapshot.scene_ir.model_dump(),
+                            "diagnosis": snapshot.diagnosis.model_dump(),
+                            "cost": 1,
+                            "failure_fingerprint": "a" * 64,
+                        }
+                    )
+                    failed = RepairReservation(
+                        kind="scene",
+                        cost=1,
+                        failure_fingerprint="a" * 64,
+                        approval=failed_approval,
+                        base_revision=snapshot.revision,
+                    )
+                    snapshot = store.begin_operation(snapshot, "revise", repair_reservation=failed)
+                    snapshot = store.complete_operation(
+                        snapshot,
+                        ToolResult(
+                            operation_id=snapshot.operations[-1].operation_id,
+                            status="failed"
+                            if reservation_fault == "failed_budget"
+                            else "cancelled",
+                            outputs=(failed_approval,),
+                            error_code="explicit_fixture_failure",
+                        ),
+                        bundle,
+                        status="active",
+                    )
+                approval = put(
+                    {
+                        "authority": "harness_controller",
+                        "approved": True,
+                        "workflow_id": snapshot.workflow_id,
+                        "base_revision": snapshot.revision,
+                        "input_bundle": bundle.model_dump(),
+                        "scene_ir": snapshot.scene_ir.model_dump(),
+                        "diagnosis": snapshot.diagnosis.model_dump(),
+                        "cost": 1,
+                        "failure_fingerprint": healthy["failure_fingerprint"],
+                    }
+                )
+                if reservation_fault == "approval":
+                    wrong_approval = json.loads(store.read_artifact(approval))
+                    wrong_approval["workflow_id"] = "different-workflow"
+                    approval = put(wrong_approval)
+                reservation = RepairReservation(
+                    kind="scene",
+                    cost=1,
+                    failure_fingerprint=healthy["failure_fingerprint"],
+                    approval=approval,
+                    base_revision=snapshot.revision,
+                )
+                snapshot = store.begin_operation(snapshot, stage, repair_reservation=reservation)
+                envelope = {
+                    "workflow_id": snapshot.workflow_id,
+                    "operation_id": snapshot.operations[-1].operation_id,
+                    "reservation": reservation.model_dump(mode="json"),
+                    "input_bundle": bundle.model_dump(),
+                    "scene_ir": snapshot.scene_ir.model_dump(),
+                    "diagnosis": snapshot.diagnosis.model_dump(),
+                }
+                if reservation_fault == "workflow":
+                    envelope["workflow_id"] = "different-workflow"
+                elif reservation_fault == "operation":
+                    envelope["operation_id"] = "different-operation"
+                elif reservation_fault == "cost":
+                    envelope["reservation"]["cost"] = 2
+                elif reservation_fault == "input":
+                    envelope["input_bundle"] = scene_ref.model_dump()
+                body = json.loads(store.read_artifact(ref))
+                body["reservation"] = put(envelope).model_dump()
+                if reservation_fault == "missing_ref":
+                    del body["reservation"]
+                ref = put(body)
+                fields = {**fields, "revision_receipt": ref}
+            else:
+                snapshot = store.begin_operation(snapshot, stage)
         ref = ref or next(iter(fields.values()))
         snapshot = store.complete_operation(
             snapshot,
@@ -650,6 +739,60 @@ def test_completion_accepts_grounding_then_layout_revision(tmp_path):
     assert result.status == "materialized", result
 
 
+def test_completion_rejects_successful_revision_without_persistent_reservation(tmp_path):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(
+        tmp_path, grounding=True, revised=True, reservation_fault="missing"
+    )
+    result = materialize_completion(snapshot, store, tmp_path / "completion")
+    assert (
+        result.status == "failed" and result.error_code == "completion_repair_reservation_missing"
+    )
+
+
+@pytest.mark.parametrize(
+    "fault", ["workflow", "operation", "cost", "input", "missing_ref", "approval"]
+)
+def test_completion_rejects_laundered_reservation_envelopes(tmp_path, fault):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(
+        tmp_path, grounding=True, revised=True, reservation_fault=fault
+    )
+    result = materialize_completion(snapshot, store, tmp_path / "completion")
+    assert result.status == "failed" and result.error_code.startswith("completion_repair_")
+
+
+@pytest.mark.parametrize("fault", ["failed_budget", "cancelled_budget"])
+def test_completion_preserves_failed_reservation_budget_and_approval_in_package(tmp_path, fault):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(
+        tmp_path, grounding=True, revised=True, reservation_fault=fault
+    )
+    result = materialize_completion(snapshot, store, tmp_path / "completion")
+    assert result.status == "materialized", result
+    reservations = [op.repair_reservation for op in snapshot.operations if op.repair_reservation]
+    assert sum(r.cost for r in reservations) == 2
+    for reservation in reservations:
+        copied = Path(result.package_path) / "evidence" / (reservation.approval.sha256 + ".json")
+        assert copied.read_bytes() == store.read_artifact(reservation.approval)
+    audits = [
+        json.loads(path.read_bytes())
+        for path in (Path(result.package_path) / "evidence").glob("*.json")
+    ]
+    budget_audits = [
+        row
+        for row in audits
+        if isinstance(row, dict) and row.get("schema_version") == "x2env.repair_budget_audit.v1"
+    ]
+    assert len(budget_audits) == 1 and budget_audits[0]["reserved_cost"] == 2
+    assert budget_audits[0]["operations"][0]["status"] == (
+        "failed" if fault == "failed_budget" else "cancelled"
+    )
+
+
 @pytest.mark.parametrize(
     "fault",
     [
@@ -673,7 +816,9 @@ def test_completion_rejects_grounded_revision_chain_attacks(tmp_path, fault):
         tmp_path, grounding=True, revised=True, revision_fault=fault
     )
     result = materialize_completion(snapshot, store, tmp_path / "completion")
-    assert result.status == "failed" and "grounding" in result.error_code
+    assert result.status == "failed" and (
+        "grounding" in result.error_code or result.error_code.startswith("completion_repair_")
+    )
     assert result.manifest is None
 
 

@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-REPAIR-BUDGET-AUDIT — 历史额度进入交付链
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `b6525e1` 执行批准、`f4cb35c` grounded layout 完成链。
+- `target_paths`：x2env/completion.py、test_completion.py。
+- `integration_method`：历史全部预留、原批准与成功修订 envelope 核对，预算审计作为包内证据。
+- `verification`：contract_pass；57 项测试，无新真实模型/仿真。前置 asset.revise 完成链仍拒绝。
+- `recorded_git_authors`：本提交元数据；不回填旧资格或历史批准。
+
 ## INT-CANONICAL-S04-DEVELOPMENT — 冻结联网输入的解释阻断
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；联网候选配置原属 Yuxin/provider 上游。

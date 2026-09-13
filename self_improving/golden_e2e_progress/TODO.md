@@ -11,7 +11,7 @@
 
 - 本地纯颜色失配 classifier/managed proposal seam 已完成（59 项相关测试）；路由待修订结果和controller复核接线中。
 
-- Store 原子持久预算与 Harness 强制预留/回执绑定已通过；完成门历史预算核验继续独立实现。
+- Store/Harness/完成门的修订预留已接通测试；前置 local asset.revise 的独立新版本链仍在实施。
 
 - 显式 uniform_replace 资产颜色修订已通过 51 项测试；local 颜色失配 continuation 与新视觉复核接线中。
 

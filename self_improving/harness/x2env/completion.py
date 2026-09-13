@@ -71,6 +71,7 @@ def materialize_completion(snapshot, store, output):
             "validation",
         )
         refs = {name: getattr(snapshot, name) for name in fields}
+        budget_refs = _audit_repair_reservations(snapshot, store)
         if snapshot.grounding is not None:
             refs["grounding"] = snapshot.grounding
         capabilities = {
@@ -97,6 +98,7 @@ def materialize_completion(snapshot, store, output):
                 raise ValueError("uncommitted_completion_evidence")
         if snapshot.grounding is not None:
             refs.update({f"revision_{i}": ref for i, ref in enumerate(snapshot.revisions)})
+        refs.update({f"repair_evidence_{i}": ref for i, ref in enumerate(budget_refs)})
         artifact_closure(store, list(refs.values()))
 
         def read(ref):
@@ -430,6 +432,139 @@ def materialize_completion(snapshot, store, output):
         receipt=store.write_artifact(raw, "application/json"),
         error_code=error,
     )
+
+
+def _audit_repair_reservations(snapshot, store):
+    """Historical journal authority; never require a live owner or re-approve a repair."""
+    from .revision import RevisionReservationEnvelope
+
+    refs, spent, fingerprints, base_revision = [], 0, set(), -1
+    successful = []
+    for index, op in enumerate(snapshot.operations):
+        reservation = op.repair_reservation
+        if (
+            op.capability in {"revise", "asset.revise"}
+            and op.status == "succeeded"
+            and reservation is None
+        ):
+            raise ValueError("completion_repair_reservation_missing")
+        if reservation is None:
+            continue
+        if op.capability not in {"revise", "asset.revise"} or op.status == "running":
+            raise ValueError("completion_repair_reservation_operation_mismatch")
+        spent += reservation.cost
+        if (
+            spent > 2
+            or reservation.failure_fingerprint in fingerprints
+            # Dead-owner recovery can finish an operation without incrementing workflow revision.
+            or not base_revision <= reservation.base_revision < snapshot.revision
+        ):
+            raise ValueError("completion_repair_reservation_budget_mismatch")
+        fingerprints.add(reservation.failure_fingerprint)
+        base_revision = reservation.base_revision
+        approval = json.loads(store.read_artifact(reservation.approval))
+        scene_ref = ArtifactRef.model_validate(approval["scene_ir"])
+        diagnosis_ref = ArtifactRef.model_validate(approval["diagnosis"])
+        expected = {
+            "authority": "harness_controller",
+            "approved": True,
+            "workflow_id": snapshot.workflow_id,
+            "base_revision": reservation.base_revision,
+            "input_bundle": snapshot.input_bundle.model_dump(),
+            "scene_ir": scene_ref.model_dump(),
+            "diagnosis": diagnosis_ref.model_dump(),
+            "cost": reservation.cost,
+            "failure_fingerprint": reservation.failure_fingerprint,
+        }
+        if (
+            approval != expected
+            or approval.get("approved") is not True
+            or type(approval.get("base_revision")) is not int
+            or type(approval.get("cost")) is not int
+        ):
+            raise ValueError("completion_repair_approval_mismatch")
+        before = snapshot.operations[:index]
+        for reference in (scene_ref, diagnosis_ref):
+            if not any(
+                prior.status == "succeeded" and prior.result and reference in prior.result.outputs
+                for prior in before
+            ):
+                raise ValueError("completion_repair_approval_source_not_committed")
+        refs.append(reservation.approval)
+        if op.status != "succeeded":
+            continue
+        if op.capability == "asset.revise":
+            raise ValueError("completion_asset_repair_not_supported")
+        rows = [
+            (ref, json.loads(store.read_artifact(ref)))
+            for ref in snapshot.revisions
+            if op.result and ref in op.result.outputs
+        ]
+        if len(rows) != 1:
+            raise ValueError("completion_repair_receipt_not_committed")
+        revision_ref, row = rows[0]
+        if "reservation" not in row:
+            raise ValueError("completion_repair_reservation_missing")
+        envelope_ref = ArtifactRef.model_validate(row["reservation"])
+        envelope = RevisionReservationEnvelope.model_validate_json(
+            store.read_artifact(envelope_ref)
+        )
+        diagnosis = DiagnosisResult.model_validate_json(store.read_artifact(diagnosis_ref))
+        proposal = diagnosis.proposal
+        if proposal is None:
+            raise ValueError("completion_repair_reservation_proposal_missing")
+        kind = (
+            "scene_asset"
+            if proposal.scene_patches and proposal.asset_patches
+            else "scene"
+            if proposal.scene_patches
+            else "asset"
+        )
+        cost = int(bool(proposal.scene_patches)) + len(proposal.asset_patches)
+        if (
+            envelope.workflow_id != snapshot.workflow_id
+            or envelope.operation_id != op.operation_id
+            or envelope.reservation != reservation
+            or envelope.input_bundle != snapshot.input_bundle
+            or envelope.scene_ir != scene_ref
+            or envelope.diagnosis != diagnosis_ref
+            or row.get("base_scene") != scene_ref.model_dump()
+            or row.get("diagnosis") != diagnosis_ref.model_dump()
+            or row.get("cost") != reservation.cost
+            or type(row.get("cost")) is not int
+            or row.get("failure_fingerprint") != reservation.failure_fingerprint
+            or reservation.kind != kind
+            or reservation.cost != cost
+        ):
+            raise ValueError("completion_repair_reservation_binding_mismatch")
+        refs.extend((revision_ref, envelope_ref))
+        successful.append(revision_ref)
+    if tuple(successful) != snapshot.revisions:
+        raise ValueError("completion_repair_revision_history_mismatch")
+    if fingerprints:
+        refs.append(
+            store.write_artifact(
+                json.dumps(
+                    {
+                        "schema_version": "x2env.repair_budget_audit.v1",
+                        "workflow_id": snapshot.workflow_id,
+                        "workflow_revision": snapshot.revision,
+                        "input_bundle": snapshot.input_bundle.model_dump(),
+                        "basis": "historical_store_snapshot_not_live_reauthorization",
+                        "reserved_cost": spent,
+                        "budget_limit": 2,
+                        "operations": [
+                            op.model_dump(mode="json")
+                            for op in snapshot.operations
+                            if op.repair_reservation is not None
+                        ],
+                    },
+                    sort_keys=True,
+                ).encode(),
+                "application/json",
+            )
+        )
+    return tuple(dict.fromkeys(refs))
 
 
 def _verify_grounding(snapshot, store, scene, compiled):
