@@ -1,5 +1,8 @@
 # Canonical x2env（收敛实施中）
 
+本地候选纯颜色失配可形成待修订建议，但原 mismatch 仍保留。建议只含原色名和 RGBA；
+类别、材质、名称 veto 或未知判断不进入该通路。resolver/controller 的新版本复核接线仍在实施。
+
 修订额度现在可与操作在同一事务预留：失败、取消及重新打开状态库均不返还。该额度针对 workflow
 状态，不是 SceneIR revision；旧历史记录保持可读。controller 新修订强制携带批准和预留，执行器核
 当前 owner/operation 后才写新版本；完成门的历史审计仍在独立接线。

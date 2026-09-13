@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C06 本地颜色失配分类与受管建议
+
+- 新 local_color_advisory 只将原 a6_verify 的纯颜色 veto 分类为待修订候选；核 Registry 版本、实测尺寸、
+  实际 preview proof、原视觉回执与 requested color/material。unknown、类别/材质失配、名称 veto 不放行。
+- 同一 managed transport 只建议原色名和 RGBA；保留原 mismatch、完整模型证据，不批准修订、不登记资产。
+  取消先保留原调用证据再抛出。local resolver/controller 消费这个 seam 的接线仍待下一片。
+- 主线程四组复跑 59 passed（2.57s），原 Yuxin 依赖以显式 PYTHONPATH 声明。
+  新模块自身 35 项测试及语句/分支 100% 为子 agent 限定结果；模型均 subprocess double，不计真实视觉成功。
+
 ## 2026-09-13 C10 Harness 执行前强制预算与批准绑定
 
 - 同一 Harness 的 revise 先核当前诊断与失败输入，再写 controller approval、原子预留及 operation-bound

@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-LOCAL-COLOR-ADVISORY — 原视觉失败后的受限颜色建议
+
+- `origin_owner`：Yuxin asset reuse 的 a6_verify；新颜色建议与整合责任为 Bingsheng Harness workstream。
+- `source_ref`：canonical `e2b05fe` 原本地检索接线、`b6525e1` managed backend；原来源固定身份保持原条目。
+- `target_paths`：x2env/local_color_advisory.py、test_local_color_advisory.py。
+- `integration_method`：消费原候选 detail 而非换一个视觉 verifier；仅纯颜色失配，建议不具执行/验收权威。
+- `verification`：contract_pass；相关组 59 passed，模型/preview 是显式外部替身；controller continuation 未接。
+- `recorded_git_authors`：本提交元数据；不凭目录/邮箱推断身份，无新资产许可授予。
+
 ## INT-CANONICAL-C10-REPAIR-APPROVAL — 执行前批准与额度绑定
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
