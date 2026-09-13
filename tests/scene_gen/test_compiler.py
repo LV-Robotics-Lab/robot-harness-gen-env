@@ -85,9 +85,7 @@ def test_compile_scene_generates_missing_asset_into_explicit_workspace(
     assert outcome.manifest["asset_catalog_sha256"] == outcome.asset_catalog.digest()
     assert (outcome.output_dir / "effective_asset_catalog.json").is_file()
     assert (objects_root / outcome.asset_catalog.entries[0].asset_id).is_dir()
-    assert ("asset_generation", "completed") in [
-        (event.stage, event.phase) for event in observed
-    ]
+    assert ("asset_generation", "completed") in [(event.stage, event.phase) for event in observed]
 
 
 def test_compile_scene_maps_bounded_request_rejection_without_creating_a_run(

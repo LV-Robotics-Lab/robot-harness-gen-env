@@ -104,10 +104,7 @@ def ground_object(query: SceneObjectSpec, catalog: AssetCatalog, *, seed: int) -
                             asset_id=entry.asset_id,
                             model_id=model.model_id,
                             score=score,
-                            reasons=(
-                                f"model colors {list(model.colors)} lack "
-                                f"{query.color}",
-                            ),
+                            reasons=(f"model colors {list(model.colors)} lack {query.color}",),
                         )
                     )
                     continue
@@ -153,7 +150,9 @@ def ground_object(query: SceneObjectSpec, catalog: AssetCatalog, *, seed: int) -
     )
 
 
-def ground_scene(spec_objects: tuple[SceneObjectSpec, ...], catalog: AssetCatalog, *, seed: int) -> dict[str, GroundedSelection]:
+def ground_scene(
+    spec_objects: tuple[SceneObjectSpec, ...], catalog: AssetCatalog, *, seed: int
+) -> dict[str, GroundedSelection]:
     return {
         query.object_id: ground_object(query, catalog, seed=seed)
         for query in sorted(spec_objects, key=lambda item: item.object_id)

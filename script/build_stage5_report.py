@@ -11,31 +11,41 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 CASES = [
     {
         "id": "stack_can",
         "index": "01",
         "title": "Stacking / on_top_of",
-        "claim": "A catalog can is grounded on a catalog plate with explicit 3D support constraints.",
+        "claim": (
+            "A catalog can is grounded on a catalog plate with explicit 3D support constraints."
+        ),
     },
     {
         "id": "inside_cup",
         "index": "02",
         "title": "Container placement / inside",
-        "claim": "A catalog cup is constrained by the basket interior volume and remains visibly contained.",
+        "claim": (
+            "A catalog cup is constrained by the basket interior volume and"
+            " remains visibly contained."
+        ),
     },
     {
         "id": "cabinet6",
         "index": "03",
         "title": "Articulation initial state",
-        "claim": "All three cabinet drawers are initialized and held at the requested half-open joint state.",
+        "claim": (
+            "All three cabinet drawers are initialized and held at the requ"
+            "ested half-open joint state."
+        ),
     },
     {
         "id": "generated",
         "index": "04",
         "title": "Catalog miss / generated proxy",
-        "claim": "A purple hexagonal pedestal is generated, imported, rescanned, replayed, and provenance-hashed.",
+        "claim": (
+            "A purple hexagonal pedestal is generated, imported, rescanned,"
+            " replayed, and provenance-hashed."
+        ),
     },
 ]
 
@@ -142,13 +152,21 @@ def object_rows(case: dict[str, Any]) -> str:
                 f"qpos {', '.join(f'{value:.4f}' for value in item['articulation_qpos'])}"
             )
         rows.append(
-            "<tr>"
-            f"<td><code>{html.escape(item['object_id'])}</code></td>"
-            f"<td><code>{html.escape(item['asset_id'])}</code><small>{html.escape(str(item['asset_provenance']))}</small></td>"
-            f"<td>{html.escape(relation)}</td>"
-            f"<td>{html.escape(articulation)}</td>"
-            f"<td>{item['visible_pixels']}</td>"
-            "</tr>"
+            (
+                "<tr><td><code>"
+                f"{html.escape(item['object_id'])}"
+                "</code></td><td><code>"
+                f"{html.escape(item['asset_id'])}"
+                "</code><small>"
+                f"{html.escape(str(item['asset_provenance']))}"
+                "</small></td><td>"
+                f"{html.escape(relation)}"
+                "</td><td>"
+                f"{html.escape(articulation)}"
+                "</td><td>"
+                f"{item['visible_pixels']}"
+                "</td></tr>"
+            )
         )
     return "".join(rows)
 
@@ -160,50 +178,60 @@ def case_section(case: dict[str, Any]) -> str:
         if case["critic_repair_count"]
         else "no repair"
     )
-    return f"""
-    <article class="case" id="{case['id']}">
-      <header class="case-header">
-        <div><span class="index">{case['index']}</span><h2>{html.escape(case['title'])}</h2></div>
-        <span class="badge pass">PASS</span>
-      </header>
-      <p class="request">{html.escape(case['request'])}</p>
-      <p class="claim">{html.escape(case['claim'])}</p>
-      <div class="metric-strip">
-        <span><strong>120</strong> frames</span>
-        <span><strong>{case['runtime_check_count']}</strong> runtime checks</span>
-        <span><strong>5/5</strong> VLM checks</span>
-        <span><strong>0</strong> issues</span>
-        <span><strong>{html.escape(repair)}</strong></span>
-      </div>
-      <div class="visual-grid">
-        <figure>
-          <img src="{paths['world_left']}" alt="{html.escape(case['title'])} world camera evidence" loading="lazy">
-          <figcaption>RoboTwin world-left camera</figcaption>
-        </figure>
-        <video controls preload="metadata" poster="{paths['world_right']}">
-          <source src="{paths['video']}" type="video/mp4">
-        </video>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Object</th><th>Asset</th><th>Support</th><th>Articulation</th><th>Visible px</th></tr></thead>
-          <tbody>{object_rows(case)}</tbody>
-        </table>
-      </div>
-      <details>
-        <summary>Structured evidence</summary>
-        <div class="artifact-links">
-          <a href="{paths['resolved']}">ResolvedSceneSpec</a>
-          <a href="{paths['static_validation']}">Static validation</a>
-          <a href="{paths['runtime_evidence']}">Runtime evidence</a>
-          <a href="{paths['runtime_validation']}">Runtime validation</a>
-          <a href="{paths['critic']}">Rendered critic</a>
-          <a href="{paths['asset_generation']}">Asset generation</a>
-        </div>
-        <p><code>{case['resolved_scene_sha256']}</code></p>
-      </details>
-    </article>
-    """
+    return (
+        '\n    <article class="case" id="'
+        f"{case['id']}"
+        '">\n      <header class="case-header">\n        <div><span class'
+        '="index">'
+        f"{case['index']}"
+        "</span><h2>"
+        f"{html.escape(case['title'])}"
+        '</h2></div>\n        <span class="badge pass">PASS</span>\n     '
+        ' </header>\n      <p class="request">'
+        f"{html.escape(case['request'])}"
+        '</p>\n      <p class="claim">'
+        f"{html.escape(case['claim'])}"
+        '</p>\n      <div class="metric-strip">\n        <span><strong>12'
+        "0</strong> frames</span>\n        <span><strong>"
+        f"{case['runtime_check_count']}"
+        "</strong> runtime checks</span>\n        <span><strong>5/5</str"
+        "ong> VLM checks</span>\n        <span><strong>0</strong> issues"
+        "</span>\n        <span><strong>"
+        f"{html.escape(repair)}"
+        '</strong></span>\n      </div>\n      <div class="visual-grid">\n'
+        '        <figure>\n          <img src="'
+        f"{paths['world_left']}"
+        '" alt="'
+        f"{html.escape(case['title'])}"
+        ' world camera evidence" loading="lazy">\n          <figcaption>'
+        "RoboTwin world-left camera</figcaption>\n        </figure>\n    "
+        '    <video controls preload="metadata" poster="'
+        f"{paths['world_right']}"
+        '">\n          <source src="'
+        f"{paths['video']}"
+        '" type="video/mp4">\n        </video>\n      </div>\n      <div c'
+        'lass="table-wrap">\n        <table>\n          <thead><tr><th>Ob'
+        "ject</th><th>Asset</th><th>Support</th><th>Articulation</th><t"
+        "h>Visible px</th></tr></thead>\n          <tbody>"
+        f"{object_rows(case)}"
+        "</tbody>\n        </table>\n      </div>\n      <details>\n       "
+        ' <summary>Structured evidence</summary>\n        <div class="ar'
+        'tifact-links">\n          <a href="'
+        f"{paths['resolved']}"
+        '">ResolvedSceneSpec</a>\n          <a href="'
+        f"{paths['static_validation']}"
+        '">Static validation</a>\n          <a href="'
+        f"{paths['runtime_evidence']}"
+        '">Runtime evidence</a>\n          <a href="'
+        f"{paths['runtime_validation']}"
+        '">Runtime validation</a>\n          <a href="'
+        f"{paths['critic']}"
+        '">Rendered critic</a>\n          <a href="'
+        f"{paths['asset_generation']}"
+        '">Asset generation</a>\n        </div>\n        <p><code>'
+        f"{case['resolved_scene_sha256']}"
+        "</code></p>\n      </details>\n    </article>\n    "
+    )
 
 
 def build_html(summary: dict[str, Any]) -> str:
@@ -274,11 +302,11 @@ def build_html(summary: dict[str, Any]) -> str:
         <li>The Qwen critic reviews visible rendered evidence. Typed geometry, contacts, drift, support, and joint error remain separate deterministic runtime gates.</li>
       </ul>
     </section>
-    <footer>Generated {html.escape(summary['generated_at'])} · manifest covers every bundled source, image, video, JSON, and log.</footer>
+    <footer>Generated {html.escape(summary["generated_at"])} · manifest covers every bundled source, image, video, JSON, and log.</footer>
   </main>
 </body>
 </html>
-"""
+"""  # noqa: E501 - Preserve the original HTML template bytes.
 
 
 def main() -> int:
@@ -346,10 +374,7 @@ def main() -> int:
             continue
         lines.append(f"{sha256(path)}  {rel}")
     (root / "manifest.sha256").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(
-        f"{summary['status'].upper()} cases={len(cases)} files={len(lines)} "
-        f"bundle={root}"
-    )
+    print(f"{summary['status'].upper()} cases={len(cases)} files={len(lines)} bundle={root}")
     return 0 if summary["status"] == "pass" else 2
 
 

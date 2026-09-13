@@ -54,10 +54,7 @@ def _prism_obj(
     with_material: bool,
 ) -> str:
     width, depth, height = dimensions_m
-    angles = [
-        2.0 * math.pi * index / sides + math.pi / 4.0
-        for index in range(sides)
-    ]
+    angles = [2.0 * math.pi * index / sides + math.pi / 4.0 for index in range(sides)]
     max_abs_cos = max(abs(math.cos(angle)) for angle in angles)
     max_abs_sin = max(abs(math.sin(angle)) for angle in angles)
     vertices: list[tuple[float, float, float]] = []
@@ -242,11 +239,7 @@ def _write_proxy_asset(
         ),
         colors=(query.color,) if query.color else (),
         materials=(
-            (query.material,)
-            if query.material
-            else source.entry.materials
-            if source
-            else ()
+            (query.material,) if query.material else source.entry.materials if source else ()
         ),
         load_type="rigid",
         asset_path=str(asset_dir.resolve()),
@@ -365,7 +358,8 @@ def ensure_assets_for_scene(
     supports = {
         relation.source: relation
         for relation in spec.relations
-        if relation.relation in {
+        if relation.relation
+        in {
             RelationType.ON_TABLE,
             RelationType.ON_TOP_OF,
             RelationType.INSIDE,

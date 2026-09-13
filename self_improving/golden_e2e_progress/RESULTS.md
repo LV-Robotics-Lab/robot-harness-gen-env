@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C13 稳定编译器与薄脚本样式维护
+
+- 最后project切片126条lint清零；24份Python中22份Python3.11 AST完全相同，仅publicredaction
+  imports排序及acceptance未用manifest改名两处不同，build调用保留，不改任何物理合同/阈值。
+- 原report HTML在单个closing literal精确说明E501例外并保字节；未改Markdown。
+  主线程scene_gen/demo/publicredaction 224 passed/15.90s，两个薄脚本help通过。
+  仅本地fixture回归，无新增SAPIEN/Genesis运行能力。
+
 ## 2026-09-13 C13 OpenXSim 原实现保值维护
 
 - 15份来源Python完成审计、12份bytes变化；11份AST完全相同，4仅imports，非import AST

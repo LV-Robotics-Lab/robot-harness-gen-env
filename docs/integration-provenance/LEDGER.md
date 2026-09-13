@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-STABLE-LINT — 稳定层合同不变
+
+- origin_owner / upstream_owner：稳定gen-env与既有脚本原作者；integration_owner：Bingsheng Harness workstream。
+- source_ref：`17324c7`；target_paths：scene_gen/demo、两薄脚本与所属tests，共24份Python。
+- integration_method：22份AST精确不变，1仅import排序、1unused名保调用，原HTML模板精确行例外。
+- verification：root224项，范围Ruff/help通过；runtime_verification：无新真实物理，未改物理合同。
+- recorded_git_authors：原来源与格式维护分别记录，不将格式化记为新编译器功能。
+
 ## INT-CANONICAL-C13-OPENXSIM-SOURCE-LINT — 上游实现保值维护
 
 - origin_owner / upstream_owner：OpenXSim/AgenticSim原来源作者；integration_owner：Bingsheng Harness workstream。

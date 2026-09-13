@@ -133,7 +133,9 @@ def _scaled_dimensions(metadata: dict[str, Any]) -> tuple[float, float, float] |
     return (source[0], source[2], source[1])
 
 
-def _bounding_box_dimensions(model_dir: Path, metadata: dict[str, Any]) -> tuple[float, float, float] | None:
+def _bounding_box_dimensions(
+    model_dir: Path, metadata: dict[str, Any]
+) -> tuple[float, float, float] | None:
     bounds = _read_json(model_dir / "bounding_box.json")
     lower = _triplet(bounds.get("min"))
     upper = _triplet(bounds.get("max"))
@@ -167,7 +169,9 @@ def _parse_articulation_joints(urdf_path: Path | None) -> tuple[CatalogJoint, ..
         limit = joint.find("limit")
         if joint_type == "continuous":
             lower, upper = -3.141592653589793, 3.141592653589793
-        elif limit is not None and limit.get("lower") is not None and limit.get("upper") is not None:
+        elif (
+            limit is not None and limit.get("lower") is not None and limit.get("upper") is not None
+        ):
             try:
                 lower, upper = float(limit.get("lower")), float(limit.get("upper"))
             except (TypeError, ValueError):
@@ -241,20 +245,12 @@ def _generated_model_override(provenance: dict[str, Any], model_id: int) -> dict
                 "interior_floor_z_offset_m": provenance.get("interior_floor_z_offset_m"),
                 "footprint_shape": provenance.get("footprint_shape"),
                 "support_surface_shape": provenance.get("support_surface_shape"),
-                "support_surface_dimensions_m": provenance.get(
-                    "support_surface_dimensions_m"
-                ),
-                "support_surface_z_offset_m": provenance.get(
-                    "support_surface_z_offset_m"
-                ),
+                "support_surface_dimensions_m": provenance.get("support_surface_dimensions_m"),
+                "support_surface_z_offset_m": provenance.get("support_surface_z_offset_m"),
                 "support_margin_m": provenance.get("support_margin_m"),
-                "support_spawn_clearance_m": provenance.get(
-                    "support_spawn_clearance_m"
-                ),
+                "support_spawn_clearance_m": provenance.get("support_spawn_clearance_m"),
                 "stable_pose_id": provenance.get("source_stable_pose_id"),
-                "stable_orientation_wxyz": provenance.get(
-                    "source_stable_orientation_wxyz"
-                ),
+                "stable_orientation_wxyz": provenance.get("source_stable_orientation_wxyz"),
                 "z_policy": provenance.get("source_z_policy"),
                 "is_static": provenance.get("source_is_static"),
             }.items()
@@ -286,8 +282,12 @@ def _scan_model(
     visual_path = _first_existing(_mesh_candidates(model_dir, "visual", model_id))
     collision_path = _first_existing(_mesh_candidates(model_dir, "collision", model_id))
     if model_dir != asset_dir and load_type != "urdf":
-        visual_path = visual_path or _first_existing(_mesh_candidates(asset_dir, "visual", model_id))
-        collision_path = collision_path or _first_existing(_mesh_candidates(asset_dir, "collision", model_id))
+        visual_path = visual_path or _first_existing(
+            _mesh_candidates(asset_dir, "visual", model_id)
+        )
+        collision_path = collision_path or _first_existing(
+            _mesh_candidates(asset_dir, "collision", model_id)
+        )
     if load_type == "urdf":
         visual_path = visual_path or urdf_path
         collision_path = collision_path or urdf_path
@@ -324,7 +324,12 @@ def _scan_model(
     if interior_floor_z_offset is not None:
         if interior_dimensions is None:
             raise ValueError(
-                f"interior_floor_z_offset_m requires interior dimensions: {asset_dir.name}/{model_id}"
+                (
+                    "interior_floor_z_offset_m requires interior dimensions: "
+                    f"{asset_dir.name}"
+                    "/"
+                    f"{model_id}"
+                )
             )
         if not isinstance(interior_floor_z_offset, (int, float)):
             raise ValueError(
@@ -337,13 +342,26 @@ def _scan_model(
     if support_surface_dimensions is not None:
         if support_surface_shape not in {"box", "circle"}:
             raise ValueError(
-                f"support_surface_shape is required with support dimensions: {asset_dir.name}/{model_id}"
+                (
+                    "support_surface_shape is required with support dimensions: "
+                    f"{asset_dir.name}"
+                    "/"
+                    f"{model_id}"
+                )
             )
         if not all(value > 0.0 for value in support_surface_dimensions):
-            raise ValueError(f"support surface dimensions must be positive: {asset_dir.name}/{model_id}")
+            raise ValueError(
+                f"support surface dimensions must be positive: {asset_dir.name}/{model_id}"
+            )
         if not isinstance(support_surface_z_offset, (int, float)):
             raise ValueError(
-                f"support_surface_z_offset_m is required with support dimensions: {asset_dir.name}/{model_id}"
+                (
+                    "support_surface_z_offset_m is required with support dimensions"
+                    ": "
+                    f"{asset_dir.name}"
+                    "/"
+                    f"{model_id}"
+                )
             )
         if dimensions is not None and (
             support_surface_dimensions[0] > dimensions[0]
@@ -353,7 +371,13 @@ def _scan_model(
             raise ValueError(f"support surface exceeds object bounds: {asset_dir.name}/{model_id}")
     elif support_surface_shape is not None or support_surface_z_offset is not None:
         raise ValueError(
-            f"support surface metadata must include dimensions, shape, and z offset: {asset_dir.name}/{model_id}"
+            (
+                "support surface metadata must include dimensions, shape, and z"
+                " offset: "
+                f"{asset_dir.name}"
+                "/"
+                f"{model_id}"
+            )
         )
     scale = _triplet(override.get("scale")) or _triplet(metadata.get("scale"))
     if scale is None:
@@ -364,14 +388,10 @@ def _scan_model(
     mass_kg = None
     if raw_mass_kg is not None:
         if isinstance(raw_mass_kg, bool) or not isinstance(raw_mass_kg, (int, float)):
-            raise ValueError(
-                f"mass_kg must be a positive number: {asset_dir.name}/{model_id}"
-            )
+            raise ValueError(f"mass_kg must be a positive number: {asset_dir.name}/{model_id}")
         mass_kg = float(raw_mass_kg)
         if mass_kg <= 0.0:
-            raise ValueError(
-                f"mass_kg must be greater than zero: {asset_dir.name}/{model_id}"
-            )
+            raise ValueError(f"mass_kg must be greater than zero: {asset_dir.name}/{model_id}")
     raw_physics = {}
     for physics_key in ("static_friction", "dynamic_friction", "restitution"):
         raw_value = override.get(physics_key)
@@ -379,9 +399,7 @@ def _scan_model(
             raw_value = metadata.get(physics_key)
         raw_physics[physics_key] = raw_value
 
-    provided_physics = {
-        key: value for key, value in raw_physics.items() if value is not None
-    }
+    provided_physics = {key: value for key, value in raw_physics.items() if value is not None}
     if provided_physics and len(provided_physics) != len(raw_physics):
         raise ValueError(
             f"physical material requires static_friction, dynamic_friction, "
@@ -394,27 +412,23 @@ def _scan_model(
     if provided_physics:
         for physics_key, raw_value in raw_physics.items():
             if isinstance(raw_value, bool) or not isinstance(raw_value, (int, float)):
-                raise ValueError(
-                    f"{physics_key} must be numeric: {asset_dir.name}/{model_id}"
-                )
+                raise ValueError(f"{physics_key} must be numeric: {asset_dir.name}/{model_id}")
             if float(raw_value) < 0.0:
-                raise ValueError(
-                    f"{physics_key} must be non-negative: {asset_dir.name}/{model_id}"
-                )
+                raise ValueError(f"{physics_key} must be non-negative: {asset_dir.name}/{model_id}")
         static_friction = float(raw_physics["static_friction"])
         dynamic_friction = float(raw_physics["dynamic_friction"])
         restitution = float(raw_physics["restitution"])
         if restitution > 1.0:
-            raise ValueError(
-                f"restitution must not exceed one: {asset_dir.name}/{model_id}"
-            )
+            raise ValueError(f"restitution must not exceed one: {asset_dir.name}/{model_id}")
 
     stable_pose_id = override.get("stable_pose_id")
     if not stable_pose_id:
         missing.append("stable_pose")
     raw_orientation = override.get("stable_orientation_wxyz", [1.0, 0.0, 0.0, 0.0])
     if not isinstance(raw_orientation, (list, tuple)) or len(raw_orientation) != 4:
-        raise ValueError(f"stable_orientation_wxyz must have four values: {asset_dir.name}/{model_id}")
+        raise ValueError(
+            f"stable_orientation_wxyz must have four values: {asset_dir.name}/{model_id}"
+        )
     stable_orientation_wxyz = tuple(float(value) for value in raw_orientation)
     orientation_norm = sum(value * value for value in stable_orientation_wxyz) ** 0.5
     if orientation_norm <= 0:
@@ -451,14 +465,25 @@ def _scan_model(
             CatalogJoint(
                 name=joint.name,
                 joint_type=joint.joint_type,
-                lower=joint.lower * scale_factor if joint.joint_type == "prismatic" else joint.lower,
-                upper=joint.upper * scale_factor if joint.joint_type == "prismatic" else joint.upper,
+                lower=joint.lower * scale_factor
+                if joint.joint_type == "prismatic"
+                else joint.lower,
+                upper=joint.upper * scale_factor
+                if joint.joint_type == "prismatic"
+                else joint.upper,
             )
             for joint in articulation_joints
         )
     usable = not any(
         reason in missing
-        for reason in ("visual_mesh", "collision_mesh", "mobility_urdf", "supported_loader", "dimensions_m", "stable_pose")
+        for reason in (
+            "visual_mesh",
+            "collision_mesh",
+            "mobility_urdf",
+            "supported_loader",
+            "dimensions_m",
+            "stable_pose",
+        )
     )
     return CatalogModel(
         model_id=model_id,
@@ -520,9 +545,13 @@ def scan_robotwin_assets(
         raise FileNotFoundError(f"RoboTwin objects root does not exist: {objects_root}")
     overrides = load_overrides(overrides_path)
     entries: list[CatalogEntry] = []
-    for asset_dir in sorted((path for path in objects_root.iterdir() if path.is_dir()), key=lambda path: path.name):
+    for asset_dir in sorted(
+        (path for path in objects_root.iterdir() if path.is_dir()), key=lambda path: path.name
+    ):
         generated_provenance = _read_json(asset_dir / "generation_provenance.json")
-        direct_urdf = (asset_dir / "mobility.urdf").is_file() or (asset_dir / "mobility_vhacd.urdf").is_file()
+        direct_urdf = (asset_dir / "mobility.urdf").is_file() or (
+            asset_dir / "mobility_vhacd.urdf"
+        ).is_file()
         nested_urdf_dirs = sorted(
             (
                 path
@@ -543,7 +572,9 @@ def scan_robotwin_assets(
         elif direct_urdf:
             model_dirs = {0: asset_dir}
         else:
-            metadata_files = sorted(asset_dir.glob("model_data*.json"), key=lambda path: (_model_id(path), path.name))
+            metadata_files = sorted(
+                asset_dir.glob("model_data*.json"), key=lambda path: (_model_id(path), path.name)
+            )
             model_ids = {_model_id(path) for path in metadata_files}
             for mesh in asset_dir.glob("**/*"):
                 if mesh.is_file() and mesh.suffix.lower() in {".glb", ".obj"}:
@@ -572,7 +603,11 @@ def scan_robotwin_assets(
             or generated_category
             or _normalized_semantic(asset_dir.name)
         )
-        category = str(asset_override.get("category") or generated_category or semantic_name).lower().replace(" ", "_")
+        category = (
+            str(asset_override.get("category") or generated_category or semantic_name)
+            .lower()
+            .replace(" ", "_")
+        )
         aliases = _string_tuple(
             [
                 semantic_name,
@@ -590,8 +625,7 @@ def scan_robotwin_assets(
                 category=category,
                 aliases=aliases,
                 colors=_string_tuple(
-                    asset_override.get("colors")
-                    or generated_provenance.get("requested_color")
+                    asset_override.get("colors") or generated_provenance.get("requested_color")
                 ),
                 materials=_string_tuple(
                     asset_override.get("materials")
@@ -687,8 +721,14 @@ def main() -> int:
     write_json(Path(args.out), catalog.canonical_dict())
     write_json(Path(args.missing_out), missing)
     print(
-        f"PASS entries={len(catalog.entries)} available={sum(entry.available for entry in catalog.entries)} "
-        f"sha256={catalog.digest()}"
+        (
+            "PASS entries="
+            f"{len(catalog.entries)}"
+            " available="
+            f"{sum((entry.available for entry in catalog.entries))}"
+            " sha256="
+            f"{catalog.digest()}"
+        )
     )
     return 0
 

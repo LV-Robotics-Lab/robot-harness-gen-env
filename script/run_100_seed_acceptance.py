@@ -60,7 +60,9 @@ def seed_scene_dir(out_root: Path, seed: int, scene_id: str) -> Path:
     return out_root / f"seed_{seed:06d}" / scene_id
 
 
-def evidence_record(scene_dir: Path, out_root: Path, *, runtime_required: bool) -> tuple[dict[str, Any], bool]:
+def evidence_record(
+    scene_dir: Path, out_root: Path, *, runtime_required: bool
+) -> tuple[dict[str, Any], bool]:
     relative = scene_dir.relative_to(out_root)
     paths = {
         "scene_spec": scene_dir / "scene_spec.json",
@@ -87,7 +89,9 @@ def evidence_record(scene_dir: Path, out_root: Path, *, runtime_required: bool) 
             "path": str(relative / video.relative_to(scene_dir)),
             "sha256": file_sha256(video),
         }
-    return evidence, all(item["sha256"] for name, item in evidence.items() if name != "observer_video")
+    return evidence, all(
+        item["sha256"] for name, item in evidence.items() if name != "observer_video"
+    )
 
 
 def batch_summary(
@@ -117,7 +121,8 @@ def batch_summary(
         **summarize_acceptance(outcomes, minimum_pass_rate=minimum_pass_rate),
         "retained_scene_count": len({item.get("scene_dir_relative") for item in passing}),
         "unique_resolved_scene_count": len({item.get("resolved_scene_sha256") for item in passing}),
-        "passing_evidence_retained": bool(passing) and all(item.get("evidence_retained") for item in passing),
+        "passing_evidence_retained": bool(passing)
+        and all(item.get("evidence_retained") for item in passing),
         "outcomes": outcomes,
         "complete": complete,
     }
@@ -161,7 +166,9 @@ def main() -> int:
     video_seeds = {int(value) for value in args.video_seeds.split(",") if value.strip()}
     outcomes: list[dict[str, Any]] = []
     generator_commit = args.generator_commit or git_head(project_root)
-    robotwin_commit = git_head(Path(args.robotwin_root).expanduser().resolve()) if args.robotwin_root else None
+    robotwin_commit = (
+        git_head(Path(args.robotwin_root).expanduser().resolve()) if args.robotwin_root else None
+    )
 
     for seed in range(args.seed_start, args.seed_start + args.seed_count):
         spec = parse_rule_based(args.prompt, seed=seed)
@@ -182,7 +189,7 @@ def main() -> int:
             print(f"FAIL seed={seed} stage=solver", flush=True)
             continue
 
-        manifest = build_scene_package(spec, resolved, scene_dir)
+        _manifest = build_scene_package(spec, resolved, scene_dir)
         static_report = validate_resolved_scene(
             resolved,
             catalog=catalog,
@@ -217,8 +224,10 @@ def main() -> int:
 
         runtime_dir = scene_dir / "runtime"
         runtime_validation_path = runtime_dir / "runtime_validation_report.json"
-        reusable = None if args.no_resume else load_reusable_runtime(
-            runtime_validation_path, resolved.digest()
+        reusable = (
+            None
+            if args.no_resume
+            else load_reusable_runtime(runtime_validation_path, resolved.digest())
         )
         if reusable is None:
             command = [
@@ -349,7 +358,13 @@ def main() -> int:
         f"rate={summary['pass_rate']:.3f} report={report_path}",
         flush=True,
     )
-    return 0 if summary["status"] == "pass" and summary["complete"] and summary["passing_evidence_retained"] else 2
+    return (
+        0
+        if summary["status"] == "pass"
+        and summary["complete"]
+        and summary["passing_evidence_retained"]
+        else 2
+    )
 
 
 if __name__ == "__main__":

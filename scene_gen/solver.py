@@ -212,11 +212,7 @@ def _pair_relation_reasons(
         interior_dimensions = target.interior_dimensions_m
         interior_height = target.interior_height
         interior_floor_z = target.interior_floor_z
-        if (
-            interior_dimensions is None
-            or interior_height is None
-            or interior_floor_z is None
-        ):
+        if interior_dimensions is None or interior_height is None or interior_floor_z is None:
             reasons.append("inside target has no interior dimensions")
         else:
             margin = support_footprint_margin(
@@ -307,7 +303,8 @@ def _support_relations(spec: SceneSpec) -> dict[str, RelationSpec]:
     return {
         relation.source: relation
         for relation in spec.relations
-        if relation.relation in {
+        if relation.relation
+        in {
             RelationType.ON_TABLE,
             RelationType.ON_TOP_OF,
             RelationType.INSIDE,
@@ -326,7 +323,9 @@ def _articulation_qpos(query: Any, model: CatalogModel) -> tuple[float, ...]:
     joints = model.articulation_joints
     if not joints:
         if query.articulation is not None:
-            raise ValueError(f"{query.object_id} requests articulation but selected model has no movable joints")
+            raise ValueError(
+                f"{query.object_id} requests articulation but selected model has no movable joints"
+            )
         return ()
     closed = model.articulation_closed_qpos or tuple(joint.lower for joint in joints)
     opened = model.articulation_open_qpos or tuple(joint.upper for joint in joints)
@@ -380,7 +379,11 @@ def solve_scene(
             if query.articulation is not None and target is None:
                 yaw = math.pi / 2.0
             else:
-                yaw = rng.uniform(-math.pi, math.pi) if target is None else target.yaw + rng.uniform(-math.pi, math.pi)
+                yaw = (
+                    rng.uniform(-math.pi, math.pi)
+                    if target is None
+                    else target.yaw + rng.uniform(-math.pi, math.pi)
+                )
             half_x, half_y, _ = _footprint(model, yaw)
             pre_reasons: list[str] = []
             if support.relation == RelationType.ON_TABLE:
@@ -444,13 +447,10 @@ def solve_scene(
                 x = target.x + offset[0] * 0.25
                 y = target.y + offset[1] * 0.25
                 bottom_z = (
-                    (
-                        target.interior_floor_z
-                        if target.interior_floor_z is not None
-                        else target.bottom_z
-                    )
-                    + target.support_spawn_clearance_m
-                )
+                    target.interior_floor_z
+                    if target.interior_floor_z is not None
+                    else target.bottom_z
+                ) + target.support_spawn_clearance_m
             candidate = _candidate_pose(
                 model,
                 x=x,
@@ -555,9 +555,7 @@ def solve_scene(
                         model.visual_path,
                         model.collision_path,
                         model.urdf_path,
-                        str(provenance_path)
-                        if generated_asset or derived_asset
-                        else None,
+                        str(provenance_path) if generated_asset or derived_asset else None,
                     )
                     if value
                 }
@@ -603,7 +601,9 @@ def solve_scene(
                 rejected_candidates=selection.rejected_candidates,
                 pose=ResolvedPose(
                     position_m=(round(pose.x, 9), round(pose.y, 9), round(pose.pose_z, 9)),
-                    orientation_wxyz=tuple(round(value, 12) for value in _orientation(model, pose.yaw)),
+                    orientation_wxyz=tuple(
+                        round(value, 12) for value in _orientation(model, pose.yaw)
+                    ),
                     yaw_rad=round(pose.yaw, 12),
                 ),
                 is_static=model.is_static,
@@ -672,7 +672,9 @@ def main() -> int:
         return 2
     path = Path(args.out)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(resolved.canonical_dict(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(resolved.canonical_dict(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     print(f"PASS scene_id={resolved.scene_id} sha256={resolved.digest()}")
     return 0
 

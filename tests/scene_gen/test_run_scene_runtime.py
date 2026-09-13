@@ -45,10 +45,7 @@ def test_task_config_path_reports_both_searched_layouts(
 
 
 def test_adaptive_extension_replaces_only_the_final_video_frame() -> None:
-    frames = [
-        np.full((1, 1, 3), fill_value=value, dtype=np.uint8)
-        for value in (1, 2, 3)
-    ]
+    frames = [np.full((1, 1, 3), fill_value=value, dtype=np.uint8) for value in (1, 2, 3)]
     extended_final_frame = np.full((1, 1, 3), fill_value=9, dtype=np.uint8)
     captures: list[str] = []
 
