@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-DESIGN-ID-PATH — 实际模型未知字段定位
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：da78d40的字段分类器。
+- integration_method：把准确原entity ID前缀与已有完整前缀/序号映射到同一字段，不改输入或设计权限。
+- verification：S02真实51.226s澄清误报保留；97项回归通过，原proposal/部署只读分类通过。
+  runtime_verification：该修复尚无新Genesis；模型、外部资产及Git作者身份分开记录。
+
 ## INT-CANONICAL-MODEL-ROUTER — 用户指定Terra内部路由
 
 - follow-up：父workflow显式列出认证所需资源；65项pipeline/lifecycle/CLI通过，程序替身不作真实认证证据。

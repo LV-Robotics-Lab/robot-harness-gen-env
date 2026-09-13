@@ -64,7 +64,8 @@ def policy():
     )
 
 
-def test_original_scene_index_paths_resolve_without_rewriting_unknowns(tmp_path):
+@pytest.mark.parametrize("bare_id", [False, True])
+def test_original_scene_index_paths_resolve_without_rewriting_unknowns(tmp_path, bare_id):
     from self_improving.harness.x2env.compile import StructuralPolicy
     from self_improving.harness.x2env.design_plan import classify_design_unknowns
 
@@ -74,6 +75,8 @@ def test_original_scene_index_paths_resolve_without_rewriting_unknowns(tmp_path)
         "scene.entities[0].pose.position",
         "scene.entities[1].pose.position[2]",
     )
+    if bare_id:
+        paths = ("support.dimensions", "support.pose.position", "object.pose.position[2]")
     proposal = proposal.model_copy(
         update={
             "unknowns": tuple(
@@ -100,6 +103,10 @@ def test_original_scene_index_paths_resolve_without_rewriting_unknowns(tmp_path)
         "scene.entities[0].category",
         "scene.entities[0].pose.position[3]",
         "scene.entities[0].pose.position[-1]",
+        "supporter.pose.position",
+        "support.category",
+        "support.pose.position[3]",
+        "missing.pose.position",
     ],
 )
 def test_index_paths_do_not_expand_authority(tmp_path, path):

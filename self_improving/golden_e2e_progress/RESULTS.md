@@ -1,5 +1,30 @@
 # 进度与结果
 
+## 2026-09-13 正常缺失参数不再因字段路径形式误判澄清
+
+- da78d40新S02在`/var/tmp/canonical-matrix-v2-simple-corrected-20260913.g9UHKB/S02`
+  51.226s blocked/clarification_required，模型已正确给red-block/table/on；无资产或Genesis执行。
+  实际未知路径为`red-block.dimensions`等准确原entity ID，而旧分类器只识别完整scene前缀/序号。
+- 只增加精确原entity ID前缀解析，仍按既有缺失字段/允许设计/known axes/冲突门判定；
+  不改原proposal、不清critical、不填SceneIR、不按类别特判。前缀相似/不存在ID/非法轴攻击保持拒绝。
+  先RED后97项design/ground/workflow回归通过4.97s。
+- 主线程用原CAS proposal及实际部署只读重放分类，解析6项允许设计未知通过；不是恢复旧workflow或新E2E。
+
+## 2026-09-13 matrix v2模型接线后的active测试
+
+- 固定e6570f3（之后颜色suffix修复与失败说明尚未包含）六组+coverage merge全部通过，399.94s。
+  主线程从JUnit复核1–6组collected分别90/302/371/241/333/2138，最后一组8 skipped，零fail/error。
+  `/var/tmp/canonical-ci-e6570f3-fXTscCNV/{summary.json,evidence}`，源码前后clean。
+- core语句7522/8179（缺657），分支2838/3368（缺530）；工具默认Protocol排除24行逐行保留。
+  新授权按report-only报告，不扩大原reconstruction/yuxin/genesis_child三个业务排除。
+- 旧0f9625b主仓库2364 passed/1 skipped、342.96s保持历史执行身份；其第六组E501失败未回填。
+  后续增量：认证资源65项、v2机读门5项、颜色后缀81项、失败交付30项均通过，非全新同源覆盖测量。
+- S02首次e6570f3新workflow`7a0dd958-9f24-443d-92ee-b9a7e8b3775c`，50.625s blocked。
+  模型通过，operator部署错误指向不存在的S02/source，使preview未执行；local证据拒绝后
+  未配置的后续adapter返回source_adapter_not_connected。不能将根因误说为“只有缺web”。
+  `/var/tmp/canonical-matrix-v2-simple-20260913.SiTa1i/S02`保全部日志/部分产物，无原样重试。
+- 修正真实deny roots并核其存在后，da78d40新S01/S02正在独立新根运行；旧现场和原资产未改。
+
 ## 2026-09-13 matrix v2首次S01与失败可读性
 
 - 新固定e6570f3 S01，workflow`1d7bdf27-e9c0-453b-9073-75d5edfe1f97`，179.63s失败，
