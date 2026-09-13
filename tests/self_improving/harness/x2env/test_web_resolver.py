@@ -153,6 +153,62 @@ def test_web_external_failure_never_spends_query_revision(tmp_path, error):
     assert result.error_code == error and not result.resolved.assets
 
 
+def test_revised_query_never_fetches_the_same_failed_candidate_twice(tmp_path):
+    from self_improving.harness.x2env.codex import CodexBackend
+    from self_improving.harness.x2env.search_advisory import plan_search
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+    from tests.self_improving.harness.x2env.test_codex import executable
+
+    store, registry, _, scene, image = inputs(tmp_path)
+    program = executable(tmp_path, {"query": "alternative name", "reason": "same object"})
+    backend = CodexBackend(
+        program, hashlib.sha256(program.read_bytes()).hexdigest(), "double", store
+    )
+    fetches = []
+
+    class SameCandidate(ProviderDouble):
+        def search(self, entity, source, limit, *, query=None):
+            result = super().search(entity, source, limit)
+            receipt = store.write_artifact(
+                json.dumps(
+                    {
+                        "entity_id": entity.id,
+                        "category": entity.category,
+                        "query": query,
+                    }
+                ).encode(),
+                "application/json",
+            )
+            return result.model_copy(update={"receipt": receipt})
+
+        def fetch(self, candidate, output_dir):
+            fetches.append(candidate.candidate_id)
+            return super().fetch(candidate, output_dir)
+
+    def unsupported(*args):
+        raise ValueError("unsupported material fields")
+
+    result = WebAssetResolver(
+        store,
+        registry,
+        SameCandidate(store, tmp_path),
+        VisualDouble(store),
+        preview_double(store, image),
+        unsupported,
+        retry_query_port=lambda entity, failure: plan_search(
+            backend,
+            scene,
+            entity,
+            store=store,
+            output_root=tmp_path / "query",
+            timeout=10,
+            previous_failure=failure,
+        ),
+    ).resolve(scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    assert result.status == "blocked" and not result.resolved.assets
+    assert fetches == ["fixture"]
+
+
 @pytest.mark.parametrize(
     "override",
     [

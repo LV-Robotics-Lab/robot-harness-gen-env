@@ -1,5 +1,10 @@
 # canonical x2env 公共测试 seams
 
+P1增量继续已有SceneIR/compile/模型seam：结构surface_rgba是绑定原color/provenance的估计，
+仅结构支撑允许、范围0..1、旧缺省序列化不变；不改变foreground材质或物理阈值。
+web resolver继续原adapter seam：一次失败绑定词法修订、共享deadline、重复query/candidate停止；
+原实体/类别不变，资源/许可/超时无模型重试。
+
 P0/P1 使用既有 CLI/Deployment 与外部 adapter seam；公开 `check_deployment`/CLI `check`
 只读报告配置存在性和 pinned JSON 完整性，不创建 Store 或执行模型。与执行相同的 PinnedFile
 读取规则必须拒绝符号链接、过大文件和漂移；不把 path present 宣称为 backend 已验证。

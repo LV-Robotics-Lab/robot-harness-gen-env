@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 Source = Literal["local", "web", "reconstruction"]
 Sha256 = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
@@ -180,6 +180,19 @@ class SceneEntity(Model):
     )
     role: Literal["foreground", "structural_support"] = "foreground"
     color: str | None
+    surface_rgba: (
+        tuple[
+            Annotated[float, Field(ge=0, le=1)],
+            Annotated[float, Field(ge=0, le=1)],
+            Annotated[float, Field(ge=0, le=1)],
+            Annotated[float, Field(ge=0, le=1)],
+        ]
+        | None
+    ) = Field(
+        default=None,
+        description="Only structural_support: estimated uniform sRGB RGBA for the declared color, "
+        "with the same color provenance; not texture recovery. Foreground must use null.",
+    )
     dimensions: PositiveVector3 | None = Field(
         description="Intent x/y/z dimensions in metres. Preserve known axes and use null "
         "for unknown "
@@ -191,8 +204,17 @@ class SceneEntity(Model):
     articulation_state: ArticulationState | None
     provenance: EntityProvenance
 
+    @model_serializer(mode="wrap")
+    def retain_legacy_shape(self, handler):
+        value = handler(self)
+        if self.surface_rgba is None:
+            value.pop("surface_rgba", None)
+        return value
+
     @model_validator(mode="after")
     def field_evidence(self):
+        if self.surface_rgba is not None and (self.role != "structural_support" or not self.color):
+            raise ValueError("surface RGBA requires structural support and declared color")
         if self.role == "structural_support" and self.category not in {
             "table",
             "worktop",

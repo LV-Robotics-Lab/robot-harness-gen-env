@@ -314,6 +314,25 @@
           ],
           "title": "Role",
           "type": "string"
+        },
+        "surface_rgba": {
+          "anyOf": [
+            {
+              "items": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "maxItems": 4,
+              "minItems": 4,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Only structural_support: estimated uniform sRGB RGBA for the declared color, with the same color provenance; not texture recovery. Foreground must use null.",
+          "title": "Surface Rgba"
         }
       },
       "required": [
@@ -321,6 +340,7 @@
         "category",
         "role",
         "color",
+        "surface_rgba",
         "dimensions",
         "material",
         "pose",

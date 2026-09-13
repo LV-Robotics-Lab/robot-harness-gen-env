@@ -150,8 +150,8 @@ def _prepare_scene(scene_ref, assets, *, registry, store, policy, seed):
                 defaults.append(f"{entity_id}.world_surface_origin=deployment.structural_policy")
             frames[entity_id] = (pos, entity.pose.yaw_degrees)
             angle = math.radians(entity.pose.yaw_degrees) / 2
-            surface_rgba = None
-            if entity.color is not None:
+            surface_rgba = entity.surface_rgba
+            if entity.color is not None and surface_rgba is None:
                 from PIL import ImageColor
 
                 try:

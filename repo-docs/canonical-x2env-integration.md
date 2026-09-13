@@ -159,6 +159,9 @@ print(version.version_sha256)
 早期 `active/1_asset_reuse/` 路径属于历史组织；新接入请使用可导入的 `asset_reuse` 模块。
 canonical [YuxinProviderAdapter](../self_improving/harness/x2env/adapters/yuxin.py)
 直接复用 `load_providers`、`tiered_search` 和下载实现，不复制 provider 引擎。
+部署装配的web resolver现在可在无匹配/明确不支持的候选耗尽后，使用失败回执请求最多一次
+Codex检索词修订；同一asset.resolve时限、原category不变，重复词/候选停止。许可、凭据、网络或
+证据错误不触发模型重试。`query-revisions.json`绑定两次结果；组件测试不代表真实修订成功。
 
 部署中的 `web` 结构为：
 

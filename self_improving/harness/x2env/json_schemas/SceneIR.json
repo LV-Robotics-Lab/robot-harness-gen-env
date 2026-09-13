@@ -315,6 +315,43 @@
           ],
           "title": "Role",
           "type": "string"
+        },
+        "surface_rgba": {
+          "anyOf": [
+            {
+              "maxItems": 4,
+              "minItems": 4,
+              "prefixItems": [
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Only structural_support: estimated uniform sRGB RGBA for the declared color, with the same color provenance; not texture recovery. Foreground must use null.",
+          "title": "Surface Rgba"
         }
       },
       "required": [

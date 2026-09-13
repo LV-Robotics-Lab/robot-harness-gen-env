@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 web第八次与结构颜色契约
+
+- e288c0b / web-solid-box-03，916be468-cccf-4f16-bdcb-6bc97c09afa5，78.564775秒blocked_license。
+  实际未触发查询修订；不算成功修订实证。summary在runtime/harness/p1-evidence/web-solid-box-03/。
+- 结构颜色light brown反例先RED；SceneEntity.surface_rgba进入模型schema→SceneIR→compiler，
+  原color/provenance和旧序列化不变，104项初始邻组通过；真实新例待运行。
+- 颜色合同/compile/Codex/schema/grounding/completion邻组270 passed，131.09秒；另web/search 62 passed，2.06秒。
+  lint/schema snapshot及本地文档链接通过；根测试的时间口径仍按各次源码记录。
+
 ## 2026-09-13 重建第四例实际越过获取门
 
 - d4c6a5e / 15dc259c-b085-4ff8-8596-8553b88b1c36，259.017125秒，failed / scene_compile_failed。

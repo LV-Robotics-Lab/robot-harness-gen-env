@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-STRUCTURAL-COLOR-ESTIMATE
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis渲染与Codex分别保留。
+- source_refs：d4c6a5e真实reconstruction-04，compile error 709de4c5d4e4da061a2cbbfe7601acbcb54813629c1a370b23f88507503b758c。
+- integration_method：SceneEntity可选surface_rgba，保留原color/provenance；仅结构支撑允许，编译器直接消费。
+  未给字段保持历史序列化及原颜色解析行为；模型估计不作纹理恢复，没有颜色词表。
+- lifecycle：integrated；verification：contract_pass；runtime_verification：新版本待运行。
+- recorded_git_authors：见本提交；无第三方代码复制。
+
 ## INT-CANONICAL-WEB-QUERY-REVISION
 
 - origin_owner：Yuxin asset_reuse engine；integration_owner：Bingsheng Harness workstream。

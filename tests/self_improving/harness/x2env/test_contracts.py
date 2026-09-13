@@ -100,6 +100,30 @@ def test_scene_preserves_entity_attributes_reference_frame_and_field_provenance(
     assert scene.entities[1].provenance.color[0].input_sha256 == "a" * 64
 
 
+@pytest.mark.parametrize("fault", [None, "foreground", "missing_color", "range", "nan"])
+def test_structural_color_estimate_preserves_label_without_overriding_asset_material(fault):
+    import json
+
+    from self_improving.harness.x2env.contracts import SceneIR
+
+    document = scene_document()
+    legacy = SceneIR.model_validate_json(json.dumps(document))
+    assert all("surface_rgba" not in e for e in legacy.model_dump(mode="json")["entities"])
+    entity = document["entities"][1 if fault == "foreground" else 0]
+    entity["color"] = None if fault == "missing_color" else "light brown"
+    entity["surface_rgba"] = [0.72, 0.51, 0.32, 1.0]
+    if fault in {"range", "nan"}:
+        entity["surface_rgba"][0] = 1.1 if fault == "range" else float("nan")
+    if fault:
+        with pytest.raises(ValueError):
+            SceneIR.model_validate_json(json.dumps(document))
+        return
+    scene = SceneIR.model_validate_json(json.dumps(document))
+    assert scene.entities[0].color == "light brown"
+    assert scene.entities[0].surface_rgba == (0.72, 0.51, 0.32, 1.0)
+    assert SceneIR.model_validate_json(scene.model_dump_json()) == scene
+
+
 def test_partial_dimensions_and_relation_height_remain_unknown_not_invented():
     import json
 

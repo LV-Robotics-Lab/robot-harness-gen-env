@@ -1,5 +1,9 @@
 # Canonical x2env API 与 CLI 参考
 
+结构支撑的SceneEntity新增可选`surface_rgba`（4个0..1数值）。模型保留原`color`文本及其provenance，
+同时提供均匀表面颜色估计，编译器直接传给Genesis；不是纹理恢复。foreground必须为null/省略，
+资产材质继续由资产工具处理。旧记录缺字段保持原序列化及旧颜色解析行为。
+
 本页按当前 `self_improving.harness.x2env` 源码说明调用行为。首次安装、部署配置实例及用户输入
 配方见[用户指南](walkthroughs/canonical-x2env-user-guide.md)。当前真实验收范围见
 [matrix v2 审计](../self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)。

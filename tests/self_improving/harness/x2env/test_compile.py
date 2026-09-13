@@ -311,15 +311,18 @@ def test_dynamic_compile_preserves_known_axes_and_rejects_invalid_graph(tmp_path
 
 
 @pytest.mark.parametrize(
-    "color,rgba",
+    "color,rgba,explicit_rgba",
     [
-        (None, None),
-        ("brown", (165 / 255, 42 / 255, 42 / 255, 1.0)),
-        ("Light Blue", (173 / 255, 216 / 255, 230 / 255, 1.0)),
-        ("#123456", (18 / 255, 52 / 255, 86 / 255, 1.0)),
+        (None, None, None),
+        ("brown", (165 / 255, 42 / 255, 42 / 255, 1.0), None),
+        ("Light Blue", (173 / 255, 216 / 255, 230 / 255, 1.0), None),
+        ("#123456", (18 / 255, 52 / 255, 86 / 255, 1.0), None),
+        ("light brown", (0.72, 0.51, 0.32, 1.0), (0.72, 0.51, 0.32, 1.0)),
     ],
 )
-def test_explicit_structural_geometry_does_not_claim_deployment_defaults(tmp_path, color, rgba):
+def test_explicit_structural_geometry_does_not_claim_deployment_defaults(
+    tmp_path, color, rgba, explicit_rgba
+):
     import copy
 
     from self_improving.harness.x2env.compile import (
@@ -335,6 +338,8 @@ def test_explicit_structural_geometry_does_not_claim_deployment_defaults(tmp_pat
     support = copy.deepcopy(scene["entities"][0])
     support.update(id="table", category="table", role="structural_support")
     support["color"] = color
+    if explicit_rgba is not None:
+        support["surface_rgba"] = explicit_rgba
     scene["entities"].append(support)
     support["dimensions"] = [0.9, 0.7, 0.03]
     support["pose"]["position"] = [0.2, 0.3, 0.6]

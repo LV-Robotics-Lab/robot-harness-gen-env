@@ -66,6 +66,7 @@ Generated; edit Python contracts, not this file.
 | SceneEntity | category | true |
 | SceneEntity | role | false |
 | SceneEntity | color | true |
+| SceneEntity | surface_rgba | false |
 | SceneEntity | dimensions | true |
 | SceneEntity | material | true |
 | SceneEntity | pose | true |
