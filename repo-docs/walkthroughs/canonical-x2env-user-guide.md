@@ -167,6 +167,8 @@ x2env resume --deployment /absolute/deployment.json --workflow-id WORKFLOW_ID
 
 - 先读顶层 `status/error_code/stage/workflow_id`，再读 snapshot 的停止原因、所需资源和操作结果。
 - `blocked_external_resource`：检查部署文件、模型/资源可用性、许可与源 pin；不要读取或传播密钥值。
+- `model_authentication_required`：受管理模型认证失效，父状态列出`managed_codex_authentication`；
+  由部署方恢复凭据，不消耗模型重试，不把“本机缓存已登录”当作服务端授权有效的证明。
 - `command_timeout` / `command_interrupted`：保留日志、已完成资产和状态；不要把一次超时推断为某种网络故障。
 - `incomplete_dual_profile` / 缺新鲜图像：物理或观测仍是 `not_run`，不能拿一张预览图替代。
 - `no_feasible_support_surface` / `footprint_outside_support_domain`：查看实测面、完整投影、接触和布局；

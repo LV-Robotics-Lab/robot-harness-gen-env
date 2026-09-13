@@ -256,6 +256,9 @@ class Harness:
                 snapshot.input_bundle,
                 status=advisory.status,
                 reason=advisory.error_code,
+                required_resources=("managed_codex_authentication",)
+                if advisory.error_code == "model_authentication_required"
+                else (),
                 proposal=proposal_ref,
             )
         result = ToolResult(

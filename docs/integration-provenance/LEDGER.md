@@ -2,6 +2,8 @@
 
 ## INT-CANONICAL-MODEL-ROUTER — 用户指定Terra内部路由
 
+- follow-up：父workflow显式列出认证所需资源；65项pipeline/lifecycle/CLI通过，程序替身不作真实认证证据。
+
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：306375c上的现有CodexBackend。
 - upstream_owner：模型服务及Codex客户端分别归其提供方；未复制第三方源码或改变Gujie/Yuxin来源。
 - integration_method：受信部署选择固定模型/端点，子进程环境凭据，同一个advisory transport/controller。

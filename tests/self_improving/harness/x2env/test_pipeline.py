@@ -14,6 +14,34 @@ from self_improving.harness.x2env.contracts import (
 from self_improving.harness.x2env.harness import Harness
 
 
+def test_authentication_blocker_names_resource_and_preserves_model_evidence(tmp_path):
+    class AuthenticationBackend:
+        def __init__(self, store):
+            self.store = store
+
+        def interpret(self, bundle, **kwargs):
+            ref = self.store.write_artifact(b"sanitized auth diagnosis", "text/plain")
+            return BackendProposal(
+                status="blocked",
+                proposal=None,
+                error_code="model_authentication_required",
+                evidence=(ref,),
+                elapsed_seconds=0.1,
+            )
+
+    harness = Harness(tmp_path / "state", backend_factory=AuthenticationBackend)
+    handle = harness.submit(
+        X2EnvRequest(
+            text="a table", seed=1, idempotency_key="auth", output_dir=str(tmp_path / "out")
+        )
+    )
+    stopped = harness.resume(handle.workflow_id)
+    assert stopped.status == "blocked"
+    assert stopped.required_resources == ("managed_codex_authentication",)
+    assert stopped.operations[-1].capability == "codex.interpret"
+    assert len(stopped.operations[-1].result.outputs) == 2
+
+
 @pytest.mark.parametrize(
     "reason,expected", [("command_deadline", "timed_out"), ("stop", "interrupted")]
 )

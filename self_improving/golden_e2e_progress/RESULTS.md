@@ -2,6 +2,10 @@
 
 ## 2026-09-13 私有Terra路由与结构化输出实测
 
+- 后续补足父workflow认证阻断的`required_resources=managed_codex_authentication`，
+  原模型证据及错误码保留；缺资源字段先RED，pipeline/lifecycle/CLI 65项通过2.78s。
+  仅新增失败说明，不改变正在固定e6570f3运行的成功路径。
+
 - 用户明确授权新内部路由；部署固定`openai/gpt-5.6-terra`，保留max、不使用旧planner。
   私钥仅权限600文件读取后进入子进程环境，根忽略`.x2env-private/`，不进入argv或回执。
 - 真实Responses小调用HTTP200、completed、1.29s；此为协议探针，不是workflow成功。
