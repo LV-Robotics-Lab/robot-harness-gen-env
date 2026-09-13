@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 P1 第二例与增量测试
+
+- web-02（固定076c801）144.246394秒/blocked，workflow b98d917a-945f-4ab0-82ba-e4ec647f86e2。
+  GLB源轴修复真实通过；首候选材质不支持，第二候选Box已入库并生成真实预览，但视觉box/cube语义拒绝。
+  最终text-only重建回退缺图。原根：`/home/jingxiang/bingsheng/runtime/harness/p1-evidence/web-02/`。
+- 72项prepare/web/CI库存测试通过4.15秒；后续ruff发现两行过长，独立格式提交30e8bb1后通过。
+- root核验295.71秒：2409 passed/1 failed/1 skipped。唯一失败为wheel CLI帮助旧子命令断言，
+  更新为含check后安装测试8 passed/3.61秒。完整日志 `/var/tmp/x2env-p1-20260913/{root-tests.log,root-tests.xml,installation-tests.log}`。
+- reader本地链接及12份archive字节通过，远端HTTP未运行。旧 ignored缓存已清理，未再触发迁移断言。
+
 ## 2026-09-13 P1 web 首例真实失败及修复
 
 - 公共CLI默认来源请求“在桌面上放一个盒子。”，seed53，workflow cf91adcc-9290-49e0-a5c0-528a651659fc。

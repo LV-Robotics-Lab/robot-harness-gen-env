@@ -183,7 +183,7 @@ def test_installed_cli_and_three_skills_keep_no_backend_submission_explicitly_bl
     root, python, _ = installed_provider
     cli = [str(python), "-I", "-B", str(python.with_name("x2env"))]
     help_result = _run([*cli, "--help"], cwd=root)
-    assert "{submit,status,resume,package}" in help_result.stdout
+    assert "{check,submit,status,resume,package}" in help_result.stdout
     probe = """
 from pathlib import Path
 from self_improving.harness.x2env.harness import Harness
