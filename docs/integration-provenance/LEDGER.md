@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C04-LIFECYCLE-BOUNDARIES — 预算和早期澄清
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：不变。
+- source_ref：`17f3637`；target_paths：test_harness_lifecycle.py/test_pipeline.py；无生产修改。
+- integration_method：公共Harness预算/取消与缺值早期澄清；真实Store保留回执，模型/时钟仅外部边界替身。
+- verification：19项生命周期通过，相关组合79项通过；runtime_verification：无新增golden资格。
+- recorded_git_authors：既有controller与本次测试分别保留。
+
 ## INT-CANONICAL-C11-PACKAGE-ATTACKS — 可迁移资源拒绝边界
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：原Genesis/格式来源不变。

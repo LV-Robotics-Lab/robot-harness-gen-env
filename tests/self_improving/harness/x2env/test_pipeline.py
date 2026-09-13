@@ -210,6 +210,17 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
         "x2env.validate",
     }
     snapshot = harness.resume(handle.workflow_id, timeout=10)
+    if missing_width:
+        # Necessary design values are now rejected before asset execution even
+        # when the model omitted unknown rows; no implicit grounding policy here.
+        assert snapshot.status == "blocked" and snapshot.stop_reason == "clarification_required"
+        assert [op.capability for op in snapshot.operations] == ["ingest", "codex.interpret"]
+        assert snapshot.proposal in snapshot.operations[-1].result.outputs
+        assert snapshot.scene_ir is None and snapshot.compiled_scene is None
+        assert snapshot.asset_resolution is None
+        assert harness.resume(handle.workflow_id) == snapshot
+        assert not (tmp_path / "package").exists()
+        return
     if with_diagnosis == "resume" and with_replay and not missing_width:
         assert snapshot.status == "blocked" and snapshot.required_resources == (
             "fresh_observation",
@@ -249,13 +260,6 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
         if with_diagnosis:
             expected.extend(["observe", "codex.diagnose", "x2env.validate"])
     assert [op.capability for op in snapshot.operations] == expected
-    if missing_width:
-        assert snapshot.status == "failed" and snapshot.stop_reason == "scene_compile_failed"
-        assert snapshot.operations[-1].result.outputs
-        assert snapshot.compiled_scene is None
-        assert harness.resume(handle.workflow_id) == snapshot
-        assert not (tmp_path / "package").exists()
-        return
     if with_replay and with_diagnosis:
         assert (
             snapshot.status == "failed" and snapshot.stop_reason == "physical_validation_not_passed"

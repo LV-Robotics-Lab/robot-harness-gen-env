@@ -6,6 +6,105 @@ from self_improving.harness.x2env.contracts import X2EnvRequest
 from self_improving.harness.x2env.harness import Harness
 
 
+@pytest.mark.parametrize("timeout", [0, -1, 1771, True, 1.5, "10", None])
+def test_invalid_resume_budget_does_not_claim_or_execute_workflow(tmp_path, timeout):
+    harness = Harness(tmp_path / "state")
+    handle = harness.submit(
+        X2EnvRequest(
+            text="one mouse",
+            seed=11,
+            idempotency_key="budget",
+            output_dir=str(tmp_path / "output"),
+        )
+    )
+    before = harness.status(handle.workflow_id)
+    with pytest.raises(ValueError, match="resume timeout must be 1..1770 seconds"):
+        harness.resume(handle.workflow_id, timeout=timeout)
+    assert harness.status(handle.workflow_id) == before
+
+
+def test_ambiguous_resolver_assembly_is_rejected(tmp_path):
+    with pytest.raises(ValueError, match="choose one resolver assembly"):
+        Harness(
+            tmp_path / "state",
+            resolver_factory=lambda store, backend: None,
+            contextual_resolver_factory=lambda store, backend, request, bundle: None,
+        )
+
+
+def test_expired_command_budget_cancels_before_model_is_called(tmp_path, monkeypatch):
+    import time
+
+    readings = iter((100.0, 102.0))
+    called = []
+
+    class UnreachableModel:
+        def interpret(self, *args, **kwargs):
+            called.append(True)
+            raise AssertionError("expired command must not invoke model")
+
+    harness = Harness(tmp_path / "state", backend_factory=lambda store: UnreachableModel())
+    handle = harness.submit(
+        X2EnvRequest(
+            text="one mouse",
+            seed=11,
+            idempotency_key="expired",
+            output_dir=str(tmp_path / "output"),
+        )
+    )
+    monkeypatch.setattr(time, "monotonic", lambda: next(readings))
+    with pytest.raises(KeyboardInterrupt, match="command_deadline"):
+        harness.resume(handle.workflow_id, timeout=1)
+    snapshot = harness.status(handle.workflow_id)
+    assert snapshot.status == "cancelled" and snapshot.stop_reason == "timed_out"
+    assert snapshot.input_bundle is not None
+    assert snapshot.operations[-1].result.error_code == "timed_out"
+    assert not called
+
+
+@pytest.mark.parametrize(
+    ("message", "reason"), [("operator stop", "interrupted"), ("command_deadline", "timed_out")]
+)
+def test_interrupted_external_model_retains_ingest_and_cancels_operation(tmp_path, message, reason):
+    import json
+
+    from self_improving.harness.x2env.store import Store
+
+    class InterruptedModel:
+        def interpret(self, bundle, *, output_root, timeout):
+            assert bundle.text is not None
+            assert 1 <= timeout <= 600
+            raise KeyboardInterrupt(message)
+
+    state = tmp_path / "state"
+    harness = Harness(state, backend_factory=lambda store: InterruptedModel())
+    handle = harness.submit(
+        X2EnvRequest(
+            text="one mouse",
+            seed=11,
+            idempotency_key="interrupt",
+            output_dir=str(tmp_path / "output"),
+        )
+    )
+    with pytest.raises(KeyboardInterrupt, match=message):
+        harness.resume(handle.workflow_id)
+    snapshot = harness.status(handle.workflow_id)
+    assert snapshot.status == "cancelled"
+    assert snapshot.stop_reason == reason
+    assert snapshot.owner is None
+    assert snapshot.input_bundle is not None
+    assert [op.status for op in snapshot.operations] == ["succeeded", "cancelled"]
+    result = snapshot.operations[-1].result
+    assert result.error_code == reason
+    receipt = json.loads(Store(state).read_artifact(result.outputs[0]))
+    assert receipt == {
+        "workflow_id": handle.workflow_id,
+        "reason": reason,
+        "partial_artifacts_retained": True,
+    }
+    assert Harness(state).resume(handle.workflow_id) == snapshot
+
+
 def test_submit_persists_one_handle_before_execution_and_survives_restart(tmp_path):
     state = tmp_path / "state"
     request = X2EnvRequest(

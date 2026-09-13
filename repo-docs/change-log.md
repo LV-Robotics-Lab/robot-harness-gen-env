@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 生命周期19项预算/取消测试通过；旧pipeline缺值回归改为更早澄清，明确不执行资产或仿真。
+
 - 包接口32项攻击回归通过；缺native loader实际调用失败留证，不作为三次真实copy-run成功。
 
 - 必要布局缺值与非critical冲突接入Harness/compile/completion，209项回归通过；保留合法默认与几何推导，真实case待验。

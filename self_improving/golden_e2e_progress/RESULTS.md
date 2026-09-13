@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C04 生命周期边界与准入回归同步
+
+- Harness公共预算拒绝7种非法值且状态不变；双resolver装配拒绝；外部模型中断保留ingest和cancelled回执，
+  已耗尽预算不调用模型。生命周期8→19项，主线程19 passed/1.28s；仅时钟与外部模型边界替身。
+- 扩大pipeline回归初次12失败/49通过：原缺宽度fixture仍预期晚期compile失败，现应在interpret后
+  blocked/clarification_required。只更新该预期并增加未调用资产/仿真断言，不改生产或冻结阈值。
+  更新后pipeline/lifecycle/web组合79 passed/3.06s，随后新增一项预算到期测试单独随生命周期通过。
+- 新a57a0ea真实S01已完成interpret并以mouse命中本地候选进入Genesis预览，尚非最终场景或golden通过。
+
 ## 2026-09-13 C11/C14 可移植包攻击覆盖
 
 - test_package从9到32项，经真实build/copy/verify测试重哈希后的manifest/schema/重复成员、
