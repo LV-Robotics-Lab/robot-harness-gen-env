@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- 补齐OpenXSim wrapper/tests检查遗漏，58项通过；完整声明active范围Ruff已实际通过。
+
 - 稳定编译器/demo/薄脚本最后样式切片224项通过，保持物理合同、算法和输出值不变。
 
 - OpenXSim上游源保值lint维护，67项回归通过；全根检查暴露额外wrapper/tests问题，保留并继续修复。

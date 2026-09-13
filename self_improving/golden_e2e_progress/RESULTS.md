@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 C13 OpenXSim wrapper/tests 覆盖实际 lint 范围
+
+- 9份wrapper/tests的38条额外lint清零；5份AST完全一致，其余仅import排序/unused导入，
+  9/9非import AST一致，断言与字符串不变。保原路径bootstrap位置、5处具体延后import说明。
+- 原58项测试通过，直接脚本help无需额外PYTHONPATH通过；主线程完整LINT_ROOTS实际检查通过，
+  没有通过缩范围绕过发现的遗漏。首次错误cwd的format命令未编辑文件，随后根目录执行正确。
+
 ## 2026-09-13 C13 稳定编译器与薄脚本样式维护
 
 - 最后project切片126条lint清零；24份Python中22份Python3.11 AST完全相同，仅publicredaction

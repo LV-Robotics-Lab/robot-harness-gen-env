@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-OPENXSIM-WRAPPERS — 完整入口与测试样式
+
+- origin_owner / upstream_owner：OpenXSim原wrapper/tests作者；integration_owner：Bingsheng Harness workstream。
+- source_ref：`79b1cd8`；target_paths：active/shared/openxsim/scripts与tests中9份Python。
+- integration_method：保原bootstrap时序、断言/字符串；9份非import AST相同，不碰算法或旧证据。
+- verification：58项+direct help，完整active Ruff通过；runtime_verification：无新物理运行。
+- recorded_git_authors：原来源与整合提交分开。
+
 ## INT-CANONICAL-C13-STABLE-LINT — 稳定层合同不变
 
 - origin_owner / upstream_owner：稳定gen-env与既有脚本原作者；integration_owner：Bingsheng Harness workstream。

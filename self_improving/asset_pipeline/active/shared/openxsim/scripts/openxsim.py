@@ -9,20 +9,22 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "source" / "agenticsim"))
 
-from agenticsim.openxsim.assets import (
+# Direct-file CLI execution needs the source path above before these provider imports.
+from agenticsim.openxsim.anchors import ColorLayoutAnchorProvider  # noqa: E402
+from agenticsim.openxsim.assets import (  # noqa: E402
     AssetScout,
     CatalogSearchProvider,
     GitHubRepositoryDiscoveryProvider,
     GitHubTreeSearchProvider,
 )
-from agenticsim.openxsim.anchors import ColorLayoutAnchorProvider
-from agenticsim.openxsim.ir import EnvironmentPackage
-from agenticsim.openxsim.pipeline import OpenXSimPipeline
-from agenticsim.openxsim.robotwin import runtime_evidence_from_rollout
+
+# The IR, workflow and rollout helpers likewise belong to that bootstrapped source tree.
+from agenticsim.openxsim.ir import EnvironmentPackage  # noqa: E402
+from agenticsim.openxsim.pipeline import OpenXSimPipeline  # noqa: E402
+from agenticsim.openxsim.robotwin import runtime_evidence_from_rollout  # noqa: E402
 
 
 def _backends(value: str) -> tuple[str, ...]:
@@ -67,7 +69,9 @@ def command_text2env(args: argparse.Namespace) -> int:
 
 def command_anchor2env(args: argparse.Namespace) -> int:
     pipeline = OpenXSimPipeline(args.output)
-    vision_provider = ColorLayoutAnchorProvider() if args.vision_provider == "color-layout" else None
+    vision_provider = (
+        ColorLayoutAnchorProvider() if args.vision_provider == "color-layout" else None
+    )
     package, results = pipeline.anchor2env(
         args.instruction,
         args.media,
@@ -141,7 +145,9 @@ def command_transfer(args: argparse.Namespace) -> int:
         json.dumps(
             {
                 "package_id": package.package_id,
-                "compile_results": {backend: result.to_dict() for backend, result in results.items()},
+                "compile_results": {
+                    backend: result.to_dict() for backend, result in results.items()
+                },
                 "conformance": {backend: report.to_dict() for backend, report in reports.items()},
             },
             ensure_ascii=False,
@@ -160,10 +166,23 @@ def command_robotwin_evidence(args: argparse.Namespace) -> int:
         args.rollout_report,
         minimum_video_frames=args.minimum_video_frames,
     )
-    output = Path(args.evidence_output) if args.evidence_output else Path(args.rollout_report).parent / "runtime_evidence.json"
+    output = (
+        Path(args.evidence_output)
+        if args.evidence_output
+        else Path(args.rollout_report).parent / "runtime_evidence.json"
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"runtime_evidence": str(output.resolve()), **evidence}, ensure_ascii=False, indent=2, sort_keys=True))
+    output.write_text(
+        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    print(
+        json.dumps(
+            {"runtime_evidence": str(output.resolve()), **evidence},
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+    )
     return 0
 
 
@@ -190,7 +209,9 @@ def build_parser() -> argparse.ArgumentParser:
     anchor.add_argument("--strict", action="store_true")
     anchor.set_defaults(func=command_anchor2env)
 
-    asset = subparsers.add_parser("asset-scout", help="search, download, convert, and register an asset")
+    asset = subparsers.add_parser(
+        "asset-scout", help="search, download, convert, and register an asset"
+    )
     asset.add_argument("--query", required=True)
     asset.add_argument("--asset-id", required=True)
     asset.add_argument("--catalog", action="append", default=[])
@@ -210,7 +231,9 @@ def build_parser() -> argparse.ArgumentParser:
     asset.add_argument("--smoke-backends", type=_backends, default=())
     asset.set_defaults(func=command_asset)
 
-    transfer = subparsers.add_parser("transfer", help="import an existing environment and compile it elsewhere")
+    transfer = subparsers.add_parser(
+        "transfer", help="import an existing environment and compile it elsewhere"
+    )
     transfer.add_argument("--source", required=True)
     transfer.add_argument("--source-backend")
     transfer.add_argument("--backends", type=_backends, required=True)
