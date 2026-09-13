@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-LOADED-TOPOLOGY — 实际三角面而非顶点集合
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis公开geom API与原Gujie适配来源。
+- source_ref：Harness`17d32ec`；Genesis`0e74bf392781884ccad765c3f344419c86b872ca`。
+- target_paths：genesis_child.py/test_genesis_runtime.py；integration_method：实际逐geom面索引与独立URDF核对，旧无面调用不授拓扑。
+- verification：主线程123项通过，非法bool面索引先RED后GREEN；runtime_verification：新child未跑真实Genesis。
+- recorded_git_authors：原引擎API、旧适配和新审计实现分别保留；未开放动态支撑。
+
 ## INT-CANONICAL-C08-SUPPORT-DESIGN — 实际加载面域前置
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis/CoACD/Gujie独立保留。

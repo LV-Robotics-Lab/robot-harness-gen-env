@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 C09 实际加载拓扑审计首片
+
+- 新child通过固定Genesis公开geom顶点/face接口逐几何读取并转换entity-local，独立比对authored URDF
+  有向三角面；保留原顶点距离，允许重索引/面顺序/循环顶点顺序，不接受不同表面、反绕序或独立sdf_mesh。
+- 历史五参数audit_geometry仍可用，但topology_status明确not_run；新child才传实际parts并要求通过。
+  assessment历史调用尚不复核parts，动态图支撑门仍未打开。
+- 新参数首RED为TypeError接口缺失，不伪称语义漏洞；mixed bool面索引被NumPy转换整数的实际攻击
+  曾DID NOT RAISE，显式拒绝后GREEN。主线程runtime/assessment/package/preview 123 passed/10.35s，
+  Ruff/diff通过；尚未执行此新child真实Genesis，不能授拓扑运行或支撑通过。
+- 外部测试日志 `/var/tmp/canonical-topology-red.log`、`canonical-topology-bool-red.log`及
+  `canonical-topology-final2.log`保留；下一片单独补显式scene.reset，再固定源码做小型真实验证。
+
 ## 2026-09-13 C08/C09 支撑拓扑只读设计
 
 - 固定Genesis0e74bf公开get_verts/init_faces及get_vverts/init_vfaces可读实际面；求解器初始化消费

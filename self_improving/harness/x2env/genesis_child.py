@@ -92,8 +92,21 @@ def array(value):
     return value.detach().cpu().numpy()
 
 
-def audit_geometry(actual_visual_world, actual_collision_world, position, quaternion, source):
-    """Compare measured loaded vertices against independently parsed static URDF geometry."""
+def audit_geometry(
+    actual_visual_world,
+    actual_collision_world,
+    position,
+    quaternion,
+    source,
+    *,
+    geometry_parts=None,
+):
+    """Audit measured vertices and optional per-geom oriented triangles against the URDF.
+
+    Triangle matching permits reindexing, face order and cyclic corner order, not a change
+    of winding or triangulation. Vertex-only historical callers explicitly get not_run
+    for topology. The 1e-5 m tolerance is the existing loaded-geometry tolerance.
+    """
     import numpy as np
     import trimesh
     from scipy.spatial import cKDTree
@@ -105,7 +118,7 @@ def audit_geometry(actual_visual_world, actual_collision_world, position, quater
     result = {}
     for kind, world in [("visual", actual_visual_world), ("collision", actual_collision_world)]:
         actual = (np.asarray(world).reshape(-1, 3) - np.asarray(position)) @ rotation
-        pieces = []
+        pieces, triangles = [], []
         for node in root.findall("link/" + kind):
             ref = node.find("geometry/mesh")
             if ref is None:
@@ -122,6 +135,8 @@ def audit_geometry(actual_visual_world, actual_collision_world, position, quater
                 points = points @ Rotation.from_euler("xyz", rpy).as_matrix().T
                 points += np.fromstring(origin.get("xyz", "0 0 0"), sep=" ")
             pieces.append(points)
+            if geometry_parts is not None:
+                triangles.extend(points[np.asarray(mesh.faces)])
         expected = np.concatenate(pieces)
         if not len(actual) or not np.isfinite(actual).all():
             raise ValueError("invalid actual loaded geometry")
@@ -132,8 +147,136 @@ def audit_geometry(actual_visual_world, actual_collision_world, position, quater
             raise ValueError("loaded geometry differs from authored URDF")
         result[kind + "_error_m"] = error
         result["local_" + kind + "_vertices_m"] = actual.tolist()
+        if geometry_parts is not None:
+            parts = geometry_parts[kind]
+            actual_triangles, part_vertices, recorded, ids = [], [], [], set()
+            for part in parts:
+                vertices = np.asarray(part["local_vertices_m"])
+                faces = np.asarray(part["faces"])
+                if (
+                    type(part["geom_id"]) is not int
+                    or part["geom_id"] < 0
+                    or part["geom_id"] in ids
+                    or vertices.ndim != 2
+                    or vertices.shape[1] != 3
+                    or not len(vertices)
+                    or not np.isfinite(vertices).all()
+                    or faces.ndim != 2
+                    or faces.shape[1] != 3
+                    or not len(faces)
+                    or faces.dtype.kind not in "iu"
+                    or any(
+                        isinstance(index, (bool, np.bool_))
+                        for face in part["faces"]
+                        for index in face
+                    )
+                    or faces.min() < 0
+                    or faces.max() >= len(vertices)
+                ):
+                    raise ValueError("invalid loaded triangle indices or geometry")
+                ids.add(part["geom_id"])
+                selected = vertices[faces]
+                if np.any(
+                    np.linalg.norm(
+                        np.cross(selected[:, 1] - selected[:, 0], selected[:, 2] - selected[:, 0]),
+                        axis=1,
+                    )
+                    == 0
+                ):
+                    raise ValueError("degenerate loaded triangle")
+                actual_triangles.extend(selected)
+                part_vertices.extend(vertices)
+                record = {
+                    "geom_id": part["geom_id"],
+                    "local_vertices_m": vertices.tolist(),
+                    "faces": faces.tolist(),
+                }
+                record["sha256"] = hashlib.sha256(
+                    json.dumps(
+                        record, sort_keys=True, separators=(",", ":"), allow_nan=False
+                    ).encode()
+                ).hexdigest()
+                recorded.append(record)
+            if (
+                not part_vertices
+                or max(
+                    cKDTree(actual).query(part_vertices)[0].max(),
+                    cKDTree(part_vertices).query(actual)[0].max(),
+                )
+                > 1e-5
+            ):
+                raise ValueError("loaded topology vertices differ from measured geometry")
+            expected_triangles = np.asarray(triangles)
+            if len(actual_triangles) != len(expected_triangles):
+                raise ValueError("loaded triangle topology differs")
+            tree = cKDTree(expected_triangles.mean(axis=1))
+            remaining = set(range(len(expected_triangles)))
+            for triangle in actual_triangles:
+                matches = [
+                    i
+                    for i in tree.query_ball_point(np.mean(triangle, axis=0), 1e-5)
+                    if i in remaining
+                    and any(
+                        np.allclose(
+                            triangle,
+                            np.roll(expected_triangles[i], shift, axis=0),
+                            atol=1e-5,
+                            rtol=0,
+                        )
+                        for shift in range(3)
+                    )
+                ]
+                if not matches:
+                    raise ValueError("loaded triangle topology differs")
+                remaining.remove(min(matches))
+            result.setdefault("geometry_parts", {})[kind] = recorded
     result["geometry_basis"] = "actual_genesis_vertices_inverse_world_pose"
+    result["topology_status"] = "passed" if geometry_parts is not None else "not_run"
+    result["topology_basis"] = (
+        "actual_genesis_geom_faces_authored_triangle_comparison"
+        if geometry_parts is not None
+        else "unavailable_vertices_only"
+    )
     return result
+
+
+def audit_loaded_geometry(entity, source):
+    """Read Genesis 0e74bf public per-geom vertices/faces; no authored topology substitution."""
+    import numpy as np
+    from scipy.spatial.transform import Rotation
+
+    position = array(entity.get_pos()).reshape(3)
+    quaternion = array(entity.get_quat()).reshape(4)
+    rotation = Rotation.from_quat(quaternion[[1, 2, 3, 0]]).as_matrix()
+    parts, worlds = {}, {}
+    for kind in ["visual", "collision"]:
+        parts[kind], worlds[kind] = [], []
+        for link in entity.links:
+            for geom in link.vgeoms if kind == "visual" else link.geoms:
+                if kind == "collision" and "sdf_mesh" in geom.mesh.metadata:
+                    raise ValueError("unaudited independent SDF geometry")
+                world = array(geom.get_vverts() if kind == "visual" else geom.get_verts()).reshape(
+                    -1, 3
+                )
+                faces = np.asarray(geom.init_vfaces if kind == "visual" else geom.init_faces)
+                parts[kind].append(
+                    {
+                        "geom_id": int(geom.idx),
+                        "local_vertices_m": ((world - position) @ rotation).tolist(),
+                        "faces": faces.tolist(),
+                    }
+                )
+                worlds[kind].append(world)
+        if not worlds[kind]:
+            raise ValueError("missing actual loaded geometry parts")
+    return audit_geometry(
+        np.concatenate(worlds["visual"]),
+        np.concatenate(worlds["collision"]),
+        position,
+        quaternion,
+        source,
+        geometry_parts=parts,
+    )
 
 
 def audit(entity, source, physics):
@@ -282,22 +425,7 @@ def execute(job):
             entity = entities[name]
             if row["kind"] == "rigid":
                 loaded[name] = audit(entity, package / row["urdf_path"], physics_by_id[name])
-                visual = np.concatenate(
-                    [
-                        array(g.get_vverts()).reshape(-1, 3)
-                        for link in entity.links
-                        for g in link.vgeoms
-                    ]
-                )
-                loaded[name].update(
-                    audit_geometry(
-                        visual,
-                        array(entity.get_verts()),
-                        array(entity.get_pos()).reshape(3),
-                        array(entity.get_quat()).reshape(4),
-                        package / row["urdf_path"],
-                    )
-                )
+                loaded[name].update(audit_loaded_geometry(entity, package / row["urdf_path"]))
             else:
                 loaded[name] = {
                     "fixed": bool(entity.base_link.is_fixed),

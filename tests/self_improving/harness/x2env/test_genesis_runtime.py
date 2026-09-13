@@ -7,7 +7,7 @@ import struct
 
 import pytest
 
-from self_improving.harness.x2env.genesis_child import audit_geometry
+from self_improving.harness.x2env.genesis_child import audit_geometry, audit_loaded_geometry
 from self_improving.harness.x2env.genesis_runtime import RuntimeScene, run_scene
 
 
@@ -297,7 +297,183 @@ def test_loaded_geometry_must_match_actual_world_vertices(tmp_path):
     result = audit_geometry(actual, actual, position, [1.0, 0.0, 0.0, 0.0], urdf)
     np.testing.assert_allclose(result["local_visual_vertices_m"], mesh.vertices)
     assert result["visual_error_m"] < 1e-8
+    assert result["topology_status"] == "not_run"
     bad = actual.copy()
     bad[0, 0] += 0.01
     with pytest.raises(ValueError, match="loaded geometry differs"):
         audit_geometry(bad, actual, position, [1.0, 0.0, 0.0, 0.0], urdf)
+
+
+def test_loaded_same_vertices_with_changed_collision_faces_are_rejected(tmp_path):
+    import numpy as np
+    import trimesh
+
+    mesh = trimesh.creation.box(extents=[0.1, 0.2, 0.3])
+    mesh.export(tmp_path / "shape.obj")
+    urdf = tmp_path / "asset.urdf"
+    urdf.write_text(
+        '<robot><link name="body">'
+        + "".join(
+            f'<{kind}><geometry><mesh filename="shape.obj"/></geometry></{kind}>'
+            for kind in ("visual", "collision")
+        )
+        + "</link></robot>"
+    )
+    vertices = np.asarray(mesh.vertices)
+    faces = np.asarray(mesh.faces).copy()
+    faces[0] = faces[1]
+    part = {"geom_id": 0, "local_vertices_m": vertices.tolist(), "faces": faces.tolist()}
+    visual = {"geom_id": 0, "local_vertices_m": vertices.tolist(), "faces": mesh.faces.tolist()}
+    with pytest.raises(ValueError, match="loaded triangle topology differs"):
+        audit_geometry(
+            vertices,
+            vertices,
+            [0, 0, 0],
+            [1, 0, 0, 0],
+            urdf,
+            geometry_parts={"visual": [visual], "collision": [part]},
+        )
+
+
+@pytest.fixture
+def topology_fixture(tmp_path):
+    """Authored mesh and explicitly synthetic Genesis-array boundary, never live evidence."""
+    import numpy as np
+    import trimesh
+
+    mesh = trimesh.creation.box(extents=[0.1, 0.2, 0.3])
+    mesh.export(tmp_path / "shape.obj")
+    urdf = tmp_path / "asset.urdf"
+    urdf.write_text(
+        '<robot><link name="body">'
+        + "".join(
+            f'<{kind}><geometry><mesh filename="shape.obj"/></geometry></{kind}>'
+            for kind in ("visual", "collision")
+        )
+        + "</link></robot>"
+    )
+    return np.asarray(mesh.vertices), np.asarray(mesh.faces), urdf
+
+
+def test_loaded_topology_accepts_reindexed_faces_and_records_each_geom(topology_fixture):
+    import numpy as np
+
+    vertices, faces, urdf = topology_fixture
+    order = np.arange(len(vertices))[::-1]
+    inverse = np.argsort(order)
+    permuted_faces = np.roll(inverse[faces[::-1]], 1, axis=1)
+    parts = [
+        {
+            "geom_id": 4,
+            "local_vertices_m": vertices[order].tolist(),
+            "faces": permuted_faces[:6].tolist(),
+        },
+        {
+            "geom_id": 9,
+            "local_vertices_m": vertices[order].tolist(),
+            "faces": permuted_faces[6:].tolist(),
+        },
+    ]
+    result = audit_geometry(
+        vertices,
+        vertices,
+        [0, 0, 0],
+        [1, 0, 0, 0],
+        urdf,
+        geometry_parts={"visual": parts, "collision": parts},
+    )
+    assert result["topology_status"] == "passed"
+    assert [p["geom_id"] for p in result["geometry_parts"]["collision"]] == [4, 9]
+    for part in result["geometry_parts"]["collision"]:
+        raw = {k: v for k, v in part.items() if k != "sha256"}
+        assert (
+            hashlib.sha256(
+                json.dumps(raw, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            == part["sha256"]
+        )
+
+
+@pytest.mark.parametrize(
+    "fault", ["negative", "overflow", "float", "boolean", "mixed_boolean", "degenerate", "winding"]
+)
+def test_loaded_triangle_indices_and_winding_fail_closed(topology_fixture, fault):
+    vertices, faces, urdf = topology_fixture
+    faces = faces.tolist()
+    if fault == "negative":
+        faces[0][0] = -1
+    elif fault == "overflow":
+        faces[0][0] = len(vertices)
+    elif fault == "float":
+        faces[0][0] = 0.5
+    elif fault == "boolean":
+        faces = [[True, False, True]]
+    elif fault == "mixed_boolean":
+        for face in faces:
+            if 0 in face:
+                face[face.index(0)] = False
+                break
+    elif fault == "degenerate":
+        faces[0][1] = faces[0][0]
+    else:
+        faces[0] = faces[0][::-1]
+    part = {"geom_id": 0, "local_vertices_m": vertices.tolist(), "faces": faces}
+    with pytest.raises(ValueError, match="triangle"):
+        audit_geometry(
+            vertices,
+            vertices,
+            [0, 0, 0],
+            [1, 0, 0, 0],
+            urdf,
+            geometry_parts={"visual": [part], "collision": [part]},
+        )
+
+
+@pytest.mark.parametrize("sdf", [False, True])
+def test_public_loaded_geometry_reads_per_geom_faces_and_rejects_separate_sdf(
+    topology_fixture, sdf
+):
+    from types import SimpleNamespace
+
+    import numpy as np
+
+    vertices, faces, urdf = topology_fixture
+    position = np.array([0.2, 0.3, 0.4])
+    # Exact quarter turn: authored local geometry must be recovered, not world-axis AABB.
+    rotation = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+    world = vertices @ rotation.T + position
+
+    class TensorBoundary:
+        def __init__(self, value):
+            self.value = np.asarray(value)
+
+        def detach(self):
+            return self
+
+        def cpu(self):
+            return self
+
+        def numpy(self):
+            return self.value
+
+    geom = SimpleNamespace(
+        idx=7,
+        init_faces=faces,
+        get_verts=lambda: TensorBoundary(world),
+        mesh=SimpleNamespace(metadata={"sdf_mesh": object()} if sdf else {}),
+    )
+    visual = SimpleNamespace(idx=2, init_vfaces=faces, get_vverts=lambda: TensorBoundary(world))
+    entity = SimpleNamespace(
+        links=[SimpleNamespace(geoms=[geom], vgeoms=[visual])],
+        get_pos=lambda: TensorBoundary(position),
+        get_quat=lambda: TensorBoundary([2**-0.5, 0, 0, 2**-0.5]),
+    )
+    if sdf:
+        with pytest.raises(ValueError, match="^unaudited independent SDF geometry$"):
+            audit_loaded_geometry(entity, urdf)
+    else:
+        result = audit_loaded_geometry(entity, urdf)
+        assert result["topology_status"] == "passed"
+        np.testing.assert_allclose(
+            result["geometry_parts"]["collision"][0]["local_vertices_m"], vertices
+        )
