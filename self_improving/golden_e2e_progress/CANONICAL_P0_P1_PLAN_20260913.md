@@ -30,7 +30,9 @@
 4. 澄清必须展示具体原因；来源closure拒绝时也要保留原始来源回执与部分产物索引，但不能信任坏引用。
 5. 达到上述分支成功后再验证local miss→web完整成功和新来源copy-run；P2继续后置。
 6. reconstruction-04暴露结构颜色接口缺口：SceneIR自由文本light brown不能被Pillow颜色解析。
-   后续须让模型提供绑定颜色数值或受控修订，不建立light brown专用映射，也不丢弃请求颜色。
+   6310f22已让模型提供绑定surface_rgba，不建立light brown专用映射，也不丢弃请求颜色。
+   reconstruction-05真实模型已保留light-brown wood-grain并给数值，266.782秒因前景light pink/pink
+   属性匹配失败，未到compile。下一切片先诊断语义颜色匹配，不能直接放宽门或硬编码同义词。
 
 ## 本轮发现（执行前）
 

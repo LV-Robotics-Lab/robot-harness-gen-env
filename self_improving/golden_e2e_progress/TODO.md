@@ -7,11 +7,12 @@
 - [x] [执行计划](CANONICAL_P0_P1_PLAN_20260913.md)及部署现状确认；dashboard 三入口仍404。
 - [x] P0-a：公开只读 check；24项 CLI/配置测试及 lint 通过。
 - [ ] P1-web：7次尝试均未完整成功；已真实下载/规范化/预览，仍有检索、许可、材质或语义失败。
-- [ ] P1-reconstruction：4次真实新几何，最新resolve/视觉/ground成功，compile的light brown颜色解析失败。
+- [ ] P1-reconstruction：5次真实新几何，第四次resolve/ground成功；第五次light pink与pink颜色匹配失败，完整线未过。
 - [x] 重复几何证据存储修复d4c6a5e，真实获取已越过旧超限。
 - [x] web最多一次失败绑定检索修订，119项定向通过；真实检验待执行。
-- [ ] web-solid-box-03真实78.565秒blocked_license，按预算规则未重试；成功修订路径仍待真实通过。
-- [x] 结构支撑可选surface_rgba契约与compiler消费，旧色名/provenance保留；新真实重建待运行。
+- [ ] web-solid-box-03真实78.565秒，已一次red cube→red block修订，第二轮blocked_license停止；完整web仍未成功。
+- [x] 结构支撑可选surface_rgba契约与compiler消费，旧色名/provenance保留；真实模型已输出，场景运行尚未验证。
+- [x] 固定6310f22根测试2433 passed/1 skipped，286.27秒；所有本轮核验未超时。
 - [ ] 记录来源回退、逐阶段耗时、失败和全部产物路径；更新指南并逐功能提交。
 - [x] GLB源轴误报修复（076c801）、大网格JSON遍历修复（5e7116d），均有真实反例和定向测试。
 - [x] 重建颜色参数传递/刚体无关节prompt修复（18ce9af），74项最终增量通过；真实颜色已应用，视觉未执行。

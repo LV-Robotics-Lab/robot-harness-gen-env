@@ -25,6 +25,8 @@
 许可与外部资源错误不触发模型重试。重建第四例已越过资产获取与视觉门，但compile因自由文本
 结构颜色`light brown`无法解析而失败；现已补可选surface_rgba数值契约，真实新例待验证。
 原色名/provenance保留，不用专用词表或丢弃颜色绕过。
+第五次重建真实模型已输出结构RGBA，但前景light pink与视觉pink的匹配被否决；下一步应改善有证据的
+颜色语义比较及用户可读诊断，不把同义/明暗关系直接硬编码为通过。当前web8次、重建5次均未完整E2E。
 
 资产搜索继续复用 Yuxin engine，围绕现有 `WebConfig` 接入固定 provider config、许可记录及所需索引。先在隔离目录完成一次真实下载、规范化、Registry 登记、Genesis replay/validate；记录作者、许可、来源 URL、原始 bytes 和新版本。许可或服务不可用保留受阻，不绕过来源检查。
 

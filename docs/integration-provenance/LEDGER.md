@@ -17,6 +17,7 @@
 - integration_method：同一resolver最多一次失败回执绑定的Codex词法修订，共享原时限，只搜未解决实体，
   跳过已尝试candidate；原category不改，无固定同义词或URL映射。权限/许可/超时不触发重试。
 - lifecycle：integrated；verification：contract_pass；runtime_verification：修正后真实web待运行。
+- 后续实测e288c0b：web-solid-box-03真实一次red cube→red block修订；第二轮许可证受阻，无完整E2E。
 
 ## INT-CANONICAL-RUNTIME-EVIDENCE-SIZE
 

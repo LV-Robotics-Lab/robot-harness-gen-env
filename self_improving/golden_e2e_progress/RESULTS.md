@@ -1,9 +1,20 @@
 # 进度与结果
 
+## 2026-09-13 接续最终检查点（P1未完成）
+
+- 固定6310f22 clean源码根测试2433 passed/1 skipped，286.27秒；root-surface.log/xml位于`/var/tmp/x2env-p1-20260913/`。
+- reconstruction-05：0a481af7-2859-4545-9a1d-19a352bb92d4，266.781519秒blocked，visual_assessment_failed。
+  新几何/预览真实执行，桌面surface_rgba模型实际输出；前景light pink与模型pink被颜色匹配否决，未到compile。
+- web本批8次、重建5次均无完整E2E；第四次重建资产resolve/ground通过、第五次模型数值色接通；
+  不把不同workflow局部成功拼成通过。两次最新媒体都6帧640×480/10fps/0.6秒，均只资产预览。
+- 完整命令、阶段、输出、图片视频与SHA见[接续记录](../../docs/evidence/canonical-p1-continuation-20260913.md)。
+- 下一优先：语义颜色匹配/可读诊断、web许可和来源覆盖、新来源完整replay/validate/copy-run；不扩大到P2或机器人。
+
 ## 2026-09-13 web第八次与结构颜色契约
 
 - e288c0b / web-solid-box-03，916be468-cccf-4f16-bdcb-6bc97c09afa5，78.564775秒blocked_license。
-  实际未触发查询修订；不算成功修订实证。summary在runtime/harness/p1-evidence/web-solid-box-03/。
+  完整回执核对更正：首次red cube动画候选耗尽，真实Codex一次修订red block，第二轮许可unknown停止。
+  query_revisions=1，真实修订执行已证明但未获得资产；summary在runtime/harness/p1-evidence/web-solid-box-03/。
 - 结构颜色light brown反例先RED；SceneEntity.surface_rgba进入模型schema→SceneIR→compiler，
   原color/provenance和旧序列化不变，104项初始邻组通过；真实新例待运行。
 - 颜色合同/compile/Codex/schema/grounding/completion邻组270 passed，131.09秒；另web/search 62 passed，2.06秒。

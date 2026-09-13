@@ -2,6 +2,9 @@
 
 ## 2026-09-13 当前 P0/P1
 
+- [x] surface_rgba兼容契约与真实模型输出；固定6310f22根测试2433 passed/1 skipped。
+- [ ] P1完整来源验收未通过：8次web/5次重建都保留失败；latest颜色语义拒绝与web许可待解决。
+
 - [x] 大几何证据存储修复；重建第四例真实resolve/ground通过，compile颜色表达受阻。
 - [x] 同一web resolver一次有界词法修订及重复/资源失败停止，119项测试通过。
 

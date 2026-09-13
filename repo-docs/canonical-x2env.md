@@ -18,6 +18,7 @@ matrix v2 的 text、image、video、image+text 四个简单 workflow 成功，�
 Genesis资产预览；完整来源案例仍有失败，见[P1逐次记录](../docs/evidence/canonical-p0-p1-20260913.md)。
 大几何预览的完整运行结果现在由回执引用；运行JSON取消缩进，减少重复存储，原始字段与容量门不变。
 这项存储修复不授予新的物理或端到端成功。
+新功能与逐次结果见[P1接续记录](../docs/evidence/canonical-p1-continuation-20260913.md)。
 复杂容器、关节、多点支撑及机器人 policy/data collection 尚未获得端到端验证。`succeeded` 表示当前开发工作流完成；导出中的 `sim_ready=false`、`release_qualified=false` 与独立 copy-run 结果分别阅读。
 
 ## 真实证据和文件位置

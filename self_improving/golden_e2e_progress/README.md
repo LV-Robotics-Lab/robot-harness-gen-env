@@ -8,6 +8,8 @@
 
 - [当前 P0/P1 计划](CANONICAL_P0_P1_PLAN_20260913.md)：部署检查、web 与真实重建的有界执行；进展见 TODO/RESULTS 顶部。
 
+- [P1接续证据](../../docs/evidence/canonical-p1-continuation-20260913.md)：大几何存储、一次检索修订、结构颜色契约与新案例。
+
 - [Canonical 文档总览](../../repo-docs/canonical-x2env.md)：当前用户/API/测试/接入/roadmap 的阅读入口。
 
 - `CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md`：本轮实施walkthrough、真实案例与复制运行、最终push审计入口；当前状态以文内明确结论为准。

@@ -198,7 +198,7 @@ x2env resume --deployment /absolute/deployment.json --workflow-id WORKFLOW_ID
 
 无需重新部署sealed runtime，可直接用下面的固定本机环境；它不是可任意搬迁的安装包。
 准备报告与完整使用说明位于`/home/jingxiang/bingsheng/runtime/harness/`，
-P1源码固定d4c6a5e（source-p1-compact）；当前state已开始执行web和reconstruction案例，结果在
+P1源码固定6310f22（source-p1-surface）；当前state已开始执行web和reconstruction案例，结果在
 `p1-evidence/`，不同于旧matrix v2四例的隔离部署。当前状态以各summary/原始stdout为准。
 迁移后另用当前部署的 runtime 根完成复制包 `load_step_smoke`：25 步、60.35 秒、新图片和视频，
 实际拒读源码/原资产/CAS；未重跑模型或物理 profile。记录在
@@ -208,7 +208,7 @@ P1源码固定d4c6a5e（source-p1-compact）；当前state已开始执行web和r
 entry_root=/home/jingxiang/bingsheng/runtime/harness
 entry_python=/var/tmp/canonical-ci-python313.BmJ3Cc/venv/bin/python
 entry_deployment="$entry_root/deployment.json"
-export PYTHONPATH=/var/tmp/canonical-shapely-2.1.2.TgCNjK/site:"$entry_root/source-p1-compact":"$entry_root/source-current/self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim"
+export PYTHONPATH=/var/tmp/canonical-shapely-2.1.2.TgCNjK/site:"$entry_root/source-p1-surface":"$entry_root/source-current/self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim"
 entry_media=/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/preserved/generic-experiment-v2-20260913.1QrGYD/inputs
 
 "$entry_python" -m self_improving.harness.x2env.cli check --deployment "$entry_deployment"
