@@ -1,5 +1,31 @@
 # 进度与结果
 
+## 2026-09-13 显式初始 reset 与证据消费接线
+
+- 新child实际build后调用公开scene.reset，任何step前写动作顺序/时间与每实体初始线/角速度；
+  无warmup，不证明步进后恢复。异常先保日志再抛出，不重试或吞取消。
+- replay将reset-lifecycle.json放入CAS；assess_scene核实际invocation绑定的child源声明，核
+  child/result claim、日志SHA、动作/进程时间、ground及全部实体、loaded与step0零速度。
+  旧源无声明且无证明保持initial_reset_status=not_run；新源剥离claim与文件仍拒绝。
+- 原始坏字节未置reset failed、child-result=[]非结构化异常两项实际攻击先RED后修复。
+  agent111 passed/18.58s；主线程runtime/replay/assessment/observation/package 152 passed/15.37s，
+  Ruff/diff通过。外部日志 `/var/tmp/canonical-reset-binding-final.log`、`canonical-reset-extra-red.log`。
+- 新reset child尚未真实运行，post_step_reset_evaluated=false；旧S01包及复制结果不回填reset资格。
+
+## 2026-09-13 实际拓扑接口小型 Genesis 验证
+
+- 固定clean `8ba6eff653f9bff79eadce062f5f4a27902f4a90`，新根
+  `/home/jingxiang/bingsheng/canonical-topology-probe-20260913.OiUXeV`，公共Registry/compile/run_scene。
+  资产沿Cesium许可闭包重登记同版本9e086987；场景是显式operator组件fixture，非冻结S02/model输出。
+- 58.493501s、25steps/dt0.004、load_step_smoke成功；block动态6自由度，实际collision8顶点12面、
+  visual24顶点12面分别与authored拓扑通过，五个原来源/CAS实际拒读。
+  6帧/4unique，仅0.1s模拟；physical_profile=not_run，不授完整物理、reset或矩阵资格。
+- 主线程查看runtime/frames/step-0025.png，方块呈灰暗而非预期红色，已要求单独材质诊断，
+  拓扑通过不能代替视觉意图通过。真实MP4为runtime/preview.mp4。
+- 主线程核summary.json SHA `2e39263085bae5d51f493d727bc139963c3185570c38f8cab271086324467ca3`，
+  loaded.json `63d9536f83ae4c6ebc9600e532337da05d58090700db3537f2222ee47bfd8a45`，
+  process.json `14c368df6c15a420868650587d6319d2e96fdd585183277e452ba145e0d74a45`。
+
 ## 2026-09-13 failure bundle 复用与路径攻击
 
 - 公开Harness.package/materialize_failure覆盖manifest/result/error成员篡改与符号链接、

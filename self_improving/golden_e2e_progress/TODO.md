@@ -4,6 +4,9 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- 初始reset→CAS→assessment接线152项主线程回归通过；下一步固定新child小型真实运行，旧包不回填reset。
+- 已提交拓扑child真实Box smoke58.49s通过，但画面灰暗，材质问题独立诊断；非S02/物理或reset资格。
+
 - failure bundle公开路径/篡改拒绝11项通过，单组仍缺媒体/scene导出三处；整体覆盖门未授予。
 
 - observation公开证据拒绝9项通过，单文件50语句/20分支100%；不替代六组整体覆盖门。

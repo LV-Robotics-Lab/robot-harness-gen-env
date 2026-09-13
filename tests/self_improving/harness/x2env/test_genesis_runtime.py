@@ -11,6 +11,121 @@ from self_improving.harness.x2env.genesis_child import audit_geometry, audit_loa
 from self_improving.harness.x2env.genesis_runtime import RuntimeScene, run_scene
 
 
+def test_scene_lifecycle_resets_built_state_before_zero_velocity_audit(tmp_path):
+    import numpy as np
+
+    from self_improving.harness.x2env.genesis_child import build_reset_scene
+
+    class TensorBoundary:
+        def __init__(self, value):
+            self.value = np.asarray(value)
+
+        def detach(self):
+            return self
+
+        def cpu(self):
+            return self
+
+        def numpy(self):
+            return self.value
+
+    class SceneBoundary:
+        velocity = [9.0, 0.0, 0.0]
+        built = False
+        reset_called = False
+
+        def build(self):
+            self.built = True
+
+        def reset(self):
+            assert self.built
+            self.reset_called = True
+            self.velocity = [0.0, 0.0, 0.0]
+
+        def get_vel(self):
+            assert self.reset_called
+            return TensorBoundary(self.velocity)
+
+        def get_ang(self):
+            return TensorBoundary([0.0, 0.0, 0.0])
+
+    scene = SceneBoundary()
+    result = build_reset_scene(scene, {"body": scene}, tmp_path)
+    assert result["status"] == "passed"
+    assert result["reset_invoked"] is True
+    assert result["post_step_reset_evaluated"] is False
+    assert result["objects"]["body"]["velocity"] == [0.0, 0.0, 0.0]
+    assert result == json.loads((tmp_path / "reset-lifecycle.json").read_bytes())
+
+
+@pytest.mark.parametrize(
+    "fault", ["linear", "angular", "nonfinite", "reset_exception", "interrupt"]
+)
+def test_reset_failure_preserves_lifecycle_and_does_not_grant_zero_state(tmp_path, fault):
+    import numpy as np
+
+    from self_improving.harness.x2env.genesis_child import build_reset_scene
+
+    class TensorBoundary:
+        def __init__(self, value):
+            self.value = np.asarray(value)
+
+        def detach(self):
+            return self
+
+        def cpu(self):
+            return self
+
+        def numpy(self):
+            return self.value
+
+    class SceneBoundary:
+        built = False
+        reset_called = False
+
+        def build(self):
+            self.built = True
+
+        def reset(self):
+            assert self.built
+            self.reset_called = True
+            if fault == "reset_exception":
+                raise RuntimeError("external reset failed")
+            if fault == "interrupt":
+                raise KeyboardInterrupt("external cancellation")
+
+        def get_vel(self):
+            assert self.reset_called
+            return TensorBoundary(
+                [
+                    float("nan") if fault == "nonfinite" else 0.1 if fault == "linear" else 0.0,
+                    0.0,
+                    0.0,
+                ]
+            )
+
+        def get_ang(self):
+            return TensorBoundary([0.1 if fault == "angular" else 0.0, 0.0, 0.0])
+
+    scene = SceneBoundary()
+    expected = (
+        RuntimeError
+        if fault == "reset_exception"
+        else KeyboardInterrupt
+        if fault == "interrupt"
+        else ValueError
+    )
+    with pytest.raises(expected):
+        build_reset_scene(scene, {"body": scene}, tmp_path)
+    result = json.loads((tmp_path / "reset-lifecycle.json").read_bytes())
+    assert result["status"] == "failed" and result["reset_invoked"] is True
+    assert result["events"][0]["status"] == "completed"
+    assert result["events"][1]["status"] == (
+        "started" if fault in {"reset_exception", "interrupt"} else "completed"
+    )
+    assert result["error_type"] == expected.__name__
+
+
 def test_typed_runtime_delegates_verified_scene_to_shared_launcher(tmp_path, monkeypatch):
     from self_improving.harness.x2env import package_loader
     from self_improving.harness.x2env.genesis_runtime import RuntimeEntity

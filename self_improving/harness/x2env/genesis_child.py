@@ -14,6 +14,8 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 
+INITIAL_RESET_REQUIRED = True
+
 
 def restrict_scene_process(roots, run):
     """Apply inherited read-only runtime and no-network rules, without host GL exceptions.
@@ -90,6 +92,57 @@ def write(path, payload):
 
 def array(value):
     return value.detach().cpu().numpy()
+
+
+def build_reset_scene(scene, entities, output):
+    """Invoke Genesis build then public reset before any measured trace or loaded audit.
+
+    This initial-scene reset does not demonstrate restoration after simulation steps.
+    No warmup steps are taken. Velocity tolerance is the existing zero-state audit's 1e-7.
+    """
+    import numpy as np
+
+    path = Path(output) / "reset-lifecycle.json"
+    result = {
+        "schema_version": "x2env.initial_scene_reset.v1",
+        "status": "failed",
+        "reset_invoked": False,
+        "post_step_reset_evaluated": False,
+        "warmup_steps": 0,
+        "events": [],
+        "objects": {},
+    }
+    write(path, result)
+    try:
+        for action in ("build", "reset"):
+            event = {"action": action, "status": "started", "started_monotonic": time.monotonic()}
+            result["events"].append(event)
+            if action == "reset":
+                result["reset_invoked"] = True
+            write(path, result)
+            getattr(scene, action)()
+            event.update(status="completed", ended_monotonic=time.monotonic())
+            write(path, result)
+        for name, entity in entities.items():
+            state = {}
+            result["objects"][name] = state
+            for field, method in (
+                ("velocity", entity.get_vel),
+                ("angular_velocity", entity.get_ang),
+            ):
+                value = array(method()).reshape(-1)
+                state[field] = value.tolist() if np.isfinite(value).all() else "nonfinite"
+                if len(value) != 3 or not np.isfinite(value).all() or np.linalg.norm(value) > 1e-7:
+                    raise ValueError("reset did not establish zero initial velocity")
+        result["status"] = "passed"
+    except BaseException as exc:
+        # Preserve exact failure/cancellation and rethrow; this journal grants no recovery.
+        result["error_type"] = type(exc).__name__
+        result["reason"] = str(exc)
+        write(path, result)
+        raise
+    write(path, result)
+    return result
 
 
 def audit_geometry(
@@ -419,7 +472,7 @@ def execute(job):
             lookat=tuple(center),
             fov=40,
         )
-        scene.build()
+        reset = build_reset_scene(scene, entities, out)
         loaded = {}
         for name, row in descriptions.items():
             entity = entities[name]
@@ -441,6 +494,8 @@ def execute(job):
             loaded[name].update(
                 position_m=array(entity.get_pos()).reshape(-1).tolist(),
                 orientation_wxyz=array(entity.get_quat()).reshape(-1).tolist(),
+                initial_velocity=reset["objects"][name]["velocity"],
+                initial_angular_velocity=reset["objects"][name]["angular_velocity"],
             )
             if not np.allclose(loaded[name]["position_m"], row["position_m"], atol=1e-6):
                 raise ValueError("runtime changed initial world position")
@@ -559,6 +614,12 @@ def execute(job):
             "physical_profile": "not_run",
             "media": media,
             "loaded": loaded,
+            "initial_reset": {
+                "path": "reset-lifecycle.json",
+                "sha256": hashlib.sha256((out / "reset-lifecycle.json").read_bytes()).hexdigest(),
+                "status": reset["status"],
+                "post_step_reset_evaluated": False,
+            },
             "robot_policy_evaluated": False,
             "data_collection_evaluated": False,
         }

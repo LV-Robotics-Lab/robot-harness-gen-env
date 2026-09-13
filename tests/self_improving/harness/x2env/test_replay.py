@@ -35,6 +35,7 @@ def test_replay_binds_both_profiles_and_keeps_partial_failure(tmp_path, monkeypa
         out = kwargs["output_dir"]
         out.mkdir(parents=True)
         (out / "stdout.log").write_text("explicit test runtime double")
+        (out / "reset-lifecycle.json").write_text('{"status":"failed","fixture":true}')
         result = {
             "status": "passed" if len(calls) == 1 else "failed",
             "simulator_executed": True,
@@ -53,6 +54,8 @@ def test_replay_binds_both_profiles_and_keeps_partial_failure(tmp_path, monkeypa
     assert all(profile.files for profile in result.profiles)
     assert result.physical_evaluated is False
     for profile in result.profiles:
+        reset = next(item for item in profile.files if item.path == "reset-lifecycle.json")
+        assert json.loads(store.read_artifact(reset.artifact))["status"] == "failed"
         assert any(
             store.read_artifact(member.artifact) == b"explicit test runtime double"
             for member in profile.files

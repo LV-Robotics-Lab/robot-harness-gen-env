@@ -1,5 +1,9 @@
 # Canonical x2env（收敛实施中）
 
+新worker已接显式build→reset，replay保存动作日志，assessment独立核claim、hash、动作/进程时间及
+loaded/step0零速度；历史无证明维持not_run。152项回归通过，新reset真实运行待验，步进后恢复未验。
+此前8ba6eff拓扑worker已实际运行25步Box小测并核对真实面索引；画面灰暗问题独立诊断，不能当S02通过。
+
 最新S02 image-only开发尝试在229.50秒后于设计准入阻断：模型用了合法的实体数组序号unknown路径，
 旧classifier仅识别实体ID路径。原proposal和失败包保留，尚未执行该case的资产查询或Genesis；
 严格路径映射修复在进行，不能把interpret成功算成S02环境成功。

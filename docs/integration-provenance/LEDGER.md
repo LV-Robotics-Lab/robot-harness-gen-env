@@ -1,5 +1,21 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-INITIAL-RESET — 实际动作及历史独立消费
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis公开Scene.reset接口。
+- source_ref：Genesis `0e74bf392781884ccad765c3f344419c86b872ca`；Harness基线15cf36c。
+- target_paths：genesis_child.py/replay.py/assessment.py及三测试文件。
+- integration_method：build后公开reset，绑定CAS和原child字节，历史无证明不升级，阈值不改。
+- verification：主线程152项通过；runtime_verification：新reset未跑，步进后恢复未验。
+- recorded_git_authors：引擎原作者与本次Harness调用/审计实现分开保留。
+
+## INT-CANONICAL-C09-TOPOLOGY-SMOKE — 实际固定引擎面索引
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Genesis与Cesium资产分别保留。
+- source_ref：Harness8ba6eff、Genesis0e74bf；integration_method：公开Registry/compile/run_scene单次组件probe。
+- verification / runtime_verification：58.49s实际load/25steps/拓扑通过；灰暗材质待诊断，不授S02/物理/reset。
+- recorded_git_authors：代码作者、资产原作者和operator fixture分别记录；精确hash/路径见RESULTS。
+
 ## INT-CANONICAL-S02-INDEX-PATH — 原模型字段准入失败
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Cesium资产/Yuxin检索分别保留。

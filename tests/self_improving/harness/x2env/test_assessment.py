@@ -441,6 +441,168 @@ def bound_fixture(tmp_path):
     )
 
 
+def reset_fixture(tmp_path):
+    """Synthetic lifecycle producer, not an actual Genesis execution."""
+    from pathlib import Path
+
+    kwargs = bound_fixture(tmp_path)
+
+    def update(profile, name, body):
+        root = Path(kwargs["profiles"][profile]["root"])
+        raw = body.encode() if isinstance(body, str) else json.dumps(body).encode()
+        (root / name).write_bytes(raw)
+        files = kwargs["profiles"][profile]["files"]
+        files[:] = [item for item in files if item["path"] != name]
+        files.append(
+            {"path": name, "sha256": hashlib.sha256(raw).hexdigest(), "size_bytes": len(raw)}
+        )
+
+    for profile in kwargs["profiles"]:
+        root = Path(kwargs["profiles"][profile]["root"])
+        proof = {
+            "schema_version": "x2env.initial_scene_reset.v1",
+            "status": "passed",
+            "reset_invoked": True,
+            "post_step_reset_evaluated": False,
+            "warmup_steps": 0,
+            "events": [
+                {
+                    "action": action,
+                    "status": "completed",
+                    "started_monotonic": start,
+                    "ended_monotonic": start + 0.1,
+                }
+                for action, start in [("build", 1.1), ("reset", 1.3)]
+            ],
+            "objects": {
+                name: {"velocity": [0.0, 0.0, 0.0], "angular_velocity": [0.0, 0.0, 0.0]}
+                for name in ["item", "table", "ground"]
+            },
+        }
+        update(profile, "reset-lifecycle.json", proof)
+        claim = {
+            "path": "reset-lifecycle.json",
+            "sha256": hashlib.sha256((root / "reset-lifecycle.json").read_bytes()).hexdigest(),
+            "status": "passed",
+            "post_step_reset_evaluated": False,
+        }
+        execution = json.loads((root / "result.json").read_bytes())
+        execution["initial_reset"] = claim
+        update(profile, "result.json", execution)
+        update(profile, "child-result.json", execution)
+        update(profile, "genesis_child.py", "# synthetic boundary\nINITIAL_RESET_REQUIRED = True\n")
+        update(
+            profile,
+            "invocation.json",
+            {"child_sha256": hashlib.sha256((root / "genesis_child.py").read_bytes()).hexdigest()},
+        )
+        loaded = json.loads((root / "loaded.json").read_bytes())
+        for state in loaded.values():
+            state.update(initial_velocity=[0.0, 0.0, 0.0], initial_angular_velocity=[0.0, 0.0, 0.0])
+        update(profile, "loaded.json", loaded)
+    return kwargs, update
+
+
+def test_bound_reset_lifecycle_is_independently_checked(tmp_path):
+    kwargs, _ = reset_fixture(tmp_path)
+    result = assess_scene(**kwargs)
+    assert result["physical_status"] == "passed", result
+    assert result["initial_reset_status"] == "passed"
+    assert result["post_step_reset_evaluated"] is False
+    assert result["simulator_execution_proven"] is False
+
+
+@pytest.mark.parametrize(
+    "attack",
+    [
+        "missing",
+        "stripped",
+        "hash",
+        "schema",
+        "order",
+        "time",
+        "entities",
+        "nonzero",
+        "nonfinite",
+        "loaded",
+        "claim",
+        "raw_corruption",
+        "extra_action",
+        "boolean_time",
+        "warmup",
+        "reset_not_invoked",
+        "trace_velocity",
+        "invalid_child",
+    ],
+)
+def test_rehashed_false_reset_proof_is_rejected(tmp_path, attack):
+    from pathlib import Path
+
+    kwargs, update = reset_fixture(tmp_path)
+    root = Path(kwargs["profiles"]["baseline"]["root"])
+    proof = json.loads((root / "reset-lifecycle.json").read_bytes())
+    execution = json.loads((root / "result.json").read_bytes())
+    if attack == "raw_corruption":
+        (root / "reset-lifecycle.json").write_bytes(b"{}")
+    elif attack == "invalid_child":
+        update("baseline", "child-result.json", [])
+    elif attack == "trace_velocity":
+        rows = [json.loads(line) for line in (root / "trace.ndjson").read_text().splitlines()]
+        rows[0]["objects"]["ground"]["velocity"] = [1e-8, 0.0, 0.0]
+        update("baseline", "trace.ndjson", "\n".join(json.dumps(row) for row in rows))
+    elif attack in {"missing", "stripped"}:
+        kwargs["profiles"]["baseline"]["files"][:] = [
+            item
+            for item in kwargs["profiles"]["baseline"]["files"]
+            if item["path"] != "reset-lifecycle.json"
+        ]
+        (root / "reset-lifecycle.json").unlink()
+        if attack == "stripped":
+            execution.pop("initial_reset")
+            update("baseline", "result.json", execution)
+            update("baseline", "child-result.json", execution)
+    elif attack == "loaded":
+        loaded = json.loads((root / "loaded.json").read_bytes())
+        loaded["item"]["initial_velocity"] = [1e-8, 0.0, 0.0]
+        update("baseline", "loaded.json", loaded)
+    elif attack == "claim":
+        execution["initial_reset"]["status"] = "failed"
+        update("baseline", "child-result.json", execution)
+    else:
+        if attack == "extra_action":
+            proof["events"].append(proof["events"][-1])
+        if attack == "boolean_time":
+            proof["events"][0]["started_monotonic"] = True
+        if attack == "warmup":
+            proof["warmup_steps"] = 1
+        if attack == "reset_not_invoked":
+            proof["reset_invoked"] = False
+        if attack == "schema":
+            proof["schema_version"] = "untrusted"
+        if attack == "order":
+            proof["events"].reverse()
+        if attack == "time":
+            proof["events"][1]["ended_monotonic"] = 3.0
+        if attack == "entities":
+            proof["objects"].pop("ground")
+        if attack == "nonzero":
+            proof["objects"]["item"]["velocity"] = [0.1, 0.0, 0.0]
+        if attack == "nonfinite":
+            proof["objects"]["item"]["velocity"] = [float("nan"), 0.0, 0.0]
+        update("baseline", "reset-lifecycle.json", proof)
+        execution["initial_reset"]["sha256"] = (
+            "0" * 64
+            if attack == "hash"
+            else hashlib.sha256((root / "reset-lifecycle.json").read_bytes()).hexdigest()
+        )
+        update("baseline", "result.json", execution)
+        update("baseline", "child-result.json", execution)
+    result = assess_scene(**kwargs)
+    assert result["physical_status"] == "failed", result
+    assert result["initial_reset_status"] == "failed"
+    assert "reset" in result["reason"], result
+
+
 def test_bound_analytic_files_do_not_gain_live_execution_authority(tmp_path):
     kwargs = bound_fixture(tmp_path)
     result = assess_scene(**kwargs)
@@ -448,6 +610,7 @@ def test_bound_analytic_files_do_not_gain_live_execution_authority(tmp_path):
     assert result["status"] == "not_run"  # no fresh Codex visual advisory here
     assert result["simulator_execution_proven"] is False
     assert result["execution_evidence_bound"] is True
+    assert result["initial_reset_status"] == "not_run"
     # File corruption and a copied identity must not inherit that result.
     from pathlib import Path
 

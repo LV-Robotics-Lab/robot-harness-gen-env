@@ -4,6 +4,7 @@ Gujie eb0b710 criterion semantics and Harness c0236bd dual-dt mathematics;
 the approved physics-assertions-v1.json is the numerical authority. No controller.
 """
 
+import ast
 import hashlib
 import json
 import math
@@ -385,6 +386,9 @@ def assess_scene(
         "data_collection_evaluated": False,
         "checks": [],
         "assertions_sha256": ASSERTIONS_SHA256,
+        "initial_reset_status": "not_run",
+        "initial_reset_profiles": {},
+        "post_step_reset_evaluated": False,
     }
     if set(profiles) != {"baseline", "half_dt"}:
         return {**result, "error_code": "incomplete_dual_profile"}
@@ -439,6 +443,10 @@ def assess_scene(
                     len(raw) != member.size_bytes
                     or hashlib.sha256(raw).hexdigest() != member.sha256
                 ):
+                    if member.path == "reset-lifecycle.json":
+                        result["initial_reset_status"] = "failed"
+                        result["initial_reset_profiles"][profile] = "failed"
+                        raise ValueError("reset lifecycle artifact identity differs")
                     raise ValueError("profile artifact identity differs")
 
             def read(name):
@@ -477,12 +485,23 @@ def assess_scene(
             rows[profile] = [
                 json.loads(line) for line in (root / "trace.ndjson").read_bytes().splitlines()
             ]
+            try:
+                result["initial_reset_profiles"][profile] = _verify_initial_reset(
+                    scene, root, names, execution, process, loaded[profile], rows[profile]
+                )
+            except (ValueError, KeyError, TypeError, OSError, SyntaxError) as exc:
+                result["initial_reset_status"] = "failed"
+                result["initial_reset_profiles"][profile] = "failed"
+                raise ValueError(f"invalid initial reset evidence: {exc}") from exc
             _verify_media(root, read("media.json"), names, profile)
         if identities[0] == identities[1]:
             raise ValueError("profiles are not independent executions")
         computed = evaluate_physics(scene, rows["baseline"], rows["half_dt"], loaded)
         result.update(computed)
         result["execution_evidence_bound"] = True
+        result["initial_reset_status"] = (
+            "passed" if set(result["initial_reset_profiles"].values()) == {"passed"} else "not_run"
+        )
         result["visual_status"] = visual_status
         result["status"] = (
             "failed"
@@ -499,6 +518,104 @@ def assess_scene(
             reason=str(exc),
         )
     return result
+
+
+def _verify_initial_reset(scene, root, names, execution, process, loaded, rows):
+    """Historical file audit only; never claims a live or post-step reset experiment.
+
+    Inspect the invocation-bound worker bytes, not this installation's worker. A new
+    worker's explicit declaration prevents stripping both claim and lifecycle file.
+    """
+    source = ast.parse((root / "genesis_child.py").read_bytes())
+    declarations = [
+        node.value
+        for node in source.body
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Name) and target.id == "INITIAL_RESET_REQUIRED"
+            for target in node.targets
+        )
+    ]
+    if declarations and (
+        len(declarations) != 1
+        or not isinstance(declarations[0], ast.Constant)
+        or declarations[0].value is not True
+    ):
+        raise ValueError("invalid reset requirement declaration")
+    child = (
+        json.loads((root / "child-result.json").read_bytes())
+        if "child-result.json" in names
+        else {}
+    )
+    if not isinstance(child, dict):
+        raise ValueError("invalid reset child result")
+    claim = execution.get("initial_reset")
+    if (
+        not declarations
+        and claim is None
+        and "initial_reset" not in child
+        and ("reset-lifecycle.json" not in names)
+    ):
+        return "not_run"
+    if (
+        not isinstance(claim, dict)
+        or child.get("initial_reset") != claim
+        or claim.get("path") != "reset-lifecycle.json"
+        or claim.get("status") != "passed"
+        or claim.get("post_step_reset_evaluated") is not False
+        or "reset-lifecycle.json" not in names
+    ):
+        raise ValueError("missing or inconsistent reset claim")
+    raw = (root / "reset-lifecycle.json").read_bytes()
+    if hashlib.sha256(raw).hexdigest() != claim.get("sha256"):
+        raise ValueError("reset lifecycle hash differs")
+    proof = json.loads(raw)
+    if (
+        proof["schema_version"] != "x2env.initial_scene_reset.v1"
+        or proof["status"] != "passed"
+        or proof["reset_invoked"] is not True
+        or proof["post_step_reset_evaluated"] is not False
+        or type(proof["warmup_steps"]) is not int
+        or proof["warmup_steps"] != 0
+    ):
+        raise ValueError("invalid reset lifecycle schema or scope")
+    events = proof["events"]
+    if not isinstance(events, list) or len(events) != 2:
+        raise ValueError("invalid reset lifecycle actions")
+    last = process["started_monotonic"]
+    end = process["ended_monotonic"]
+    for event, action in zip(events, ("build", "reset"), strict=True):
+        start, finish = event["started_monotonic"], event["ended_monotonic"]
+        if (
+            event["action"] != action
+            or event["status"] != "completed"
+            or any(
+                type(v) not in (int, float) or not math.isfinite(v)
+                for v in (last, start, finish, end)
+            )
+            or not 0 <= last <= start <= finish <= end
+        ):
+            raise ValueError("invalid reset lifecycle order or timing")
+        last = finish
+    expected = {entity.id for entity in scene.entities} | {"ground"}
+    if set(proof["objects"]) != expected or set(loaded) != expected - {"ground"}:
+        raise ValueError("reset entity set differs")
+    if not rows or rows[0]["step"] != 0 or rows[0]["time_s"] != 0:
+        raise ValueError("reset lacks zero-step trace")
+    if set(rows[0]["objects"]) != expected:
+        raise ValueError("reset zero-step entity set differs")
+    for name, state in proof["objects"].items():
+        for field in ("velocity", "angular_velocity"):
+            value = _vector(state[field])
+            if np.linalg.norm(value) > 1e-7:
+                raise ValueError("reset did not establish zero velocity")
+            if not np.array_equal(value, _vector(rows[0]["objects"][name][field])):
+                raise ValueError("reset velocity differs from zero-step trace")
+            if name != "ground" and not np.array_equal(
+                value, _vector(loaded[name]["initial_" + field])
+            ):
+                raise ValueError("reset velocity differs from loaded evidence")
+    return "passed"
 
 
 def _verify_loaded_assets(scene, package, loaded):

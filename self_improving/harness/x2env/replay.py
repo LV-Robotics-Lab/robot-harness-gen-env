@@ -76,6 +76,7 @@ class GenesisReplayExecutor:
                 "child-result.json",
                 "genesis_child.py",
                 "loaded.json",
+                "reset-lifecycle.json",
                 "trace.ndjson",
                 "media.json",
                 "simulation.mkv",
