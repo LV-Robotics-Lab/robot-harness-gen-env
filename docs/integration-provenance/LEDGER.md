@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-DYNAMIC-PHYSICS — 逐帧目标坐标核验
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness da2dbd0与冻结physics断言。
+- upstream_owner：Genesis0e74bf collider contact_data.pos/gjk中点语义、Shapely/GEOS分别保留。
+- target_paths：assessment.py、test_assessment.py；integration_method：共享原双dt评估，只为v2消费
+  绑定面/实际三角/目标当前pose/声明pair，旧v1不改；点距平面不另造阈值。
+- verification：主线程136项相关测试通过；runtime_verification：实际动态Genesis not_run，合成profile不作执行证明。
+- recorded_git_authors：引擎来源、数值库与Harness消费作者分开；单片覆盖未到100%，不升级资格。
+
 ## INT-CANONICAL-C11-DYNAMIC-PACKAGE — 包内实测面核验
 
 - follow-up：v2导出README明确独立审核Python与Shapely等外部依赖，38项package测试通过；未安装runtime。

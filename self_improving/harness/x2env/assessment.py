@@ -18,7 +18,14 @@ from pydantic import model_validator
 from scipy.spatial.transform import Rotation
 
 from .genesis_child import audit_geometry
-from .genesis_runtime import RuntimeMember, RuntimeModel, RuntimeScene, _member, _verify
+from .genesis_runtime import (
+    RuntimeMember,
+    RuntimeModel,
+    RuntimeSceneV2,
+    _member,
+    _verify,
+    parse_runtime_scene,
+)
 
 ASSERTIONS_SHA256 = "39d83385bffc3c06a4e8ef2433f1ec58a043168a3979320e7b1b924fd28561ff"
 
@@ -66,7 +73,9 @@ def _angle(a, b):
     return math.degrees(2 * math.acos(min(1.0, cosine)))
 
 
-def evaluate_physics(scene, baseline_rows, half_dt_rows, loaded_by_profile):
+def evaluate_physics(
+    scene, baseline_rows, half_dt_rows, loaded_by_profile, *, support_surfaces=None
+):
     """Pure analytical seam. Even passed traces do not prove simulator execution."""
     report = {
         "physical_status": "not_run",
@@ -76,7 +85,26 @@ def evaluate_physics(scene, baseline_rows, half_dt_rows, loaded_by_profile):
         "assertions_sha256": ASSERTIONS_SHA256,
     }
     try:
-        scene = RuntimeScene.model_validate(scene)
+        scene = parse_runtime_scene(scene)
+        measured = isinstance(scene, RuntimeSceneV2)
+        surfaces = {} if support_surfaces is None else support_surfaces
+        if measured:
+            from .measured_support import MeasuredSupportSurface, evaluate_support_footprint
+
+            bindings = {
+                b.source_id: b for b in scene.support_bindings if b.kind == "measured_surface"
+            }
+            if not isinstance(surfaces, dict) or set(surfaces) != set(bindings):
+                raise ValueError("missing or extra measured support surface")
+            for name, binding in bindings.items():
+                surface = surfaces[name]
+                if (
+                    not isinstance(surface, MeasuredSupportSurface)
+                    or surface.version_sha256 != binding.target_version_sha256
+                    or hashlib.sha256(surface.model_dump_json().encode()).hexdigest()
+                    != binding.surface_sha256
+                ):
+                    raise ValueError("measured support surface identity differs")
         cfg = _assertions()
         entities = {e.id: e for e in scene.entities}
         dynamic = {e.id for e in scene.entities if e.kind == "rigid"}
@@ -97,6 +125,8 @@ def evaluate_physics(scene, baseline_rows, half_dt_rows, loaded_by_profile):
                 raise ValueError("loaded entity set differs")
             for name, e in entities.items():
                 item = loaded[name]
+                if measured and e.kind == "rigid" and not item.get("geometry_parts"):
+                    raise ValueError("missing actual loaded triangles")
                 if (
                     np.linalg.norm(_vector(item["position_m"]) - e.position_m) > 1e-6
                     or _angle(_vector(item["orientation_wxyz"], 4), e.orientation_wxyz) > 1e-4
@@ -201,6 +231,13 @@ def evaluate_physics(scene, baseline_rows, half_dt_rows, loaded_by_profile):
                 if len(vertices) < 4:
                     raise ValueError("incomplete actual footprint")
                 target = entities[targets[name][0]]
+                domain = None
+                if measured and target.kind == "rigid":
+                    from shapely.geometry import MultiPolygon, Point, Polygon
+
+                    domain = MultiPolygon([Polygon(p[0], p[1:]) for p in surfaces[name].polygons])
+                    if domain.is_empty or not domain.is_valid:
+                        raise ValueError("invalid measured contact domain")
                 target_rotation = _rotation(target.orientation_wxyz)
                 if not np.allclose(target_rotation[:, 2], [0, 0, 1], atol=1e-6):
                     return {**report, "error_code": "unsupported_tilted_support_profile"}
@@ -228,6 +265,8 @@ def evaluate_physics(scene, baseline_rows, half_dt_rows, loaded_by_profile):
                 touching = supported = 0
                 for row in window:
                     contacts = [c for c in row["contacts"] if name in (c["a"], c["b"])]
+                    if measured:
+                        contacts = [c for c in contacts if target.id in (c["a"], c["b"])]
                     touching += bool(contacts)
                     upward = sum(
                         c["force_a" if c["a"] == name else "force_b"][2]
@@ -240,10 +279,41 @@ def evaluate_physics(scene, baseline_rows, half_dt_rows, loaded_by_profile):
                     state = row["objects"][name]
                     world = vertices @ _rotation(state["orientation_wxyz"]).T + state["position"]
                     local = (world - target.position_m) @ target_rotation
-                    margin = min(
-                        margin,
-                        float(np.min(np.asarray(target.size_m)[:2] / 2 - np.abs(local[:, :2]))),
-                    )
+                    if measured and target.kind == "rigid":
+                        target_state = row["objects"][target.id]
+                        rotation = _rotation(target_state["orientation_wxyz"])
+                        support = evaluate_support_footprint(
+                            surfaces[name],
+                            source_geometry_parts=item["geometry_parts"],
+                            source_pose={
+                                "position_m": state["position"],
+                                "orientation_wxyz": state["orientation_wxyz"],
+                            },
+                            target_pose={
+                                "position_m": row["objects"][target.id]["position"],
+                                "orientation_wxyz": row["objects"][target.id]["orientation_wxyz"],
+                            },
+                        )
+                        margin = min(margin, support["margin_m"] if support["covered"] else -1.0)
+                        for contact in row["contacts"]:
+                            if {contact["a"], contact["b"]} != {name, target.id}:
+                                continue
+                            point = (
+                                _vector(contact["position"]) - target_state["position"]
+                            ) @ rotation
+                            if (
+                                not domain.covers(Point(point[:2]))
+                                or abs(point[2] - surfaces[name].plane_z_m)
+                                > cfg["penetration"]["all_trajectory_m_max"]
+                            ):
+                                raise ValueError(
+                                    "contact outside selected measured support surface"
+                                )
+                    else:
+                        margin = min(
+                            margin,
+                            float(np.min(np.asarray(target.size_m)[:2] / 2 - np.abs(local[:, :2]))),
+                        )
                     minimum_z = min(minimum_z, float(world[:, 2].min()))
                 stability = cfg["stability"]
                 duration = stability["window_s"]
@@ -295,7 +365,7 @@ def evaluate_physics(scene, baseline_rows, half_dt_rows, loaded_by_profile):
                     "support_geometry": (
                         margin,
                         cfg["support"]["target_local_complete_footprint_margin_m_min"],
-                        "margin",
+                        "ge" if measured and target.kind == "rigid" else "margin",
                     ),
                     "below_ground": (
                         minimum_z,
@@ -397,7 +467,7 @@ def assess_scene(
     try:
         if visual_status not in {"passed", "failed", "not_run"}:
             raise ValueError("invalid separate visual status")
-        scene = RuntimeScene.model_validate(scene)
+        scene = parse_runtime_scene(scene)
         if (
             hashlib.sha256(scene_ir_bytes).hexdigest() != scene.scene_ir_sha256
             or json.loads(scene_ir_bytes)["input_sha256"] != input_sha256
@@ -505,7 +575,22 @@ def assess_scene(
             _verify_media(root, read("media.json"), names, profile)
         if identities[0] == identities[1]:
             raise ValueError("profiles are not independent executions")
-        computed = evaluate_physics(scene, rows["baseline"], rows["half_dt"], loaded)
+        surfaces = None
+        if isinstance(scene, RuntimeSceneV2):
+            from .measured_support import MeasuredSupportSurface
+
+            if set(result["topology_profiles"].values()) != {"passed"}:
+                raise ValueError("dynamic support requires actual loaded topology")
+            surfaces = {
+                binding.source_id: MeasuredSupportSurface.model_validate_json(
+                    _member(package, binding.surface_path).read_bytes()
+                )
+                for binding in scene.support_bindings
+                if binding.kind == "measured_surface"
+            }
+        computed = evaluate_physics(
+            scene, rows["baseline"], rows["half_dt"], loaded, support_surfaces=surfaces
+        )
         result.update(computed)
         result["execution_evidence_bound"] = True
         result["topology_status"] = (

@@ -1,5 +1,18 @@
 # 进度与结果
 
+## 2026-09-13 动态目标的独立物理证据消费
+
+- 同一evaluate_physics/assess_scene接受明确v2，面映射精确核target版本/序列化SHA；实际包先重算面，
+  每profile加载三角拓扑必须通过，缺失不能沿历史not_run进入动态通过。
+- 每帧用目标当前pose与源完整三角投影检查孔洞/2cm余量，不用初始目标或顶点凸包代替动态域。
+  v2接触掉线与向上力均按声明pair；点须落所选面域，距平面仅沿冻结穿透阈值。
+  Genesis固定collider源码contact_pos为支持点中点，记录为接触位置而非精确表面顶点。
+- 动态解析正例、跨孔/移动目标/错pair/缺面/错面/缺faces/倾斜、接触点域/高度，以及真实compile成员
+  加明确合成profile的独立assess攻击通过。主线程assessment+package 136 passed/35.52s。
+  agent98项/48.91s，覆盖382/389语句、197/204分支，未排除；
+  `/var/tmp/canonical-assessment-dynamic-final.json`。v1判据保留；尚无新增真实动态Genesis/矩阵通过。
+
+
 ## 2026-09-13 动态支撑证据持久化与包内独立核验
 
 - 后续补导出README的v2审核依赖说明：原说明缺Shapely先RED，现与runtime.json一致；

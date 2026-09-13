@@ -133,6 +133,312 @@ def test_complete_analytic_support_obeys_frozen_metrics_without_execution_author
     assert any(c["name"] == "support_geometry" and c["observed"] == 0.45 for c in report["checks"])
 
 
+def dynamic_analytic():
+    """Synthetic two-rigid trace and authored square surface, not Genesis evidence."""
+    import copy
+
+    import trimesh
+
+    from self_improving.harness.x2env.measured_support import MeasuredSupportSurface
+
+    scene, a, b, loaded = analytic()
+    target = copy.deepcopy(scene["entities"][1])
+    target.update(id="plate", category="plate", version_sha256="c" * 64)
+    scene["entities"].append(target)
+    scene["entities"][1]["position_m"] = [0.0, 0.0, 0.5]
+    scene["relations"] = [
+        {"source": "item", "target": "plate", "relation": "on"},
+        {"source": "plate", "target": "table", "relation": "on"},
+    ]
+    surface = MeasuredSupportSurface(
+        version_sha256="c" * 64,
+        plane_z_m=0.1,
+        polygons=((((-0.2, -0.2), (0.2, -0.2), (0.2, 0.2), (-0.2, 0.2), (-0.2, -0.2)),),),
+        member_bindings=(),
+        face_sources=(),
+        shapely_version="synthetic",
+        geos_version="synthetic",
+    )
+    surface_sha = hashlib.sha256(surface.model_dump_json().encode()).hexdigest()
+    scene.update(
+        schema_version="x2env.runtime_scene.v2",
+        scene_ir_path="scene.json",
+        support_profile="measured_single_support_dag.v1",
+    )
+    paths = {
+        "scene.json": "a" * 64,
+        "surface.json": surface_sha,
+        "item-record.json": "d" * 64,
+        "plate-record.json": "e" * 64,
+        "item-selection.json": "f" * 64,
+        "plate-selection.json": "1" * 64,
+    }
+    scene["members"] = [{"path": p, "sha256": sha, "size_bytes": 1} for p, sha in paths.items()]
+    scene["support_bindings"] = [
+        {
+            "source_id": "item",
+            "target_id": "plate",
+            "kind": "measured_surface",
+            "source_version_sha256": "b" * 64,
+            "source_asset_record_path": "item-record.json",
+            "target_version_sha256": "c" * 64,
+            "target_asset_record_path": "plate-record.json",
+            "surface_path": "surface.json",
+            "surface_sha256": surface_sha,
+            "selection_receipt_path": "item-selection.json",
+        },
+        {
+            "source_id": "plate",
+            "target_id": "table",
+            "kind": "structural_top",
+            "source_version_sha256": "c" * 64,
+            "source_asset_record_path": "plate-record.json",
+            "target_version_sha256": None,
+            "target_asset_record_path": None,
+            "surface_path": None,
+            "surface_sha256": None,
+            "selection_receipt_path": "plate-selection.json",
+        },
+    ]
+    for values in loaded.values():
+        values["plate"] = copy.deepcopy(values["item"])
+        values["item"]["position_m"] = [0.0, 0.0, 0.5]
+        for name, size in [("item", 0.1), ("plate", 0.4)]:
+            mesh = trimesh.creation.box(extents=[size, size, 0.1])
+            mesh.apply_translation([0, 0, 0.05])
+            part = {"local_vertices_m": mesh.vertices.tolist(), "faces": mesh.faces.tolist()}
+            values[name]["geometry_parts"] = {"visual": [part], "collision": [copy.deepcopy(part)]}
+            values[name]["local_visual_vertices_m"] = mesh.vertices.tolist()
+            values[name]["local_collision_vertices_m"] = mesh.vertices.tolist()
+    for rows in [a, b]:
+        for row in rows:
+            row["objects"]["plate"] = copy.deepcopy(row["objects"]["item"])
+            row["objects"]["item"]["position"] = [0.0, 0.0, 0.5]
+            pair = copy.deepcopy(row["contacts"][0])
+            pair["a"] = "plate"
+            row["contacts"][0]["b"] = "plate"
+            row["contacts"][0]["position"] = [0.0, 0.0, 0.5]
+            if row["step"]:
+                pair["force_a"] = [0.0, 0.0, 1.962]
+                pair["force_b"] = [0.0, 0.0, -1.962]
+            row["contacts"].append(pair)
+            row["net_contact_forces"]["plate"] = [0.0, 0.0, 0.981] if row["step"] else None
+    return scene, a, b, loaded, {"item": surface}
+
+
+def test_dynamic_measured_surface_uses_shared_frozen_physical_evaluator():
+    scene, a, b, loaded, surfaces = dynamic_analytic()
+    report = evaluate_physics(scene, a, b, loaded, support_surfaces=surfaces)
+    assert report["physical_status"] == "passed", report
+    assert report["simulator_execution_proven"] is False
+
+
+@pytest.mark.parametrize(
+    "attack",
+    [
+        "hole",
+        "moving_target",
+        "wrong_pair",
+        "missing_surface",
+        "wrong_surface",
+        "missing_faces",
+        "tilt",
+    ],
+)
+def test_dynamic_support_attacks_cannot_pass(attack):
+    scene, a, b, loaded, surfaces = dynamic_analytic()
+    if attack == "hole":
+        data = surfaces["item"].model_dump(mode="json")
+        data["polygons"][0].append(
+            [[-0.01, -0.01], [-0.01, 0.01], [0.01, 0.01], [0.01, -0.01], [-0.01, -0.01]]
+        )
+        surfaces["item"] = type(surfaces["item"]).model_validate_json(json.dumps(data))
+        digest = hashlib.sha256(surfaces["item"].model_dump_json().encode()).hexdigest()
+        scene["support_bindings"][0]["surface_sha256"] = digest
+        next(m for m in scene["members"] if m["path"] == "surface.json")["sha256"] = digest
+        for rows in [a, b]:
+            for row in rows:
+                row["contacts"][0]["position"] = [0.1, 0.0, 0.5]
+    elif attack == "moving_target":
+        for rows in [a, b]:
+            for row in rows[1:]:
+                row["objects"]["plate"]["position"] = [0.19, 0.0, 0.4]
+    elif attack == "tilt":
+        for row in a[1:]:
+            row["objects"]["plate"]["orientation_wxyz"] = [0.9238795325, 0.3826834324, 0.0, 0.0]
+    elif attack == "wrong_pair":
+        for rows in [a, b]:
+            for row in rows:
+                row["contacts"][0]["b"] = "table"
+                if row["step"]:
+                    row["net_contact_forces"]["plate"] = [0.0, 0.0, 1.962]
+    elif attack == "missing_surface":
+        surfaces = {}
+    elif attack == "wrong_surface":
+        surfaces["item"] = surfaces["item"].model_copy(update={"version_sha256": "f" * 64})
+    elif attack == "missing_faces":
+        del loaded["baseline"]["item"]["geometry_parts"]["visual"][0]["faces"]
+    report = evaluate_physics(scene, a, b, loaded, support_surfaces=surfaces)
+    assert report["physical_status"] == "failed", report
+    if attack in {"hole", "moving_target"}:
+        assert any(c["name"] == "support_geometry" and not c["passed"] for c in report["checks"])
+    if attack == "wrong_pair":
+        assert any(c["name"] == "contact_dropout_max" and not c["passed"] for c in report["checks"])
+
+
+@pytest.mark.parametrize("position", [[0.3, 0.0, 0.5], [0.0, 0.0, 0.55]])
+def test_dynamic_contact_outside_selected_domain_cannot_supply_support(position):
+    scene, a, b, loaded, surfaces = dynamic_analytic()
+    for rows in [a, b]:
+        for row in rows:
+            row["contacts"][0]["position"] = position
+    report = evaluate_physics(scene, a, b, loaded, support_surfaces=surfaces)
+    assert report["physical_status"] == "failed", report
+
+
+def test_common_dynamic_translation_uses_target_current_frame_not_initial_pose():
+    scene, a, b, loaded, surfaces = dynamic_analytic()
+    for rows in [a, b]:
+        for row in rows[1:]:
+            row["objects"]["item"]["position"] = [0.19, 0.0, 0.5]
+            row["objects"]["plate"]["position"] = [0.19, 0.0, 0.4]
+            row["contacts"][0]["position"] = [0.19, 0.0, 0.5]
+            row["contacts"][1]["position"] = [0.19, 0.0, 0.4]
+    report = evaluate_physics(scene, a, b, loaded, support_surfaces=surfaces)
+    assert report["physical_status"] == "passed", report
+
+
+@pytest.mark.parametrize("attack", [None, "missing_topology", "wrong_faces", "missing_surface"])
+def test_bound_dynamic_assessment_rechecks_compiled_members_and_loaded_triangles(tmp_path, attack):
+    """Real compiler/asset bytes, synthetic process and trace producer; not simulation."""
+    import copy
+    from pathlib import Path
+
+    import trimesh
+
+    from self_improving.harness.x2env.compile import StructuralPolicy, compile_scene
+    from tests.self_improving.harness.x2env.test_compile import dynamic_stack_inputs
+
+    kwargs = bound_fixture(tmp_path)
+    source = tmp_path / "dynamic"
+    source.mkdir()
+    store, registry, _, ref, assets = dynamic_stack_inputs(source)
+    compiled = compile_scene(
+        ref,
+        assets,
+        registry=registry,
+        store=store,
+        output_root=source / "compiled",
+        seed=11,
+        policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+    )
+    scene = compiled.runtime_scene
+    package = source / "compiled"
+    payload = scene.model_dump(mode="json")
+    digest = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    kwargs.update(
+        scene=scene,
+        package_root=package,
+        scene_ir_bytes=(package / scene.scene_ir_path).read_bytes(),
+        input_sha256="a" * 64,
+    )
+    _, a, b, _ = analytic()
+    for name, rows in [("baseline", a), ("half_dt", b)]:
+        profile = kwargs["profiles"][name]
+        root = Path(profile["root"])
+        loaded = {}
+        objects = {}
+        for entity in scene.entities:
+            objects[entity.id] = {
+                "position": list(entity.position_m),
+                "orientation_wxyz": list(entity.orientation_wxyz),
+                "velocity": [0.0, 0.0, 0.0],
+                "angular_velocity": [0.0, 0.0, 0.0],
+            }
+            item = {
+                "position_m": list(entity.position_m),
+                "orientation_wxyz": list(entity.orientation_wxyz),
+                "fixed": entity.kind == "structural_box",
+                "collision_shapes": 1,
+                "friction": [0.5],
+            }
+            if entity.kind == "rigid":
+                physics = json.loads((package / entity.physics_path).read_bytes())
+                parts = {}
+                for kind, filename in [("visual", "visual.glb"), ("collision", "collision.obj")]:
+                    mesh = trimesh.load(
+                        (package / entity.urdf_path).parent / filename, force="scene", process=False
+                    ).to_geometry()
+                    parts[kind] = [
+                        {
+                            "geom_id": 0,
+                            "local_vertices_m": mesh.vertices.tolist(),
+                            "faces": mesh.faces.tolist(),
+                        }
+                    ]
+                    item[f"local_{kind}_vertices_m"] = mesh.vertices.tolist()
+                item.update(
+                    mass_kg=0.2,
+                    authored_mass_kg=0.2,
+                    supplied_friction=0.5,
+                    dofs=6,
+                    geometry_basis="actual_genesis_vertices_inverse_world_pose",
+                    geometry_parts=parts,
+                    com_link_m=physics["center_of_mass_m"],
+                    inertia_link_kg_m2=physics["inertia_kg_m2"],
+                )
+                if attack == "missing_topology":
+                    item.pop("geometry_parts")
+                if attack == "wrong_faces":
+                    parts["visual"][0]["faces"][0].reverse()
+            loaded[entity.id] = item
+        for row in rows:
+            ground = row["objects"]["ground"]
+            row["objects"] = {**copy.deepcopy(objects), "ground": ground}
+            row["net_contact_forces"] = {
+                key: [0.0, 0.0, 1.962] if row["step"] else None for key in ["box", "plate"]
+            }
+            contacts = []
+            for src, tgt, force in [("box", "plate", 1.962), ("plate", "table", 3.924)]:
+                contacts.append(
+                    {
+                        "a": src,
+                        "b": tgt,
+                        "position": row["objects"][src]["position"],
+                        "normal": [0.0, 0.0, 1.0],
+                        "penetration": 0.0,
+                        "force_a": [0.0, 0.0, force] if row["step"] else None,
+                        "force_b": [0.0, 0.0, -force] if row["step"] else None,
+                    }
+                )
+            row["contacts"] = contacts
+        job = json.loads((root / "job.json").read_bytes())
+        job.update(scene=payload, scene_sha256=digest)
+        execution = json.loads((root / "result.json").read_bytes())
+        execution["scene_sha256"] = digest
+        for filename, value in [
+            ("job.json", job),
+            ("result.json", execution),
+            ("loaded.json", loaded),
+        ]:
+            (root / filename).write_text(json.dumps(value))
+        (root / "trace.ndjson").write_text("\n".join(json.dumps(row) for row in rows))
+        for member in profile["files"]:
+            raw = (root / member["path"]).read_bytes()
+            member.update(sha256=hashlib.sha256(raw).hexdigest(), size_bytes=len(raw))
+    if attack == "missing_surface":
+        binding = next(b for b in scene.support_bindings if b.kind == "measured_surface")
+        (package / binding.surface_path).unlink()
+    report = assess_scene(**kwargs)
+    if attack is None:
+        assert report["physical_status"] == "passed", report
+        assert report["topology_status"] == "passed"
+    else:
+        assert report["physical_status"] == "failed", report
+
+
 @pytest.mark.parametrize(
     "attack",
     [
