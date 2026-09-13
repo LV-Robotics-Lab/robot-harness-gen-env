@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C10 Harness 执行前强制预算与批准绑定
+
+- 同一 Harness 的 revise 先核当前诊断与失败输入，再写 controller approval、原子预留及 operation-bound
+  envelope；apply_revision 在任何新目录/版本写入前核 live owner、当前 running 操作、批准和全部身份。
+  成功修订回执引用 envelope，终态操作不能拿旧批准再次执行。
+- 超额/重复/不合法提案只形成不可执行 repair.reject，不覆盖上一条操作；执行阶段失败仍留成本。
+  完成门的历史预算审计独立接入中，不将本片当作所有交付链已完成。
+- 公开 Harness/修订/CAS 攻击先 RED 后 GREEN；主线程五组 40 passed（6.51s），ruff 通过。
+  外部模型/运行产物是明确测试替身，无新的真实 fallback 通过。
+
 ## 2026-09-13 C04/C10 持久修订额度预留
 
 - Store 在原 BEGIN IMMEDIATE 内核 live owner/head、running operation、当前 workflow revision、

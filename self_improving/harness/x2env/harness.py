@@ -690,11 +690,13 @@ class Harness:
 
         from .assets import AssetRegistry
         from .compile import ResolvedAssetSet
+        from .contracts import RepairReservation, SceneIR
+        from .diagnosis import DiagnosisResult
         from .observation import ObservationResult
         from .revision import apply_revision
 
         self._remaining()
-        snapshot = self._store.begin_operation(snapshot, "revise")
+        approval = None
         try:
             observed = ObservationResult.model_validate_json(
                 self._store.read_artifact(snapshot.observation)
@@ -715,6 +717,104 @@ class Harness:
                     sort_keys=True,
                 ).encode()
             ).hexdigest()
+            diagnosis = DiagnosisResult.model_validate_json(
+                self._store.read_artifact(snapshot.diagnosis)
+            )
+            scene = SceneIR.model_validate_json(self._store.read_artifact(snapshot.scene_ir))
+            proposal = diagnosis.proposal
+            if (
+                diagnosis.status != "completed"
+                or proposal is None
+                or proposal.base_revision != scene.revision
+                or observed.observation.scene_ir != snapshot.scene_ir
+                or report["input_sha256"] != scene.input_sha256
+            ):
+                raise ValueError("revision_base_mismatch")
+            cost = int(bool(proposal.scene_patches)) + len(proposal.asset_patches)
+            if not 1 <= cost <= 2:
+                raise ValueError("revision_budget_exhausted")
+            approval = self._store.write_artifact(
+                json.dumps(
+                    {
+                        "authority": "harness_controller",
+                        "approved": True,
+                        "workflow_id": snapshot.workflow_id,
+                        "base_revision": snapshot.revision,
+                        "input_bundle": snapshot.input_bundle.model_dump(),
+                        "scene_ir": snapshot.scene_ir.model_dump(),
+                        "diagnosis": snapshot.diagnosis.model_dump(),
+                        "cost": cost,
+                        "failure_fingerprint": fingerprint,
+                    },
+                    sort_keys=True,
+                ).encode(),
+                "application/json",
+            )
+            reservation = RepairReservation(
+                kind="scene_asset"
+                if proposal.scene_patches and proposal.asset_patches
+                else "scene"
+                if proposal.scene_patches
+                else "asset",
+                cost=cost,
+                failure_fingerprint=fingerprint,
+                approval=approval,
+                base_revision=snapshot.revision,
+            )
+            snapshot = self._store.begin_operation(
+                snapshot, "revise", repair_reservation=reservation
+            )
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            # A rejected request is not an executable repair and cannot consume a prior operation.
+            snapshot = self._store.begin_operation(snapshot, "repair.reject")
+            code = {
+                "repair_budget_exhausted": "revision_budget_exhausted",
+                "repair_repeated_failure": "repeated_failure",
+            }.get(str(error), "repair_preflight_rejected")
+            error_ref = self._store.write_artifact(
+                json.dumps(
+                    {
+                        "error_code": code,
+                        "reason": str(error)[:2048],
+                        "executable_repair": False,
+                        "scene_ir": snapshot.scene_ir.model_dump() if snapshot.scene_ir else None,
+                        "diagnosis": snapshot.diagnosis.model_dump()
+                        if snapshot.diagnosis
+                        else None,
+                        "approval": approval.model_dump() if approval else None,
+                    },
+                    sort_keys=True,
+                ).encode(),
+                "application/json",
+            )
+            return self._store.complete_operation(
+                snapshot,
+                ToolResult(
+                    operation_id=snapshot.operations[-1].operation_id,
+                    status="failed",
+                    outputs=(error_ref,),
+                    error_code=code,
+                ),
+                snapshot.input_bundle,
+                status="failed",
+                reason=code,
+            )
+        try:
+            self._remaining()
+            reservation_ref = self._store.write_artifact(
+                json.dumps(
+                    {
+                        "workflow_id": snapshot.workflow_id,
+                        "operation_id": snapshot.operations[-1].operation_id,
+                        "reservation": reservation.model_dump(mode="json"),
+                        "input_bundle": snapshot.input_bundle.model_dump(),
+                        "scene_ir": snapshot.scene_ir.model_dump(),
+                        "diagnosis": snapshot.diagnosis.model_dump(),
+                    },
+                    sort_keys=True,
+                ).encode(),
+                "application/json",
+            )
             revised = apply_revision(
                 self._store,
                 AssetRegistry(self._store),
@@ -729,6 +829,7 @@ class Harness:
                 / snapshot.operations[-1].operation_id,
                 history=snapshot.revisions,
                 failure_fingerprint=fingerprint,
+                reservation_ref=reservation_ref,
             )
             assets_ref = self._store.write_artifact(
                 revised.assets.model_dump_json().encode(), "application/json"

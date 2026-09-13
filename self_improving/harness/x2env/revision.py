@@ -1,11 +1,12 @@
 """Bounded controller revision application; immutable inputs and shared scene/asset budget."""
 
 import json
+import os
 from pathlib import Path
 
 from .asset_revision import AssetRevision
 from .compile import ResolvedAssetSet
-from .contracts import ArtifactRef, Model, SceneIR
+from .contracts import ArtifactRef, Model, RepairReservation, SceneIR
 from .diagnosis import DiagnosisResult
 
 
@@ -15,8 +16,71 @@ class RevisionResult(Model):
     receipt: ArtifactRef
 
 
+class RevisionReservationEnvelope(Model):
+    workflow_id: str
+    operation_id: str
+    reservation: RepairReservation
+    input_bundle: ArtifactRef
+    scene_ir: ArtifactRef
+    diagnosis: ArtifactRef
+
+
+def _verify_reservation(store, ref, scene_ref, diagnosis_ref, cost, fingerprint, kind):
+    from .store import process_identity
+
+    envelope = RevisionReservationEnvelope.model_validate_json(store.read_artifact(ref))
+    current = store.status(envelope.workflow_id)
+    reservation = envelope.reservation
+    operation = current.operations[-1] if current.operations else None
+    approval = json.loads(store.read_artifact(reservation.approval))
+    if (
+        current.status != "active"
+        or current.owner != process_identity(os.getpid())
+        or operation is None
+        or operation.status != "running"
+        or operation.capability != "revise"
+        or operation.operation_id != envelope.operation_id
+        or operation.repair_reservation != reservation
+        or reservation.base_revision != current.revision
+        or reservation.cost != cost
+        or reservation.kind != kind
+        or reservation.failure_fingerprint != fingerprint
+        or envelope.scene_ir != scene_ref
+        or envelope.diagnosis != diagnosis_ref
+        or current.scene_ir != scene_ref
+        or current.diagnosis != diagnosis_ref
+        or current.input_bundle != envelope.input_bundle
+        or not isinstance(approval, dict)
+        or approval.get("approved") is not True
+        or type(approval.get("cost")) is not int
+        or type(approval.get("base_revision")) is not int
+        or approval
+        != {
+            "authority": "harness_controller",
+            "approved": True,
+            "workflow_id": current.workflow_id,
+            "base_revision": current.revision,
+            "input_bundle": envelope.input_bundle.model_dump(),
+            "scene_ir": scene_ref.model_dump(),
+            "diagnosis": diagnosis_ref.model_dump(),
+            "cost": cost,
+            "failure_fingerprint": fingerprint,
+        }
+    ):
+        raise ValueError("revision_reservation_mismatch")
+
+
 def apply_revision(
-    store, registry, scene_ref, assets, diagnosis_ref, *, output_root, history, failure_fingerprint
+    store,
+    registry,
+    scene_ref,
+    assets,
+    diagnosis_ref,
+    *,
+    output_root,
+    history,
+    failure_fingerprint,
+    reservation_ref=None,
 ):
     """History refs are controller-owned committed revise receipts, never model/request input."""
     scene = SceneIR.model_validate_json(store.read_artifact(scene_ref))
@@ -44,6 +108,17 @@ def apply_revision(
     cost = int(bool(proposal.scene_patches)) + len(proposal.asset_patches)
     if cost < 1 or sum(row["cost"] for row in prior) + cost > 2:
         raise ValueError("revision_budget_exhausted")
+    if reservation_ref is not None:
+        kind = (
+            "scene_asset"
+            if proposal.scene_patches and proposal.asset_patches
+            else "asset"
+            if proposal.asset_patches
+            else "scene"
+        )
+        _verify_reservation(
+            store, reservation_ref, scene_ref, diagnosis_ref, cost, failure_fingerprint, kind
+        )
     asset_by_id = {a.entity_id: a for a in assets.assets}
     asset_ids = [p.entity_id for p in proposal.asset_patches]
     if len(set(asset_ids)) != len(asset_ids):
@@ -55,7 +130,10 @@ def apply_revision(
         ):
             raise ValueError("asset_revision_base_mismatch")
         if set(patch.patch.model_dump(exclude_none=True)) - {
-            "base_color", "color_mode", "mass", "friction"
+            "base_color",
+            "color_mode",
+            "mass",
+            "friction",
         }:
             raise ValueError("unsupported_asset_patch")
     document = scene.model_dump(mode="json")
@@ -127,6 +205,8 @@ def apply_revision(
         "physical_evaluated": False,
         "asset_receipts": [r.model_dump(mode="json") for r in asset_receipts],
     }
+    if reservation_ref is not None:
+        receipt["reservation"] = reservation_ref.model_dump()
     raw = json.dumps(receipt, sort_keys=True).encode()
     (output / "receipt.json").write_bytes(raw)
     return RevisionResult(

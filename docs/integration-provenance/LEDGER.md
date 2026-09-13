@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C10-REPAIR-APPROVAL — 执行前批准与额度绑定
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `51695c6` 原子预算、`48ee402` 属性修订。
+- `target_paths`：x2env/harness.py、revision.py、test_harness_repair_budget.py、test_revision_reservation.py。
+- `integration_method`：controller 强制预算，执行器核当前操作/owner/输入/诊断/批准；成功回执保存预留。
+- `verification`：contract_pass；40 项测试，外部模型/运行数据显式替身，无新仿真资格。
+- `recorded_git_authors`：本提交元数据；原始来源、许可与上游归属保持不变。
+
 ## INT-CANONICAL-C04-REPAIR-RESERVATION — 原子共享额度
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
