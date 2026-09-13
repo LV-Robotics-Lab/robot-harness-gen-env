@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C14-SOURCE-IDENTITY-ATTACKS — 开发来源不是签名资格
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Git/Python metadata原作者。
+- source_ref：`ee14096`；target_paths：test_source_identity.py；生产未改。
+- integration_method：真实Git与临时无签名安装布局，经公开来源接口验证拒绝语义，不改外部环境。
+- verification：23项通过，126/127语句与38/38分支；runtime_verification：没有新仿真或wheel签名证明。
+- recorded_git_authors：原来源身份实现与本次测试独立保留。
+
 ## INT-CANONICAL-C11-COMPLETION-ATTACKS — 包准入绑定回归
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：不变。

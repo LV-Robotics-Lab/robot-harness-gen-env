@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C14 安装来源身份攻击覆盖
+
+- capture_source_identity新增20项真实Git/临时unsigned dist-info测试，覆盖RECORD pin/格式/重复/缺成员、
+  字节与算法漂移、METADATA、软链、错误安装路径、Git core.worktree欺骗；不mock内部，不声称签名wheel。
+- 主线程23 passed/0.18s；独立测量126/127语句、38/38分支。剩余重复读取RECORD时的竞争异常路径
+  未强造内部替身；全core仍非100%。无生产改动或新Genesis验证。
+- `/var/tmp/canonical-source-identity-final.json`保留测量；初次agent未设COVERAGE_FILE产生默认ignored
+  文件，最终明确使用外部独立数据，未混入固定六组coverage。
+
 ## 2026-09-13 C14 固定六组及根测试通过，覆盖门真实失败
 
 - 固定clean `5fe0225dc435115f9920f2ddd45f2003feb32109`，专用Python3.13.12环境；两个external
