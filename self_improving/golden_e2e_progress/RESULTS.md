@@ -1,5 +1,18 @@
 # 进度与结果
 
+## 2026-09-13 固定a0499b9完整测试与覆盖实测
+
+- clean固定`a0499b97989ea85f5e5fbb81bdded1e5bcc1778a`，六组全部通过；各组wall为
+  2.571/31.477/17.418/18.984/157.762/76.937秒。独立root 2171 passed、1 skipped，259.775384秒。
+- lint、库存和reader docs本地/远程检查通过。八份receipt同源SHA
+  `f12d6cfb035103b2bde14ba8601522efbffd53d38d99886ac0286e572eaa8331`，未混入后续PBR或支撑改动。
+- merge真实失败：核心语句6450/6955（92.7390%）、分支2392/2812（85.0640%）；缺505行/420分支。
+  另有coverage默认Protocol ellipsis规则排除24行，零排除门亦未过；不放宽阈值或补造覆盖。
+- 证据`/var/tmp/canonical-ci-a0499b9.M8dzTT/summary.json`，SHA
+  `c52d17d7b821372a46ab49d4f142825ba875d87d77e55d323f6624a4135fdf28`；coverage.json含逐行与弧缺口。
+  本地Python3.13.12测量，不是hosted CI/新HEAD或可推送资格。
+
+
 ## 2026-09-13 显式颜色覆盖改用引擎可消费的材质
 
 - 主线程复读固定Genesis0e74bf：URDF的GLB走gltf parser；primitive无material时使用默认surface，

@@ -38,8 +38,8 @@ compile、双profile Genesis replay、观察诊断、validate和包物化，约5
 测试从 `script/run_self_improving_tests.sh` 执行六组、独立root与merge；每组独立30分钟总预算。
 同源六份测量才可归并，业务文件语句/分支必须100%。全active lint与reader docs检查已实际接入，
 不再列为未实现；固定源码的真实全组结果和资格仍须分别验收，详见进度账。
-固定5fe0225已在本地Python3.13通过六组与独立root测试、lint及docslink；合并core语句90.46%、
-分支80.03%，因此覆盖门仍失败，不是可推送资格或hosted CI证明。
+固定a0499b9已在本地Python3.13通过六组与独立root测试、lint及docslink；合并core语句92.739%、
+分支85.064%，因此覆盖门仍失败，不是后续HEAD、可推送资格或hosted CI证明。
 
 内部 Codex 所有角色通过唯一 transport 显式请求 `model_reasoning_effort="max"`；拒绝时不降级。
 回执记录请求值与实际argv，但不把CLI接受配置描述成服务端有效力度已验证；旧未指定回执不回填。
