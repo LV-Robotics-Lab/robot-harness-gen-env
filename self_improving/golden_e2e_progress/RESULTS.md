@@ -1,5 +1,19 @@
 # 进度与结果
 
+## 2026-09-13 C14 固定六组及根测试通过，覆盖门真实失败
+
+- 固定clean `5fe0225dc435115f9920f2ddd45f2003feb32109`，专用Python3.13.12环境；两个external
+  精确gitlink从已有本地objects建立，无下载/递归初始化/运行时重验。源码结束仍clean。
+- 六组通过：1=88项/2.407s，2=197项/28.567s，3=300项/16.816s，4=51项/7.820s，
+  5=172项/111.587s，6=2127项通过+8skip/80.368s；独立root1844 passed/1skip/196.138s。
+  group5真实reader docs与公共HTTP通过；group6完整active Ruff通过。skip保留外部依赖原因。
+- merge 1.311s明确failed：仅排除原3个external文件，core语句5840/6456=90.4585%、
+  分支2028/2534=80.0316%，32文件缺616语句/506分支。不是最终全绿或push资格。
+- `/var/tmp/canonical-ci-5fe0225.F4Gk3V/summary.json` SHA
+  `361e67da076ff59986c12cef28741a894cb91953414cb1793298e247f7580263`；coverage-gate.json SHA
+  `361a6eac85bcd18e19f0dc35c6ab95e68611c08756d19d14271b077ac5d963f5`。
+  每组日志/JUnit/coverage和精确缺口独立保留，不混入之后开发新增测试，也不冒充hosted3.11/3.12。
+
 ## 2026-09-13 C11 完成包准入攻击测试
 
 - 新增14项公开materialize_completion攻击：相对/符号路径、非可完成状态、CAS存在但无成功操作、
