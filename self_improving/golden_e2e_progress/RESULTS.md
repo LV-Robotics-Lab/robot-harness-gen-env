@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 C03 三个 Skills 的缺依赖与串证据拒绝
+
+- 新增公开 invoke 测试：无 compile policy、无 replay executor 均不得生成输出目录；
+  validate 拒绝 observation 绑定不同 SceneIR，以及 diagnosis 的不同 base revision。
+- 不修改生产行为，补足已声明的真实边界。7 passed/4.81s；skill_execution.py 的62条语句、
+  6条分支均100%。这是单模块覆盖，不代表整体 core 或真实仿真通过。
+
 ## 2026-09-13 C14 预览的安装身份与拒读分离
 
 - 旧预览忽略 Git 命令失败并以 __file__ 推算工作区；wheel 下会留下空 HEAD 且误拒

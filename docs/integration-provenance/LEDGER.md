@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C03-SKILL-EDGES — 三 Skill 公开拒绝边界
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`3f76bd8`。
+- target_paths：test_skill_execution.py；integration_method：真实公开 invoke/CAS，补缺依赖和串证据攻击。
+- verification：7项、执行绑定62语句/6分支100%；runtime_verification：未运行新模型或仿真。
+- recorded_git_authors：本提交元数据；未引入新的第三方源。
+
 ## INT-CANONICAL-C14-PREVIEW-SOURCE — 安装身份与拒读策略分离
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`8da345a` 旧预览实现。
