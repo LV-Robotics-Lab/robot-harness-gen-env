@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C07/C12 部署媒体与重建阻断边界
+
+- 新增11项：真实FFmpeg视频ingest后的sequence来源/顺序/帧数与路径攻击、外部decoder超时、
+  text-only不伪造重建像素，以及公开build_harness中授权和两个runtime pin失败。
+- 主线程部署两模块38 passed/4.01s；独立同源基线27项→38项，deployment语句226→238/246，
+  分支39→46/50。报告 `/var/tmp/canonical-deployment-next-worker-final.json`；不是全core100%。
+- 无生产修改或真实重建成功；外部解释器测试程序明确double，不称managed模型或Genesis证据。
+
 ## 2026-09-13 C04 生命周期边界与准入回归同步
 
 - Harness公共预算拒绝7种非法值且状态不变；双resolver装配拒绝；外部模型中断保留ingest和cancelled回执，

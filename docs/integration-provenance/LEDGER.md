@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C07-DEPLOYMENT-ATTACKS — 重建输入和资源门
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：FFmpeg/Gujie原接口来源不变。
+- source_ref：`663efc3`；target_paths：test_deployment_edges.py；无生产修改。
+- integration_method：真实视频解码输入配合外部decoder超时替身，公开部署验证授权与runtime pin拒绝。
+- verification：主线程38项通过；runtime_verification：无新重建/模型/Genesis成功。
+- recorded_git_authors：原集成与本次边界测试分开保留。
+
 ## INT-CANONICAL-C04-LIFECYCLE-BOUNDARIES — 预算和早期澄清
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：不变。

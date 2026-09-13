@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -14,6 +15,173 @@ from self_improving.harness.x2env.deployment import build_harness, load_deployme
 from self_improving.harness.x2env.input import ingest
 from tests.self_improving.harness.x2env.test_deployment import foreground_deployment
 from tests.self_improving.harness.x2env.test_local_color_advisory import color_inputs
+
+
+@pytest.mark.parametrize(
+    "fault,error",
+    [
+        ("partial_decode", "unbound_video_sequence"),
+        ("foreign_source", "unbound_video_sequence"),
+        ("first_index", "incomplete_video_sequence"),
+        ("frame_count", "incomplete_video_sequence"),
+        ("relative_output", "unsafe frame extraction root"),
+        ("symbolic_output", "unsafe frame extraction root"),
+        ("decoder_timeout", "frame_decode_timeout"),
+    ],
+)
+def test_public_video_selection_rejects_unbound_or_unavailable_frames(
+    tmp_path, monkeypatch, fault, error
+):
+    from self_improving.harness.x2env.contracts import InputMedia
+    from self_improving.harness.x2env.deployment import select_reconstruction_image
+    from self_improving.harness.x2env.store import Store
+
+    video = tmp_path / "input.mp4"
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc2=size=32x24:rate=4:duration=1",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            str(video),
+        ],
+        check=True,
+        timeout=30,
+    )
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(
+            video=InputMedia(path=str(video)),
+            seed=19,
+            idempotency_key="video-edge",
+            output_dir=str(tmp_path / "out"),
+        ),
+        store,
+    )
+    scene = store.write_artifact(b"{}", "application/json")
+    sequence = json.loads(store.read_artifact(bundle.video.sequence))
+    output = tmp_path / "selection"
+    if fault == "partial_decode":
+        sequence["full_decode"] = False
+    elif fault == "foreign_source":
+        sequence["source"] = scene.model_dump()
+    elif fault == "first_index":
+        sequence["frames"][0]["index"] = 1
+    elif fault == "frame_count":
+        sequence["frames"].pop()
+    elif fault == "relative_output":
+        output = Path("relative-selection")
+    elif fault == "symbolic_output":
+        real = tmp_path / "real"
+        real.mkdir()
+        output.symlink_to(real, target_is_directory=True)
+    else:
+
+        def timeout(command, **kwargs):
+            assert command[0] == "ffmpeg" and kwargs["timeout"] == 2
+            raise subprocess.TimeoutExpired(command, 2)
+
+        # Only the external frame decoder is replaced, after real video ingest.
+        monkeypatch.setattr(subprocess, "run", timeout)
+    sequence_ref = store.write_artifact(json.dumps(sequence).encode(), "application/json")
+    bundle = bundle.model_copy(
+        update={"video": bundle.video.model_copy(update={"sequence": sequence_ref})}
+    )
+    with pytest.raises(ValueError, match=error):
+        select_reconstruction_image(store, bundle, scene, "box", output_root=output, timeout=2)
+    if fault == "decoder_timeout":
+        assert json.loads((output / "failure.json").read_bytes()) == {
+            "error_code": "frame_decode_timeout"
+        }
+
+
+def test_public_text_only_selection_does_not_invent_reconstruction_pixels(tmp_path):
+    from self_improving.harness.x2env.deployment import select_reconstruction_image
+    from self_improving.harness.x2env.store import Store
+
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(
+            text="a box", seed=1, idempotency_key="text", output_dir=str(tmp_path / "out")
+        ),
+        store,
+    )
+    scene = store.write_artifact(b"{}", "application/json")
+    output = tmp_path / "unused"
+    assert select_reconstruction_image(store, bundle, scene, "box", output_root=output) is None
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("fault", ["authorization", "segmentation_pin", "reconstruction_pin"])
+def test_deployed_reconstruction_preserves_authorization_and_runtime_pin_failures(tmp_path, fault):
+    from self_improving.harness.x2env.contracts import InputMedia
+    from self_improving.harness.x2env.store import Store
+
+    store = Store(tmp_path / "state")
+    authorization = store.write_artifact(b"explicit fixture derivation authorization", "text/plain")
+    segmentation = tmp_path / "segmentation.json"
+    reconstruction = tmp_path / "reconstruction.json"
+    segmentation.write_text("{}")
+    reconstruction.write_text("{}")
+    settings = {
+        "source_root": str(tmp_path / "never-loaded-source"),
+        "source_commit": "a" * 40,
+        "python": str(tmp_path / "never-executed-python"),
+        "python_sha256": "b" * 64,
+        "segmentation_runtime": {
+            "path": str(segmentation),
+            "sha256": "0" * 64
+            if fault == "segmentation_pin"
+            else hashlib.sha256(b"{}").hexdigest(),
+        },
+        "reconstruction_runtime": {
+            "path": str(reconstruction),
+            "sha256": "0" * 64,
+        },
+        "model_refs": {},
+        "derivation_authorization": None
+        if fault == "authorization"
+        else authorization.model_dump(),
+    }
+    config, request = foreground_deployment(
+        tmp_path, "reconstruction", {"reconstruction": settings}
+    )
+    original_bundle = ingest(request, store)
+    picture = tmp_path / "source.png"
+    Image.new("RGB", (8, 8), "red").save(picture)
+    request = request.model_copy(update={"images": (InputMedia(path=str(picture)),)})
+    bundle = ingest(request, store)
+    # Rebind the external interpretation executable to this actual multimodal request.
+    program = Path(config.codex.executable)
+    program.write_text(
+        program.read_text().replace(original_bundle.request_sha256, bundle.request_sha256)
+    )
+    config = config.model_copy(
+        update={
+            "codex": config.codex.model_copy(
+                update={"sha256": hashlib.sha256(program.read_bytes()).hexdigest()}
+            )
+        }
+    )
+    harness = build_harness(config)
+    snapshot = harness.resume(harness.submit(request).workflow_id)
+    assert snapshot.status == "blocked" and snapshot.compiled_scene is None
+    assert snapshot.asset_resolution is not None
+    records = artifact_closure(store, (snapshot.asset_resolution,))
+    expected = (
+        b"blocked_derivation_authorization"
+        if fault == "authorization"
+        else b"deployment_pin_mismatch"
+    )
+    assert any(expected in store.read_artifact(ref) for ref in records)
+    assert not (tmp_path / "never-executed-python").exists()
 
 
 @pytest.mark.parametrize("count", [2, 129])
