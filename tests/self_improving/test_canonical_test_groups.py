@@ -59,6 +59,66 @@ def test_merge_fails_closed_without_all_six_real_group_results(tmp_path):
         merge_groups(Path(__file__).resolve().parents[2], tmp_path)
 
 
+def test_public_merge_reports_partial_real_measurement_without_percentage_block(tmp_path):
+    """Real coverage measurement; synthetic shard receipts are a gate fixture, not CI success."""
+    import shutil
+
+    from script.x2env_test_groups import merge_groups, source_identity
+
+    root = Path(__file__).resolve().parents[2]
+    driver = tmp_path / "measurement.py"
+    driver.write_text("import self_improving.harness.x2env.contracts\n")
+    data = tmp_path / ".measured"
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "coverage",
+            "run",
+            "--branch",
+            f"--data-file={data}",
+            f"--source={root / 'self_improving/harness/x2env'}",
+            str(driver),
+        ],
+        cwd=root,
+        check=True,
+        env={**__import__("os").environ, "PYTHONPATH": str(root)},
+        timeout=30,
+    )
+    identity = source_identity(root)
+    for group, commands in build_plan(root).items():
+        directory = tmp_path / group
+        directory.mkdir()
+        (directory / "result.json").write_text(
+            json.dumps(
+                {"status": "passed", "exit_code": 0, "source": identity, "fixture_only": True}
+            )
+        )
+        for index in range(len(commands)):
+            shutil.copyfile(data, directory / f".coverage.{index}")
+            (directory / f"junit-{index}.xml").write_text(
+                '<testsuite name="synthetic gate fixture"/>'
+            )
+    gate = merge_groups(root, tmp_path)
+    assert gate["status"] == "passed"
+    assert gate["coverage_policy"] == "report_only"
+    assert gate["core_gaps"]
+    assert gate["totals"]["missing_lines"] > 0
+    assert gate["require_statement_percent"] is None
+    assert gate["require_branch_percent"] is None
+    assert gate["reported_exclusions"]  # Existing coverage defaults include Protocol bodies.
+
+
+def test_report_only_coverage_does_not_allow_failed_test_group(tmp_path):
+    from script.x2env_test_groups import merge_groups
+
+    directory = tmp_path / "1"
+    directory.mkdir()
+    (directory / "result.json").write_text(json.dumps({"status": "failed", "exit_code": 1}))
+    with pytest.raises(ValueError, match="unsuccessful_group:1"):
+        merge_groups(Path(__file__).resolve().parents[2], tmp_path)
+
+
 def test_merge_rejects_missing_measurements_before_combining(tmp_path):
     from script.x2env_test_groups import merge_groups
 

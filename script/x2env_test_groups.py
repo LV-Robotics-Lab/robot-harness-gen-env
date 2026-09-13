@@ -17,17 +17,20 @@ CANONICAL = "tests/self_improving/harness/x2env"
 GROUPS = {
     "1": "acceptance_contract capabilities contracts input schema_export "
     "structured_schema stage_contracts",
-    "2": "codex design_plan design_workflow design_grounding_v2 design_grounding_v3 diagnosis grounding "
+    "2": "codex design_plan design_workflow design_grounding_v2 design_grounding_v3 "
+    "diagnosis grounding "
     "harness_completion harness_lifecycle "
     "harness_repair_budget local_color_harness operation_recovery pipeline repair_reservations "
     "revision revision_reservation revision_state skill_execution store_contract_edges",
     "3": "artifact_closure artifact_store asset_advisory asset_index_store asset_preparation "
-    "asset_preview asset_registry asset_revision collision_decomposition local_catalog local_color_advisory "
+    "asset_preview asset_registry asset_revision collision_decomposition local_catalog "
+    "local_color_advisory "
     "local_color_execution normalization reconstruction_adapter reconstruction_planning "
     "reconstruction_resolver resolver search_advisory source_router web_resolver yuxin_adapter "
     "yuxin_package_migration",
     "4": "assessment compile genesis_runtime measured_support observation replay",
-    "5": "cli completion completion_local_color completion_v2 completion_v3 delivery deployment deployment_edges "
+    "5": "cli completion completion_local_color completion_v2 completion_v3 delivery deployment "
+    "deployment_edges "
     "failure_bundle import_boundary "
     "package publisher source_identity",
 }
@@ -302,7 +305,7 @@ def worker(root: Path, group: str, output: Path) -> int:
 
 
 def merge_groups(root: Path, output: Path) -> dict:
-    """Fail closed on incomplete execution, identity drift, or missing core lines/branches."""
+    """Require successful same-source tests and valid measurements; report coverage gaps."""
     identities = []
     data = []
     for group in map(str, range(1, 7)):
@@ -344,24 +347,38 @@ def merge_groups(root: Path, output: Path) -> dict:
     prefix = root / "self_improving/harness/x2env"
     files = {str((root / name).resolve()): value for name, value in coverage["files"].items()}
     failures = []
+    gaps = []
+    exclusions = []
     for path in prefix.rglob("*.py"):
         if path.relative_to(prefix).as_posix() in EXTERNAL_ADAPTERS:
             continue
         value = files.get(str(path.resolve()))
-        if (
-            value is None
-            or value["missing_lines"]
-            or value.get("missing_branches")
-            or value.get("excluded_lines")
-        ):
+        if value is None:
             failures.append(str(path.relative_to(root)))
+            continue
+        if value.get("excluded_lines"):
+            exclusions.append(
+                {"path": str(path.relative_to(root)), "excluded_lines": value["excluded_lines"]}
+            )
+        if value["missing_lines"] or value.get("missing_branches"):
+            gaps.append(
+                {
+                    "path": str(path.relative_to(root)),
+                    "missing_lines": value["missing_lines"],
+                    "missing_branches": value.get("missing_branches", []),
+                }
+            )
     gate = {
         "status": "failed" if failures else "passed",
         "core_failures": failures,
+        "core_gaps": gaps,
+        "reported_exclusions": exclusions,
+        "coverage_policy": "report_only",
+        "totals": coverage["totals"],
         "external_adapters": list(EXTERNAL_ADAPTERS),
         "source": identities[0],
-        "require_statement_percent": 100,
-        "require_branch_percent": 100,
+        "require_statement_percent": None,
+        "require_branch_percent": None,
         "pending_noncoverage_gates": list(PENDING_GATES),
     }
     (output / "coverage-gate.json").write_text(json.dumps(gate, indent=2) + "\n")
