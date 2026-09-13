@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C08-COMPILE-EDGES — 真实编译输入拒绝与默认边界
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`85cf4f8`。
+- target_paths：test_compile.py；integration_method：真实规范化资产/Registry/CAS与公开compile断言，无生产改动。
+- verification：53项、118语句/46分支100%；runtime_verification：无Genesis；初次不足覆盖与fixture失败保留结果账。
+- recorded_git_authors：本提交元数据，未新增第三方源。
+
 ## INT-CANONICAL-C04-STORE-EDGES — 持久状态与恢复错误边界
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：`c236724`。

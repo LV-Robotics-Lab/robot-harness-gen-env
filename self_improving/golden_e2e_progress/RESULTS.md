@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C08 编译拒绝边界与显式结构字段
+
+- 补公开compile攻击：关节、相对/符号路径、不合法规范化尺度、缺physics、多支撑、
+  非world结构frame、未知前景位置及缺结构宽度；均用实际Registry/CAS，无内部替身。
+- 明确结构厚度/位置必须保持，不得记录成部署default。初次44项、随后52项虽通过测试但
+  覆盖门分别96%/99%失败；新正例曾因误认单物体fixture含桌面而StopIteration，修正fixture后
+  最终53 passed/6.55s，compile.py 118语句/46分支100%。未改生产实现或物理阈值。
+
 ## 2026-09-13 C04 Store 与 AssetRegistry 完整聚焦覆盖
 
 - 新增15个真实Store公开边界：未知workflow、终态claim幂等、缺结果拒写、僵尸/复用PID、
