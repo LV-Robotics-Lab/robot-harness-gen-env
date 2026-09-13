@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 failure bundle 部分产物导出补齐
+
+- 真实Store提交停止操作后的scene/image/video部分成员，经公开materialize_failure逐字节保留；
+  video为明确opaque测试字节，只验分类与复制，不声称可播放或仿真。无environment资格。
+- 12 passed/0.98s，failure_bundle.py 59/59语句、32/32分支；数据
+  `/var/tmp/canonical-failure-boundaries-v2.coverage`，不是六组同源整体覆盖。
+
 ## 2026-09-13 显式初始 reset 与证据消费接线
 
 - 新child实际build后调用公开scene.reset，任何step前写动作顺序/时间与每实体初始线/角速度；

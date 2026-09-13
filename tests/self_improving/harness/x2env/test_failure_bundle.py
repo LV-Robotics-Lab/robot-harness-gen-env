@@ -113,3 +113,47 @@ def test_active_workflow_cannot_be_exported_as_failure(tmp_path):
             harness.status(handle.workflow_id), Store(tmp_path / "state"), tmp_path / "review"
         )
     assert not (tmp_path / "review").exists()
+
+
+def test_stopped_workflow_exports_partial_media_and_scene_without_granting_environment(tmp_path):
+    from pathlib import Path
+
+    from self_improving.harness.x2env.contracts import ToolResult
+    from self_improving.harness.x2env.failure_bundle import materialize_failure
+    from tests.self_improving.harness.x2env.test_resolver import inputs
+
+    store, _, _, scene, image = inputs(tmp_path)
+    # Export is an opaque byte-copy seam, not a decoder or playback qualification.
+    video_bytes = b"opaque video fixture; not playable simulation evidence"
+    video = store.write_artifact(video_bytes, "video/mp4")
+    snapshot = store.claim(
+        store.submit(
+            X2EnvRequest(
+                text="partial fixture",
+                seed=11,
+                idempotency_key="partial-output",
+                output_dir=str(tmp_path / "output"),
+            )
+        ).workflow_id
+    )
+    snapshot = store.complete_operation(
+        snapshot,
+        ToolResult(
+            operation_id=snapshot.operations[-1].operation_id,
+            status="failed",
+            error_code="explicit_fixture_failure",
+            outputs=(scene, image, video),
+        ),
+        None,
+        status="failed",
+        scene_ir=scene,
+        reason="explicit_fixture_failure",
+    )
+    result = materialize_failure(snapshot, store, tmp_path / "review")
+    assert result["scene_ir"]["status"] == "produced"
+    assert Path(result["scene_ir"]["path"]).read_bytes() == store.read_artifact(scene)
+    assert len(result["images"]) == len(result["videos"]) == 1
+    assert Path(result["images"][0]).read_bytes() == store.read_artifact(image)
+    assert Path(result["videos"][0]).read_bytes() == video_bytes
+    assert result["environment_package"] is None
+    assert store.status(snapshot.workflow_id) == snapshot

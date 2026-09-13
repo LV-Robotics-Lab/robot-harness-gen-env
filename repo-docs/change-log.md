@@ -1,5 +1,9 @@
 # Change Log
 
+## 2026-09-13 — failure bundle 部分产物
+
+- 补齐失败包保留scene与媒体字节的公开接口测试，单文件覆盖通过；opaque媒体fixture不作可播放或仿真证明。
+
 ## 2026-09-13 — 初始reset证据与实际拓扑小测
 
 - 接入真实reset动作及CAS/assessment消费，保留历史not_run边界；152项回归通过，新reset运行待验。
