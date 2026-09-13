@@ -771,7 +771,8 @@ def _verify_grounding_origin(snapshot, store, scene, compiled):
     }
     if any(receipt.get(k) != v for k, v in expected.items()):
         raise ValueError("completion_grounding_binding_mismatch")
-    if not SceneDesignPolicy.model_validate(receipt["policy"]).enabled:
+    policy = SceneDesignPolicy.model_validate_json(json.dumps(receipt["policy"]))
+    if not policy.enabled:
         raise ValueError("completion_grounding_policy_disabled")
     original = BackendProposal.model_validate_json(store.read_artifact(snapshot.proposal))
     if original.status != "completed" or original.proposal.scene is None:
@@ -818,15 +819,68 @@ def _verify_grounding_origin(snapshot, store, scene, compiled):
             raise ValueError("completion_grounding_missing_original_journal")
     unknowns = original.proposal.unknowns
     indices = receipt.get("resolved_unknowns")
+    new_design = "design_plan" in receipt
+    plan = None
+    fixed_values = {}
+    structural_policy = None
+    if new_design:
+        from .compile import StructuralPolicy
+        from .design_plan import classify_design_unknowns
+
+        if receipt.get("structural_policy") is not None:
+            structural_policy = StructuralPolicy.model_validate_json(
+                json.dumps(receipt["structural_policy"])
+            )
+        if policy.structural_defaults_enabled and structural_policy != compiled.policy:
+            raise ValueError("completion_grounding_structural_policy_mismatch")
+        try:
+            plan = classify_design_unknowns(original.proposal, policy, structural_policy)
+        except ValueError as exc:
+            raise ValueError("completion_grounding_invalid_design_plan") from exc
+        if receipt["design_plan"] != plan.model_dump(mode="json") or indices != list(
+            plan.resolved_unknown_indices
+        ):
+            raise ValueError("completion_grounding_design_plan_mismatch")
+        version = AssetRegistry(store).inspect(assets.assets[0].version_sha256)
+        metrics = read(version.normalization_report)
+        dims = metrics.get("dimensions_m")
+        import math
+
+        if (
+            not isinstance(dims, list)
+            or len(dims) != 3
+            or any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in dims)
+        ):
+            raise ValueError("completion_grounding_missing_measured_geometry")
+        for rule in plan.rules:
+            value = rule.value
+            if rule.basis == "on_geometry_derived":
+                value = dims[2] / 2
+            if rule.basis == "asset_anchor":
+                value = dims[int(rule.path[-2])]
+            if value is not None:
+                fixed_values[rule.entity_id + "." + rule.path] = value
+        if receipt.get("fixed_values") != fixed_values:
+            raise ValueError("completion_grounding_fixed_values_mismatch")
+        anchor = next(e for e in base.entities if e.role == "foreground")
+        support = next(e for e in base.entities if e.role == "structural_support")
+        if anchor.pose.frame == support.id and anchor.pose.position[2] is not None:
+            if not math.isclose(anchor.pose.position[2], dims[2] / 2, rel_tol=0, abs_tol=1e-9):
+                raise ValueError("completion_grounding_known_height_conflict")
+    elif policy.structural_defaults_enabled or receipt.get("structural_policy") is not None:
+        raise ValueError("completion_grounding_legacy_default_authority_missing")
     if (
         receipt.get("original_unknowns") != [u.model_dump(mode="json") for u in unknowns]
         or not isinstance(indices, list)
         or not indices
         or any(type(i) is not int or not 0 <= i < len(unknowns) for i in indices)
         or len(set(indices)) != len(indices)
-        or any(
-            unknowns[i].reason_kind not in {"scale_unobservable", "pose_unobservable"}
-            for i in indices
+        or (
+            not new_design
+            and any(
+                unknowns[i].reason_kind not in {"scale_unobservable", "pose_unobservable"}
+                for i in indices
+            )
         )
         or any(u.critical and i not in indices for i, u in enumerate(unknowns))
     ):
@@ -836,6 +890,91 @@ def _verify_grounding_origin(snapshot, store, scene, compiled):
         for ref in receipt["evidence"]
         if ref.get("media_type") == "application/json"
     ]
+    if new_design:
+        contexts = [
+            r
+            for r in records
+            if isinstance(r, dict) and "design_plan" in r and "original_proposal" in r
+        ]
+        if len(contexts) != 1:
+            raise ValueError("completion_grounding_design_context_missing")
+        context = contexts[0]
+        expected_context = {
+            "bundle_ref": snapshot.input_bundle.model_dump(),
+            "original_proposal": original.proposal.model_dump(mode="json"),
+            "policy": policy.model_dump(mode="json"),
+            "structural_policy": structural_policy.model_dump(mode="json")
+            if structural_policy
+            else None,
+            "design_plan": plan.model_dump(mode="json"),
+            "fixed_values": fixed_values,
+            "asset_version": version.model_dump(mode="json"),
+            "anchor_dimensions_m": dims,
+        }
+        if any(context.get(k) != v for k, v in expected_context.items()):
+            raise ValueError("completion_grounding_design_context_mismatch")
+        bundle = InputBundle.model_validate_json(store.read_artifact(snapshot.input_bundle))
+        media = context.get("media_selection")
+        if media is None:
+            if plan.requires_media or bundle.text is None or bundle.images or bundle.video:
+                raise ValueError("completion_grounding_media_missing")
+            store.read_artifact(bundle.text)
+        else:
+            image_ref = ArtifactRef.model_validate(media["image"])
+            store.read_artifact(image_ref)
+            selection = read(ArtifactRef.model_validate(media["provenance"]))
+            if (
+                selection.get("scene_ir") != assets.scene_ir.model_dump()
+                or selection.get("entity_id") != anchor.id
+            ):
+                raise ValueError("completion_grounding_media_binding_mismatch")
+            if selection.get("request_sha256") != bundle.request_sha256:
+                raise ValueError("completion_grounding_media_binding_mismatch")
+            if bundle.images:
+                expected_media = {
+                    "selection_basis": "first_canonical_input_image",
+                    "image_index": 0,
+                    "source_ref": bundle.images[0].source.model_dump(),
+                }
+                if image_ref != bundle.images[0].canonical or any(
+                    selection.get(k) != v for k, v in expected_media.items()
+                ):
+                    raise ValueError("completion_grounding_media_binding_mismatch")
+            elif bundle.video:
+                from io import BytesIO
+
+                from PIL import Image
+
+                sequence = read(bundle.video.sequence)
+                frames = sequence.get("frames", [])
+                if (
+                    sequence.get("source") != bundle.video.source.model_dump()
+                    or sequence.get("full_decode") is not True
+                    or len(frames) != bundle.video.frame_count
+                    or not frames
+                    or frames[0].get("index") != 0
+                ):
+                    raise ValueError("completion_grounding_video_sequence_mismatch")
+                with Image.open(BytesIO(store.read_artifact(image_ref))) as png:
+                    if png.size != (bundle.video.width, bundle.video.height):
+                        raise ValueError("completion_grounding_video_pixels_mismatch")
+                    pixels = png.convert("RGB").tobytes()
+                expected_media = {
+                    "selection_basis": "first_verified_decoded_video_frame",
+                    "frame_index": 0,
+                    "frame_sha256": hashlib.sha256(pixels).hexdigest(),
+                    "sequence_ref": bundle.video.sequence.model_dump(),
+                    "source_ref": bundle.video.source.model_dump(),
+                    "full_frame_count": bundle.video.frame_count,
+                }
+                if (
+                    len(pixels) != frames[0].get("size_bytes")
+                    or hashlib.sha256(pixels).hexdigest() != frames[0].get("sha256")
+                    or any(selection.get(k) != v for k, v in expected_media.items())
+                ):
+                    raise ValueError("completion_grounding_video_pixels_mismatch")
+            else:
+                raise ValueError("completion_grounding_fabricated_media")
 
     original_records = [
         read(ref) for ref in original.evidence if ref.media_type == "application/json"
@@ -855,6 +994,22 @@ def _verify_grounding_origin(snapshot, store, scene, compiled):
     for entity in scene.entities:
         old = by_id[entity.id]
         value = next(v for v in values[0].entities if v.id == entity.id)
+        if new_design:
+            actual = {
+                **{f"dimensions[{i}]": v for i, v in enumerate(value.dimensions)},
+                **{f"pose.position[{i}]": v for i, v in enumerate(value.position)},
+                "pose.yaw_degrees": value.yaw_degrees,
+            }
+            if any(
+                entity.id + "." + k in fixed_values and fixed_values[entity.id + "." + k] != v
+                for k, v in actual.items()
+            ):
+                raise ValueError("completion_grounding_changed_fixed_value")
+            if entity.id == anchor.id and any(
+                not math.isclose(a, b, abs_tol=1e-9, rel_tol=0)
+                for a, b in zip(value.dimensions, dims, strict=True)
+            ):
+                raise ValueError("completion_grounding_changed_anchor_geometry")
         if (
             value.dimensions != entity.dimensions
             or value.position != entity.pose.position

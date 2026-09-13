@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-STRUCTURAL-DESIGN-AUDIT — 结构设计来源复核
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `cd74b42` 结构设计接线、`09c3264` 历史预算审计。
+- `target_paths`：x2env/completion.py、test_completion.py。
+- `integration_method`：原 proposal 分类、Registry 几何、compiled policy、模型原始值与媒体/文本绑定重核。
+- `verification`：contract_pass；52 tests，外部模型/运行数据明确替身，无新真实仿真资格。
+- `recorded_git_authors`：本提交元数据；旧证据不获得新部署默认值授权。
+
 ## INT-CANONICAL-C06-LOCAL-PENDING — 来源路由保留待修订候选
 
 - `origin_owner`：Yuxin 原检索/视觉；`integration_owner`：Bingsheng Harness workstream。

@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C11 结构设计完成来源独立重算
+
+- 完成门从原 proposal 重新分类并重算部署 defaults/Registry 几何 fixed values，结构 policy 必须与实际
+  compiled policy 一致；逐项核模型原始值、accepted scene、原未知项、输入 context 和执行身份。
+- 无图文本设计必须有原 text，不能伪造媒体；图像绑定 canonical input，视频首帧按完整逐帧序列重核像素。
+  旧无 design_plan 回执只保留旧 scale/pose 审计，不能回填新的结构默认授权。
+- 新文本正例与 shadow policy/高度/缺 policy/plan/已知轴攻击；主线程 completion 52 passed（55.80s）。
+  本片没有真实新包运行；视频分支增加了检查，但不据此称新的 video golden 已通过。
+- Dashboard portfolio/tasks/project 本次仍全部 HTTP404，没有 task id，未同步虚构进度。
+
 ## 2026-09-13 C06 本地颜色待修订进入来源路由
 
 - LocalAssetResolver 在现有检索/preview/原 a6_verify 调用后生成 typed pending_color_repairs；

@@ -38,6 +38,7 @@ def completed_fixture(
     revised=False,
     revision_fault=None,
     reservation_fault=None,
+    structural_grounding=False,
 ):
     """Synthetic producer at external execution seam, not a real Genesis run."""
     from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
@@ -76,6 +77,10 @@ def completed_fixture(
                 "pose": Pose(frame="world", position=(0.0, 0.0, 0.45), yaw_degrees=0.0),
             }
         )
+        if structural_grounding:
+            entity = entity.model_copy(
+                update={"pose": Pose(frame="table", position=(0.0, 0.0, 0.05), yaw_degrees=0.0)}
+            )
         table = entity.model_copy(
             update={
                 "id": "table",
@@ -332,6 +337,43 @@ def completed_fixture(
                 )
             }
         )
+        if structural_grounding:
+            pending = accepted.model_copy(
+                update={
+                    "entities": (
+                        accepted.entities[0].model_copy(
+                            update={
+                                "pose": accepted.entities[0].pose.model_copy(
+                                    update={"position": (0.0, 0.0, None)}
+                                )
+                            }
+                        ),
+                        accepted.entities[1].model_copy(
+                            update={
+                                "dimensions": (1.0, 1.0, None),
+                                "pose": accepted.entities[1].pose.model_copy(
+                                    update={"position": (None, None, None), "yaw_degrees": None}
+                                ),
+                            }
+                        ),
+                    )
+                }
+            )
+        if structural_grounding and grounding_fault == "known_axis":
+            pending = pending.model_copy(
+                update={
+                    "entities": (
+                        pending.entities[0].model_copy(
+                            update={
+                                "pose": pending.entities[0].pose.model_copy(
+                                    update={"position": (0.2, 0.0, None)}
+                                )
+                            }
+                        ),
+                        pending.entities[1],
+                    )
+                }
+            )
         pending_ref = put(pending.model_dump(mode="json"))
 
         def execution_double(value):
@@ -379,7 +421,22 @@ def completed_fixture(
             status="completed",
             proposal=SceneIntentProposal(
                 scene=pending,
-                unknowns=(
+                unknowns=tuple(
+                    UnknownField(
+                        field=field,
+                        reason="unit unspecified design",
+                        critical=True,
+                        reason_kind=kind,
+                        provenance=entity.provenance.pose,
+                    )
+                    for field, kind in [
+                        ("scene.entities.table.dimensions[2]", "unspecified"),
+                        ("scene.entities.table.pose", "unspecified"),
+                        ("scene.entities.item.pose.position[2]", "pose_unobservable"),
+                    ]
+                )
+                if structural_grounding
+                else (
                     UnknownField(
                         field="scene.entities[*].dimensions",
                         reason="fixture design scale unknown",
@@ -430,6 +487,50 @@ def completed_fixture(
                 "evidence": [ref.model_dump() for ref in execution_double(values)],
             }
         )
+        if structural_grounding:
+            from self_improving.harness.x2env.design_plan import classify_design_unknowns
+            from self_improving.harness.x2env.grounding import SceneDesignPolicy
+
+            policy = SceneDesignPolicy(
+                enabled=True,
+                structural_defaults_enabled=True,
+                world_anchor_xy=(0.0, 0.0),
+                world_anchor_yaw_degrees=0.0,
+            )
+            plan = classify_design_unknowns(original.proposal, policy, compiled.policy)
+            fixed = {
+                r.entity_id + "." + r.path: (0.05 if r.basis == "on_geometry_derived" else r.value)
+                for r in plan.rules
+            }
+            body = json.loads(store.read_artifact(ground_ref))
+            body.update(
+                policy=policy.model_dump(mode="json"),
+                structural_policy=compiled.policy.model_dump(),
+                design_plan=plan.model_dump(mode="json"),
+                fixed_values=fixed,
+                resolved_unknowns=list(plan.resolved_unknown_indices),
+            )
+            context = {
+                "bundle_ref": bundle.model_dump(),
+                "original_proposal": original.proposal.model_dump(mode="json"),
+                "policy": body["policy"],
+                "structural_policy": body["structural_policy"],
+                "design_plan": body["design_plan"],
+                "fixed_values": fixed,
+                "media_selection": None,
+                "asset_version": version.model_dump(mode="json"),
+                "anchor_dimensions_m": report["dimensions_m"],
+            }
+            body["evidence"].append(put(context).model_dump())
+            if grounding_fault == "default_policy":
+                body["structural_policy"]["surface_height_m"] = 0.8
+            if grounding_fault == "fixed_height":
+                body["fixed_values"]["item.pose.position[2]"] = 0.2
+            if grounding_fault == "missing_policy":
+                body.pop("structural_policy")
+            if grounding_fault == "plan":
+                body["design_plan"]["rules"][0]["value"] = 0.9
+            ground_ref = put(body)
         if grounding_fault:
             body = json.loads(store.read_artifact(ground_ref))
             if grounding_fault == "model":
@@ -729,6 +830,24 @@ def test_completion_accepts_bound_grounding(tmp_path):
     store, snapshot = completed_fixture(tmp_path, grounding=True)
     result = materialize_completion(snapshot, store, tmp_path / "completion")
     assert result.status == "materialized", result
+
+
+@pytest.mark.parametrize(
+    "fault", [None, "default_policy", "fixed_height", "missing_policy", "plan", "known_axis"]
+)
+def test_completion_audits_text_structural_design_against_geometry_and_compile_policy(
+    tmp_path, fault
+):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(
+        tmp_path, grounding=True, structural_grounding=True, grounding_fault=fault
+    )
+    result = materialize_completion(snapshot, store, tmp_path / "completion")
+    if fault:
+        assert result.status == "failed" and "grounding" in result.error_code, result
+    else:
+        assert result.status == "materialized", result
 
 
 def test_completion_accepts_grounding_then_layout_revision(tmp_path):

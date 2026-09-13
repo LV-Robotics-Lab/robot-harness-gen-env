@@ -4,7 +4,7 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
-- 结构 defaults/on-z 分类已接 interpret→ground；完成门同步新逐轴来源审计后，再固定代码执行真实案例。
+- 结构 defaults/on-z 分类与完成门逐轴来源审计均已接通测试；下一步固定新代码执行显式授权的真实案例。
 
 - replay 之后补齐诊断 backend 的续点已接 public resume，保留原回放和时间；52 项相关测试通过，未授真实恢复。
 
