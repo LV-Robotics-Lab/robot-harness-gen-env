@@ -2,6 +2,18 @@
 
 更新时间：2026-09-13
 
+## Push 后另行授权的目录整理
+
+- [x] 读取实际 Git/进程/入口依赖；冻结 115 个本地工作树和 116 个 refs 清单。
+- [x] 集中归档 143 个证据目录、27 个文件及两份备份；历史地址保留可读链接。
+- [x] 86 个干净无活动依赖工作树先完整快照和保留 ref，再正常 remove；68 个未合并 HEAD 未删除。
+- [x] 四个 dirty 工作树、当前入口/密钥/runtime/原示例媒体保持原路径。
+- [x] 258 个链接、140 个绑定证据文件及入口静态核验通过；未重跑模型、Genesis 或全量测试。
+- [x] 归档和恢复说明已记录；不新增 push/main PR。
+
+记录根：`/home/jingxiang/bingsheng/archive/2026-09-13-workspace/audit/`。
+以下为 f80e2a82 push 前冻结 TODO，最终 push 已由其外部审计确认，不回填旧测量。
+
 ## 当前执行焦点
 
 当前优先级由用户最新 [matrix v2](qualification-matrix-v2.json) 覆盖：

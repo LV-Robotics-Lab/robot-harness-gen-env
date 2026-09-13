@@ -1,5 +1,18 @@
 # 进度与结果
 
+## 2026-09-13 普通 push 后工作区归档
+
+- 新用户授权下，143 个证据目录、27 个文件、两份修改保护备份已集中到
+  `/home/jingxiang/bingsheng/archive/2026-09-13-workspace/`，内容通过同盘 rename 或 hardlink 保留。
+- 86 个工作树完整快照后正常 remove，无 force；全部 116 个原 refs 保留，另加 86 个本地 archive refs。
+  其中 68 个 HEAD 不是 f80e2a82 的祖先，仍保留提交及文件，不称已合并。四个 dirty 工作树未动。
+- bingsheng 内登记从 115 减到 29；全仓库登记从 140 减到 54。实体顶级目录从 163 减到 19，
+  历史兼容链接为 173；只保证旧证据读取，不保证旧 no-symlink 部署可直接执行。
+- 后验 `audit/verification.json` passed：258 个归档链接、140 个 SHA 绑定证据文件、四个原媒体/说明/
+  索引 SHA、源码身份、deployment、私密文件安全和 CLI help。当前源码仍固定 9d5909b；
+  runtime/deny roots 保持实体路径。模型/Genesis/全测试本次 not_run，不改旧 f80e2a82 CI 结果。
+- 主仓库产品源码未改；本次整理文档另行本地提交，不新增 push/main PR。
+
 ## 2026-09-13 matrix v2四例及复制运行通过，进入最终push审计
 
 - S01 da78d40/339.200397s，S02 e754ff9/290.985332s，S03 e754ff9/312.627s，

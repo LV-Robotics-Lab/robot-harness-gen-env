@@ -51,6 +51,11 @@
 
 ## 当前阶段
 
+matrix v2 已于 07:59 UTC 左右正常 push `origin/worktree/bingsheng@f80e2a82` 并按要求停止。
+用户随后另行批准本地目录整理；86 个工作树可恢复退役，143 个证据目录、27 个文件及两份备份归档。
+整理记录固定于 `/home/jingxiang/bingsheng/archive/2026-09-13-workspace/README.md`；
+原入口、dirty 修改及历史证据保留，本次不新增 push/main PR。以下为该 push 前冻结的阶段记录。
+
 2026-09-13最新matrix v2四简单例全部真实成功，S01已独立复制load/step/新媒体通过；
 当前只做最终冻结测试、来源/Git审计和条件满足后的普通push，不创建main PR。
 精确运行版本、失败和剩余能力见[本轮walkthrough](CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)及
