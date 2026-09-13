@@ -1,5 +1,9 @@
 # Workbench Replay Assessment 持久索引
 
+历史说明：本页未接路由的 Python read-model 及其旧 System 2 依赖已在 canonical C13 退役，
+可从 `42d5bb7` Git 历史恢复；不迁移成第二个默认 workflow。当前实现见
+[Canonical x2env](canonical-x2env.md)。下文不是当前调用配方。
+
 `demo.harness_replay_assessment` 是 Workbench 的本地 replay-assessment read-model seam。它把一次已经完成的
 `System2ReplayEvidenceAcquisitionResult` 交给现有 Recorder 与 artifact-only Verifier，再把窄 view 以 immutable
 row 写入 acquisition 所属的共享 SQLite journal。之后的新进程可以只用 run ID、同一 SQLite、同一 CAS 与独立

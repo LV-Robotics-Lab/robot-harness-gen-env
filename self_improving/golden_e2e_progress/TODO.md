@@ -4,6 +4,7 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- C13 旧 System 2/GoldenRun/Qwen/未接路由 assessment 独立组已退役；旧 Workbench compile 的 app/static 消费者需先下线，再退旧 qualification/schema/CI。稳定 SAPIEN工具与只读feed保留。
 - C13/C14 provider wheel 缺依赖已修复：隔离安装后原 Yuxin 本地检索通过；6 项包装测试通过，不依赖工作区 provider 路径。全 CLI/runtime 安装闭包仍需独立核验。
 - C13 G2c qualified replay bootstrap 已撤，旧深模块测试改为直接调用；65 项相关测试通过。旧资格资源/deep consumers 尚待进一步清理。
 - local 颜色 Harness→新版本→新视觉→来源续点已接通，主线程 91 项相关测试通过；完成包历史链审计仍在接入。

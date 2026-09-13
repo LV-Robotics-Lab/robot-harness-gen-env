@@ -2,6 +2,7 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- C13 退役 18 个旧 System 2/GoldenRun/Qwen/未接路由 assessment 源文件及 17 个专属测试；保留稳定 runtime/feed，旧指南标历史，尚未删除仍被 Workbench compile 消费的资格链。
 - 原 Yuxin 依赖的 agenticsim 从原目录随同一 wheel 安装，去掉隐式 simulator bootstrap；隔离安装后的真实本地查询测试补上源目录 PYTHONPATH 曾遮蔽的包装缺口。
 - qualified replay 薄入口随后退役，历史深模块业务/攻击测试直接调用保留；同步脚本贡献者指引和旧资格说明，避免已撤 console 被描述为当前配方。
 - C13 再撤历史 compile campaign 与独立 Qwen replay assessment 两个无活跃消费者的脚本；稳定核心入口和仍被消费的深模块保留。

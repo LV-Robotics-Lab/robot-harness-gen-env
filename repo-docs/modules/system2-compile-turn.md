@@ -1,5 +1,9 @@
 # System 2 的一次真实 Compile 回合
 
+历史说明：本页旧 planner/dispatcher/回合实现已在 canonical C13 退役，源字节可从 `42d5bb7`
+恢复。它不再是当前运行接口；当前唯一 workflow 与 managed Codex 路径见
+[Canonical x2env](canonical-x2env.md)。下文只保留旧行为审计语境。
+
 `self_improving.system2_compile_turn.System2CompileTurn` 把现有的 System 2 零件收进一个
 公开入口：调用方给出任务意图、seed、受信 catalog 路径和 generate-on-miss 策略，模块返回
 `System2CompileTurnResult`。调用方不需要自己拼 planner context、保存模型回执、调用 Registry、

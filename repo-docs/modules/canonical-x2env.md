@@ -1,5 +1,10 @@
 # Canonical x2env（收敛实施中）
 
+旧 System 2 planner/dispatcher、GoldenRun、独立 Qwen replay assessment，以及仅 Python 消费的
+Workbench assessment 链已退役（18 个源文件，Git 历史可恢复）。稳定 SAPIEN runtime 工具与只读
+事件 feed 保留。旧 Workbench compile 仍是旧 qualification 的真实消费者，尚须单独下线；
+因此此处不称 legacy active graph 已全部消除。
+
 Provider 安装使用根项目的 `pip install '.[platform]'`（开发可加 `-e`）。现有 Yuxin engine 和
 它实际依赖的三个 `agenticsim` 包从原位置进入同一 wheel；无需为 provider 手写工作区 PYTHONPATH，
 也不必安装 IsaacLab/MetaSim。顶层导入不再自动初始化这些可选仿真器；原显式 bootstrap helper 保留。

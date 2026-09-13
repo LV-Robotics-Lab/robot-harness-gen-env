@@ -1,5 +1,16 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-OLD-ORCHESTRATION — 独立旧控制图退役
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：最后完整基线 `42d5bb705ef0c78647ac98c9ce27ec19e5c8a82b`；原作者记录为
+  `Bingsheng Xie <xieziyin_shangshu@outlook.com>`，不据此推断其它自然人身份。
+- `target_paths`：本提交删除清单的 18 源/17 专属测试及 test_import_boundary.py。
+- `integration_method`：基于实际 Python 消费者连组退役；源码留 Git，不保重复 workflow。
+- `verification`：contract_pass；114 小测试、3295 tests collection。旧资格未重签，稳定 runtime/feed 保留。
+- `recorded_git_authors`：原创建提交包括 domain `5cedd21f`、planner `1b4582ae`、GoldenRun `3d7aa025`、
+  Qwen `084ad04a`、demo assessment `dd3c675d`；本提交只记录退役整合责任。
+
 ## INT-CANONICAL-C13-PROVIDER-INSTALL — 原位打包 Yuxin 的 agenticsim 依赖
 
 - `origin_owner`：Yuxin asset reuse/OpenXSim 来源链；`integration_owner`：Bingsheng Harness workstream。

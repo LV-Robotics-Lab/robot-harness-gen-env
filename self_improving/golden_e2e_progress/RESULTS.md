@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 C13 旧 planner/GoldenRun/Qwen 独立图退役
+
+- 删除 18 源文件：harness/system2 七文件、self_improving/system2_* 六模块、golden_run、Qwen
+  provider/worker/assessment 三模块、demo/harness_replay_assessment；17 个仅专属测试同步退役。
+  全部原字节在 `42d5bb705ef0c78647ac98c9ce27ec19e5c8a82b` 可恢复，没有创建新的 vendor/archive 副本。
+- 公开 fresh-process absence 先 RED，隔离真实依赖后 boundary/runtime-events/feed/稳定 schema/
+  canonical contracts/能力组 114 passed/0.53s；全仓 collection 3295/1.46s 无新 dangling import。
+- 共享开发 .venv 的旧 editable finder 会回退加载旧工作树已退役模块；新边界测试用 -S 并显式加载
+  真实 site-packages，避免 .pth finder 污染。未修改共享环境，collection 不等于全套测试通过。
+- demo/app.py 的旧 Workbench compile 仍真实依赖 qualification，需先下线消费者再裁剪；旧 schema
+  字符串/快照另片处理，不盲删 schemas 包。稳定 scene_gen/SAPIEN runtime/feed 不随旧 workflow 删除。
+
 ## 2026-09-13 C13/C14 原 provider 的可安装依赖闭包
 
 - 先 RED：真实 wheel 缺 agenticsim；根 setuptools 多源目录发现加入已有 agenticsim/openxsim/generation
