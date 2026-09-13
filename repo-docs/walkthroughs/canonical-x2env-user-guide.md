@@ -197,16 +197,19 @@ x2env resume --deployment /absolute/deployment.json --workflow-id WORKFLOW_ID
 ## 本机已配置的实验入口
 
 无需重新部署sealed runtime，可直接用下面的固定本机环境；它不是可任意搬迁的安装包。
-准备报告与完整使用说明位于`/home/jingxiang/bingsheng/canonical-x2env-user-entry-20260913.AydTBI/`，
+准备报告与完整使用说明位于`/home/jingxiang/bingsheng/runtime/harness/`，
 源码固定9d5909b；只做过配置组装、help和非法输入拒绝，本独立state尚未提交真实案例。
 四例成功来自walkthrough列出的各自隔离部署，不能混称同一已运行state。
+迁移后另用当前部署的 runtime 根完成复制包 `load_step_smoke`：25 步、60.35 秒、新图片和视频，
+实际拒读源码/原资产/CAS；未重跑模型或物理 profile。记录在
+`/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/runtime-verification.json`。
 
 ```bash
-entry_root=/home/jingxiang/bingsheng/canonical-x2env-user-entry-20260913.AydTBI
+entry_root=/home/jingxiang/bingsheng/runtime/harness
 entry_python=/var/tmp/canonical-ci-python313.BmJ3Cc/venv/bin/python
 entry_deployment="$entry_root/deployment.json"
 export PYTHONPATH=/var/tmp/canonical-shapely-2.1.2.TgCNjK/site:"$entry_root/source-current":"$entry_root/source-current/self_improving/asset_pipeline/active/shared/openxsim/source/agenticsim"
-entry_media=/home/jingxiang/bingsheng/generic-experiment-v2-20260913.1QrGYD/inputs
+entry_media=/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/preserved/generic-experiment-v2-20260913.1QrGYD/inputs
 
 "$entry_python" -m self_improving.harness.x2env.cli submit --deployment "$entry_deployment" \
   --text '在桌面放一个粉红色鼠标。' --seed 11 --idempotency-key my-text-1 --output "$entry_root/outputs/text-1"

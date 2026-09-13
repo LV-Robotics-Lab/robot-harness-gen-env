@@ -21,9 +21,9 @@ web 和 reconstruction adapter 已有实现，本机四例部署未配置它们�
 - [实施 walkthrough 与审计](../self_improving/golden_e2e_progress/CANONICAL_MATRIX_V2_PUSH_AUDIT_20260913.md)：源码、测试、运行和剩余能力。
 - [四例机读索引](../self_improving/golden_e2e_progress/qualification-matrix-v2-results.json)：workflow、输入、seed、场景/资产/报告位置与 hash。
 - [开发证据 Release](https://github.com/LV-Robotics-Lab/robot-harness-gen-env/releases/tag/x2env-evidence-f80e2a82efd53fff5822a7cfdaa63e41c65d4af1)：固定 f80e2a82 的开发证据，不是正式产品资格。
-- 本机用户入口：`/home/jingxiang/bingsheng/canonical-x2env-user-entry-20260913.AydTBI/USAGE.md`。
-- 最终 push 审计：`/home/jingxiang/bingsheng/canonical-matrix-v2-push-audit-20260913.cKTw0K/push-audit.json`。
-- [工作区归档与恢复说明](workspace-collaboration.md)：旧路径部分为阅读兼容链接，严格拒绝 symlink 的执行入口不能随意换成归档路径。
+- 本机用户入口：`/home/jingxiang/bingsheng/runtime/harness/USAGE.md`。
+- 最终 push 审计：`/home/jingxiang/bingsheng/archive/2026-09-13-workspace/evidence/canonical-matrix-v2-push-audit-20260913.cKTw0K/push-audit.json`。
+- [工作区归档与恢复说明](workspace-collaboration.md)：旧兼容链接已撤销，历史绝对地址按归档路径映射查找；当前运行入口使用实体路径。
 
 自己的请求输出由 `--output` 决定。先读命令 JSON 的 `delivery` 和输出目录 `result.json`，按其中真实成员路径查找图片、MP4、资产和日志；不要假设所有媒体都位于 `media/`。环境包通常把证据置于 `evidence/`，资产位于 `assets/`，精确布局见 API 和测试指南。
 

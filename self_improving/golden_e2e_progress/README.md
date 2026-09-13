@@ -53,6 +53,11 @@
 
 ## 当前阶段
 
+最新用户授权已撤销旧兼容链接并迁移运行入口至
+`/home/jingxiang/bingsheng/runtime/harness/USAGE.md`。
+根目录收敛记录及原地址映射在 `/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/`。
+下文首轮整理的“原路径保留”属于历史；当前验证进度见 TODO/RESULTS。
+
 matrix v2 已于 07:59 UTC 左右正常 push `origin/worktree/bingsheng@f80e2a82` 并按要求停止。
 用户随后另行批准本地目录整理；86 个工作树可恢复退役，143 个证据目录、27 个文件及两份备份归档。
 整理记录固定于 `/home/jingxiang/bingsheng/archive/2026-09-13-workspace/README.md`；

@@ -1,5 +1,23 @@
 # 进度与结果
 
+## 2026-09-13 根目录收敛与迁移后真实核验
+
+- 用户后续授权撤除历史兼容地址：14 项实体迁移、259 个链接撤除（含 worktrees 内链接）。
+  主仓库、runtime、archive、worktrees、原有独立项目及隐藏工具目录保留，历史字节未永久删除。
+- 逐项 journal 记录 inode、HEAD/status/diff 保持一致；文档提交前 202 个 refs 无变化。
+- 静态通过：当前 deployment/build_harness/help、固定源码 9d5909b、密钥路径检查、
+  block/mouse 本地资产目录、原 PNG/MP4 SHA；当前入口为 runtime/harness/USAGE.md。
+- 真实 Genesis load_step_smoke：exit 0、60.345903966 秒、25 步、640×480、6 帧/6 unique，
+  新图片、preview.mp4、轨迹和日志生成；实际拒读六个源码/原资产/CAS 根。
+  仿真 0.1 秒，预览 10 fps；physical_profile=not_run、模型重跑 not_run、policy/data=false。
+- 核验脚本首次在调用不存在的 Harness.store 时失败，尚未启动仿真；修正为现有 Store 接口后通过。
+  产品源码未改。此次不运行全测试，不覆盖此前记录的通过或环境失败结果。
+- 证据/路径映射：`/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/README.md`。
+  Dashboard 三入口仍 HTTP 404；本地文档提交，不新增 push/main PR。
+- 收尾：reader-docs 本地链接与 12 份历史文档 bytes 通过，远端 HTTP 未运行；diff --check 通过。
+  ffprobe 确认新 MP4 为 640×480、10 fps、6 帧；运行进程已退出，密钥目录/文件权限为 700/600。
+  无 bingsheng 根目录链接；唯一 prunable 登记位于 Gujie 旧路径，属于既有外部现场，未处理。
+
 ## 2026-09-13 推送后文档补全与检查
 
 - 新增 [文档总入口](../../repo-docs/canonical-x2env.md)、Python/CLI API、测试手册、

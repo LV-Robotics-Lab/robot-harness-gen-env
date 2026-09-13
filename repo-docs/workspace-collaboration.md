@@ -43,6 +43,20 @@ Git 分支可以从组织远端恢复；ignored 数据、公共 runtime 和本�
 
 ## 2026-09-13 Bingsheng 本地归档
 
+当前布局已按后续授权再次收敛：根目录只显示主仓库、`runtime/`、`archive/`、
+`worktrees/`、原有 `R4R-Simulation-Group/` 和导航 README，隐藏工具目录保留。
+当前操作入口为 `/home/jingxiang/bingsheng/runtime/harness/USAGE.md`；Genesis 运行依赖
+迁至 `runtime/genesis` 与 `runtime/genesis-native`，私密配置在 `runtime/private`。
+14 项迁移及 259 个链接撤除（含 worktrees 下链接）逐项核验，202 个原 refs 保持不变。
+用户已批准旧绝对地址不再直接可读；按
+`/home/jingxiang/bingsheng/archive/2026-09-13-root-layout/path-map.json` 的 moves 或
+retired_links 查找旧地址，再把剩余相对路径接到新根下。完整记录见同目录 README。
+历史已哈希报告保留原文；当前配置和用户命令更新为实体新路径。
+迁移后真实 Genesis `load_step_smoke` 通过：25 步、60.35 秒、新图片与连续视频，
+拒读六个源码/原资产/CAS 根；完整物理 profile 和模型重跑未执行。
+
+以下为第一阶段历史记录，其中原路径和兼容链接描述已被上述后续授权替代。
+
 用户在 matrix v2 普通 push 完成后另行批准整理目录。本次没有修改 Harness 功能或再次推送。
 集中入口为 `/home/jingxiang/bingsheng/archive/2026-09-13-workspace/README.md`；
 完整前后清单、逐项处理及核验在其 `audit/` 内，主仓库和可用入口保持原路径。
