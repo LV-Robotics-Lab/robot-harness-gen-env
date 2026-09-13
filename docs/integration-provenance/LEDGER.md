@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C04-REPAIR-RESERVATION — 原子共享额度
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `48ee402` Store/operation 合同；没有并行数据库或新执行权威。
+- `target_paths`：x2env/contracts.py、store.py、schema snapshots、test_repair_reservations.py。
+- `integration_method`：同一事务预留并创建操作；失败/取消/重开不退还，重复失败和超额拒绝。
+- `verification`：contract_pass；39 项公开 Store/合同/CAS 测试，真实 SQLite 并发；业务接线随后提交。
+- `recorded_git_authors`：本提交元数据；第三方来源与运行资格不变。
+
 ## INT-CANONICAL-C10-UNIFORM-COLOR — 显式替换颜色层
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

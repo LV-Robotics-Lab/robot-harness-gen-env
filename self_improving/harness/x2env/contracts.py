@@ -79,6 +79,16 @@ class WorkflowHandle(Model):
     workflow_id: str = Field(min_length=1)
 
 
+class RepairReservation(Model):
+    """Controller approval reserved against the workflow head, not a SceneIR revision."""
+
+    kind: Literal["scene", "asset", "scene_asset"]
+    cost: int = Field(ge=1, le=2)
+    failure_fingerprint: Sha256
+    approval: ArtifactRef
+    base_revision: int = Field(ge=0)
+
+
 class OperationRecord(Model):
     operation_id: str
     capability: str
@@ -87,6 +97,7 @@ class OperationRecord(Model):
     started_at: str
     ended_at: str | None = None
     result: ToolResult | None = None
+    repair_reservation: RepairReservation | None = None
 
 
 class WorkflowSnapshot(WorkflowHandle):

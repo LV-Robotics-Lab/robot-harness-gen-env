@@ -10,7 +10,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from .contracts import ArtifactRef, OperationRecord, ToolResult, WorkflowSnapshot, X2EnvRequest
+from .contracts import (
+    ArtifactRef,
+    OperationRecord,
+    RepairReservation,
+    ToolResult,
+    WorkflowSnapshot,
+    X2EnvRequest,
+)
 
 
 def process_identity(pid: int) -> str | None:
@@ -301,7 +308,12 @@ class Store:
         return False
 
     def begin_operation(
-        self, snapshot: WorkflowSnapshot, capability: str, *, version: str = "1.0.0"
+        self,
+        snapshot: WorkflowSnapshot,
+        capability: str,
+        *,
+        version: str = "1.0.0",
+        repair_reservation: RepairReservation | None = None,
     ) -> WorkflowSnapshot:
         with closing(sqlite3.connect(self.database)) as db, db:
             db.execute("BEGIN IMMEDIATE")
@@ -314,12 +326,31 @@ class Store:
             self._require_owned_head(current, snapshot)
             if any(op.status == "running" for op in current.operations):
                 raise ValueError("workflow already has a running operation")
+            if repair_reservation is not None:
+                repair_reservation = RepairReservation.model_validate_json(
+                    repair_reservation.model_dump_json()
+                )
+                if capability not in {"revise", "asset.revise"}:
+                    raise ValueError("repair_reservation_capability_mismatch")
+                if repair_reservation.base_revision != current.revision:
+                    raise ValueError("repair_reservation_stale_base")
+                prior = [
+                    op.repair_reservation for op in current.operations if op.repair_reservation
+                ]
+                if any(
+                    r.failure_fingerprint == repair_reservation.failure_fingerprint for r in prior
+                ):
+                    raise ValueError("repair_repeated_failure")
+                if sum(r.cost for r in prior) + repair_reservation.cost > 2:
+                    raise ValueError("repair_budget_exhausted")
+                self.read_artifact(repair_reservation.approval)
             operation = OperationRecord(
                 operation_id=str(uuid4()),
                 capability=capability,
                 version=version,
                 status="running",
                 started_at=datetime.now(timezone.utc).isoformat(),
+                repair_reservation=repair_reservation,
             )
             updated = current.model_copy(update={"operations": (*current.operations, operation)})
             db.execute(

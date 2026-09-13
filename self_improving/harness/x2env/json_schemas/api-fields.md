@@ -52,9 +52,15 @@ Generated; edit Python contracts, not this file.
 | OperationRecord | started_at | true |
 | OperationRecord | ended_at | false |
 | OperationRecord | result | false |
+| OperationRecord | repair_reservation | false |
 | Pose | frame | true |
 | Pose | position | true |
 | Pose | yaw_degrees | true |
+| RepairReservation | kind | true |
+| RepairReservation | cost | true |
+| RepairReservation | failure_fingerprint | true |
+| RepairReservation | approval | true |
+| RepairReservation | base_revision | true |
 | RequestConstraints | allow_cousin | false |
 | SceneEntity | id | true |
 | SceneEntity | category | true |

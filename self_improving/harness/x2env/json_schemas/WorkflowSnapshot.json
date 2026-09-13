@@ -65,6 +65,17 @@
           "title": "Operation Id",
           "type": "string"
         },
+        "repair_reservation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RepairReservation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "result": {
           "anyOf": [
             {
@@ -104,6 +115,49 @@
         "started_at"
       ],
       "title": "OperationRecord",
+      "type": "object"
+    },
+    "RepairReservation": {
+      "additionalProperties": false,
+      "description": "Controller approval reserved against the workflow head, not a SceneIR revision.",
+      "properties": {
+        "approval": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "base_revision": {
+          "minimum": 0,
+          "title": "Base Revision",
+          "type": "integer"
+        },
+        "cost": {
+          "maximum": 2,
+          "minimum": 1,
+          "title": "Cost",
+          "type": "integer"
+        },
+        "failure_fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Failure Fingerprint",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "scene",
+            "asset",
+            "scene_asset"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "cost",
+        "failure_fingerprint",
+        "approval",
+        "base_revision"
+      ],
+      "title": "RepairReservation",
       "type": "object"
     },
     "RequestConstraints": {

@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- Store 原子持久预算 seam 已完成；新 Harness 强制预留/回执绑定进入主线程审阅，完成门随后核验。
+
 - 显式 uniform_replace 资产颜色修订已通过 51 项测试；local 颜色失配 continuation 与新视觉复核接线中。
 
 - S02 新固定 109b0c5 开发运行 failed/model_timeout（600.514s），尚未进入 grounding/资产/Genesis。

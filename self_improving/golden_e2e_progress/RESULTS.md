@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C04/C10 持久修订额度预留
+
+- Store 在原 BEGIN IMMEDIATE 内核 live owner/head、running operation、当前 workflow revision、
+  approval CAS 完整性、重复失败与总成本，再一次写入 running operation 和 typed RepairReservation。
+- 场景/资产共用总成本 2；失败、取消及重开 Store 后都保留预留。并发同 head 只有一次成功，
+  缺批准、旧 revision、无效 cost、非法 capability 等拒绝时不写 operation。
+- 公开 Store/合同/CAS 测试主线程复跑 39 passed（0.39s）；不包含真实模型或仿真。
+  旧历史 operation 的可选字段可读；实际 Harness 强制预留与完成链校验在随后业务切片接入。
+
 ## 2026-09-13 C10 显式统一颜色替换
 
 - AssetPatch 新增可选 `color_mode=uniform_replace`，必须伴随 base_color；默认继续拒绝纹理或顶点颜色
