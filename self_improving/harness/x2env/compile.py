@@ -131,6 +131,8 @@ def compile_scene(scene_ref, assets, *, registry, store, output_root, policy, se
         if len(on) > 1:
             raise ValueError("multiple support targets")
         position = list(entity.pose.position)
+        if any(value is None for value in position[:2]):
+            raise ValueError("unresolved foreground XY requires grounding")
         if any(v is None for v in position):
             if not on or on[0].target != frame or by_id[frame].role != "structural_support":
                 raise ValueError("unresolved foreground position")

@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-DESIGN-READINESS — 缺值不是模型标记
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：既有Genesis/资产来源不变。
+- source_ref：`b9955a6`；target_paths：design_plan/harness/compile/completion及公开测试。
+- integration_method：共享必要字段准入，保留显式默认和Registry实测推导；原proposal入包，不重写unknown。
+- verification：主线程209项通过，实际错误接受先RED后GREEN；runtime_verification：新版真实case待跑。
+- recorded_git_authors：原场景/资产适配与本次Harness门禁维护分开保留。
+
 ## INT-CANONICAL-C05-CATEGORY-CONTEXT — 词表提示不是资产匹配
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Yuxin原whole-phrase engine不变。

@@ -74,8 +74,11 @@ def materialize_completion(snapshot, store, output):
         budget_refs = _audit_repair_reservations(snapshot, store)
         if snapshot.grounding is not None:
             refs["grounding"] = snapshot.grounding
+        if snapshot.proposal is not None:
+            refs["proposal"] = snapshot.proposal
         capabilities = {
             "input_bundle": {"ingest"},
+            "proposal": {"codex.interpret"},
             "scene_ir": {"codex.interpret", "revise", "codex.ground"},
             "grounding": {"codex.ground"},
             "compiled_scene": {"x2env.compile"},
@@ -106,6 +109,16 @@ def materialize_completion(snapshot, store, output):
 
         scene = SceneIR.model_validate_json(store.read_artifact(snapshot.scene_ir))
         compiled = CompiledScene.model_validate_json(store.read_artifact(snapshot.compiled_scene))
+        from .design_plan import needs_design_grounding
+
+        if needs_design_grounding(scene, compiled.policy):
+            raise ValueError("completion_unresolved_scene_values")
+        if snapshot.proposal is not None:
+            original = BackendProposal.model_validate_json(store.read_artifact(snapshot.proposal))
+            if original.proposal is not None and any(
+                unknown.reason_kind == "conflict" for unknown in original.proposal.unknowns
+            ):
+                raise ValueError("completion_unresolved_intent_conflict")
         if snapshot.grounding is not None:
             _verify_grounding(snapshot, store, scene, compiled)
         elif any(
@@ -1018,7 +1031,7 @@ def _verify_grounding_origin(snapshot, store, scene, compiled):
     if (
         receipt.get("original_unknowns") != [u.model_dump(mode="json") for u in unknowns]
         or not isinstance(indices, list)
-        or not indices
+        or (not indices and not new_design)
         or any(type(i) is not int or not 0 <= i < len(unknowns) for i in indices)
         or len(set(indices)) != len(indices)
         or (

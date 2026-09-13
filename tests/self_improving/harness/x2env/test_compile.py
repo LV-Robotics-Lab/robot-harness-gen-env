@@ -77,6 +77,8 @@ def test_explicit_structural_geometry_does_not_claim_deployment_defaults(tmp_pat
         "structural_width",
         "multiple_support",
         "unresolved_position",
+        "unresolved_support_x",
+        "unresolved_support_y",
     ],
 )
 def test_compile_preserves_layout_and_copies_bound_asset_closure(tmp_path, fault):
@@ -182,6 +184,8 @@ def test_compile_preserves_layout_and_copies_bound_asset_closure(tmp_path, fault
         "structural_width",
         "multiple_support",
         "unresolved_position",
+        "unresolved_support_x",
+        "unresolved_support_y",
     }:
         document = scene.model_dump(mode="json")
         if fault == "dimensions":
@@ -201,6 +205,9 @@ def test_compile_preserves_layout_and_copies_bound_asset_closure(tmp_path, fault
             document["entities"][0]["dimensions"][0] = None
         elif fault == "multiple_support":
             document["relations"] *= 2
+        elif fault in {"unresolved_support_x", "unresolved_support_y"}:
+            axis = 0 if fault == "unresolved_support_x" else 1
+            document["entities"][1]["pose"]["position"][axis] = None
         else:
             document["relations"] = []
         scene = SceneIR.model_validate_json(json.dumps(document))

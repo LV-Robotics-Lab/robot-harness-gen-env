@@ -29,6 +29,30 @@ def intent(tmp_path):
     return SceneIntentProposal.model_validate_json(json.dumps(value))
 
 
+def test_authorized_compile_defaults_and_measured_geometry_do_not_require_model(tmp_path):
+    from self_improving.harness.x2env.compile import StructuralPolicy
+    from self_improving.harness.x2env.design_plan import needs_design_grounding
+
+    scene = intent(tmp_path).scene
+    support, obj = scene.entities
+    scene = scene.model_copy(
+        update={
+            "entities": (
+                support.model_copy(
+                    update={"pose": support.pose.model_copy(update={"yaw_degrees": 0})}
+                ),
+                obj.model_copy(update={"dimensions": None}),
+            )
+        }
+    )
+    assert (
+        needs_design_grounding(
+            scene, StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5)
+        )
+        is False
+    )
+
+
 def policy():
     from self_improving.harness.x2env.grounding import SceneDesignPolicy
 
@@ -38,6 +62,30 @@ def policy():
         world_anchor_xy=(0, 0),
         world_anchor_yaw_degrees=0,
     )
+
+
+@pytest.mark.parametrize("unknown_mode", ["noncritical", "omitted"])
+def test_actual_missing_geometry_and_defaults_do_not_depend_on_unknown_flags(
+    tmp_path, unknown_mode
+):
+    from self_improving.harness.x2env.compile import StructuralPolicy
+    from self_improving.harness.x2env.design_plan import classify_design_unknowns
+
+    proposal = intent(tmp_path)
+    proposal = proposal.model_copy(
+        update={
+            "unknowns": tuple(u.model_copy(update={"critical": False}) for u in proposal.unknowns)
+            if unknown_mode == "noncritical"
+            else (),
+        }
+    )
+    original = proposal.model_dump_json()
+    plan = classify_design_unknowns(
+        proposal, policy(), StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5)
+    )
+    assert plan.rules and not plan.requires_media
+    assert plan.resolved_unknown_indices == ((0, 1, 2) if unknown_mode == "noncritical" else ())
+    assert proposal.model_dump_json() == original
 
 
 @pytest.mark.parametrize("height_reason", ["pose_unobservable", "unspecified"])
@@ -64,6 +112,58 @@ def test_exact_structural_defaults_and_on_height_are_classified(tmp_path, height
         "on_geometry_derived",
     }
     assert proposal.unknowns[0].critical
+
+
+@pytest.mark.parametrize("critical", [False, True])
+@pytest.mark.parametrize(
+    "field", ["scene.entities.support.dimensions[2]", "scene.entities.support.category"]
+)
+def test_reported_conflict_never_becomes_design_authority(tmp_path, critical, field):
+    from self_improving.harness.x2env.compile import StructuralPolicy
+    from self_improving.harness.x2env.design_plan import classify_design_unknowns
+
+    proposal = intent(tmp_path)
+    proposal = proposal.model_copy(
+        update={
+            "unknowns": (
+                proposal.unknowns[0].model_copy(
+                    update={"critical": critical, "reason_kind": "conflict", "field": field}
+                ),
+                *proposal.unknowns[1:],
+            )
+        }
+    )
+    with pytest.raises(ValueError, match="grounding_requires_clarification"):
+        classify_design_unknowns(
+            proposal,
+            policy(),
+            StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+        )
+
+
+@pytest.mark.parametrize("field", [None, "dimensions", "dimension_axis", "position", "yaw"])
+def test_readiness_reads_required_values_instead_of_model_unknown_rows(tmp_path, field):
+    from self_improving.harness.x2env.contracts import SceneIR
+    from self_improving.harness.x2env.design_plan import needs_design_grounding
+
+    raw = intent(tmp_path).scene.model_dump(mode="json")
+    for entity in raw["entities"]:
+        entity["dimensions"] = [0.8, 0.6, 0.04]
+        entity["pose"]["position"] = [0, 0, 0.75]
+        entity["pose"]["yaw_degrees"] = 0
+    obj = raw["entities"][1]
+    if field == "dimensions":
+        obj["dimensions"] = None
+    elif field == "dimension_axis":
+        obj["dimensions"][1] = None
+    elif field == "position":
+        obj["pose"]["position"][0] = None
+    elif field == "yaw":
+        obj["pose"]["yaw_degrees"] = None
+    assert needs_design_grounding(SceneIR.model_validate_json(json.dumps(raw))) is (
+        field in {"position", "yaw"}
+    )
+    assert needs_design_grounding(None) is False
 
 
 def test_unknown_foreground_dimension_axis_is_geometry_design_not_media(tmp_path):

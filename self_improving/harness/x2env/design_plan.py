@@ -20,6 +20,39 @@ class DesignPlan(Model):
     requires_media: bool
 
 
+def needs_design_grounding(scene, structural_policy=None):
+    """Find design gaps beyond explicit compile defaults and measured asset geometry."""
+    if scene is None:
+        return False
+    entities = {entity.id: entity for entity in scene.entities}
+    for entity in scene.entities:
+        if entity.pose.yaw_degrees is None:
+            return True
+        if entity.role == "structural_support":
+            dimensions = entity.dimensions
+            if dimensions is None or dimensions[0] is None or dimensions[1] is None:
+                return True
+            if structural_policy is None and (
+                dimensions[2] is None or any(v is None for v in entity.pose.position)
+            ):
+                return True
+        else:
+            # Registry geometry owns foreground dimensions, but cannot infer layout XY.
+            if any(v is None for v in entity.pose.position[:2]):
+                return True
+            if entity.pose.position[2] is None:
+                on = [r for r in scene.relations if r.source == entity.id and r.relation == "on"]
+                target = entities.get(entity.pose.frame)
+                if (
+                    len(on) != 1
+                    or on[0].target != entity.pose.frame
+                    or target is None
+                    or target.role != "structural_support"
+                ):
+                    return True
+    return False
+
+
 def classify_design_unknowns(proposal, policy, structural_policy=None):
     if not policy.enabled or proposal.scene is None:
         raise ValueError("design_grounding_disabled")
@@ -106,15 +139,17 @@ def classify_design_unknowns(proposal, policy, structural_policy=None):
                 paths[prefix + "." + field] = selected
     indices = []
     for i, unknown in enumerate(proposal.unknowns):
-        if not unknown.critical:
-            continue
+        if unknown.reason_kind == "conflict":
+            raise ValueError("grounding_requires_clarification")
         selected = paths.get(unknown.field)
         # Retain the original bounded wildcard contract; expand only existing entities.
         if unknown.field in {"scene.entities[*].dimensions", "scene.entities[*].pose"}:
             field = unknown.field.split("].")[1]
             selected = [r for r in rules if r.path.startswith(field)]
         if not selected:
-            raise ValueError("grounding_unknown_field_not_designable")
+            if unknown.critical:
+                raise ValueError("grounding_unknown_field_not_designable")
+            continue
         if unknown.reason_kind == "unspecified":
             if any(
                 r.basis
@@ -142,7 +177,7 @@ def classify_design_unknowns(proposal, policy, structural_policy=None):
             if unknown.field.endswith("[2]"):
                 raise ValueError("unsupported_on_coordinate_frame")
         indices.append(i)
-    if not indices:
+    if not rules:
         raise ValueError("no_authorized_design_unknowns")
     return DesignPlan(
         resolved_unknown_indices=tuple(indices),

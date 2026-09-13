@@ -67,6 +67,7 @@ def completed_fixture(
     reservation_fault=None,
     structural_grounding=False,
     local_color=False,
+    empty_grounding_unknowns=False,
 ):
     """Synthetic producer at external execution seam, not a real Genesis run."""
     from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
@@ -150,6 +151,20 @@ def completed_fixture(
         ground_ir = SceneIR.model_validate_json(json.dumps(ground_doc))
     if input_fault == "scene_input":
         ir = ir.model_copy(update={"input_sha256": "f" * 64})
+    elif input_fault == "ungrounded_x":
+        ir = ir.model_copy(
+            update={
+                "entities": (
+                    ir.entities[0].model_copy(
+                        update={
+                            "pose": ir.entities[0].pose.model_copy(
+                                update={"position": (None, 0.0, 0.0)}
+                            )
+                        }
+                    ),
+                )
+            }
+        )
 
     def put(value):
         return store.write_artifact(json.dumps(value).encode(), "application/json")
@@ -383,6 +398,39 @@ def completed_fixture(
         ("codex.diagnose", {"diagnosis": diagnosis_ref}, diagnosis_ref),
         ("x2env.validate", {"validation": validation}, validation),
     ]
+    if input_fault == "noncritical_conflict":
+        from self_improving.harness.x2env.contracts import BackendProposal
+
+        original = BackendProposal.model_validate_json(
+            json.dumps(
+                {
+                    "status": "completed",
+                    "proposal": {
+                        "scene": ir.model_dump(mode="json"),
+                        "unknowns": [
+                            {
+                                "field": "scene.entities.item.category",
+                                "reason": "unresolved contradictory object requests",
+                                "reason_kind": "conflict",
+                                "critical": False,
+                                "provenance": [
+                                    p.model_dump(mode="json") for p in entity.provenance.category
+                                ],
+                            }
+                        ],
+                    },
+                    "evidence": [],
+                    "error_code": None,
+                    "elapsed_seconds": 0.0,
+                }
+            )
+        )
+        original_ref = put(original.model_dump(mode="json"))
+        stages[1] = (
+            "codex.interpret",
+            {"scene_ir": scene_ref, "proposal": original_ref},
+            scene_ref,
+        )
     if grounding:
         from self_improving.harness.x2env.contracts import (
             BackendProposal,
@@ -522,6 +570,10 @@ def completed_fixture(
             error_code=None,
             elapsed_seconds=0.0,
         )
+        if empty_grounding_unknowns:
+            original = original.model_copy(
+                update={"proposal": original.proposal.model_copy(update={"unknowns": ()})}
+            )
         original_ref = put(original.model_dump(mode="json"))
         initial_assets = resolved.model_copy(update={"scene_ir": pending_ref})
         initial_ref = put(initial_assets.model_dump(mode="json"))
@@ -1193,6 +1245,41 @@ def test_completion_rejects_forged_or_failed_evidence(tmp_path, fault):
     }
     assert result.error_code == expected[fault]
     assert store.status(snapshot.workflow_id) == (original if fault == "stale" else snapshot)
+
+
+def test_completion_rejects_missing_scene_values_even_without_critical_advisory(tmp_path):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(tmp_path, input_fault="ungrounded_x")
+    result = materialize_completion(snapshot, store, tmp_path / "rejected")
+    assert result.status == "failed"
+    assert result.error_code == "completion_unresolved_scene_values"
+    assert result.package_path is None and result.manifest is None
+    assert store.status(snapshot.workflow_id) == snapshot
+
+
+def test_completion_rejects_retained_conflict_even_when_advisory_marks_it_noncritical(tmp_path):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(tmp_path, input_fault="noncritical_conflict")
+    result = materialize_completion(snapshot, store, tmp_path / "rejected")
+    assert result.status == "failed"
+    assert result.error_code == "completion_unresolved_intent_conflict"
+    assert result.package_path is None
+    assert store.status(snapshot.workflow_id) == snapshot
+
+
+def test_completion_accepts_actual_design_rules_without_invented_unknown_records(tmp_path):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(
+        tmp_path, grounding=True, structural_grounding=True, empty_grounding_unknowns=True
+    )
+    receipt = json.loads(store.read_artifact(snapshot.grounding))
+    assert receipt["original_unknowns"] == receipt["resolved_unknowns"] == []
+    assert receipt["design_plan"]["rules"]
+    result = materialize_completion(snapshot, store, tmp_path / "completion")
+    assert result.status == "materialized", result
 
 
 @pytest.mark.parametrize("state", ["failed", "cancelled", "blocked"])

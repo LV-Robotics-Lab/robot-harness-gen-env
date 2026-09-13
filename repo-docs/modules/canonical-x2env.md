@@ -1,5 +1,9 @@
 # Canonical x2env（收敛实施中）
 
+场景准入检查必要布局缺值，不只相信模型unknown.critical；显式冲突即使非critical也需澄清。
+未知foreground XY不能在compile中变成零；显式结构默认、Registry尺寸和唯一on支撑高度推导仍合法。
+完成门独立复核这些条件，并把原interpret proposal纳入证据包；组件209项回归通过，真实新case待验。
+
 测试从 `script/run_self_improving_tests.sh` 执行六组、独立root与merge；每组独立30分钟总预算。
 同源六份测量才可归并，业务文件语句/分支必须100%。全active lint与reader docs检查已实际接入，
 不再列为未实现；固定源码的真实全组结果和资格仍须分别验收，详见进度账。

@@ -13,14 +13,27 @@ from tests.self_improving.harness.x2env.test_grounding import setup
 
 
 @pytest.mark.parametrize("enabled", [False, True])
+@pytest.mark.parametrize("critical", [False, True])
 @pytest.mark.parametrize("conflict", [False, True])
 @pytest.mark.parametrize("measured", [False, True])
 @pytest.mark.parametrize("structural_case", [False, True])
 def test_unknown_scale_is_pending_until_asset_anchored_design_commits(
-    tmp_path, enabled, conflict, measured, structural_case
+    tmp_path, enabled, critical, conflict, measured, structural_case
 ):
     store, backend, bundle, proposal, assets = setup(tmp_path, measured=measured, conflict=conflict)
     original = BackendProposal.model_validate_json(store.read_artifact(proposal))
+    original = original.model_copy(
+        update={
+            "proposal": original.proposal.model_copy(
+                update={
+                    "unknowns": tuple(
+                        u.model_copy(update={"critical": critical})
+                        for u in original.proposal.unknowns
+                    )
+                }
+            )
+        }
+    )
     if structural_case and not conflict:
         document = original.model_dump(mode="json")
         document["proposal"]["unknowns"][0].update(
@@ -89,7 +102,101 @@ def test_unknown_scale_is_pending_until_asset_anchored_design_commits(
     assert BackendProposal.model_validate_json(store.read_artifact(result.proposal)) == original
     receipt = json.loads(store.read_artifact(result.grounding))
     assert receipt["real_world_scale_recovered"] is False
-    assert original.proposal.unknowns[0].critical is True
+    assert original.proposal.unknowns[0].critical is critical
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_omitted_unknown_list_cannot_bypass_actual_missing_design_fields(tmp_path, enabled):
+    store, backend, _, proposal, assets = setup(tmp_path, measured=True)
+    original = BackendProposal.model_validate_json(store.read_artifact(proposal))
+    original = original.model_copy(
+        update={"proposal": original.proposal.model_copy(update={"unknowns": ()})}
+    )
+    calls = []
+
+    class ModelDouble:
+        def interpret(self, bundle, **kwargs):
+            return original
+
+        def ground_scene(self, *args, **kwargs):
+            calls.append("ground")
+            return backend.ground_scene(*args, **kwargs)
+
+    class ResolverDouble:
+        def resolve(self, scene, **kwargs):
+            checkpoint = harness.status(handle.workflow_id)
+            assert checkpoint.scene_ir is None and checkpoint.pending_scene_ir == scene
+            calls.append("resolve")
+            resolved = ResolvedAssetSet.model_validate_json(store.read_artifact(assets))
+            return ResolutionResult(
+                status="succeeded",
+                resolved=resolved.model_copy(update={"scene_ir": scene}),
+                receipt=assets,
+            )
+
+    harness = Harness(
+        tmp_path / "state",
+        backend_factory=lambda _: ModelDouble(),
+        resolver_factory=lambda *_: ResolverDouble(),
+        scene_design_policy=SceneDesignPolicy(enabled=enabled),
+        compile_policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+    )
+    handle = harness.submit(
+        X2EnvRequest(
+            images=(InputMedia(path=str(tmp_path / "input.png")),),
+            seed=23,
+            idempotency_key="ground",
+            output_dir=str(tmp_path / "out"),
+        )
+    )
+    result = harness.resume(handle.workflow_id)
+    assert BackendProposal.model_validate_json(store.read_artifact(result.proposal)) == original
+    if not enabled:
+        assert result.stop_reason == "clarification_required" and calls == []
+        assert result.compiled_scene is None
+    else:
+        assert calls == ["resolve", "ground"]
+        assert result.compiled_scene is not None and result.pending_scene_ir is None
+        receipt = json.loads(store.read_artifact(result.grounding))
+        assert receipt["resolved_unknowns"] == receipt["original_unknowns"] == []
+        assert receipt["design_plan"]["rules"]
+        assert receipt["design_plan"]["requires_media"] is True
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_reported_conflict_blocks_even_when_fields_are_filled_and_noncritical(tmp_path, enabled):
+    store, _, _, proposal, _ = setup(tmp_path, measured=True)
+    document = json.loads(store.read_artifact(proposal))
+    for entity in document["proposal"]["scene"]["entities"]:
+        entity["dimensions"] = [0.1, 0.1, 0.1]
+        entity["pose"]["position"] = [0, 0, 0.5]
+        entity["pose"]["yaw_degrees"] = 0
+    document["proposal"]["unknowns"][0].update(
+        critical=False, reason_kind="conflict", field="scene.entities.support.dimensions"
+    )
+    original = BackendProposal.model_validate_json(json.dumps(document))
+
+    class ModelDouble:
+        def interpret(self, bundle, **kwargs):
+            return original
+
+    harness = Harness(
+        tmp_path / "state",
+        backend_factory=lambda _: ModelDouble(),
+        scene_design_policy=SceneDesignPolicy(enabled=enabled),
+    )
+    handle = harness.submit(
+        X2EnvRequest(
+            images=(InputMedia(path=str(tmp_path / "input.png")),),
+            seed=23,
+            idempotency_key="ground",
+            output_dir=str(tmp_path / "out"),
+        )
+    )
+    result = harness.resume(handle.workflow_id)
+    assert result.stop_reason == "clarification_required"
+    assert result.scene_ir is None and result.pending_scene_ir is None
+    assert BackendProposal.model_validate_json(store.read_artifact(result.proposal)) == original
 
 
 def test_recovered_dead_grounding_owner_does_not_become_permanent_design_failure(tmp_path):

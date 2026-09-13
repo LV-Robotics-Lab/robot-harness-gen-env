@@ -262,18 +262,23 @@ class Harness:
             operation_id=operation.operation_id, status="succeeded", outputs=outputs
         )
         proposal = advisory.proposal
-        critical = [unknown for unknown in proposal.unknowns if unknown.critical]
-        design_pending = False
-        if critical and self._scene_design_policy.enabled:
-            from .design_plan import classify_design_unknowns
+        from .design_plan import classify_design_unknowns, needs_design_grounding
 
+        critical = [
+            unknown
+            for unknown in proposal.unknowns
+            if unknown.critical or unknown.reason_kind == "conflict"
+        ]
+        needs_design = needs_design_grounding(proposal.scene, self._compile_policy)
+        design_pending = False
+        if (critical or needs_design) and self._scene_design_policy.enabled:
             try:
                 classify_design_unknowns(proposal, self._scene_design_policy, self._compile_policy)
                 design_pending = True
             except ValueError:
                 # The original advisory/critical fields remain in the journal for clarification.
                 pass
-        if proposal.scene is None or (critical and not design_pending):
+        if proposal.scene is None or ((critical or needs_design) and not design_pending):
             return self._store.complete_operation(
                 snapshot,
                 result,

@@ -26,7 +26,12 @@ _Avoid_: free-form prompt、隐式丢实体
 
 **Pending Intent（待补全意图）**:
 语义已识别但关键参数尚未解决的建议，可用于查找候选资产，不可直接编译或视为接受场景。
-_Avoid_: accepted SceneIR、悄悄忽略 critical unknown
+是否待补全取决于未解决的必要设计信息，而非建议者对其重要性的单独标记。
+_Avoid_: accepted SceneIR、用非 critical 标签消除未解决冲突
+
+**Category Vocabulary（类别词表）**:
+资产库已使用的概念名称，供意图命名保持一致；名称相同或出现在词表中不等于候选已经匹配。
+_Avoid_: 同义词自动替换、资产可用性证明
 
 **Simulation Design Scale（仿真设计尺度）**:
 为生成场景选择的尺寸依据，可锚定已测资产并保留设计来源；不声称恢复了媒体中真实世界的绝对尺度。

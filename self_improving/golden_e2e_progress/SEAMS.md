@@ -30,6 +30,10 @@ SceneIR坐标约定：foreground为几何中心，结构支撑frame为上表面�
 XY中心/Z底面，编译器做显式偏移。仅未给出的结构厚度/世界原点可使用部署policy，并记录defaults；
 长宽必须来自SceneIR，foreground未知高度只由明确on关系与已测资产半高解析。
 不得修改用户已给轴/朝向，尺寸冲突拒绝；没有解析的关节/inside不静默简化。
+foreground未知X/Y不得用支撑中心替代。控制器与完成门共用needs_design_grounding检查实际
+缺失的必要设计值，不以unknown.critical为唯一门；未解决conflict即使非critical也须阻断。
+显式StructuralPolicy默认、Registry实测尺寸与合法on-Z推导仍沿用原compile合同，不一律强制模型补全。
+classify_design_unknowns保留原unknown行与标记；规则有内容时原unknown索引可为空，完成门重算并核对。
 
 - CodexBackend.interpret / assess_asset_candidates / assess_and_diagnose只提供建议，不控制执行或物理通过。
 - Store.asset_categories提供有界排序命名索引，部署取构造时快照交给CodexBackend；每次interpret留证。

@@ -1,5 +1,14 @@
 # 稳定决策
 
+## 2026-09-13 必要设计信息不由模型 critical 标记授予
+
+- Harness按实际未解决的布局/yaw/必要结构尺寸决定补全或澄清；原unknown及critical标记不改写。
+- 明确报告的未解决conflict不因critical=false或字段已有数值而获得授权；显式已解决override不在此列。
+- 保留原编译合同允许的显式结构默认、Registry实测尺寸与唯一支撑on-Z推导；不能把这些已有依据
+  错判成必须调用模型。未知foreground X/Y无此默认授权，compile与completion都须拒绝。
+- 模型未列unknown行时，实际缺失字段仍可产生有界设计rules；空indices不等于无设计，原行不伪造。
+  新design receipt由完成门独立重算规则；旧无design_plan合同仍要求非空原索引。
+
 ## 2026-09-13 唯一受管理 Codex transport 显式请求最大力度
 
 - 现固定传 `-c model_reasoning_effort="max"`；用户/模型prompt不能降级，也不在拒绝后换值。

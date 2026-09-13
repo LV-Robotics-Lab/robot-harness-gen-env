@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 C05/C08/C11 实际缺值准入
+
+- Harness按必要设计字段而非仅模型critical判断grounding；非critical conflict也必须澄清，原unknown不改写。
+  显式结构默认、Registry几何尺寸及唯一on关系的支撑高度推导仍保留，未知foreground XY不再自动置零。
+- completion独立拒绝未知XY和原proposal冲突；原interpret proposal进入包证据闭包。
+  新design plan可保留空unknown索引，但必须有可重算授权规则；旧receipt非空索引要求不变。
+- 公开compile未知X/Y、completion未知X/非critical冲突、无unknown行的合法grounding均先RED后GREEN。
+  主线程九模块最终209 passed/93.51s。早期“所有null均需grounding”过宽，已按既有默认契约收窄，
+  恢复原fixture未知尺寸；不把允许的Registry尺寸推导记成生产漏洞。
+- 这是组件修复，新的真实S01与Genesis仍待固定版本验证；不回填此前失败或授予push资格。
+
 ## 2026-09-13 C05/C06 库内类别命名上下文
 
 - 固定eaccbeb的S01一次运行155.395893s，workflow `d4c7d32a-e3d2-4742-a6aa-c787250d3a4e`

@@ -4,6 +4,10 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- 实际缺值/冲突三层准入修复209项通过；提交后固定新版，连同类别命名上下文跑一次真实S01。
+- 固定5fe0225六组和独立root已通过，merge因core覆盖90.46%语句/80.03%分支失败；继续补齐，不满足push。
+- 下列执行中描述为历史记录；新case、三次copy-run和完整冻结矩阵尚未通过。
+
 - compact版S01已blocked/local_assets_unresolved：computer_mouse未命中mouse目录；旧成功理解也全critical=false，不能归因于新提示。保留新失败并修复通用检索/按实际缺值准入。
 - completion新增14项准入攻击通过；整体core覆盖仍待补齐，不混合单文件和三模块测量。
 
