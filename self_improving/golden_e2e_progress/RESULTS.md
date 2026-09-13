@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 S04模型语法失败与有界格式重生成
+
+- e754ff9 S04第三次50.793268s，workflow`49bfce32-4183-4051-993f-e6447ae9a01e`，
+  failed/invalid_model_evidence；根`/var/tmp/canonical-matrix-v2-s04-r3.nUNpgt/S04`。
+  原输出8095 bytes与唯一agent_message逐字一致，turn.completed/exit0，末尾unknowns数组闭合符错误；
+  output_tokens6188，不能据此宣称服务内部未截断。未产生资产/Genesis；原坏JSON/CAS/日志保留。
+- failure包也因遍历坏JSON失败，另片修历史部分产物保存。模型切片只对语法错误一次重生成，
+  精确错误+原输入/媒体/schema、同deadline/max模型，非schema/语义重试，绝不手填或补括号。
+  原bad bytes标text/plain而不是声称有效JSON；成功输出仍严格校验。两个公开外部进程替身用例先RED，
+  有界成功/再次失败/语义不重试及相邻codex/deployment/pipeline共78项通过6.07s。
+  一个首次测试命令路径写错，未运行测试，未计为通过。新真实S04待固定版本运行。
+
 ## 2026-09-13 三例完成门 JSON 顺序误拒与通用字段冲突修复
 
 - e755421 新 S02/S03/S04 分别257.521/311.348/408.129076s，真实视觉、物理与validate均通过，

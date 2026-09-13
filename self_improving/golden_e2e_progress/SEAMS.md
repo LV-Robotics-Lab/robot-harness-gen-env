@@ -47,6 +47,8 @@ classify_design_unknowns保留原unknown行与标记；规则有内容时原unkn
   本InputBundle原text/image/video来源集合；不使用派生帧PNG身份代替原来源。静态合同不变，
   模型仍选择内容和出处，后置来源类型/索引/帧/SHA关联检查保留；错误输出不得自动重写。
 - 所有模型角色共用的 transport 固定显式请求 max 并记实际argv；拒绝原样失败，不重试降级，服务端有效力度未验证。
+- interpret的JSON语法错误独立于语义/schema失败：最多一次带精确错误的模型重生成，原输入和schema
+  不变、共享原deadline、两份raw/log保留；非语法错误和第二次失败停止，不做本地JSON内容修补。
 - CodexBackend.ground_scene 补全显式部署允许的生成设计未知项；pending intent 只供查资产，
   测得的不可变资产尺寸与原媒体共同形成设计依据，不是图像绝对尺度测量，未通过检查不得 compile。
 - YuxinProviderAdapter调用原provider engine，带真实local/web和许可门。

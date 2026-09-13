@@ -99,6 +99,79 @@ def executable(tmp_path, response, event="turn.completed", tool=False):
     return path
 
 
+@pytest.mark.parametrize("repair_ok", [True, False])
+def test_syntax_only_regeneration_is_once_and_preserves_original_bytes(tmp_path, repair_ok):
+    from self_improving.harness.x2env.artifacts import artifact_closure
+    from self_improving.harness.x2env.codex import CodexBackend
+
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(text="a table", seed=1, idempotency_key="format", output_dir=str(tmp_path)),
+        store,
+    )
+    valid = json.dumps(
+        {
+            "scene": None,
+            "unknowns": [
+                {
+                    "field": "scene",
+                    "reason": "Ambiguous requested relation",
+                    "critical": True,
+                    "provenance": [
+                        {"source": "text", "input_sha256": bundle.text.sha256, "kind": "explicit"}
+                    ],
+                }
+            ],
+        }
+    )
+    broken = valid[:-1]
+    path = tmp_path / "format-model-double"
+    path.write_text(
+        f"#!{sys.executable}\nimport sys,pathlib\n"
+        "prompt=sys.stdin.read()\n"
+        "out=pathlib.Path(sys.argv[sys.argv.index('--output-last-message')+1])\n"
+        f"raw={valid!r} if 'format-retry-1' in str(out) and {repair_ok!r} else {broken!r}\n"
+        "out.write_text(raw)\n"
+        'print(\'{"type":"turn.completed"}\')\n'
+    )
+    path.chmod(0o700)
+    attempt = tmp_path / "attempt"
+    result = CodexBackend(
+        path, hashlib.sha256(path.read_bytes()).hexdigest(), "double", store
+    ).interpret(bundle, output_root=attempt, timeout=10)
+    assert result.status == ("completed" if repair_ok else "failed")
+    assert (attempt / "proposal.json").read_text() == broken
+    assert (attempt / "format-retry-1/proposal.json").is_file()
+    assert not (attempt / "format-retry-2").exists()
+    assert any(
+        store.read_artifact(ref) == broken.encode() and ref.media_type == "text/plain"
+        for ref in result.evidence
+    )
+    artifact_closure(store, result.evidence)
+    prompt = (attempt / "format-retry-1/prompt.txt").read_text()
+    assert "JSON syntax" in prompt and bundle.request_sha256 in prompt and "a table" in prompt
+    receipt = json.loads((attempt / "format-regeneration.json").read_bytes())
+    assert receipt["attempt_limit"] == 1 and receipt["shared_deadline"] is True
+    if repair_ok:
+        assert result.proposal.unknowns[0].critical is True
+
+
+def test_schema_failure_does_not_get_a_syntax_regeneration(tmp_path):
+    from self_improving.harness.x2env.codex import CodexBackend
+
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(text="a table", seed=1, idempotency_key="schema", output_dir=str(tmp_path)),
+        store,
+    )
+    path = executable(tmp_path, {"scene": None, "unknowns": []})
+    result = CodexBackend(
+        path, hashlib.sha256(path.read_bytes()).hexdigest(), "double", store
+    ).interpret(bundle, output_root=tmp_path / "attempt", timeout=10)
+    assert result.status == "failed" and result.error_code == "invalid_model_evidence"
+    assert not (tmp_path / "attempt/format-retry-1").exists()
+
+
 @pytest.mark.parametrize("category", ["garbage_can", "computer_mouse", "unlisted_object"])
 def test_local_naming_snapshot_is_evidence_not_category_rewriting(tmp_path, category):
     from self_improving.harness.x2env.codex import CodexBackend

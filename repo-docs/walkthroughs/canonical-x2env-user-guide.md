@@ -175,6 +175,8 @@ x2env resume --deployment /absolute/deployment.json --workflow-id WORKFLOW_ID
 - `model_authentication_required`：受管理模型认证失效，父状态列出`managed_codex_authentication`；
   由部署方恢复凭据，不消耗模型重试，不把“本机缓存已登录”当作服务端授权有效的证明。
 - `command_timeout` / `command_interrupted`：保留日志、已完成资产和状态；不要把一次超时推断为某种网络故障。
+- interpret遇到JSON语法错误时，最多请求模型重生成一次，带原输入与精确语法错误且共享原时限；
+  不在本地补JSON或改语义。原始错误及两次输出保留；schema/来源失败、认证和超时不走此重试。
 - `incomplete_dual_profile` / 缺新鲜图像：物理或观测仍是 `not_run`，不能拿一张预览图替代。
 - `no_feasible_support_surface` / `footprint_outside_support_domain`：查看实测面、完整投影、接触和布局；
   不加静态标记、不填孔、不改冻结物理阈值制造通过。

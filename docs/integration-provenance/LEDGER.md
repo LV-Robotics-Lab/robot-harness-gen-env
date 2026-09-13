@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-INTERPRET-SYNTAX — 单次同预算格式重生成
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：e754ff9实际S04模型日志。
+- integration_method：既有Codex interpret公开seam仅JSON语法失败重生成一次，原模型/输入/时限不变；
+  原raw保存、不本地修内容、不扩大物理或语义授权。malformed原输出标text/plain保精确bytes。
+- verification：真实model event=proposal且exit0、数组闭合错误；78项外部程序替身邻组通过，
+  runtime_verification：此修复尚无新真实E2E。上游模型服务/客户端归属不变；Git author见提交。
+
 ## INT-CANONICAL-COMPLETION-CONTEXT-BYTES — 语义和原始传输分别核验
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：e755421。

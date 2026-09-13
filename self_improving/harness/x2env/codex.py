@@ -401,6 +401,44 @@ class CodexBackend:
             raw = self._invoke(
                 root, prompt, images, SceneIntentProposal, record, timeout, started, bundle=bundle
             )
+            try:
+                json.loads(raw)
+            except json.JSONDecodeError as exc:
+                # One syntax-only regeneration, not a semantic repair or a fresh time budget.
+                record(
+                    "format-regeneration.json",
+                    json.dumps(
+                        {
+                            "error_code": "model_json_syntax_invalid",
+                            "message": exc.msg,
+                            "position": exc.pos,
+                            "original_sha256": hashlib.sha256(raw).hexdigest(),
+                            "attempt_limit": 1,
+                            "shared_deadline": True,
+                        }
+                    ).encode(),
+                )
+                if time.monotonic() - started >= timeout:
+                    raise ValueError("model_timeout") from exc
+                retry = root / "format-retry-1"
+                retry.mkdir()
+                raw = self._invoke(
+                    retry,
+                    prompt
+                    + "\nThe previous response failed JSON syntax validation: "
+                    + json.dumps({"message": exc.msg, "position": exc.pos})
+                    + ". Regenerate the complete JSON from the same original inputs. "
+                    "Close every array/object correctly. Preserve all user constraints, "
+                    "uncertainty, provenance and overrides; do not force a successful scene.",
+                    images,
+                    SceneIntentProposal,
+                    lambda name, data, media_type="application/json": record(
+                        "format-retry-1/" + name, data, media_type
+                    ),
+                    timeout,
+                    started,
+                    bundle=bundle,
+                )
             proposal = SceneIntentProposal.model_validate_json(raw)
             if proposal.scene and (
                 proposal.scene.input_sha256 != bundle.request_sha256 or proposal.scene.revision != 0
@@ -630,7 +668,13 @@ class CodexBackend:
             record(name, (root / name).read_bytes(), "text/plain")
         proposal_path = root / "proposal.json"
         if proposal_path.is_file():
-            record("proposal.json", proposal_path.read_bytes())
+            raw_proposal = proposal_path.read_bytes()
+            try:
+                json.loads(raw_proposal)
+                proposal_media_type = "application/json"
+            except (ValueError, UnicodeDecodeError):
+                proposal_media_type = "text/plain"
+            record("proposal.json", raw_proposal, proposal_media_type)
         if cancellation is not None:
             raise cancellation
         stderr_text = (root / "codex.stderr").read_text(errors="replace")

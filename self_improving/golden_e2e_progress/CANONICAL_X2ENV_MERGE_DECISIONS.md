@@ -14,6 +14,14 @@
 - v1 保持原 bytes；v2 单独固定精确输入、seed、媒体 SHA 和新门禁，不用新简单 prompt 回填旧分数。
   动态支撑非本窗口必要工作；硬截止不因失败或覆盖率缺口后移。
 
+### Q65执行细则：模型语法失败不等同语义修订
+
+- S04第三次真实模型以turn.completed/exit0返回未闭合JSON数组，event text与proposal原字节一致；
+  不推断服务内部是否截断，不手补括号。interpret允许且只允许一次JSON语法重生成，带精确语法错误
+  和原输入/媒体/同schema、共用原deadline及固定max模型。第二次仍错即失败，无循环或第三次调用。
+- 此预算不适用于schema/来源/语义错误、工具违规、认证或超时；不替代场景/资产修订共同预算。
+  原坏bytes按text/plain保存、新输出仍严格类型和来源校验，测试替身与真实运行分别报告。
+
 - 日期：2026-09-13
 - 状态：`accepted_matrix_v1_frozen`
 - 目标分支：`worktree/bingsheng`
