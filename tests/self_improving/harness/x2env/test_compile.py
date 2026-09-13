@@ -310,7 +310,16 @@ def test_dynamic_compile_preserves_known_axes_and_rejects_invalid_graph(tmp_path
         assert proof["plane_z_m"] == pytest.approx(0.4)
 
 
-def test_explicit_structural_geometry_does_not_claim_deployment_defaults(tmp_path):
+@pytest.mark.parametrize(
+    "color,rgba",
+    [
+        (None, None),
+        ("brown", (165 / 255, 42 / 255, 42 / 255, 1.0)),
+        ("Light Blue", (173 / 255, 216 / 255, 230 / 255, 1.0)),
+        ("#123456", (18 / 255, 52 / 255, 86 / 255, 1.0)),
+    ],
+)
+def test_explicit_structural_geometry_does_not_claim_deployment_defaults(tmp_path, color, rgba):
     import copy
 
     from self_improving.harness.x2env.compile import (
@@ -325,6 +334,7 @@ def test_explicit_structural_geometry_does_not_claim_deployment_defaults(tmp_pat
     scene = SceneIR.model_validate_json(store.read_artifact(ref)).model_dump(mode="json")
     support = copy.deepcopy(scene["entities"][0])
     support.update(id="table", category="table", role="structural_support")
+    support["color"] = color
     scene["entities"].append(support)
     support["dimensions"] = [0.9, 0.7, 0.03]
     support["pose"]["position"] = [0.2, 0.3, 0.6]
@@ -355,7 +365,35 @@ def test_explicit_structural_geometry_does_not_claim_deployment_defaults(tmp_pat
     actual = next(e for e in result.runtime_scene.entities if e.id == support["id"])
     assert actual.size_m == (0.9, 0.7, 0.03)
     assert actual.position_m == pytest.approx((0.2, 0.3, 0.585))
+    assert actual.model_dump().get("surface_rgba") == rgba
+    if color is None:
+        assert "surface_rgba" not in actual.model_dump()
     assert not any("deployment.structural_policy" in entry for entry in result.defaults_applied)
+
+
+def test_explicit_unsupported_structural_color_is_not_silently_dropped(tmp_path):
+    from self_improving.harness.x2env.compile import (
+        ResolvedAssetSet,
+        StructuralPolicy,
+        compile_scene,
+    )
+
+    store, registry, _, ref, _ = dynamic_stack_inputs(tmp_path)
+    scene = SceneIR.model_validate_json(store.read_artifact(ref)).model_dump(mode="json")
+    table = next(e for e in scene["entities"] if e["role"] == "structural_support")
+    table["color"] = "unrecognized-color-specification"
+    scene["entities"], scene["relations"] = [table], []
+    ref = store.write_artifact(json.dumps(scene).encode(), "application/json")
+    with pytest.raises(ValueError, match="^unsupported_structural_color$"):
+        compile_scene(
+            ref,
+            ResolvedAssetSet(scene_ir=ref, assets=()),
+            registry=registry,
+            store=store,
+            output_root=tmp_path / "compiled-unsupported",
+            policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+            seed=1,
+        )
 
 
 @pytest.mark.parametrize(

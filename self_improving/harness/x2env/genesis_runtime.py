@@ -14,13 +14,14 @@ import xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 from . import package_loader
 
 Sha = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 Number = Annotated[float, Field(strict=True)]
 Vec3 = tuple[Number, Number, Number]
+ColorChannel = Annotated[float, Field(strict=True, ge=0, le=1, allow_inf_nan=False)]
 
 
 class RuntimeModel(BaseModel):
@@ -44,6 +45,14 @@ class RuntimeEntity(RuntimeModel):
     version_sha256: Sha | None = None
     size_m: Vec3 | None = None
     friction: float | None = Field(default=None, ge=0)
+    surface_rgba: tuple[ColorChannel, ColorChannel, ColorChannel, ColorChannel] | None = None
+
+    @model_serializer(mode="wrap")
+    def retain_legacy_shape(self, handler):
+        value = handler(self)
+        if self.surface_rgba is None:
+            value.pop("surface_rgba", None)
+        return value
 
     @model_validator(mode="after")
     def complete(self):
@@ -52,7 +61,11 @@ class RuntimeEntity(RuntimeModel):
         if self.kind == "rigid":
             if not all((self.urdf_path, self.physics_path, self.version_sha256)):
                 raise ValueError("rigid needs explicit URDF, physics and version identity")
-            if self.size_m is not None or self.friction is not None:
+            if (
+                self.size_m is not None
+                or self.friction is not None
+                or self.surface_rgba is not None
+            ):
                 raise ValueError("rigid geometry/physics must come from asset members")
         elif (
             self.category not in {"table", "worktop", "counter"}

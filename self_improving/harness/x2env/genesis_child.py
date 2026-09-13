@@ -438,9 +438,12 @@ def execute(job):
             name = row["id"]
             descriptions[name] = row
             pose = {"pos": tuple(row["position_m"]), "quat": tuple(row["orientation_wxyz"])}
+            appearance = {}
             if row["kind"] == "structural_box":
                 morph = gs.morphs.Box(size=tuple(row["size_m"]), fixed=True, **pose)
                 friction = row["friction"]
+                if row.get("surface_rgba") is not None:
+                    appearance["surface"] = gs.surfaces.Default(color=tuple(row["surface_rgba"]))
             else:
                 source = package / row["urdf_path"]
                 physics = json.loads((package / row["physics_path"]).read_bytes())
@@ -460,7 +463,11 @@ def execute(job):
                 )
                 friction = physics["friction"]
             entities[name] = scene.add_entity(
-                morph, name=name, vis_mode="visual", material=gs.materials.Rigid(friction=friction)
+                morph,
+                name=name,
+                vis_mode="visual",
+                material=gs.materials.Rigid(friction=friction),
+                **appearance,
             )
         points = np.array([e["position_m"] for e in descriptions.values()])
         center = points.mean(0)

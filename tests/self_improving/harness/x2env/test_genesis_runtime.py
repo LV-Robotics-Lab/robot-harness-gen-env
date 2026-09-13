@@ -12,6 +12,60 @@ from self_improving.harness.x2env.genesis_runtime import RuntimeScene, run_scene
 
 
 @pytest.mark.parametrize(
+    "rgba",
+    [(-0.1, 0.0, 0.0, 1.0), (0.0, 0.0, 0.0, 1.1), (float("nan"), 0.0, 0.0, 1.0), (0.0, 0.0, 1.0)],
+)
+def test_structural_surface_rejects_invalid_channels(rgba):
+    from self_improving.harness.x2env.genesis_runtime import RuntimeEntity
+
+    with pytest.raises(ValueError):
+        RuntimeEntity(
+            id="table",
+            kind="structural_box",
+            category="table",
+            position_m=(0.0, 0.0, 0.5),
+            orientation_wxyz=(1.0, 0.0, 0.0, 0.0),
+            size_m=(1.0, 1.0, 0.1),
+            friction=0.5,
+            surface_rgba=rgba,
+        )
+
+
+def test_runtime_appearance_retains_legacy_dump_and_cannot_override_rigid_material():
+    from self_improving.harness.x2env.genesis_runtime import RuntimeEntity
+
+    original = dict(
+        id="table",
+        kind="structural_box",
+        category="table",
+        position_m=[0.0, 0.0, 0.5],
+        orientation_wxyz=[1.0, 0.0, 0.0, 0.0],
+        size_m=[1.0, 1.0, 0.1],
+        friction=0.5,
+        urdf_path=None,
+        physics_path=None,
+        version_sha256=None,
+    )
+    table = RuntimeEntity.model_validate(original)
+    assert table.model_dump(mode="json") == original
+    assert json.loads(table.model_dump_json()) == original
+    scene = RuntimeScene(seed=1, scene_ir_sha256="a" * 64, entities=(table,))
+    assert json.loads(scene.model_dump_json())["entities"] == [original]
+    with pytest.raises(ValueError, match="rigid geometry/physics"):
+        RuntimeEntity(
+            id="block",
+            kind="rigid",
+            category="block",
+            position_m=(0.0, 0.0, 0.5),
+            orientation_wxyz=(1.0, 0.0, 0.0, 0.0),
+            urdf_path="asset.urdf",
+            physics_path="physics.json",
+            version_sha256="a" * 64,
+            surface_rgba=(0.0, 0.0, 1.0, 1.0),
+        )
+
+
+@pytest.mark.parametrize(
     "fault", [None, "surface", "selection", "asset_record", "position", "intent_dimensions"]
 )
 def test_dynamic_support_preflight_recomputes_copied_geometry_before_runtime(tmp_path, fault):

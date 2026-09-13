@@ -150,6 +150,19 @@ def _prepare_scene(scene_ref, assets, *, registry, store, policy, seed):
                 defaults.append(f"{entity_id}.world_surface_origin=deployment.structural_policy")
             frames[entity_id] = (pos, entity.pose.yaw_degrees)
             angle = math.radians(entity.pose.yaw_degrees) / 2
+            surface_rgba = None
+            if entity.color is not None:
+                from PIL import ImageColor
+
+                try:
+                    surface_rgba = tuple(
+                        channel / 255
+                        for channel in ImageColor.getcolor(
+                            "".join(entity.color.lower().split()), "RGBA"
+                        )
+                    )
+                except ValueError as exc:
+                    raise ValueError("unsupported_structural_color") from exc
             runtime[entity_id] = RuntimeEntity(
                 id=entity_id,
                 category=entity.category,
@@ -158,6 +171,7 @@ def _prepare_scene(scene_ref, assets, *, registry, store, policy, seed):
                 orientation_wxyz=(math.cos(angle), 0.0, 0.0, math.sin(angle)),
                 size_m=(dims[0], dims[1], thickness),
                 friction=policy.friction,
+                surface_rgba=surface_rgba,
             )
             return
         dims = dimensions[entity_id]
