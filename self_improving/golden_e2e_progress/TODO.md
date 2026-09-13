@@ -4,6 +4,9 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- v2显式布局设计首片字段和直接结构支撑子集已冻结，agent按公开ground/Harness/completion纵切TDD；未接深层动态支撑。
+- S02 corrected31osM1已唯一publicsubmit，当前interpret；不把准备或旧案例当新成功。
+
 - S01双profile隔离copy/load/step真实通过118.72s，新轨迹26/26复算通过；显式reset缺口单独修复中，未授最终copy-run资格。
 
 - 实际拓扑首片123项通过，尚待新child真实验证；旧assessment调用明确topology not_run，动态图门未放开。

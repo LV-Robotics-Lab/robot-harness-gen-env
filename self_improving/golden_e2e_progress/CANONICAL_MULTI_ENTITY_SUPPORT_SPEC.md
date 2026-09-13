@@ -45,7 +45,7 @@ geom.init_faces + geom.vert_start。每geom保留局部顶点/三角索引及ent
   全轨迹穿透和媒体门，冻结2cm支撑余量不变。超出水平支撑profile则明确拒绝。
 - 完成门及复制包包含面证据、加载拓扑、场景和实际轨迹；相同消费者重算，而非信任自报passed。
 
-## Design Grounding v2（实施前再固定字段schema）
+## Design Grounding v2
 
 显式部署选择generated simulation layout，默认不开启；仅授权模型为生成仿真选择未知结构尺寸、
 XY/yaw，不声称从媒体恢复真实尺度。范围上限8实体；数值设计范围由部署记录，不改物理成功阈值。
@@ -59,6 +59,25 @@ simulation_design_choice、media_layout。每前景的尺寸只绑定自己的ve
 新receipt明确v2版本，含全部资产绑定、原proposal、授权、规则、固定值、设计选择及真实model evidence。
 completion按版本从已提交输入重建规则并重验；不能仅以出现字段猜版本或用回执自称授权。
 不另建controller。旧v1仍沿用原two-entity/单anchor合同。
+
+### 首个纵切固定字段与可执行子集
+
+- 保留原SceneDesignPolicy及其dump；新增GeneratedLayoutPolicy，mode=generated_layout、enabled默认false。
+  保留同名structural_defaults_enabled/world_anchor_xy/world_anchor_yaw_degrees显式授权字段。
+- 新设计范围字段support_extent_range_m=(0.05,5.0)，有限正数且下界小于上界；
+  position_abs_max_m=5.0，有限正数。范围仅检查模型新选值，已有值不clamp也不改写。
+- Deployment沿用scene_design_policy字段，v1/v2明确mode的联合；旧缺mode配置仍选择原v1，
+  不能因新增discriminator使旧配置失效。模型prompt无权开启新模式。
+- 首片允许1..8实体和多个world-frame结构支撑；每前景恰好一个直接结构on目标。动态目标先返回
+  unsupported_dynamic_support_geometry，等待实测面片接入，不以v2绕过runtime关系门。
+- 未知前景Z仅在frame等于唯一结构target时用该资产halfheight推导；world-frame未知Z首片拒绝，
+  已知worldpose保留。未知结构厚度/高度仅用显式StructuralPolicy，不产生无依据的生成Z。
+- 无图生成可选择未知结构长宽、各实体XY/yaw；原媒体关系及字段出处仍须保持，不能用新模式忽略参考图。
+- receipt明确schema_version=x2env.scene_grounding.v2；保留bundle_ref/proposal_ref/assets_ref/policy/
+  structural_policy，新增逐实体asset_bindings、plan、fixed_values、design_choices，并保原unknowns、
+  changes、输出SceneIR及真实evidence。GroundingValuesV2为1..8实体且ID集合不变，只含数值建议。
+- completion精确按receipt版本分派；从已提交原proposal、全部Registry版本和编译policy重建规则/固定值，
+  校验原模型transport、raw values、设计范围和最终SceneIR，不信任receipt自报字段授权。
 
 ## TDD与真实验收
 
