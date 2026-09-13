@@ -4,6 +4,7 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- C13 旧 Workbench compile 的 app/static 实际消费者已退役；45 项 demo/import 测试通过，下一步裁剪旧资格深模块与schema/CI，不重签旧资格。
 - S01 文本未知资产尺寸的通用设计缺口已补：实际 Registry 几何无需媒体，未知布局仍拒；75 项主线程相关测试通过。真实 S01 仍待新固定源码运行。
 - 前置 local color→continuation→compile→完成包历史链已接通组件测试，主线程70项通过；准备固定真实S01前，补text-only资产尺寸派生不应要求图片的通用缺口。
 - C13 旧 System 2/GoldenRun/Qwen/未接路由 assessment 独立组已退役；旧 Workbench compile 的 app/static 消费者需先下线，再退旧 qualification/schema/CI。稳定 SAPIEN工具与只读feed保留。

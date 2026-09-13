@@ -1,5 +1,9 @@
 # Source Evidence For /gen-env、Harness PR1 与 ASPIRE 研究落点
 
+2026-09-13 C13 退役提示：下列旧 System 2/Workbench compile 记录保留其历史 commit 语义，不是当前
+active interface。旧 planner/assessment 和 Workbench 写入口已从 active tree 撤下；当前来源与状态见
+[Canonical x2env](../modules/canonical-x2env.md)及功能级 integration-provenance 台账。稳定核心证据不变。
+
 这是一份审计材料，不是读者首页。如果行为还看不清楚，先读 [一条真实路径](../walkthroughs/one-real-run.md)。
 
 核心 `/gen-env` 路径证据基于 commit `60a2597` 收集；Harness PR1 schema 证据基于实现

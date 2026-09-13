@@ -54,16 +54,9 @@
               <i data-lucide="play" aria-hidden="true"></i>
               <span>生成并运行</span>
             </button>
-            <button class="secondary-button" id="harness-compile-button" type="button">
-              <i data-lucide="git-commit-horizontal" aria-hidden="true"></i>
-              <span>仅 Harness Compile</span>
-            </button>
           </div>
         </div>
         <p class="form-error" id="form-error" role="alert" hidden></p>
-        <p class="form-status" id="harness-submit-status" role="status">
-          Harness Compile 同步返回持久化终态；阶段只从 journal 显示。
-        </p>
       </form>
     </section>
 
@@ -150,125 +143,6 @@
         <code id="harness-cursor">0</code>
       </div>
       <ol class="event-timeline" id="harness-event-list" aria-live="polite"></ol>
-      <div class="compile-audit-shell">
-        <p class="feed-note" id="harness-audit-message" role="status">
-          筛选一个已终止的 Compile run 后显示依赖与终态对账。
-        </p>
-        <section class="compile-audit" id="harness-audit-panel" aria-labelledby="harness-audit-title" hidden>
-          <div class="compile-audit-heading">
-            <div>
-              <span class="section-index">AUDIT</span>
-              <h3 id="harness-audit-title">依赖与终态对账</h3>
-            </div>
-            <span class="feed-status ready">已对账</span>
-          </div>
-          <dl class="compile-audit-summary" id="harness-audit-run-summary"></dl>
-          <div class="compile-audit-invocation">
-            <span id="harness-invocation-status"></span>
-            <code id="harness-invocation-digest"></code>
-          </div>
-          <ul class="compile-dependency-list" id="harness-dependency-list"></ul>
-          <div class="compile-artifact-heading">
-            <h4>已提交 Artifact 元数据</h4>
-            <span id="harness-artifact-count"></span>
-          </div>
-          <ol
-            class="compile-artifact-list"
-            id="harness-artifact-list"
-            aria-label="已提交 Artifact 元数据"
-          ></ol>
-          <div class="scene-preview-actions">
-            <button
-              class="secondary-button"
-              id="harness-scene-preview-button"
-              type="button"
-              aria-controls="harness-scene-preview-panel"
-              aria-describedby="harness-scene-preview-message"
-              aria-expanded="false"
-              hidden
-            >
-              查看场景结构
-            </button>
-            <p
-              class="scene-preview-message"
-              id="harness-scene-preview-message"
-              role="status"
-              aria-live="polite"
-            ></p>
-            <button
-              class="secondary-button"
-              id="harness-static-validation-button"
-              type="button"
-              aria-controls="harness-static-validation-panel"
-              aria-describedby="harness-static-validation-message"
-              aria-expanded="false"
-              hidden
-            >
-              查看编译期检查
-            </button>
-            <p
-              class="scene-preview-message"
-              id="harness-static-validation-message"
-              role="status"
-              aria-live="polite"
-            ></p>
-          </div>
-          <section
-            class="scene-preview"
-            id="harness-scene-preview-panel"
-            aria-labelledby="harness-scene-preview-title"
-            aria-busy="false"
-            hidden
-          >
-            <div class="scene-preview-heading">
-              <div>
-                <span class="section-index">SCENE</span>
-                <h4 id="harness-scene-preview-title" tabindex="-1">已验证场景结构</h4>
-              </div>
-              <button
-                class="secondary-button"
-                id="harness-scene-preview-close"
-                type="button"
-                aria-label="关闭场景结构预览"
-              >关闭</button>
-            </div>
-            <div id="harness-scene-preview-content"></div>
-          </section>
-          <section
-            class="scene-preview static-validation-preview"
-            id="harness-static-validation-panel"
-            aria-labelledby="harness-static-validation-title"
-            aria-describedby="harness-static-validation-boundary"
-            aria-busy="false"
-            hidden
-          >
-            <div class="scene-preview-heading">
-              <div>
-                <span class="section-index">STATIC</span>
-                <h4 id="harness-static-validation-title" tabindex="-1">已提交的编译期检查</h4>
-              </div>
-              <button
-                class="secondary-button"
-                id="harness-static-validation-close"
-                type="button"
-                aria-label="关闭编译期检查预览"
-              >关闭</button>
-            </div>
-            <p class="static-validation-boundary" id="harness-static-validation-boundary">
-              只核对已提交报告的内容身份、结构与绑定；未重跑 validator，未使用物理回放，不作发布判断。
-            </p>
-            <dl
-              class="scene-preview-summary"
-              id="harness-static-validation-summary"
-            ></dl>
-            <ol
-              class="static-validation-checks"
-              id="harness-static-validation-checks"
-              aria-label="已提交的编译期检查项目"
-            ></ol>
-          </section>
-        </section>
-      </div>
     </section>
 
     <section class="evidence-band" id="evidence-band" aria-labelledby="evidence-title" hidden>

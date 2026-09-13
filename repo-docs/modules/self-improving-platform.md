@@ -1,5 +1,9 @@
 # Self-Improving 平台边界
 
+Canonical C13 更新：旧 Workbench compile 及其 app/static 消费者已经下线，事件流仅从显式
+HARNESS_EVENT_FEED 读取，稳定 demo job/critic 不变。下文旧 Harness PR/Workbench 成果为历史阶段，
+当前平台实施入口与未完成范围见 [Canonical x2env](canonical-x2env.md)；旧资格深模块清理仍在继续。
+
 `scene_gen/` 是稳定信任边界，负责把受限文本编译成可验证、可回放、哈希绑定的场景包。`self_improving/` 是消费者和编排层：它可以选择环境、组织采集与训练、评估失败、写诊断和记忆、决定是否晋升，也可以调用资产与仿真适配器；它不能伪造或跳过 `/gen-env` 的物理门控。
 
 | 层 | 目录 | 写什么 | 不写什么 |

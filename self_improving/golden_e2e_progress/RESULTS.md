@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 C13 下线旧 Workbench compile 消费者
+
+- 删除 demo/harness_compile.py 与其专属测试，下线 app 四组旧 submit/audit/scene/static-preview
+  路由以及对应 HTML/JS/无用样式；不接一个新 dispatch，旧 HARNESS_WORKBENCH 不再被读取。
+- 显式 HARNESS_EVENT_FEED 是唯一事件接口提供者；稳定 job/rendered-critic、event timeline 与
+  run board 保留。公开 absence/旧配置不能提供权威先 RED 2 failed，替换旧专属断言后 GREEN。
+- 主线程 demo+import boundary 45 passed/13.51s，含 16 项真实本地 Chrome 测试；子agent同组
+  45 passed/13.29s，collection 3023/0.80s。仅本地测试服务，没有操作其它会话服务或启动模型。
+- 原文件可从 Git 历史恢复；harness_compile 最后修改提交 `17427bc6bc0d9916d3889e574c7adc6fdf5b322e`。
+  删除旧消费者为后续资格清理开路，不等于全部 legacy/schema/CI 已清完；原有 unrelated E501 未顺手格式化。
+
 ## 2026-09-13 C05 文本未知尺寸采用 Registry 设计尺度
 
 - 冻结 S01 未指定 mouse 尺寸；旧 classifier 拒绝 unspecified，且即使 asset_anchor 固定值已由

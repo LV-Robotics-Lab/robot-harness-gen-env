@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-WORKBENCH-RETIRE — 旧资格写入口消费者退役
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `682a5d7` 前后旧消费者状态；harness_compile 最后修改 `17427bc6bc0d9916d3889e574c7adc6fdf5b322e`。
+- `target_paths`：demo/app.py、harness_compile.py、static/app.js/index.html/styles.css 与对应 demo tests。
+- `integration_method`：删除旧写路由及专属控件，仅保 stable job 和显式 feed；不另建新 dispatch。
+- `verification`：contract_pass；45 项含实际 Chrome 测试，旧资格未重签，canonical 新入口未由此授真实能力。
+- `recorded_git_authors`：原作者记录 `Bingsheng Xie <xieziyin_shangshu@outlook.com>` 与本提交元数据。
+
 ## INT-CANONICAL-C05-TEXT-ASSET-SCALE — 几何设计与媒体布局分流
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

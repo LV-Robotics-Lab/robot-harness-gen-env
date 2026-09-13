@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | `scene_gen/` | 编译器核心库：契约、解析、grounding、求解、builder、validator、绘制代理、acceptance。 | `schema.py`、`parser.py`、`grounding.py`、`solver.py`、`builder.py`、`validator.py`、`scene_gen/envs/generated_scene.py` | 主流程每一阶段都住在这里；CLI 与 demo 只是薄入口 |
 | `script/` | CLI 入口：编译、回放、批量验收、矩阵、可选渲染评判、stage-5 报告。 | `generate_scene.py`、`run_scene_runtime.py`、`run_100_seed_acceptance.py`、`run_prompt_matrix.py` | 编排 `scene_gen`；流水线逻辑加进 `scene_gen`，不要加在这里 |
-| `demo/` | Flask 控制面：保留旧 GPU job 流水线，并可注入 Harness compile submit、只读事件与终态依赖审计。 | `app.py`、`harness_compile.py`、`harness_feed.py`、`static/` | job 入口仍调用旧脚本；审计只投影同一 compile authority，不执行 replay/validate 或推演操作 |
+| `demo/` | 稳定 GPU job 控制面与只读 Harness 事件投影。 | `app.py`、`harness_feed.py`、`static/` | 旧 Workbench compile 写入口已退役；新平台实验使用 x2env，不从此处另建编排 |
 | `tests/` | pytest 套件 + committed fixture；为每个误报模式留攻击测试。 | `tests/scene_gen/test_<module>.py`、`tests/fixtures/{asset_catalog,golden_prompts,prompt_matrix}.json` | 锁住契约与失败分支；套件无需 RoboTwin checkout 即可跑 |
 | `self_improving/` | Harness 对外契约、平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `harness/schemas/`、`harness/schema_catalog.py`、`harness/registry.py`、`harness/package_store.py`、`harness/handlers/text2env_compile.py`、`source_inventory.json`、各命名模块 | Harness 只引用权威载荷，平台消费稳定核心；都不能降低 `scene_gen` 门控 |
 | `apps/pearl_evidence_portal/` | PEARL Self-Improving Agents 的独立证据门户、构建脚本、测试与已裁剪的浏览器报告子集。 | `app/page.tsx`、`scripts/build-hosted-report-subsets.mjs`、`tests/rendered-html.test.mjs` | 只呈现已有证据；不产出或修改核心验收结论 |
@@ -55,10 +55,9 @@ Canonical C13 已从 active tree 撤下历史 `run_compile_acceptance.py` 与离
 
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
-| `demo/app.py` | Flask 控制面：保留旧 text2env job，并增加可选的 Harness compile submit、event replay、terminal audit 与固定 SceneSpec/static-validation 预览。 | `create_app`、`POST /api/harness/compile`、四个 `GET /api/harness/*` 路由、`HARNESS_WORKBENCH` | submit 只收 request/seed；audit/preview 只收 canonical v4 run id，preview 还拒绝 query/body/Transfer-Encoding/Range；同一 Workbench 优先拥有写入与读取 |
-| `demo/harness_compile.py` | 把固定 qualified `CompileApplication` 隐藏在同步工作台 seam 后，并重读 terminal closure、Invocation、artifact metadata 与两个 succeeded compile 内容投影。 | `WorkbenchCompile.submit`、`audit`、`scene_preview`、`static_validation_preview`、`page`、`WorkbenchCompileAuthorityError` | 两个 preview 都复用完整终态 closure；SceneSpec、static report、ResolvedSceneSpec 分别以同 FD 有界读取 65,536 / 262,144 / 1,048,576 bytes，static preview 重算报告并把 canonical resolved digest 与 request/scene/seed/frame/unit/workspace/relations/source SceneSpec digest 绑定 package/report/SceneSpec，但不重跑 validator |
+| `demo/app.py` | 稳定 text2env job 与可选只读事件流。 | `create_app`、`/api/jobs`、`GET /api/harness/events`、`HARNESS_EVENT_FEED` | 旧 compile/audit/scene/static-preview 路由返回 404；HARNESS_WORKBENCH 不再作为执行或事件权威 |
 | `demo/harness_feed.py` | 把 `SQLiteEventJournal` 的 `EventPage` 投影成浏览器可消费、可恢复的全局 cursor 页。 | `HarnessEventFeed.page`、`HarnessEventFeedCorruptionError` | 只读 seam；保留 run/Skill/Event 信封与 artifact metadata，不增加任意路径读取 |
-| `demo/static/` | 无构建步骤的 Event Timeline + compile-only 提交、依赖/artifact metadata 审计与两个固定字段预览 UI。 | `harness-compile-button`、`loadHarnessEvents`、`loadHarnessAuditIfEligible`、`loadHarnessScenePreview`、`loadHarnessStaticValidationPreview` | preview 只在 succeeded audit v2 精确绑定后由用户点击读取；独立 generation/abort、防缓存、响应上限与 exact-key 校验后用 `textContent` 渲染；static checks 可按任意契约有效顺序到达，且明示未运行物理 replay、不代表 publishable |
+| `demo/static/` | 无构建步骤的稳定任务面板、Event Timeline 和运行活动板。 | `loadHarnessEvents`、`workbench_run_board.js` | 只投影已提交活动；旧 compile 写按钮及其审计/预览控件已下线，未替换为新 dispatch |
 | `demo/__init__.py` | 包标记使 `demo` 可被导入。 | — | `python -m demo.app` |
 
 ## `tests/`
@@ -130,7 +129,7 @@ PR1 的 21 个专项测试是历史基线；当前验证边界见模块页与
 
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
-| `tests/demo/test_harness_compile.py`、`test_app.py`、`test_harness_feed.py` | 真实 qualified compile application、SQLite terminal/Invocation closure、Flask exact payload、SceneSpec 内容 authority 与 feed 公共 seam。 |—| 覆盖声明/读取越界、symlink/FIFO、同 FD 漂移、字节/SHA、严格 JSON/SceneSpec、语义/post-read authority binding 与 HTTP 脱敏；compile module 374 statements / 156 branches 全覆盖 |
+| `tests/demo/test_app.py`、`test_harness_feed.py`、`test_retired_workbench.py`、`test_workbench_browser.py` | 稳定任务、显式只读 feed、退役路由缺席与实际 Chrome 活动板测试。 |—| 旧 qualified Workbench 专属测试随实现退役；新测试禁止旧配置恢复写入口或事件权威 |
 | `tests/demo/test_workbench_browser.py` | 真 Flask + 本机 headless Chrome 的事件、提交、审计与按需 SceneSpec 预览端到端门。 |—| 覆盖不自动请求、成功投影、非成功不提供按钮、迟到 abort、XSS/locator、响应漂移/额外字段及关闭后重读；`pytest -q tests/demo` 当前 232 passed（47 Chrome） |
 
 ## 覆盖范围
