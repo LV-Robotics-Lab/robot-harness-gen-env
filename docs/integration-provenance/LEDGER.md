@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C10-DYNAMIC-OBSERVATION — 版本化场景消费
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness91da764/53fe5b1。
+- target_paths：observation/diagnosis与公开测试；integration_method：两处消费统一严格parser，原证据门不变。
+- verification：主线程28项通过；runtime_verification：not_run，外部模型为明确测试程序。
+- upstream_owner / recorded_git_authors：模型、Genesis与Harness消费实现分开，不从模拟回执授真实能力。
+- operator几何诊断补充：7JSBuX真实Can/Plate因粗分解底面高度不对应而拒绝，见RESULTS；
+  Kay Lousberg/Kenney各自CC0，未用x2env1.0覆盖署名。第二候选预算显式为2，尚待运行。
+
 ## INT-CANONICAL-C08-MEASURED-GROUNDING-V3 — 模型选择与几何高度分离
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness53fe5b1及增量spec。

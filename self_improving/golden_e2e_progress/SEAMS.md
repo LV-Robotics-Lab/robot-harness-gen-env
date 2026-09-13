@@ -5,6 +5,10 @@
 
 ## 用户与能力seam
 
+v3父推进前`audit_pending_measured_grounding`为已批准只读seam：真实active snapshot/公开Store状态、
+controller授权、返回GroundingResult与controller显式policy。共同内容核验与最终完成门复用，但不
+伪造committed operation/compiled scene。Harness公开测试须证明坏返回不采用scene/不compile且保错误证据。
+
 Harness.submit/status/resume/package是唯一用户接口；模型前持久化handle，同key同工作流。
 最后revision验证通过、package物化可读后才原子succeeded。
 状态仅active、succeeded、failed、blocked、cancelled，timed_out是cancelled原因。

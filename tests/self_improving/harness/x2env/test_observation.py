@@ -8,6 +8,81 @@ from self_improving.harness.x2env.replay import ReplayFile, ReplayProfile, Repla
 from tests.self_improving.harness.x2env.test_diagnosis import evidence
 
 
+def dynamic_replay_fixture(tmp_path):
+    """Real compiler assets and synthetic camera-only replay, explicitly no physics pass."""
+    from self_improving.harness.x2env.compile import StructuralPolicy, compile_scene
+    from tests.self_improving.harness.x2env.test_compile import dynamic_stack_inputs
+
+    camera_root = tmp_path / "camera"
+    camera_root.mkdir()
+    camera_store, _, original, _ = evidence(camera_root)
+    source = tmp_path / "dynamic"
+    source.mkdir()
+    store, registry, _, ref, assets = dynamic_stack_inputs(source)
+    compiled = compile_scene(
+        ref,
+        assets,
+        registry=registry,
+        store=store,
+        output_root=source / "compiled",
+        policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+        seed=11,
+    )
+    frame = original.frames[0]
+    for artifact in [frame.image, frame.media_ref]:
+        assert (
+            store.write_artifact(camera_store.read_artifact(artifact), artifact.media_type)
+            == artifact
+        )
+    runtime = store.write_artifact(
+        compiled.runtime_scene.model_dump_json().encode(), "application/json"
+    )
+    profile = ReplayProfile(
+        profile="baseline",
+        root=str(tmp_path / "missing-runtime"),
+        status="passed",
+        files=(
+            ReplayFile(path="media.json", artifact=frame.media_ref),
+            ReplayFile(path="frames/one.png", artifact=frame.image),
+        ),
+    )
+    receipt = store.write_artifact(
+        json.dumps(
+            {
+                "scene": compiled.runtime_scene.model_dump(mode="json"),
+                "status": "succeeded",
+                "profiles": [profile.model_dump(mode="json")],
+            }
+        ).encode(),
+        "application/json",
+    )
+    replay = ReplayResult(status="succeeded", profiles=(profile,), receipt=receipt, error_code=None)
+    return store, compiled.scene_ir, runtime, replay, source / "compiled", frame
+
+
+def test_dynamic_observation_retains_camera_and_missing_dual_profile_semantics(tmp_path):
+    from self_improving.harness.x2env.observation import observe_replay
+
+    store, scene, runtime, replay, package, frame = dynamic_replay_fixture(tmp_path)
+    result = observe_replay(store, scene, runtime, replay, package_root=package)
+    assert result.observation.frames == (frame,)
+    physical = json.loads(store.read_artifact(result.physics_report))
+    assert physical["physical_status"] == "not_run"
+    assert physical["error_code"] == "incomplete_dual_profile"
+
+
+@pytest.mark.parametrize("schema", ["x2env.runtime_scene.v1", "x2env.runtime_scene.v999"])
+def test_dynamic_observation_rejects_schema_downgrade_and_unknown_version(tmp_path, schema):
+    from self_improving.harness.x2env.observation import observe_replay
+
+    store, scene, runtime, replay, package, _ = dynamic_replay_fixture(tmp_path)
+    body = json.loads(store.read_artifact(runtime))
+    body["schema_version"] = schema
+    changed = store.write_artifact(json.dumps(body).encode(), "application/json")
+    with pytest.raises(ValueError):
+        observe_replay(store, scene, changed, replay, package_root=package)
+
+
 @pytest.mark.parametrize(
     "fault,reason",
     [

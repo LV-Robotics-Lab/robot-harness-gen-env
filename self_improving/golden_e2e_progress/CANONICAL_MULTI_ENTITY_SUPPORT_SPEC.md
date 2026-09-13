@@ -107,6 +107,12 @@ GroundingResult只在独立重验后推进父state；完成门从原authorizatio
 
 首片没有模型选面；多面歧义明确阻断。该合同仍未授任何真实动态案例、视觉或physical资格。
 
+父推进前新增只读`audit_pending_measured_grounding`：输入实际active snapshot/Store、controller
+授权ref、GroundingResult及controller显式expected_policy/structural_policy；核snapshot与公开status
+一致、最后真实running ground operation、原输入/授权/传输/候选/几何和返回scene。不得构造假succeeded
+operation或CompiledScene。内容审计与完成门共用；完成门另外核committed lineage。审计失败先保
+模型receipt/真实授权/结构化error，不采用scene、不执行compile。v1/v2不自动启用此新增时点。
+
 ## 坐标、图与动态物理
 
 - 保留SceneIR前景几何中心、结构上表面中心、normalized URDF XY中心/Z底面约定。

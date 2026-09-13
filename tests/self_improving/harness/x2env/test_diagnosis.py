@@ -116,6 +116,48 @@ def test_fresh_diagnosis_preserves_physics_as_separate_evidence(tmp_path):
     assert receipt["authority"] == "advisory_only"
 
 
+@pytest.mark.parametrize("schema", [None, "x2env.runtime_scene.v1", "x2env.runtime_scene.v999"])
+def test_dynamic_diagnosis_advisory_does_not_upgrade_missing_physics(tmp_path, schema):
+    from self_improving.harness.x2env.observation import observe_replay
+    from tests.self_improving.harness.x2env.test_observation import dynamic_replay_fixture
+
+    store, scene, runtime, replay, package, _ = dynamic_replay_fixture(tmp_path)
+    observed = observe_replay(store, scene, runtime, replay, package_root=package)
+    observation = observed.observation
+    if schema is not None:
+        body = json.loads(store.read_artifact(runtime))
+        body["schema_version"] = schema
+        runtime = store.write_artifact(json.dumps(body).encode(), "application/json")
+        observation = observation.model_copy(update={"runtime_scene": runtime})
+    answer = {
+        "base_revision": 0,
+        "visual_intent": "passed",
+        "reason": "external executable double",
+        "evidence_sha256": [observed.physics_report.sha256],
+        "scene_patches": [],
+        "asset_patches": [],
+    }
+    path = executable(tmp_path, answer)
+    result = CodexBackend(
+        path, hashlib.sha256(path.read_bytes()).hexdigest(), "test-double", store
+    ).assess_and_diagnose(
+        scene, observation, observed.physics_report, output_root=tmp_path / "model", timeout=10
+    )
+    if schema is None:
+        assert result.status == "completed", result
+        receipt = json.loads(store.read_artifact(result.receipt))
+        assert receipt["physical_status"] == "not_run"
+        assert receipt["authority"] == "advisory_only"
+        assert (tmp_path / "model/process.json").exists()
+    else:
+        assert result.status == "failed"
+        assert not (tmp_path / "model/process.json").exists()
+        reason = json.loads((tmp_path / "model/error.json").read_bytes())["reason"]
+        assert "validation error" in reason
+        field = "support_bindings" if schema.endswith(".v1") else "schema_version"
+        assert field in reason
+
+
 @pytest.mark.parametrize(
     "fault",
     ["stale", "future", "renewed_wrapper", "physics_binding", "frame_binding", "assertions"],

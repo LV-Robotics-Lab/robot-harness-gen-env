@@ -1,5 +1,20 @@
 # 进度与结果
 
+## 2026-09-13 v2观测/诊断接线与真实盘底失败
+
+- 两处旧v1硬解析使动态观察/诊断先RED；现共用严格版本parser，原hash/时间/物理门不改。
+  主线程28项通过1.29s；外部模型为明确程序替身。缺half_dt仍not_run，未知/降级schema在模型前拒绝。
+  agent观察覆盖100%，诊断仍缺15语句/13分支；`/var/tmp/canonical-observe-diagnose-v2.json`。
+- 真实Plate+Can准备根`/var/tmp/canonical-plate-can-package-20260913.7JSBuX`，固定ae2c1e7。
+  初次漏显式Shapely依赖后保失败；使用已声明库继续，compile真实拒绝no_feasible_support_surface。
+  未package/Genesis；未改变.04×.04×.08m Can、XY0或2cm余量。
+- 只读`support-diagnosis.json`：原visual底z=.009m覆盖中心；13块CoACD向上底约.009775m，
+  抬高约.000775m超过原1e-5几何对应容差。共同域只剩z≈.03的盘沿，中心距域约.1184m，
+  Can投影完全在域外。故分解成功不等于可用盘底；原版本不升级。
+- 授权唯一第二候选：同parent/尺度/物理/seed19，只调既有policy threshold .05→.0005、块数上限64。
+  误差能否降低为待验证假设，不改对应容差/物理门、不手动snap；失败后不自动第三候选，结果待验。
+
+
 ## 2026-09-13 受限动态布局v3及完成门独立重算
 
 - 实际动态目标进入明确v3授权/context/receipt，模型choices只覆盖允许缺失XY/yaw/结构长宽；

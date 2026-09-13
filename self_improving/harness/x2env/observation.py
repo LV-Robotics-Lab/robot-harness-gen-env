@@ -6,7 +6,7 @@ import json
 from .assessment import assess_scene
 from .contracts import ArtifactRef, Model, SceneIR
 from .diagnosis import FreshObservation, ObservationFrame
-from .genesis_runtime import RuntimeScene
+from .genesis_runtime import parse_runtime_scene
 from .replay import ReplayResult
 
 
@@ -19,7 +19,7 @@ class ObservationResult(Model):
 def observe_replay(store, scene_ir, runtime_scene, replay, *, package_root):
     """Use the last captured frame of the last profile; do not recapture or renew its time."""
     scene = SceneIR.model_validate_json(store.read_artifact(scene_ir))
-    runtime = RuntimeScene.model_validate_json(store.read_artifact(runtime_scene))
+    runtime = parse_runtime_scene(json.loads(store.read_artifact(runtime_scene)))
     replay = ReplayResult.model_validate_json(replay.model_dump_json())
     if runtime.scene_ir_sha256 != scene_ir.sha256 or replay.status != "succeeded":
         raise ValueError("observation requires a bound completed replay")

@@ -40,6 +40,9 @@ trimesh/Shapely2.1.2，包内README与runtime.json均列明；Genesis仍用声�
 模型v3已接明确授权/choices/候选与完成门独立重算，102项主线程相关测试通过；模型不提交Z，
 真实几何求解补高度。独立全证据审核仍在完成门，父推进前审核另片补；真实动态模型/仿真及copy-run待验。
 S03原视频唯一提交在interpret 600秒超时，无SceneIR或Genesis；输入采样帧与失败包保留。
+观察/诊断两处旧v1硬解析已接严格v2 parser，28项主线程测试通过，缺双profile仍不授物理通过。
+真实罐子居中放盘子准备失败：粗CoACD抬高盘底约0.775mm，公共面只剩盘沿；未运行Genesis。
+第二候选仅在原分解policy内收紧误差预算，结果待验，不缩罐或放宽几何/物理门。
 70项相关测试通过；此处是authored几何组件，不授实际加载/动态接触。下一片接独立拓扑消费与动态物理；
 详见[增量契约](../../self_improving/golden_e2e_progress/CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)。
 

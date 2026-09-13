@@ -15,7 +15,7 @@ from pydantic import Field, model_validator
 from .assessment import ASSERTIONS_SHA256
 from .asset_revision import AssetPatch
 from .contracts import ArtifactRef, JointPosition, Model, Pose, SceneIR, Sha256
-from .genesis_runtime import RuntimeScene
+from .genesis_runtime import parse_runtime_scene
 
 
 class ObservationFrame(Model):
@@ -96,8 +96,8 @@ def assess_and_diagnose(backend, scene_ir, observation, physics_report, *, outpu
         observation = FreshObservation.model_validate_json(observation.model_dump_json())
         if observation.scene_ir != scene_ir:
             raise ValueError("observation_scene_mismatch")
-        runtime = RuntimeScene.model_validate_json(
-            backend.store.read_artifact(observation.runtime_scene)
+        runtime = parse_runtime_scene(
+            json.loads(backend.store.read_artifact(observation.runtime_scene))
         )
         if runtime.scene_ir_sha256 != scene_ir.sha256:
             raise ValueError("runtime_scene_mismatch")
