@@ -56,8 +56,8 @@ Qualification Matrix v1 位于
 保留为已发现待解决项，不再暂停主线；
 详见 [C01 记录](CANONICAL_C01_INTAKE_20260913.md)。当前 canonical 已实现统一 CLI、三 public Skills 的
 实际 typed 调用、资产来源 adapter、Genesis 执行与开发包完成门，并逐功能提交；尚未完成冻结矩阵、
-正式 qualification/prerelease 或 push。最新真实 S02 仍为尺度未知的 blocked，后续显式生成设计补全
-已接通组件测试，不能据此升级该失败。当前执行细目与结果以 TODO/RESULTS 顶部为准。
+正式 qualification/prerelease 或 push。原 S02 尺度未知 blocked 保留；新固定 109b0c5 的显式设计运行
+在 interpret 超时，未进入 grounding 或仿真。组件测试不能升级任一失败。当前细目以 TODO/RESULTS 顶部为准。
 
 ## 历史交接基线（下文不是当前停止指令）
 

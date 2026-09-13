@@ -4,11 +4,12 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
-- partial pose 的 null yaw 已修复为保留原朝向；ground+layout 修订完成链继续实现中。
+- S02 新固定 109b0c5 开发运行 failed/model_timeout（600.514s），尚未进入 grounding/资产/Genesis。
+  失败包已保存；当前分流最小 transport 诊断与预算/颜色修订接线，不原样重试。
 
-- grounding 已接开发包完成门；ground 后再 revise 的来源链暂明确拒绝，仍需独立补齐。
+- partial pose 的 null yaw 已修复；ground+layout 完成链已实现，ground+asset 修订仍拒绝，待独立补齐。
 
-- grounding 恢复已区分 recoverable_dead_owner 与确定性设计失败；真实 S02 新隔离目录已备但未启动。
+- 持久修订预算在现有 Store 原子操作中实现中；失败/取消必须消费预算，不能只累计成功回执。
 
 - C13 G2a 已撤两个旧 console 安装映射；旧脚本及仍被消费的深模块继续按实际消费者退役。
 

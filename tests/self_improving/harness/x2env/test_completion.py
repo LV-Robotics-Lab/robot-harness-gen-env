@@ -30,7 +30,14 @@ def test_unexecuted_workflow_cannot_materialize_success(tmp_path):
     assert store.status(snapshot.workflow_id) == snapshot
 
 
-def completed_fixture(tmp_path, input_fault=None, grounding=False, grounding_fault=None):
+def completed_fixture(
+    tmp_path,
+    input_fault=None,
+    grounding=False,
+    grounding_fault=None,
+    revised=False,
+    revision_fault=None,
+):
     """Synthetic producer at external execution seam, not a real Genesis run."""
     from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
     from self_improving.harness.x2env.compile import (
@@ -90,6 +97,16 @@ def completed_fixture(tmp_path, input_fault=None, grounding=False, grounding_fau
                 ),
             }
         )
+    ground_ir = ir
+    if revised:
+        doc = ir.model_dump(mode="json")
+        doc["revision"] += 1
+        for row in doc["entities"][0]["provenance"]["pose"]:
+            row["kind"] = "override"
+        ir = SceneIR.model_validate_json(json.dumps(doc))
+        ground_doc = ground_ir.model_dump(mode="json")
+        ground_doc["entities"][0]["pose"]["yaw_degrees"] = 20.0
+        ground_ir = SceneIR.model_validate_json(json.dumps(ground_doc))
     if input_fault == "scene_input":
         ir = ir.model_copy(update={"input_sha256": "f" * 64})
 
@@ -297,7 +314,9 @@ def completed_fixture(tmp_path, input_fault=None, grounding=False, grounding_fau
             UnknownField,
         )
 
-        pending = ir.model_copy(
+        accepted = ground_ir if revised else ir
+        accepted_ref = store.write_artifact(accepted.model_dump_json().encode(), "application/json")
+        pending = accepted.model_copy(
             update={
                 "entities": tuple(
                     e.model_copy(
@@ -308,7 +327,7 @@ def completed_fixture(tmp_path, input_fault=None, grounding=False, grounding_fau
                             ),
                         }
                     )
-                    for e in ir.entities
+                    for e in accepted.entities
                 )
             }
         )
@@ -376,7 +395,8 @@ def completed_fixture(tmp_path, input_fault=None, grounding=False, grounding_fau
         original_ref = put(original.model_dump(mode="json"))
         initial_assets = resolved.model_copy(update={"scene_ir": pending_ref})
         initial_ref = put(initial_assets.model_dump(mode="json"))
-        final_assets = put(resolved.model_dump(mode="json"))
+        grounded_assets = resolved.model_copy(update={"scene_ir": accepted_ref})
+        final_assets = put(grounded_assets.model_dump(mode="json"))
         values = {
             "entities": [
                 {
@@ -386,7 +406,7 @@ def completed_fixture(tmp_path, input_fault=None, grounding=False, grounding_fau
                     "position": e.pose.position,
                     "yaw_degrees": e.pose.yaw_degrees,
                 }
-                for e in ir.entities
+                for e in accepted.entities
             ]
         }
         ground_ref = put(
@@ -402,7 +422,7 @@ def completed_fixture(tmp_path, input_fault=None, grounding=False, grounding_fau
                     u.model_dump(mode="json") for u in original.proposal.unknowns
                 ],
                 "resolved_unknowns": [0],
-                "proposed_scene": ir.model_dump(mode="json"),
+                "proposed_scene": accepted.model_dump(mode="json"),
                 "real_world_scale_recovered": False,
                 "authority": "advisory_design_only",
                 "changes": [],
@@ -450,10 +470,152 @@ def completed_fixture(tmp_path, input_fault=None, grounding=False, grounding_fau
             ("asset.resolve", {"resolved_assets": initial_ref}, initial_ref),
             (
                 "codex.ground",
-                {"scene_ir": scene_ref, "resolved_assets": final_assets, "grounding": ground_ref},
+                {
+                    "scene_ir": accepted_ref,
+                    "resolved_assets": final_assets,
+                    "grounding": ground_ref,
+                },
                 ground_ref,
             ),
         ]
+        if revised:
+            from self_improving.harness.x2env.diagnosis import ScenePatch
+            from self_improving.harness.x2env.revision import apply_revision
+
+            prior_runtime = runtime.model_copy(update={"scene_ir_sha256": accepted_ref.sha256})
+            prior_runtime_ref = put(prior_runtime.model_dump(mode="json"))
+            prior_report = json.loads(store.read_artifact(observed.physics_report))
+            prior_report["scene_sha256"] = hashlib.sha256(
+                json.dumps(
+                    prior_runtime.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
+                ).encode()
+            ).hexdigest()
+            prior_observed = observed.model_copy(
+                update={
+                    "observation": observed.observation.model_copy(
+                        update={"scene_ir": accepted_ref, "runtime_scene": prior_runtime_ref}
+                    ),
+                    "physics_report": put(prior_report),
+                }
+            )
+            prior_observed_ref = put(prior_observed.model_dump(mode="json"))
+
+            patch_proposal = DiagnosisProposal(
+                base_revision=accepted.revision,
+                visual_intent="failed",
+                reason="Synthetic layout revision test",
+                evidence_sha256=(accepted_ref.sha256,),
+                scene_patches=(ScenePatch(entity_id="item", pose=ir.entities[0].pose, joints=()),),
+                asset_patches=(),
+            )
+            repair_evidence = execution_double(patch_proposal.model_dump(mode="json"))
+            repair_receipt = put(
+                {
+                    "status": "completed",
+                    "authority": "advisory_only",
+                    "executable_sha256": json.loads(store.read_artifact(repair_evidence[0]))[
+                        "executable_sha256"
+                    ],
+                    "scene_ir": accepted_ref.model_dump(),
+                    "physical_report": prior_observed.physics_report.model_dump(),
+                    "observation": prior_observed.observation.model_dump(mode="json"),
+                    "admitted_at": json.loads(store.read_artifact(diagnosis.receipt))[
+                        "admitted_at"
+                    ],
+                    "proposal": patch_proposal.model_dump(mode="json"),
+                    "evidence": [r.model_dump() for r in repair_evidence],
+                }
+            )
+            repair = DiagnosisResult(
+                status="completed", proposal=patch_proposal, receipt=repair_receipt
+            )
+            repair_ref = put(repair.model_dump(mode="json"))
+            revision = apply_revision(
+                store,
+                registry,
+                accepted_ref,
+                grounded_assets,
+                repair_ref,
+                output_root=tmp_path / "revision",
+                history=(),
+                failure_fingerprint=hashlib.sha256(
+                    json.dumps(
+                        {
+                            "input": prior_report["input_sha256"],
+                            "error_code": prior_report.get("error_code"),
+                            "checks": [
+                                c
+                                for c in prior_report.get("checks", [])
+                                if c.get("status") != "passed"
+                            ],
+                            "images": [f.image.sha256 for f in prior_observed.observation.frames],
+                        },
+                        sort_keys=True,
+                    ).encode()
+                ).hexdigest(),
+            )
+            assert revision.scene_ir == scene_ref
+            revision_ref = revision.receipt
+            if revision_fault:
+                row = json.loads(store.read_artifact(revision_ref))
+                if revision_fault == "base":
+                    row["base_scene"] = scene_ref.model_dump()
+                elif revision_fault == "history":
+                    row["history"] = [ground_ref.model_dump()]
+                elif revision_fault == "budget":
+                    row["cost"] = 3
+                elif revision_fault == "fingerprint":
+                    row["failure_fingerprint"] = "e" * 64
+                elif revision_fault == "diagnosis":
+                    row["diagnosis"] = diagnosis_ref.model_dump()
+                elif revision_fault == "assets":
+                    row["resolved_assets"]["assets"][0]["version_sha256"] = "e" * 64
+                elif revision_fault == "asset_receipt":
+                    row["asset_receipts"] = [ground_ref.model_dump()]
+                elif revision_fault in {"model", "patch", "stale", "observation"}:
+                    body = json.loads(store.read_artifact(repair_receipt))
+                    if revision_fault == "model":
+                        body["evidence"] = body["evidence"][-1:]
+                    elif revision_fault == "stale":
+                        body["admitted_at"] = "2020-01-01T00:00:00+00:00"
+                    elif revision_fault == "observation":
+                        body["observation"]["scene_ir"] = scene_ref.model_dump()
+                    else:
+                        bad_proposal = patch_proposal.model_copy(
+                            update={
+                                "scene_patches": (
+                                    patch_proposal.scene_patches[0].model_copy(
+                                        update={
+                                            "pose": patch_proposal.scene_patches[0].pose.model_copy(
+                                                update={"yaw_degrees": 40.0}
+                                            )
+                                        }
+                                    ),
+                                )
+                            }
+                        )
+                        body["proposal"] = bad_proposal.model_dump(mode="json")
+                        body["evidence"] = [
+                            r.model_dump() for r in execution_double(body["proposal"])
+                        ]
+                        repair = repair.model_copy(update={"proposal": bad_proposal})
+                    repair = repair.model_copy(update={"receipt": put(body)})
+                    repair_ref = put(repair.model_dump(mode="json"))
+                    row["diagnosis"] = repair_ref.model_dump()
+                revision_ref = put(row)
+            stages[4:4] = [
+                ("observe", {"observation": prior_observed_ref}, prior_observed_ref),
+                ("codex.diagnose", {"diagnosis": repair_ref}, repair_ref),
+                (
+                    "revise",
+                    {
+                        "scene_ir": revision.scene_ir,
+                        "resolved_assets": put(revision.assets.model_dump(mode="json")),
+                        "revision_receipt": revision_ref,
+                    },
+                    revision_ref,
+                ),
+            ]
     for index, (stage, fields, ref) in enumerate(stages):
         if index:
             snapshot = store.begin_operation(snapshot, stage)
@@ -478,6 +640,41 @@ def test_completion_accepts_bound_grounding(tmp_path):
     store, snapshot = completed_fixture(tmp_path, grounding=True)
     result = materialize_completion(snapshot, store, tmp_path / "completion")
     assert result.status == "materialized", result
+
+
+def test_completion_accepts_grounding_then_layout_revision(tmp_path):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(tmp_path, grounding=True, revised=True)
+    result = materialize_completion(snapshot, store, tmp_path / "completion")
+    assert result.status == "materialized", result
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "base",
+        "history",
+        "budget",
+        "diagnosis",
+        "assets",
+        "asset_receipt",
+        "model",
+        "patch",
+        "fingerprint",
+        "stale",
+        "observation",
+    ],
+)
+def test_completion_rejects_grounded_revision_chain_attacks(tmp_path, fault):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(
+        tmp_path, grounding=True, revised=True, revision_fault=fault
+    )
+    result = materialize_completion(snapshot, store, tmp_path / "completion")
+    assert result.status == "failed" and "grounding" in result.error_code
+    assert result.manifest is None
 
 
 @pytest.mark.parametrize(

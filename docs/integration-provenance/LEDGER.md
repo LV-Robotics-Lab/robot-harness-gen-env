@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-GROUNDED-LAYOUT — 生成设计后的布局链
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `109b0c5` completion、`31eecd0` partial pose 修订。
+- `target_paths`：x2env/completion.py、test_completion.py。
+- `integration_method`：逐已提交 revision 校验原 grounding、诊断、观测、失败摘要、真实布局字段及资产重绑。
+- `verification`：contract_pass；模型/运行数据为明确替身。资产版本修订链未授予。
+- `runtime_evidence`：固定 `109b0c5` 的 S02 新运行 model_timeout，未执行 grounding；见 RESULTS。
+- `recorded_git_authors`：本提交元数据；没有新第三方代码或新的物理运行资格。
+
 ## INT-CANONICAL-C11-GROUNDING — 包完成门接设计来源
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

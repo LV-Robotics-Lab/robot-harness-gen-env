@@ -95,6 +95,8 @@ def materialize_completion(snapshot, store, output):
                 for op in operations
             ):
                 raise ValueError("uncommitted_completion_evidence")
+        if snapshot.grounding is not None:
+            refs.update({f"revision_{i}": ref for i, ref in enumerate(snapshot.revisions)})
         artifact_closure(store, list(refs.values()))
 
         def read(ref):
@@ -415,6 +417,7 @@ def materialize_completion(snapshot, store, output):
             if getattr(snapshot, name) is not None
         },
         "wall_seconds": time.monotonic() - started,
+        "revisions": [ref.model_dump() for ref in snapshot.revisions],
         "robot_policy_evaluated": False,
         "data_collection_evaluated": False,
     }
@@ -430,6 +433,185 @@ def materialize_completion(snapshot, store, output):
 
 
 def _verify_grounding(snapshot, store, scene, compiled):
+    """Verify the original grounding node, then the committed layout revision chain."""
+    ground_ops = [
+        (i, op)
+        for i, op in enumerate(snapshot.operations)
+        if op.capability == "codex.ground"
+        and op.status == "succeeded"
+        and op.result
+        and snapshot.grounding in op.result.outputs
+    ]
+    if len(ground_ops) != 1:
+        raise ValueError("completion_grounding_not_committed")
+    index, operation = ground_ops[0]
+    receipt = json.loads(store.read_artifact(snapshot.grounding))
+    accepted = SceneIR.model_validate_json(json.dumps(receipt["proposed_scene"]))
+    documents = [(ref, json.loads(store.read_artifact(ref))) for ref in operation.result.outputs]
+    scenes = [ref for ref, body in documents if body == accepted.model_dump(mode="json")]
+    if len(scenes) != 1:
+        raise ValueError("completion_grounding_revision_chain_not_verified")
+    scene_ref = scenes[0]
+    assets = [
+        (ref, ResolvedAssetSet.model_validate_json(json.dumps(body)))
+        for ref, body in documents
+        if isinstance(body, dict)
+        and body.get("scene_ir") == scene_ref.model_dump()
+        and "assets" in body
+    ]
+    if len(assets) != 1:
+        raise ValueError("completion_grounding_asset_binding_mismatch")
+    assets_ref, current_assets = assets[0]
+    _verify_grounding_origin(
+        snapshot.model_copy(update={"scene_ir": scene_ref, "resolved_assets": assets_ref}),
+        store,
+        accepted,
+        compiled.model_copy(update={"resolved_assets": current_assets}),
+    )
+    previous_index, spent, fingerprints, prefix = index, 0, set(), []
+    for revision_ref in snapshot.revisions:
+        row = json.loads(store.read_artifact(revision_ref))
+        positions = [
+            (i, op)
+            for i, op in enumerate(snapshot.operations)
+            if op.capability == "revise"
+            and op.status == "succeeded"
+            and op.result
+            and revision_ref in op.result.outputs
+        ]
+        if len(positions) != 1 or positions[0][0] <= previous_index:
+            raise ValueError("completion_grounding_revision_journal_mismatch")
+        next_index, op = positions[0]
+        next_ref = ArtifactRef.model_validate(row["scene_ir"])
+        if (
+            row.get("schema_version") != "x2env.revision.v1"
+            or row.get("base_scene") != scene_ref.model_dump()
+            or row.get("input_sha256") != scene.input_sha256
+            or row.get("history") != [r.model_dump() for r in prefix]
+            or next_ref not in op.result.outputs
+        ):
+            raise ValueError("completion_grounding_revision_chain_mismatch")
+        diagnosis_ref = ArtifactRef.model_validate(row["diagnosis"])
+        if not any(
+            o.capability == "codex.diagnose"
+            and o.status == "succeeded"
+            and o.result
+            and diagnosis_ref in o.result.outputs
+            for o in snapshot.operations[previous_index + 1 : next_index]
+        ):
+            raise ValueError("completion_grounding_revision_diagnosis_not_committed")
+        diagnosis = DiagnosisResult.model_validate_json(store.read_artifact(diagnosis_ref))
+        proposal = diagnosis.proposal
+        advisory = json.loads(store.read_artifact(diagnosis.receipt))
+        if (
+            diagnosis.status != "completed"
+            or proposal is None
+            or proposal.base_revision != accepted.revision
+            or advisory.get("status") != "completed"
+            or advisory.get("authority") != "advisory_only"
+            or advisory.get("scene_ir") != scene_ref.model_dump()
+            or advisory.get("proposal") != proposal.model_dump(mode="json")
+        ):
+            raise ValueError("completion_grounding_revision_diagnosis_mismatch")
+        model_records = [
+            json.loads(store.read_artifact(ArtifactRef.model_validate(r)))
+            for r in advisory.get("evidence", [])
+            if r.get("media_type") == "application/json"
+        ]
+        ground_records = [
+            json.loads(store.read_artifact(ArtifactRef.model_validate(r)))
+            for r in receipt["evidence"]
+            if r.get("media_type") == "application/json"
+        ]
+        if (
+            advisory.get("executable_sha256")
+            not in (_execution_shas(model_records) & _execution_shas(ground_records))
+            or proposal.model_dump(mode="json") not in model_records
+        ):
+            raise ValueError("completion_grounding_revision_model_mismatch")
+        if proposal.asset_patches or row.get("asset_receipts") != []:
+            raise ValueError("completion_grounding_asset_revision_not_verified")
+        _verify_revision_observation(
+            store,
+            snapshot.operations[previous_index + 1 : next_index],
+            diagnosis_ref,
+            advisory,
+            proposal,
+            scene_ref,
+            scene.input_sha256,
+            row,
+        )
+        cost = int(bool(proposal.scene_patches))
+        fingerprint = row.get("failure_fingerprint")
+        if (
+            type(row.get("cost")) is not int
+            or row["cost"] != cost
+            or cost != 1
+            or spent + cost > 2
+            or not isinstance(fingerprint, str)
+            or len(fingerprint) != 64
+            or any(c not in "0123456789abcdef" for c in fingerprint)
+            or fingerprint in fingerprints
+        ):
+            raise ValueError("completion_grounding_revision_budget_mismatch")
+        document = accepted.model_dump(mode="json")
+        entities = {e["id"]: e for e in document["entities"]}
+        seen = set()
+        for patch in proposal.scene_patches:
+            if patch.entity_id in seen or patch.entity_id not in entities or patch.joints:
+                raise ValueError("completion_grounding_revision_patch_mismatch")
+            seen.add(patch.entity_id)
+            entity = entities[patch.entity_id]
+            if patch.pose is not None:
+                if patch.pose.frame != entity["pose"]["frame"]:
+                    raise ValueError("completion_grounding_revision_patch_mismatch")
+                entity["pose"]["position"] = [
+                    old if new is None else new
+                    for old, new in zip(
+                        entity["pose"]["position"], patch.pose.position, strict=True
+                    )
+                ]
+                if patch.pose.yaw_degrees is not None:
+                    entity["pose"]["yaw_degrees"] = patch.pose.yaw_degrees
+        if document == accepted.model_dump(mode="json"):
+            raise ValueError("completion_grounding_revision_no_effect")
+        for entity_id in seen:
+            for provenance in entities[entity_id]["provenance"]["pose"]:
+                provenance["kind"] = "override"
+        document["revision"] += 1
+        following = SceneIR.model_validate_json(store.read_artifact(next_ref))
+        next_assets = ResolvedAssetSet.model_validate_json(json.dumps(row["resolved_assets"]))
+        if (
+            following.model_dump(mode="json") != document
+            or next_assets.scene_ir != next_ref
+            or next_assets.assets != current_assets.assets
+            or not any(
+                json.loads(store.read_artifact(ref)) == next_assets.model_dump(mode="json")
+                for ref in op.result.outputs
+            )
+        ):
+            raise ValueError("completion_grounding_revision_output_mismatch")
+        accepted, scene_ref, current_assets = following, next_ref, next_assets
+        previous_index, spent = next_index, spent + cost
+        fingerprints.add(fingerprint)
+        prefix.append(revision_ref)
+    committed = [
+        op
+        for op in snapshot.operations[index + 1 :]
+        if op.capability == "revise" and op.status == "succeeded"
+    ]
+    if (
+        len(committed) != len(prefix)
+        or scene_ref != snapshot.scene_ir
+        or accepted != scene
+        or current_assets != compiled.resolved_assets
+        or current_assets
+        != ResolvedAssetSet.model_validate_json(store.read_artifact(snapshot.resolved_assets))
+    ):
+        raise ValueError("completion_grounding_revision_chain_not_verified")
+
+
+def _verify_grounding_origin(snapshot, store, scene, compiled):
     """Audit the accepted design source and its original managed execution, never rerun it."""
     from .grounding import GroundingValues, SceneDesignPolicy
 
@@ -520,43 +702,10 @@ def _verify_grounding(snapshot, store, scene, compiled):
         if ref.get("media_type") == "application/json"
     ]
 
-    def valid_process(record):
-        return (
-            isinstance(record, dict)
-            and all(
-                type(record.get(k)) is int and record[k] > 0 for k in ("pid", "pgid", "start_ticks")
-            )
-            and record["pid"] == record["pgid"]
-            and isinstance(record.get("executable_sha256"), str)
-            and len(record["executable_sha256"]) == 64
-            and all(c in "0123456789abcdef" for c in record["executable_sha256"])
-        )
-
-    def reaped(process, evidence):
-        return any(
-            isinstance(t, dict)
-            and type(t.get("pid")) is int
-            and t["pid"] == process["pid"]
-            and t.get("reaped") is True
-            and type(t.get("returncode")) is int
-            and t["returncode"] == 0
-            and "failure" in t
-            and t["failure"] is None
-            for t in evidence
-        )
-
-    processes = [r for r in records if valid_process(r)]
     original_records = [
         read(ref) for ref in original.evidence if ref.media_type == "application/json"
     ]
-    original_executables = {
-        item["executable_sha256"]
-        for item in original_records
-        if valid_process(item) and reaped(item, original_records)
-    }
-    if not any(
-        p["executable_sha256"] in original_executables and reaped(p, records) for p in processes
-    ):
+    if not (_execution_shas(records) & _execution_shas(original_records)):
         raise ValueError("completion_grounding_missing_model_execution")
     values = [
         GroundingValues.model_validate_json(json.dumps(r))
@@ -595,3 +744,111 @@ def _verify_grounding(snapshot, store, scene, compiled):
             old.pose.yaw_degrees is not None and old.pose.yaw_degrees != entity.pose.yaw_degrees
         ):
             raise ValueError("completion_grounding_changed_explicit_axis")
+
+
+def _execution_shas(records):
+    """Historical successful session identities, not a live deployment qualification."""
+    return {
+        p["executable_sha256"]
+        for p in records
+        if isinstance(p, dict)
+        and all(type(p.get(k)) is int and p[k] > 0 for k in ("pid", "pgid", "start_ticks"))
+        and p["pid"] == p["pgid"]
+        and isinstance(p.get("executable_sha256"), str)
+        and len(p["executable_sha256"]) == 64
+        and all(c in "0123456789abcdef" for c in p["executable_sha256"])
+        and any(
+            isinstance(t, dict)
+            and type(t.get("pid")) is int
+            and t["pid"] == p["pid"]
+            and t.get("reaped") is True
+            and type(t.get("returncode")) is int
+            and t["returncode"] == 0
+            and "failure" in t
+            and t["failure"] is None
+            for t in records
+        )
+    }
+
+
+def _verify_revision_observation(
+    store, operations, diagnosis_ref, advisory, proposal, scene_ref, input_sha256, revision
+):
+    """Bind historical repair inputs without recapturing or refreshing their timestamps."""
+    diagnoses = [
+        i
+        for i, op in enumerate(operations)
+        if op.capability == "codex.diagnose"
+        and op.status == "succeeded"
+        and op.result
+        and diagnosis_ref in op.result.outputs
+    ]
+    if len(diagnoses) != 1:
+        raise ValueError("completion_grounding_revision_diagnosis_mismatch")
+    observations = []
+    for op in operations[: diagnoses[0]]:
+        if op.capability == "observe" and op.status == "succeeded" and op.result:
+            for ref in op.result.outputs:
+                body = json.loads(store.read_artifact(ref))
+                if isinstance(body, dict) and set(body) == {
+                    "observation",
+                    "physics_report",
+                    "receipt",
+                }:
+                    observations.append(ObservationResult.model_validate_json(json.dumps(body)))
+    if not observations:
+        raise ValueError("completion_grounding_revision_observation_missing")
+    observed = observations[-1]
+    observation = observed.observation
+    report = json.loads(store.read_artifact(observed.physics_report))
+    runtime = json.loads(store.read_artifact(observation.runtime_scene))
+    digest = hashlib.sha256(
+        json.dumps(runtime, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    if (
+        observation.scene_ir != scene_ref
+        or runtime.get("scene_ir_sha256") != scene_ref.sha256
+        or advisory.get("observation") != observation.model_dump(mode="json")
+        or advisory.get("physical_report") != observed.physics_report.model_dump()
+        or report.get("execution_evidence_bound") is not True
+        or report.get("input_sha256") != input_sha256
+        or report.get("scene_sha256") != digest
+    ):
+        raise ValueError("completion_grounding_revision_observation_mismatch")
+    allowed = {
+        scene_ref.sha256,
+        observed.physics_report.sha256,
+        observation.runtime_scene.sha256,
+        observation.replay_receipt.sha256,
+    }
+    admitted = datetime.fromisoformat(advisory["admitted_at"])
+    for frame in observation.frames:
+        captured = datetime.fromisoformat(frame.captured_at)
+        media = json.loads(store.read_artifact(frame.media_ref))
+        entry = media["frames"][frame.frame_index]
+        if (
+            admitted.tzinfo is None
+            or captured.tzinfo is None
+            or not 0 <= (admitted - captured).total_seconds() <= 300
+            or entry["png_sha256"] != frame.image.sha256
+            or entry["captured_at"] != frame.captured_at
+        ):
+            raise ValueError("completion_grounding_revision_observation_mismatch")
+        store.read_artifact(frame.image)
+        allowed.update((frame.image.sha256, frame.media_ref.sha256))
+    expected = hashlib.sha256(
+        json.dumps(
+            {
+                "input": report["input_sha256"],
+                "error_code": report.get("error_code"),
+                "checks": [c for c in report.get("checks", []) if c.get("status") != "passed"],
+                "images": [f.image.sha256 for f in observation.frames],
+            },
+            sort_keys=True,
+        ).encode()
+    ).hexdigest()
+    if (
+        revision.get("failure_fingerprint") != expected
+        or not set(proposal.evidence_sha256) <= allowed
+    ):
+        raise ValueError("completion_grounding_revision_failure_binding_mismatch")

@@ -1,5 +1,30 @@
 # 进度与结果
 
+## 2026-09-13 S02 显式设计开发运行：模型超时
+
+- 固定 clean `109b0c53f8dce987eed6b21b9c675f5afbce9b9f`，冻结原图、text=null、seed23、local-only；
+  部署显式启用生成设计。workflow `63761f00-8a02-4a38-9e12-40fd86a20902` 最终 failed/model_timeout，
+  revision2、owner=null；没有人工场景建议或原样重试。
+- ingest 0.019116s；interpret 600.169492s；CLI wall 600.381331s、外层 wall 600.513599s。
+  模型只留下 thread.started/turn.started，无场景建议；进程由自己的超时路径 SIGINT 回收。
+  未进入资产解析、grounding、Genesis，没有新渲染、视频或环境包；失败包图片仅为原输入。
+- 审计：`/home/jingxiang/bingsheng/canonical-s02-design-20260913.RNm4Th/audit-summary.json`，
+  SHA256 `181c1bb785d7bdbf434a4cd086ea6f5bfb894cec6cc7535ffc38a0a5bc384131`。
+  同目录 `run-summary.json` SHA256 `552dec3252a5e5d87ece6892d620aeaaf0e1aed5092169bb41466a17482ee84a`；
+  `requested-output/failure` manifest SHA256 `cdc953752c5d0e32e45ad189a98c9ba19711cb86c96ec7da10cafa34f021e181`。
+- 原资产、固定源码均未改变。此结果不是 grounding 行为失败的证明，因为该阶段未执行；
+  继续最小 transport 诊断及其它实施，不增加等待预算或预填模型输出。
+
+## 2026-09-13 C11 生成设计后的布局修订完成链
+
+- 完成门先核原 grounding 节点，再沿已提交 revise 顺序核 base/history、真实改动字段、同版本资产重绑、
+  原诊断执行身份、准入时观测 TTL、失败摘要及修订成本。包包含所有修订回执，不把旧图刷新为新观测。
+- 来源/历史/成本/资产偷换、模型身份、无效 patch、重复指纹、过期或缺失观测攻击均保留；
+  测试数据的外部模型与运行产物明确为替身，不增加真实 fallback 或物理成功主张。
+- 本片只接受布局链；ground 后资产版本修订仍明确拒绝 `completion_grounding_asset_revision_not_verified`。
+  失败操作的持久预算预留另片实现，不能把当前成功回执累计当成该问题已解决。
+- 主线程完成门/交付/Harness 完成组复跑 44 passed（48.68s）。
+
 ## 2026-09-13 partial pose 修订保留原 yaw
 
 - nullable yaw 引入后，发现修订将 null 写入原已接受朝向，违反 ScenePatch 的“null 不改动”合同。
