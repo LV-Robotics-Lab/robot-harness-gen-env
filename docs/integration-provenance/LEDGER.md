@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-WEB-BOUNDARIES — 外部获取回执与预算
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Yuxin原引擎不变。
+- source_ref：`c97e533`；target_paths：test_web_resolver.py；无生产修改。
+- integration_method：公开resolve调用真实Store/规范化/登记，外部provider/模型/preview及系统时钟边界替身。
+- verification：主线程45项通过，202/203语句、91/92分支；runtime_verification：无新联网/仿真成功。
+- recorded_git_authors：原provider与本次Harness边界测试独立保留。
+
 ## INT-CANONICAL-MEDIA-AUTHORIZATION — 用户媒体发布许可
 
 - origin_owner：用户提供原媒体；署名`x2env1.0`，不推断自然人；integration_owner：Bingsheng Harness workstream。

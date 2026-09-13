@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import time
 from pathlib import Path
 
 import pytest
@@ -52,6 +53,290 @@ class ProviderDouble:
             "application/json",
         )
         return ProviderFetchResult(status="succeeded", source_path=str(path), receipt=ref)
+
+
+@pytest.mark.parametrize(
+    "override",
+    [
+        {"timeout": 0},
+        {"timeout": True},
+        {"allow_cousin": 1},
+        {"allowed_sources": ()},
+        {"allowed_sources": ("web", "web")},
+        {"allowed_sources": ("unknown",)},
+        {"output_root": Path("relative")},
+    ],
+)
+def test_invalid_web_configuration_does_not_call_provider(tmp_path, override):
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+    provider = ProviderDouble(store, tmp_path)
+    args = dict(allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    args.update(override)
+    with pytest.raises(ValueError, match="^invalid web resolver configuration$"):
+        WebAssetResolver(store, registry, provider, None, None, None).resolve(scene, **args)
+    assert provider.queries == []
+
+
+@pytest.mark.parametrize("fault", ["invalid_scene", "source", "filter"])
+def test_unavailable_scene_or_scope_never_searches(tmp_path, fault):
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+    provider = ProviderDouble(store, tmp_path)
+    resolver = WebAssetResolver(store, registry, provider, None, None, None)
+    if fault == "filter":
+        with pytest.raises(ValueError, match="^invalid resolver entity filter$"):
+            resolver.resolve(
+                scene,
+                allowed_sources=("web",),
+                allow_cousin=False,
+                output_root=tmp_path / "resolve",
+                entity_ids=("not-present",),
+            )
+    else:
+        if fault == "invalid_scene":
+            scene = store.write_artifact(b"{}", "application/json")
+        result = resolver.resolve(
+            scene, allowed_sources=("local",), allow_cousin=False, output_root=tmp_path / "resolve"
+        )
+        assert result.error_code == (
+            "invalid_scene_evidence" if fault == "invalid_scene" else "web_source_not_allowed"
+        )
+        assert result.status == "blocked" and not result.resolved.assets
+    assert not provider.queries
+
+
+def test_empty_explicit_entity_filter_succeeds_without_search(tmp_path):
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+    provider = ProviderDouble(store, tmp_path)
+    result = WebAssetResolver(store, registry, provider, None, None, None).resolve(
+        scene,
+        allowed_sources=("web",),
+        allow_cousin=False,
+        output_root=tmp_path / "resolve",
+        entity_ids=(),
+    )
+    assert result.status == "succeeded" and not result.resolved.assets
+    assert not provider.queries
+
+
+@pytest.mark.parametrize("fault", ["binding", "failure", "failure_default"])
+def test_actual_query_receipt_cannot_be_rebound_by_provider(tmp_path, fault):
+    from self_improving.harness.x2env.codex import CodexBackend
+    from self_improving.harness.x2env.search_advisory import plan_search
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+    from tests.self_improving.harness.x2env.test_codex import executable
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+    program = executable(tmp_path, {"query": "rectangular block", "reason": "fixture query"})
+    backend = CodexBackend(
+        program, hashlib.sha256(program.read_bytes()).hexdigest(), "double", store
+    )
+
+    class FailingQueryProvider(ProviderDouble):
+        def search(self, entity, source, limit, *, query):
+            self.queries.append((entity.category, source, limit))
+            receipt = store.write_artifact(
+                json.dumps(
+                    {
+                        "entity_id": entity.id,
+                        "category": entity.category,
+                        "query": "rebound" if fault == "binding" else query,
+                    }
+                ).encode(),
+                "application/json",
+            )
+            return ProviderSearchResult(
+                status="failed",
+                candidates=(),
+                receipt=receipt,
+                error_code="provider_offline" if fault == "failure" else None,
+            )
+
+        def fetch(self, *args):
+            raise AssertionError("failed search must never fetch")
+
+    provider = FailingQueryProvider(store, tmp_path)
+    result = WebAssetResolver(
+        store,
+        registry,
+        provider,
+        backend,
+        None,
+        None,
+        query_port=lambda entity: plan_search(
+            backend, scene, entity, store=store, output_root=tmp_path / "query", timeout=10
+        ),
+    ).resolve(scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    assert result.status == "blocked" and not result.resolved.assets
+    assert len(provider.queries) == 1
+    assert (
+        result.error_code
+        == {
+            "binding": "invalid_provider_evidence",
+            "failure": "provider_offline",
+            "failure_default": "web_search_failed",
+        }[fault]
+    )
+    rows = json.loads(store.read_artifact(result.receipt))["candidates"]
+    assert "query_advisory" in rows[0]
+    if fault == "binding":
+        assert rows[1]["reason"] == "provider_query_binding_mismatch"
+
+
+@pytest.mark.parametrize(
+    "phase", ["before_search", "after_search", "after_prepare", "after_preview", "after_model"]
+)
+def test_shared_deadline_stops_after_real_stage_boundary(tmp_path, monkeypatch, phase):
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, image = inputs(tmp_path)
+    elapsed = [0.0]
+    reads = [0]
+
+    def clock():
+        reads[0] += 1
+        if phase == "before_search" and reads[0] > 1:
+            return 600.0
+        return elapsed[0]
+
+    monkeypatch.setattr(time, "monotonic", clock)
+
+    class SlowProvider(ProviderDouble):
+        def search(self, *args, **kwargs):
+            result = super().search(*args, **kwargs)
+            if phase == "after_search":
+                elapsed[0] = 599.5
+            return result
+
+    def prepare(*args):
+        result = prepared(store, scene)(*args)
+        if phase == "after_prepare":
+            elapsed[0] = 599.5
+        return result
+
+    def preview(*args, **kwargs):
+        result = preview_double(store, image)(*args, **kwargs)
+        if phase == "after_preview":
+            elapsed[0] = 599.5
+        return result
+
+    class SlowVisual(VisualDouble):
+        def assess_asset_candidates(self, *args, **kwargs):
+            result = super().assess_asset_candidates(*args, **kwargs)
+            if phase == "after_model":
+                elapsed[0] = 600.0
+            return result
+
+    provider, backend = SlowProvider(store, tmp_path), SlowVisual(store)
+    result = WebAssetResolver(store, registry, provider, backend, preview, prepare).resolve(
+        scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve"
+    )
+    assert result.status == "blocked" and result.error_code == "resolver_timeout"
+    assert not result.resolved.assets
+    assert len(provider.queries) == (0 if phase == "before_search" else 1)
+    assert len(backend.calls) == (1 if phase == "after_model" else 0)
+
+
+@pytest.mark.parametrize("fault", ["proposal_binding", "query_deadline"])
+def test_query_proposal_binding_and_elapsed_query_stop_before_search(tmp_path, monkeypatch, fault):
+    from self_improving.harness.x2env.codex import CodexBackend
+    from self_improving.harness.x2env.contracts import SceneIR
+    from self_improving.harness.x2env.search_advisory import plan_search
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+    from tests.self_improving.harness.x2env.test_codex import executable
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+    entity = SceneIR.model_validate_json(store.read_artifact(scene)).entities[0]
+    program = executable(tmp_path, {"query": "rectangular block", "reason": "fixture query"})
+    backend = CodexBackend(
+        program, hashlib.sha256(program.read_bytes()).hexdigest(), "double", store
+    )
+    actual = plan_search(
+        backend, scene, entity, store=store, output_root=tmp_path / "query", timeout=10
+    )
+    elapsed = [0.0]
+    monkeypatch.setattr(time, "monotonic", lambda: elapsed[0])
+
+    def query(entity):
+        if fault == "query_deadline":
+            elapsed[0] = 599.5
+            return actual
+        record = json.loads(store.read_artifact(actual.receipt))
+        record["proposal"]["query"] = "different query"
+        return actual.model_copy(
+            update={
+                "receipt": store.write_artifact(json.dumps(record).encode(), "application/json")
+            }
+        )
+
+    provider = ProviderDouble(store, tmp_path)
+    result = WebAssetResolver(
+        store, registry, provider, backend, None, None, query_port=query
+    ).resolve(scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    assert result.status == "blocked" and not provider.queries
+    if fault == "query_deadline":
+        assert result.error_code == "resolver_timeout"
+    else:
+        rows = json.loads(store.read_artifact(result.receipt))["candidates"]
+        assert result.error_code == "invalid_provider_evidence"
+        assert rows[-1]["reason"] == "invalid_search_advisory"
+
+
+@pytest.mark.parametrize(
+    ("fault", "error"),
+    [
+        ("candidate", "unbound_provider_candidate"),
+        ("license", "blocked_license"),
+        ("fetch", "web_fetch_failed"),
+        ("escape", "unsafe_provider_output"),
+        ("duplicate", "missing_physical_metadata"),
+    ],
+)
+def test_provider_faults_preserve_receipts_without_acceptance(tmp_path, fault, error):
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+    before = registry.find("box")
+
+    class FaultProvider(ProviderDouble):
+        fetch_count = 0
+
+        def search(self, entity, source, limit):
+            result = super().search(entity, source, limit)
+            candidate = result.candidates[0]
+            if fault == "candidate":
+                candidate = candidate.model_copy(update={"entity_id": "other"})
+            elif fault == "license":
+                candidate = candidate.model_copy(
+                    update={"license": candidate.license.model_copy(update={"evidence": None})}
+                )
+            return result.model_copy(
+                update={"candidates": (candidate,) * (2 if fault == "duplicate" else 1)}
+            )
+
+        def fetch(self, candidate, output_dir):
+            self.fetch_count += 1
+            result = super().fetch(candidate, output_dir)
+            if fault == "fetch":
+                return result.model_copy(update={"status": "failed", "source_path": None})
+            if fault == "escape":
+                return result.model_copy(update={"source_path": str(tmp_path / "box.glb")})
+            return result
+
+    provider = FaultProvider(store, tmp_path)
+    result = WebAssetResolver(store, registry, provider, None, None, None).resolve(
+        scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve"
+    )
+    assert result.error_code == error and not result.resolved.assets
+    assert registry.find("box") == before
+    assert provider.fetch_count == (0 if fault in {"candidate", "license"} else 1)
+    receipt = json.loads(store.read_artifact(result.receipt))
+    assert receipt["candidates"][0]["error_code"] == error
 
 
 def test_managed_query_is_used_once_without_mutating_scene_or_entity(tmp_path):
@@ -218,6 +503,109 @@ def preview_double(store, image):
         )
 
     return render
+
+
+@pytest.mark.parametrize(
+    ("fault", "error"),
+    [
+        ("no_preview", "missing_preview"),
+        ("no_backend", "missing_managed_codex"),
+        ("preview_binding", "unbound_preview_evidence"),
+        ("verdict_binding", "unbound_visual_verdict"),
+    ],
+)
+def test_preview_or_model_binding_failure_keeps_only_unaccepted_version(tmp_path, fault, error):
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, image = inputs(tmp_path)
+
+    def preview(version, **kwargs):
+        proof = preview_double(store, image)(version, **kwargs)
+        if fault == "preview_binding":
+            return proof.model_copy(update={"version_sha256": "0" * 64})
+        # Existing CAS members stand for explicitly labelled renderer-boundary evidence.
+        record = json.loads(store.read_artifact(proof.receipt))
+        record["runtime_scene"] = scene.model_dump(mode="json")
+        record["package"] = {"frame": image.model_dump(mode="json")}
+        return proof.model_copy(
+            update={
+                "receipt": store.write_artifact(json.dumps(record).encode(), "application/json")
+            }
+        )
+
+    class ReboundVisual(VisualDouble):
+        def assess_asset_candidates(self, candidates, **kwargs):
+            result = super().assess_asset_candidates(candidates, **kwargs)
+            if fault == "verdict_binding":
+                return result.model_copy(
+                    update={
+                        "verdicts": (
+                            result.verdicts[0].model_copy(update={"candidate_id": "wrong-version"}),
+                        )
+                    }
+                )
+            return result
+
+    result = WebAssetResolver(
+        store,
+        registry,
+        ProviderDouble(store, tmp_path),
+        None if fault == "no_backend" else ReboundVisual(store),
+        None if fault == "no_preview" else preview,
+        prepared(store, scene),
+    ).resolve(scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    assert result.status == "blocked" and result.error_code == error
+    assert not result.resolved.assets
+    receipt = json.loads(store.read_artifact(result.receipt))
+    version = registry.inspect(receipt["candidates"][0]["version_sha256"])
+    assert version.source.kind == "web" and version.physical_evaluated is False
+
+
+@pytest.mark.parametrize(
+    ("fault", "expected"),
+    [
+        ("complete", "succeeded"),
+        ("missing_color_basis", "missing_color_provenance"),
+        ("wrong_color", "color_mismatch"),
+    ],
+)
+def test_preparation_result_color_must_bind_declared_intent(tmp_path, fault, expected):
+    from self_improving.harness.x2env.asset_preparation import PreparationResult
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, image = inputs(tmp_path)
+    record = json.loads(store.read_artifact(scene))
+    record["entities"][0]["color"] = "red"
+    scene = store.write_artifact(json.dumps(record).encode(), "application/json")
+    original = prepared(store, scene)
+
+    def prepare(entity, candidate, fetched):
+        params = original(entity, candidate, fetched).model_copy(
+            update={
+                "base_color": (1.0, 0.0, 0.0, 1.0),
+                "declared_color": "blue" if fault == "wrong_color" else "red",
+                "color_basis": None if fault == "missing_color_basis" else "deployment_supplied",
+            }
+        )
+        binding = json.loads(store.read_artifact(params.evidence))
+        binding["parameters"] = params.model_dump(mode="json", exclude={"evidence"})
+        params = params.model_copy(
+            update={
+                "evidence": store.write_artifact(json.dumps(binding).encode(), "application/json")
+            }
+        )
+        return PreparationResult(status="completed", parameters=params, receipt=params.evidence)
+
+    result = WebAssetResolver(
+        store,
+        registry,
+        ProviderDouble(store, tmp_path),
+        VisualDouble(store),
+        preview_double(store, image),
+        prepare,
+    ).resolve(scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    assert (result.status if fault == "complete" else result.error_code) == expected
+    assert bool(result.resolved.assets) is (fault == "complete")
 
 
 def test_explicit_preparation_real_normalization_registry_and_visual_binding(tmp_path):
