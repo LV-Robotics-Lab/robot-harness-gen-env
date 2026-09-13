@@ -1,8 +1,13 @@
 # Canonical x2env（收敛实施中）
 
+固定a57a0ea的S01已从一次公共Harness提交真实完成local检索、颜色child及视觉复验、ground、
+compile、双profile Genesis replay、观察诊断、validate和包物化，约546.60秒，物理26/26通过。
+这只授予单案例开发闭环：包仍development_review/sim_ready=false，复制运行与最终矩阵资格待验。
+完整证据入口见进度RESULTS中“S01 同一公共工作流真实开发闭环”，不是将旧limited证据升级。
+
 场景准入检查必要布局缺值，不只相信模型unknown.critical；显式冲突即使非critical也需澄清。
 未知foreground XY不能在compile中变成零；显式结构默认、Registry尺寸和唯一on支撑高度推导仍合法。
-完成门独立复核这些条件，并把原interpret proposal纳入证据包；组件209项回归通过，真实新case待验。
+完成门独立复核这些条件，并把原interpret proposal纳入证据包；209项相关回归及上述S01真实路径已通过。
 
 测试从 `script/run_self_improving_tests.sh` 执行六组、独立root与merge；每组独立30分钟总预算。
 同源六份测量才可归并，业务文件语句/分支必须100%。全active lint与reader docs检查已实际接入，
@@ -53,8 +58,8 @@ Provider 安装使用根项目的 `pip install '.[platform]'`（开发可加 `-e
 不重跑或返还预算。历史审计重核原模型输出/进程、批准、几何/许可继承与新预览，供续点和完成门共用。
 子版本视觉还逐次绑定同一模型/执行身份、新图、问题与回答，通过原 a6 重算判断；历史审计不再次调用模型。
 完成门已接入该历史审计，另核原 blocked 解析、已提交续点、实际编译 child 与顺序；支持初始场景及
-grounding 前颜色修订，失败/取消成本和部分产物也进包。当前通过组件测试，尚无真实模型+Genesis
-颜色闭环成功，grounding 后资产修订仍不在此范围。
+grounding 前颜色修订，失败/取消成本和部分产物也进包。上述S01已真实完成模型+Genesis颜色闭环，
+grounding 后资产修订仍不在此范围。
 
 结构设计补全不等于恢复真实尺度。部署显式授权世界 XY/yaw 后，可复用已声明的桌面厚度/高度；
 局部 on 高度由资产实测几何推导。原 critical 与用户已知数值仍保留，模型输出必须符合逐轴来源；

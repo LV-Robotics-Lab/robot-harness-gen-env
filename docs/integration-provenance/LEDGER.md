@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-S01-REAL-CLOSURE — 单workflow开发闭环
+
+- origin_owner：Bingsheng Harness workstream；upstream_owner：Yuxin检索、CreativeTrio CC0鼠标、Genesis分别保留。
+- integration_owner：Bingsheng Harness workstream；source_ref：`a57a0ea33acbb2926774ac01f6d7b0480f6c9386`。
+- integration_method：真实公共submit，managed Codex命名/视觉/颜色/ground/诊断，同controller执行13operations。
+- verification：workflow07321d67-37be-45c4-89c7-f37527729797终态成功、187refs、包186members；精确证据见RESULTS。
+- runtime_verification：双profile物理26/26、真实连续视频和颜色child；copy-run未执行、qualification未授。
+- recorded_git_authors：原引擎、资产作者、集成代码作者不互相替代；用户媒体署名不适用于此第三方鼠标。
+
 ## INT-CANONICAL-C06-WEB-BOUNDARIES — 外部获取回执与预算
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Yuxin原引擎不变。
