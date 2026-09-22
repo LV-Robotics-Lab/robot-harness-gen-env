@@ -10,5 +10,5 @@ OPENAI_API_KEY = ""
 # Optional model overrides.
 MOONSHOT_TEXT_MODEL = "kimi-k2.5"
 MOONSHOT_VISION_MODEL = "kimi-k2.5"
-OPENAI_TEXT_MODEL = "gpt-5.5"
-OPENAI_VISION_MODEL = "gpt-5.5"
+OPENAI_TEXT_MODEL = "gpt-5.6-sol"
+OPENAI_VISION_MODEL = "gpt-5.6-sol"

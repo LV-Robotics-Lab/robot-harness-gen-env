@@ -15,8 +15,8 @@ from typing import Any
 
 
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
-DEFAULT_TEXT_MODEL = "gpt-5.5"
-DEFAULT_VISION_MODEL = "gpt-5.5"
+DEFAULT_TEXT_MODEL = "gpt-5.6-sol"
+DEFAULT_VISION_MODEL = "gpt-5.6-sol"
 
 # Optional local-only fallback.
 # Prefer generate_scene/local_config.py locally. Never commit a real key.

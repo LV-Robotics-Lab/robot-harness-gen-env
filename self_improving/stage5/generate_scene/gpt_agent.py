@@ -28,7 +28,7 @@ def _load_prompt(name: str) -> str:
 
 
 def _uses_openai(provider: str) -> bool:
-    return provider.lower() in {"openai", "gpt", "gpt5", "gpt-5", "gpt5.5", "gpt-5.5"}
+    return provider.lower() in {"openai", "gpt", "gpt5", "gpt-5", "gpt5.5", "gpt-5.5", "gpt5.6", "gpt-5.6"}
 
 
 def _json_chat_for_provider(

@@ -23,8 +23,8 @@ OpenAI:
 
 ```bash
 export OPENAI_API_KEY="your_key"
-export OPENAI_TEXT_MODEL="gpt-5.5"
-export OPENAI_VISION_MODEL="gpt-5.5"
+export OPENAI_TEXT_MODEL="gpt-5.6-sol"
+export OPENAI_VISION_MODEL="gpt-5.6-sol"
 ```
 
 也可以在本机创建一个不会提交到 git 的文件：
@@ -48,8 +48,8 @@ export MOONSHOT_BASE_URL="https://api.moonshot.cn/v1"
 export MOONSHOT_TEXT_MODEL="kimi-k2.5"
 export MOONSHOT_VISION_MODEL="kimi-k2.5"
 export OPENAI_BASE_URL="https://api.openai.com/v1"
-export OPENAI_TEXT_MODEL="gpt-5.5"
-export OPENAI_VISION_MODEL="gpt-5.5"
+export OPENAI_TEXT_MODEL="gpt-5.6-sol"
+export OPENAI_VISION_MODEL="gpt-5.6-sol"
 ```
 
 默认 endpoint 是 `https://api.moonshot.cn/v1`。如果你使用的是兼容域名，也可以把 `MOONSHOT_BASE_URL` 改成对应地址。
