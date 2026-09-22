@@ -1,0 +1,59 @@
+{
+  "schema_version": "robotwin.scene_spec.v1",
+  "scene_id": "put_a_mug_on_the_laptop_44c7c57f84",
+  "request": "Put a mug on the laptop.",
+  "language": "en",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "objects": [
+    {
+      "object_id": "mug_1",
+      "category": "mug",
+      "region": "center"
+    },
+    {
+      "object_id": "laptop_1",
+      "category": "laptop",
+      "region": "center"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "laptop_1",
+      "target": "table"
+    },
+    {
+      "relation": "on_top_of",
+      "source": "mug_1",
+      "target": "laptop_1"
+    }
+  ]
+}

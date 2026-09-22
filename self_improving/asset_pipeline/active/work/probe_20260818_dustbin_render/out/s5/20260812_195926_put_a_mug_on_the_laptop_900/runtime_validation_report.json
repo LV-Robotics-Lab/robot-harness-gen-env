@@ -1,0 +1,360 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "put_a_mug_on_the_laptop_b698c0c3ac",
+  "resolved_scene_sha256": "88d2b139ed37cf4d2b04ab4b3e965279d132daa2bbec5ee0a382c68c911e9007",
+  "status": "fail",
+  "fail_count": 8,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:cup_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.17400098801962072,
+          -0.05184253998037926,
+          0.0332267379852126,
+          0.1554397160147874
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:cup_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.87419895,
+        "table_height_m": 0.741,
+        "support_relation": "on_top_of"
+      }
+    },
+    {
+      "name": "real_asset_files:cup_1",
+      "status": "fail",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base0.glb",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data0.json",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base0.glb"
+        ],
+        "exists": [
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "name": "workspace_bounds:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.24355738603945293,
+          -0.0011511339605470988,
+          -0.05171091494225456,
+          0.19815017094225457
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:laptop_1",
+      "status": "fail",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/015_laptop/10098/mobility.urdf",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/015_laptop/10098/model_data.json"
+        ],
+        "exists": [
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "name": "no_overlap:cup_1:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "first_aabb_3d": [
+          -0.17400098801962072,
+          -0.05184253998037926,
+          0.0332267379852126,
+          0.1554397160147874,
+          0.87419895,
+          0.9637130757492691
+        ],
+        "second_aabb_3d": [
+          -0.24355738603945293,
+          -0.0011511339605470988,
+          -0.05171091494225456,
+          0.19815017094225457,
+          0.741,
+          0.87119895
+        ],
+        "expected_support_pair": true
+      }
+    },
+    {
+      "name": "relation:on_table:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "relation:on_top_of:cup_1:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "center_distance_m": 0.02312479283199782,
+        "source_aabb": [
+          -0.17400098801962072,
+          -0.05184253998037926,
+          0.0332267379852126,
+          0.1554397160147874
+        ],
+        "target_aabb": [
+          -0.24355738603945293,
+          -0.0011511339605470988,
+          -0.05171091494225456,
+          0.19815017094225457
+        ],
+        "source_aabb_3d": [
+          -0.17400098801962072,
+          -0.05184253998037926,
+          0.0332267379852126,
+          0.1554397160147874,
+          0.87419895,
+          0.9637130757492691
+        ],
+        "target_aabb_3d": [
+          -0.24355738603945293,
+          -0.0011511339605470988,
+          -0.05171091494225456,
+          0.19815017094225457,
+          0.741,
+          0.87119895
+        ],
+        "target_interior_aabb_3d": null,
+        "support_surface_shape": "box",
+        "support_surface_dimensions_m": [
+          0.2038767,
+          0.14564385
+        ],
+        "support_surface_z_m": 0.87119895,
+        "spawn_clearance_m": 0.003,
+        "expected_source_bottom_z_m": 0.87419895,
+        "support_footprint_margin_m": 0.016473188017221925,
+        "required_support_margin_m": 0.005
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "88d2b139ed37cf4d2b04ab4b3e965279d132daa2bbec5ee0a382c68c911e9007",
+        "after": "88d2b139ed37cf4d2b04ab4b3e965279d132daa2bbec5ee0a382c68c911e9007"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 12,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 12,
+        "minimum": 12
+      }
+    },
+    {
+      "name": "translation_drift:cup_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 9.827913981367288,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:cup_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 144.67163061280786,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:cup_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 9.82791398320329,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:cup_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 144.67163145231342,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:cup_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:cup_1",
+      "status": "fail",
+      "evidence": true
+    },
+    {
+      "name": "support_contact:cup_1",
+      "status": "fail",
+      "evidence": {
+        "raw_contact": false,
+        "mode": "none",
+        "is_static": false,
+        "expected_target": "laptop_1",
+        "observed_target": null,
+        "contact_fraction": 0.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "no_unexpected_support_contact:cup_1",
+      "status": "fail",
+      "evidence": {
+        "contact_fraction": 0.125,
+        "targets": [
+          "ground"
+        ]
+      }
+    },
+    {
+      "name": "runtime_support_margin:cup_1",
+      "status": "fail",
+      "evidence": {
+        "margin_m": -7.98324815457106,
+        "required_margin_m": 0.005
+      }
+    },
+    {
+      "name": "not_dropped:cup_1",
+      "status": "fail",
+      "evidence": true
+    },
+    {
+      "name": "head_visibility:cup_1",
+      "status": "fail",
+      "evidence": {
+        "pixels": 0,
+        "threshold": 64
+      }
+    },
+    {
+      "name": "translation_drift:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "drift_m": 0.0,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "rotation_drift:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "drift_deg": 0.039501412983362905,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "resolved_translation_error:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "error_m": 0.0,
+        "threshold_m": 0.02,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "resolved_rotation_error:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "error_deg": 0.9166850762328672,
+        "threshold_deg": 5.0,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "penetration:laptop_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:laptop_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": false,
+        "mode": "fixed_static_pose",
+        "is_static": true,
+        "expected_target": "table",
+        "observed_target": null,
+        "contact_fraction": 0.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:laptop_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 5244,
+        "threshold": 64
+      }
+    },
+    {
+      "name": "articulation_qpos:laptop_1",
+      "status": "pass",
+      "evidence": {
+        "max_abs_error": 5.65052032475144e-06,
+        "target_qpos": [
+          -1.45
+        ]
+      }
+    }
+  ]
+}

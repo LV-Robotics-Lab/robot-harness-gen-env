@@ -1,0 +1,19 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+pairs: pos=179 neg=29714
+pos: p5=0.1705 p50=0.2336 p95=0.2881
+neg: p5=0.1025 p50=0.1519 p95=0.2042
+AUC=0.9492
+threshold  同类召回  异类误入
+  0.14      0.989     0.656
+  0.16      0.978     0.390
+  0.18      0.911     0.173
+  0.20      0.816     0.064
+  0.22      0.659     0.019
+  0.24      0.413     0.004
+  0.26      0.212     0.001
+  0.28      0.095     0.000
+  0.30      0.022     0.000
+color-probe: blue ball -> top=366_ball['blue', 'purple'] ✓
+color-probe: brown ball -> top=330_ball['brown'] ✓
+color-probe: purple ball -> top=366_ball['blue', 'purple'] ✓
+color-probe: 3/3 排序正确

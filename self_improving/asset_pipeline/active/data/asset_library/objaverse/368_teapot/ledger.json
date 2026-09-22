@@ -1,0 +1,188 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_368_teapot",
+  "category": "teapot",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "teapot"
+    ],
+    "colors": [
+      "blue"
+    ],
+    "materials": [
+      "plastic"
+    ],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260824_114719_place_a_teapot_on_the_table/acquire/identity_post_render_368_teapot_m0.json",
+      "verified": true
+    },
+    "attribute_basis": {
+      "colors": "vlm",
+      "materials": "vlm"
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.25,
+          0.1567692448858498,
+          0.1265230135510485
+        ],
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 2.389173984527588,
+          "scale": 0.10463867496423981,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/368_teapot/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "d9357e29c7dbbd567afaaef39e72134ba66a62659431293a32046cb0fa11b57d",
+          "size_bytes": 426916,
+          "metadata": {
+            "derived_from": "03c5cc9626e1456eb247ea7dcca8e133.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/368_teapot/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "d9357e29c7dbbd567afaaef39e72134ba66a62659431293a32046cb0fa11b57d",
+          "size_bytes": 426916,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/_source/web_368_teapot/03c5cc9626e1456eb247ea7dcca8e133.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "f37246ec573a41684339e2f19479cf2cc8fa88cb2e69acb4ac059ccaf45e5106",
+          "size_bytes": 426784,
+          "metadata": {
+            "origin_prefix": "web_368_teapot"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/objaverse/368_teapot/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "69b7e796688d0ddfbcb9f1e89859cf5099caf41503ab521cde3790fe8b3d9bf7",
+          "size_bytes": 5738,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (objaverse)",
+        "group": "web_368_teapot",
+        "file": "03c5cc9626e1456eb247ea7dcca8e133.glb",
+        "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-000/03c5cc9626e1456eb247ea7dcca8e133.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "CC-BY-4.0 (Objaverse per-object metadata); owner: Tue, 23 Jul 2019 17:43:48",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-000.json.gz",
+          "checked_date": "2026-08-24",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-24",
+        "source_manifest_path": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/_source/web_368_teapot/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-24T11:47:56",
+          "verified_digest": "3d5099f7a350dac45505b3ee40621d96790e32316cf29bb5fc71b207c7bf6544",
+          "report_path": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260824_114719_place_a_teapot_on_the_table/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ]
+    }
+  ]
+}

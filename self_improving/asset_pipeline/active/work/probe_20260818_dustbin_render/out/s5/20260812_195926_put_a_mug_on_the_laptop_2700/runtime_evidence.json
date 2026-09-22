@@ -1,0 +1,377 @@
+{
+  "schema_version": "robotwin.scene_runtime_evidence.v2",
+  "scene_id": "put_a_mug_on_the_laptop_b698c0c3ac",
+  "resolved_scene_sha256": "88d2b139ed37cf4d2b04ab4b3e965279d132daa2bbec5ee0a382c68c911e9007",
+  "seed": 42,
+  "status": "pass",
+  "robot_initial_collision_count": 0,
+  "robot_initial_collision_pairs": [],
+  "robot_final_collision_count": 0,
+  "robot_final_collision_pairs": [],
+  "objects": {
+    "cup_1": {
+      "asset_id": "021_cup",
+      "entity_id": 66,
+      "entity_ids": [
+        66
+      ],
+      "initial_pose": {
+        "position_m": [
+          -0.11292176693677902,
+          0.0943332239985466,
+          0.8741989731788635
+        ],
+        "orientation_wxyz": [
+          0.6422820687294006,
+          0.6422820687294006,
+          -0.2957596480846405,
+          -0.2957596480846405
+        ],
+        "qpos": []
+      },
+      "final_pose": {
+        "position_m": [
+          -11.038590431213379,
+          -3.038147449493408,
+          0.032605238258838654
+        ],
+        "orientation_wxyz": [
+          -0.2889214754104614,
+          0.6293688416481018,
+          -0.6061319708824158,
+          -0.3911820948123932
+        ],
+        "qpos": []
+      },
+      "translation_drift_m": 11.39697113034919,
+      "rotation_drift_deg": 118.18834855232366,
+      "resolved_translation_error_m": 11.396971132277868,
+      "loader_translation_offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "resolved_rotation_error_deg": 118.18834953999573,
+      "late_window_translation_m": 0.002671542281807446,
+      "late_window_rotation_deg": 4.698071812762275,
+      "still_moving": true,
+      "visible_pixels": 0,
+      "penetration_count": 0,
+      "support_contact": false,
+      "support_contact_fraction": 0.0,
+      "support_contact_samples": 120,
+      "unexpected_contact_fraction": 1.0,
+      "unexpected_contact_targets": [
+        "ground"
+      ],
+      "support_mode": "none",
+      "support_target": null,
+      "expected_support_target": "laptop_1",
+      "support_footprint_margin_m": -9.326646119452493,
+      "inside_contained": null,
+      "dropped": true,
+      "articulation_target_qpos": [],
+      "articulation_final_qpos": [],
+      "articulation_max_abs_error": null
+    },
+    "laptop_1": {
+      "asset_id": "015_laptop",
+      "entity_id": null,
+      "entity_ids": [
+        67,
+        68,
+        69
+      ],
+      "initial_pose": {
+        "position_m": [
+          -0.12235426157712936,
+          0.07321962714195251,
+          0.7773683071136475
+        ],
+        "orientation_wxyz": [
+          0.9058127999305725,
+          -0.00338712683878839,
+          -0.007219006773084402,
+          0.42360302805900574
+        ],
+        "qpos": [
+          -1.4500000476837158
+        ]
+      },
+      "final_pose": {
+        "position_m": [
+          -0.12235426157712936,
+          0.07321962714195251,
+          0.7773683071136475
+        ],
+        "orientation_wxyz": [
+          0.9058127999305725,
+          -0.00338712683878839,
+          -0.007219006773084402,
+          0.42360302805900574
+        ],
+        "qpos": [
+          -1.4500056505203247
+        ]
+      },
+      "translation_drift_m": 0.0,
+      "rotation_drift_deg": 0.039501412983362905,
+      "resolved_translation_error_m": 0.0,
+      "loader_translation_offset_m": [
+        -1.5771293576660739e-09,
+        -8.580474802899474e-10,
+        0.03636830711364747
+      ],
+      "resolved_rotation_error_deg": 0.9166850762328672,
+      "late_window_translation_m": 0.0,
+      "late_window_rotation_deg": 0.039501412983362905,
+      "still_moving": false,
+      "visible_pixels": 5244,
+      "penetration_count": 0,
+      "support_contact": false,
+      "support_contact_fraction": 0.0,
+      "support_contact_samples": 120,
+      "unexpected_contact_fraction": 0.0,
+      "unexpected_contact_targets": [],
+      "support_mode": "fixed_static_pose",
+      "support_target": null,
+      "expected_support_target": "table",
+      "support_footprint_margin_m": null,
+      "inside_contained": null,
+      "dropped": false,
+      "articulation_target_qpos": [
+        -1.45
+      ],
+      "articulation_final_qpos": [
+        -1.4500056505203247
+      ],
+      "articulation_max_abs_error": 5.65052032475144e-06
+    }
+  },
+  "relations": {},
+  "initial_contact_records": [],
+  "final_contact_records": [
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.005186939612030983,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": 0.00015061721205711365,
+      "max_impulse_norm": 0.0,
+      "active": true
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.015629010275006294,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": -3.129243850708008e-07,
+      "max_impulse_norm": 0.00016521108045708505,
+      "active": true
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.001342128962278366,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 1.564621925354004e-07,
+      "max_impulse_norm": 0.00011141477443743577,
+      "active": true
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.0026453211903572083,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": 2.4512410163879395e-06,
+      "max_impulse_norm": 8.744224032852861e-06,
+      "active": true
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.006629645824432373,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.0010727085173130035,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.01803872361779213,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.006865963339805603,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.006019305437803268,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.010921269655227661,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.004035860300064087,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.01562715321779251,
+      "max_impulse_norm": 0.0,
+      "active": false
+    }
+  ],
+  "images": {
+    "head": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_195926_put_a_mug_on_the_laptop_2700/preview_head.png",
+    "world_left": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_195926_put_a_mug_on_the_laptop_2700/preview_world_left.png",
+    "world_right": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_195926_put_a_mug_on_the_laptop_2700/preview_world_right.png",
+    "segmentation": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_195926_put_a_mug_on_the_laptop_2700/preview_segmentation.png",
+    "observer_start": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_195926_put_a_mug_on_the_laptop_2700/observer_start.png",
+    "observer_mid": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_195926_put_a_mug_on_the_laptop_2700/observer_mid.png",
+    "observer_end": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_195926_put_a_mug_on_the_laptop_2700/observer_end.png"
+  },
+  "video": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_195926_put_a_mug_on_the_laptop_2700/observer_runtime.mp4",
+  "video_frame_count": 12,
+  "unique_video_frame_count": 12,
+  "fps": 12,
+  "simulation_step_count": 2700,
+  "video_sample_step_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    2699
+  ],
+  "precheck_steps": 0,
+  "contact_window_steps": 120
+}

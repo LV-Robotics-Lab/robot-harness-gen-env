@@ -1,0 +1,404 @@
+{
+  "schema_version": "robotwin.scene_runtime_evidence.v2",
+  "scene_id": "put_an_apple_inside_the_basket_2e0053fd76",
+  "resolved_scene_sha256": "b9bb747bd7b83a32aeb6b63dc810e0d83f25973ed9ca0ae57429e60ec1270e0e",
+  "seed": 42,
+  "status": "pass",
+  "robot_initial_collision_count": 0,
+  "robot_initial_collision_pairs": [],
+  "robot_final_collision_count": 0,
+  "robot_final_collision_pairs": [],
+  "objects": {
+    "apple_1": {
+      "asset_id": "035_apple",
+      "entity_id": 66,
+      "entity_ids": [
+        66
+      ],
+      "initial_pose": {
+        "position_m": [
+          -0.10831055045127869,
+          0.08540835976600647,
+          0.7559999823570251
+        ],
+        "orientation_wxyz": [
+          0.9083240032196045,
+          0.0,
+          0.0,
+          -0.41826730966567993
+        ],
+        "qpos": []
+      },
+      "final_pose": {
+        "position_m": [
+          1.6265050172805786,
+          0.38094156980514526,
+          0.0028739552944898605
+        ],
+        "orientation_wxyz": [
+          0.015605751425027847,
+          -0.18899741768836975,
+          0.5692446231842041,
+          0.7999982833862305
+        ],
+        "qpos": []
+      },
+      "translation_drift_m": 1.9141901015624971,
+      "rotation_drift_deg": 142.621163156657,
+      "resolved_translation_error_m": 1.9141901112409463,
+      "loader_translation_offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "resolved_rotation_error_deg": 142.62116363816642,
+      "late_window_translation_m": 0.03958597473536004,
+      "late_window_rotation_deg": 99.00255096677984,
+      "still_moving": true,
+      "visible_pixels": 0,
+      "penetration_count": 0,
+      "support_contact": false,
+      "support_contact_fraction": 0.0,
+      "support_contact_samples": 120,
+      "unexpected_contact_fraction": 1.0,
+      "unexpected_contact_targets": [
+        "ground",
+        "wall"
+      ],
+      "support_mode": "none",
+      "support_target": null,
+      "expected_support_target": "basket_1",
+      "support_footprint_margin_m": null,
+      "inside_contained": false,
+      "dropped": true,
+      "articulation_target_qpos": [],
+      "articulation_final_qpos": [],
+      "articulation_max_abs_error": null
+    },
+    "basket_1": {
+      "asset_id": "110_basket",
+      "entity_id": 67,
+      "entity_ids": [
+        67
+      ],
+      "initial_pose": {
+        "position_m": [
+          -0.11141006648540497,
+          0.07908765971660614,
+          0.7409999966621399
+        ],
+        "orientation_wxyz": [
+          0.6403504610061646,
+          0.6403504610061646,
+          0.2999188005924225,
+          0.2999188005924225
+        ],
+        "qpos": []
+      },
+      "final_pose": {
+        "position_m": [
+          -0.11141006648540497,
+          0.07908765971660614,
+          0.7409999966621399
+        ],
+        "orientation_wxyz": [
+          0.6403504610061646,
+          0.6403504610061646,
+          0.2999188005924225,
+          0.2999188005924225
+        ],
+        "qpos": []
+      },
+      "translation_drift_m": 0.0,
+      "rotation_drift_deg": 0.002715556433445136,
+      "resolved_translation_error_m": 3.6088817981770253e-09,
+      "loader_translation_offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "resolved_rotation_error_deg": 0.0019214148878939428,
+      "late_window_translation_m": 0.0,
+      "late_window_rotation_deg": 0.002715556433445136,
+      "still_moving": false,
+      "visible_pixels": 8511,
+      "penetration_count": 0,
+      "support_contact": false,
+      "support_contact_fraction": 0.0,
+      "support_contact_samples": 120,
+      "unexpected_contact_fraction": 0.0,
+      "unexpected_contact_targets": [],
+      "support_mode": "fixed_static_pose",
+      "support_target": null,
+      "expected_support_target": "table",
+      "support_footprint_margin_m": null,
+      "inside_contained": null,
+      "dropped": false,
+      "articulation_target_qpos": [],
+      "articulation_final_qpos": [],
+      "articulation_max_abs_error": null
+    }
+  },
+  "relations": {},
+  "initial_contact_records": [],
+  "final_contact_records": [
+    {
+      "bodies": [
+        "apple_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 2.592848613858223e-05,
+      "max_impulse_norm": 0.0,
+      "active": true
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 1,
+      "min_separation_m": 0.0005128383636474609,
+      "max_impulse_norm": 0.0,
+      "active": true
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.004537045955657959,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.004148223903030157,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": 0.0001118779182434082,
+      "max_impulse_norm": 0.0006379064870998606,
+      "active": true
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 2,
+      "active_point_count": 0,
+      "min_separation_m": 0.01841791532933712,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.007692098617553711,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 2,
+      "active_point_count": 0,
+      "min_separation_m": 0.016565822064876556,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.007931113243103027,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.010660478845238686,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.005534470081329346,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.0021988321095705032,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": 0.00013571977615356445,
+      "max_impulse_norm": 0.0,
+      "active": true
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.00902026891708374,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.008824050426483154,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "ground"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.015491029247641563,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.00744551420211792,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.008112013339996338,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "apple_1",
+        "wall"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.008351504802703857,
+      "max_impulse_norm": 0.0,
+      "active": false
+    }
+  ],
+  "images": {
+    "head": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_200211_put_an_apple_inside_the_basket_900/preview_head.png",
+    "world_left": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_200211_put_an_apple_inside_the_basket_900/preview_world_left.png",
+    "world_right": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_200211_put_an_apple_inside_the_basket_900/preview_world_right.png",
+    "segmentation": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_200211_put_an_apple_inside_the_basket_900/preview_segmentation.png",
+    "observer_start": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_200211_put_an_apple_inside_the_basket_900/observer_start.png",
+    "observer_mid": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_200211_put_an_apple_inside_the_basket_900/observer_mid.png",
+    "observer_end": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_200211_put_an_apple_inside_the_basket_900/observer_end.png"
+  },
+  "video": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s5/20260812_200211_put_an_apple_inside_the_basket_900/observer_runtime.mp4",
+  "video_frame_count": 12,
+  "unique_video_frame_count": 12,
+  "fps": 12,
+  "simulation_step_count": 900,
+  "video_sample_step_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    899
+  ],
+  "precheck_steps": 0,
+  "contact_window_steps": 120
+}

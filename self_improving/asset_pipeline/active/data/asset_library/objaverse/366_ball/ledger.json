@@ -1,0 +1,189 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_366_ball",
+  "category": "ball",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "ball"
+    ],
+    "colors": [
+      "blue",
+      "purple"
+    ],
+    "materials": [
+      "pixelated"
+    ],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/_test/20260820_blue_ball_exact/identity_post_render_366_ball_m0.json",
+      "verified": true
+    },
+    "attribute_basis": {
+      "colors": "vlm",
+      "materials": "vlm"
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.19999998807907104,
+          0.19999998807907104,
+          0.20000000298023224
+        ],
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.20000000298023224,
+          "scale": 1.0,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "no_precedent"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/366_ball/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "bf2a0d9d4e2f7124ed1182cc3c068bdb3293e0973073d1bbec0faf05094d03fd",
+          "size_bytes": 11260,
+          "metadata": {
+            "derived_from": "4d29df627d7c46e78debfcf99a723e24.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/366_ball/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "bf2a0d9d4e2f7124ed1182cc3c068bdb3293e0973073d1bbec0faf05094d03fd",
+          "size_bytes": 11260,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/_source/web_366_ball/4d29df627d7c46e78debfcf99a723e24.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "2453e92af413320546bb0873cbc2d3145de499db94e125974ce1a5cf9d44fbbd",
+          "size_bytes": 11204,
+          "metadata": {
+            "origin_prefix": "web_366_ball"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/objaverse/366_ball/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "4daf362e919adcdf0511dc212dc4844d18b6b8ddbf629534ed653bb4a6d9f59e",
+          "size_bytes": 3023,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (objaverse)",
+        "group": "web_366_ball",
+        "file": "4d29df627d7c46e78debfcf99a723e24.glb",
+        "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-041/4d29df627d7c46e78debfcf99a723e24.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "CC-BY-4.0 (Objaverse per-object metadata); owner: Blue ball",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-041.json.gz",
+          "checked_date": "2026-08-20",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-20",
+        "source_manifest_path": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/_source/web_366_ball/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "20260820_blue_ball_exact",
+          "timestamp": "2026-08-20T18:20:55",
+          "verified_digest": "7a1e6e2fb667f96779bc1832509e30ad8d7fadfbd055403e87323b921f887523",
+          "report_path": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/_test/20260820_blue_ball_exact/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,337 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_bottle_near_the_bowl_e5064814a8",
+  "resolved_scene_sha256": "1929028bc43f10afe0a5e2f29116861495665a75aa02306f44bb6dd3ad4d5ea9",
+  "status": "fail",
+  "fail_count": 11,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:bottle_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.2389514721060975,
+          -0.18070253389390253,
+          0.0009880428939025195,
+          0.059236981106097486
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:bottle_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:bottle_1",
+      "status": "fail",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/304_bottle/collision/base0.glb",
+          "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/304_bottle/model_data0.json",
+          "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/304_bottle/visual/base0.glb"
+        ],
+        "exists": [
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "name": "workspace_bounds:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.16990892729773513,
+          -0.036227144702264874,
+          0.014004154525406085,
+          0.14756430147459393
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:bowl_1",
+      "status": "fail",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/002_bowl/collision/base1.glb",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/002_bowl/model_data1.json",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/002_bowl/visual/base1.glb"
+        ],
+        "exists": [
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "name": "no_overlap:bottle_1:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "first_aabb_3d": [
+          -0.2389514721060975,
+          -0.18070253389390253,
+          0.0009880428939025195,
+          0.059236981106097486,
+          0.741,
+          0.9323009982265308
+        ],
+        "second_aabb_3d": [
+          -0.16990892729773513,
+          -0.036227144702264874,
+          0.014004154525406085,
+          0.14756430147459393,
+          0.741,
+          0.7900097264864927
+        ],
+        "expected_support_pair": false
+      }
+    },
+    {
+      "name": "relation:on_table:bottle_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "relation:on_table:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "relation:near:bottle_1:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "center_distance_m": 0.11817402353009628,
+        "source_aabb": [
+          -0.2389514721060975,
+          -0.18070253389390253,
+          0.0009880428939025195,
+          0.059236981106097486
+        ],
+        "target_aabb": [
+          -0.16990892729773513,
+          -0.036227144702264874,
+          0.014004154525406085,
+          0.14756430147459393
+        ]
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "1929028bc43f10afe0a5e2f29116861495665a75aa02306f44bb6dd3ad4d5ea9",
+        "after": "1929028bc43f10afe0a5e2f29116861495665a75aa02306f44bb6dd3ad4d5ea9"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 12,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 12,
+        "minimum": 12
+      }
+    },
+    {
+      "name": "translation_drift:bottle_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 1.2124967143303524,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:bottle_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 24.83030706049949,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:bottle_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 1.2124967174807753,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:bottle_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 24.830306698518502,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:bottle_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:bottle_1",
+      "status": "fail",
+      "evidence": true
+    },
+    {
+      "name": "support_contact:bottle_1",
+      "status": "fail",
+      "evidence": {
+        "raw_contact": false,
+        "mode": "none",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": null,
+        "contact_fraction": 0.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:bottle_1",
+      "status": "fail",
+      "evidence": true
+    },
+    {
+      "name": "head_visibility:bottle_1",
+      "status": "fail",
+      "evidence": {
+        "pixels": 0,
+        "threshold": 64
+      }
+    },
+    {
+      "name": "translation_drift:bowl_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 2.7201962675289333,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:bowl_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 84.40231994818232,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:bowl_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 2.7201962643615714,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:bowl_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 84.4023234009628,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:bowl_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:bowl_1",
+      "status": "fail",
+      "evidence": true
+    },
+    {
+      "name": "support_contact:bowl_1",
+      "status": "fail",
+      "evidence": {
+        "raw_contact": false,
+        "mode": "none",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": null,
+        "contact_fraction": 0.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:bowl_1",
+      "status": "fail",
+      "evidence": true
+    },
+    {
+      "name": "head_visibility:bowl_1",
+      "status": "fail",
+      "evidence": {
+        "pixels": 0,
+        "threshold": 64
+      }
+    },
+    {
+      "name": "runtime_relation:near:bottle_1:bowl_1",
+      "status": "fail",
+      "evidence": {
+        "relation": "near",
+        "source": "bottle_1",
+        "target": "bowl_1",
+        "pass": false,
+        "center_delta_m": [
+          -1.5777192115783691,
+          1.6620674133300781
+        ],
+        "center_distance_m": 2.2916513689994837,
+        "source_half_extent_m": [
+          0.02912446910609748,
+          0.02912446910609748
+        ],
+        "target_half_extent_m": [
+          0.06684089129773513,
+          0.06678007347459392
+        ]
+      }
+    }
+  ]
+}

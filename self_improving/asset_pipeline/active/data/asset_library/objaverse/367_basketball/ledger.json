@@ -1,0 +1,190 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_367_basketball",
+  "category": "basketball",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "basketball"
+    ],
+    "colors": [
+      "brown",
+      "black"
+    ],
+    "materials": [
+      "rubber",
+      "leather"
+    ],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260824_113009_place_a_basketball_on_the_table/acquire/identity_post_render_367_basketball_m0.json",
+      "verified": true
+    },
+    "attribute_basis": {
+      "colors": "vlm",
+      "materials": "vlm"
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.25,
+          0.24898057621421155,
+          0.24898057923924868
+        ],
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 0.8132732171001464,
+          "scale": 0.30739977014294695,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/367_basketball/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "9e3d41012bc24a01c6e74cf9056a55a19821f4504d7e8dc875ffe3379af06f88",
+          "size_bytes": 232068,
+          "metadata": {
+            "derived_from": "5fe39851c88f4db5b343fd38ce8ef4ce.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/367_basketball/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "9e3d41012bc24a01c6e74cf9056a55a19821f4504d7e8dc875ffe3379af06f88",
+          "size_bytes": 232068,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/_source/web_367_basketball/5fe39851c88f4db5b343fd38ce8ef4ce.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "95acb4f7cedf8fedf9717f80768a461821f17ad059f95b14885e6ed286f57887",
+          "size_bytes": 246496,
+          "metadata": {
+            "origin_prefix": "web_367_basketball"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/objaverse/367_basketball/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "d4249f2d1af65d257c97f46f1b9352b293fffd78e502938ed59b0b9a025164ea",
+          "size_bytes": 23452,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (objaverse)",
+        "group": "web_367_basketball",
+        "file": "5fe39851c88f4db5b343fd38ce8ef4ce.glb",
+        "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-059/5fe39851c88f4db5b343fd38ce8ef4ce.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "CC-BY-4.0 (Objaverse per-object metadata); owner: Hello Neighbor Basketball",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-059.json.gz",
+          "checked_date": "2026-08-24",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-24",
+        "source_manifest_path": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/_source/web_367_basketball/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-24T11:31:42",
+          "verified_digest": "49383f43fe1304c5c0df16708f283661d77f852d5ebc6427f7542a89377a7c09",
+          "report_path": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260824_113009_place_a_basketball_on_the_table/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ]
+    }
+  ]
+}
