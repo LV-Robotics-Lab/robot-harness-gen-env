@@ -12,9 +12,16 @@ import zipfile
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+HARNESS_PACKAGE = Path("self_improving/harness")
+HARNESS_RESOURCE_MEMBERS = ("IMPLEMENTATION_LOG.md",)
+SCENE_GEN_PACKAGE = Path("scene_gen")
+SCENE_GEN_RESOURCE_MEMBERS = ("AGENTS.md", "envs/AGENTS.md")
 LEDGER_PACKAGE = Path("self_improving/asset_pipeline/active/1_asset_reuse/lib")
-LEDGER_MEMBERS = ("__init__.py", "conventions.py", "ledger.py")
-QUALIFICATION_PACKAGE = Path("self_improving/harness/qualified_skills/text2env.compile/1.0.0")
+LEDGER_MEMBERS = ("__init__.py", "README.md", "conventions.py", "ledger.py")
+QUALIFICATION_PACKAGES = (
+    Path("self_improving/harness/qualified_skills/text2env.compile/1.0.0"),
+    Path("self_improving/harness/qualified_skills/text2env.replay/1.0.0"),
+)
 QUALIFICATION_MEMBERS = ("manifest.json", "qualification.json", "report.json")
 MEDIA_NATIVE_PACKAGE = Path("self_improving/harness/native")
 MEDIA_NATIVE_MEMBERS = ("media_sandbox.c",)
@@ -34,8 +41,12 @@ def _copy_build_fixture(destination: Path) -> Path:
         Path("self_improving/__init__.py"),
         Path("self_improving/registry.py"),
         Path("self_improving/harness/__init__.py"),
+        Path("scene_gen/__init__.py"),
+        Path("scene_gen/envs/__init__.py"),
+        *(HARNESS_PACKAGE / name for name in HARNESS_RESOURCE_MEMBERS),
+        *(SCENE_GEN_PACKAGE / name for name in SCENE_GEN_RESOURCE_MEMBERS),
         *(LEDGER_PACKAGE / name for name in LEDGER_MEMBERS),
-        *(QUALIFICATION_PACKAGE / name for name in QUALIFICATION_MEMBERS),
+        *(package / name for package in QUALIFICATION_PACKAGES for name in QUALIFICATION_MEMBERS),
         *(MEDIA_NATIVE_PACKAGE / name for name in MEDIA_NATIVE_MEMBERS),
     ):
         target = source / relative_path
@@ -67,7 +78,7 @@ def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_wheel_installs_asset_ledger_contract(tmp_path: Path) -> None:
+def test_wheel_installs_runtime_source_and_qualification_resources(tmp_path: Path) -> None:
     source = _copy_build_fixture(tmp_path)
     wheelhouse = tmp_path / "wheelhouse"
     wheelhouse.mkdir()
@@ -88,17 +99,31 @@ def test_wheel_installs_asset_ledger_contract(tmp_path: Path) -> None:
     )
     wheel = next(wheelhouse.glob("*.whl"))
     expected_members = {(LEDGER_PACKAGE / name).as_posix() for name in LEDGER_MEMBERS}
-    expected_qualification = {
-        (QUALIFICATION_PACKAGE / name).as_posix() for name in QUALIFICATION_MEMBERS
+    expected_harness_resources = {
+        (HARNESS_PACKAGE / name).as_posix() for name in HARNESS_RESOURCE_MEMBERS
+    }
+    expected_scene_gen_resources = {
+        (SCENE_GEN_PACKAGE / name).as_posix() for name in SCENE_GEN_RESOURCE_MEMBERS
+    }
+    expected_qualifications = {
+        (package / name).as_posix()
+        for package in QUALIFICATION_PACKAGES
+        for name in QUALIFICATION_MEMBERS
     }
     expected_media_native = {
         (MEDIA_NATIVE_PACKAGE / name).as_posix() for name in MEDIA_NATIVE_MEMBERS
     }
     with zipfile.ZipFile(wheel) as archive:
         assert expected_members <= set(archive.namelist())
-        assert expected_qualification <= set(archive.namelist())
+        assert expected_harness_resources <= set(archive.namelist())
+        assert expected_scene_gen_resources <= set(archive.namelist())
+        assert expected_qualifications <= set(archive.namelist())
         assert expected_media_native <= set(archive.namelist())
-        for member in expected_qualification:
+        for member in expected_qualifications:
+            assert archive.read(member) == (REPO_ROOT / member).read_bytes()
+        for member in expected_harness_resources:
+            assert archive.read(member) == (REPO_ROOT / member).read_bytes()
+        for member in expected_scene_gen_resources:
             assert archive.read(member) == (REPO_ROOT / member).read_bytes()
         for member in expected_media_native:
             assert archive.read(member) == (REPO_ROOT / member).read_bytes()
@@ -141,7 +166,11 @@ assert native_source.is_file()
 assert hashlib.sha256(native_source.read_bytes()).hexdigest() == {MEDIA_NATIVE_SHA256!r}
 """
     _run([sys.executable, "-I", "-c", probe], cwd=installed)
-    for member in expected_qualification:
+    for member in expected_qualifications:
+        assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
+    for member in expected_harness_resources:
+        assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
+    for member in expected_scene_gen_resources:
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
     for member in expected_media_native:
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
@@ -151,5 +180,9 @@ def test_packaging_declares_qualified_skill_resources() -> None:
     configuration = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
 
     package_data = configuration["tool"]["setuptools"]["package-data"]
+    assert "AGENTS.md" in package_data["scene_gen"]
+    assert "envs/AGENTS.md" in package_data["scene_gen"]
+    assert "IMPLEMENTATION_LOG.md" in package_data["self_improving.harness"]
+    assert "asset_pipeline/active/1_asset_reuse/lib/README.md" in package_data["self_improving"]
     assert "qualified_skills/**/*.json" in package_data["self_improving.harness"]
     assert "native/*.c" in package_data["self_improving.harness"]
