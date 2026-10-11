@@ -8,6 +8,9 @@
   复核，但 RoboTwin `create_actor` 还会按 model id 隐式读取 7 个 `model_data*.json` 缩放 sidecar；
   sidecar 未进入同一 CAS manifest 前，不能把该结果称为 portable 或 runtime-qualified。修复后必须
   只从 staged/CAS 物化闭包完成真实无渲染 SAPIEN 900-step replay，并分别保留失败与成功证据。
+- P2：在独立 worktree 以 S1 `submit` tracer 冻结 command/idempotency/revision/receipt-head CAS，接入
+  同一 CAS 的真实 `CompileApplication` 与 live Registry handler；本切片只做 exact qualified
+  `text2env.compile@1.0.0`，不接 replay、observation、promotion 或 planner-specific v1 receipt。
 
 ## Next
 

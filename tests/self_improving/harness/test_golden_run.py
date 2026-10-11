@@ -9,7 +9,7 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from hashlib import sha256
 from pathlib import Path
 from threading import Barrier
@@ -19,7 +19,14 @@ import pytest
 from pydantic import ValidationError
 
 import self_improving.harness as public_harness
+from scene_gen.catalog import AssetCatalog
+from self_improving.harness.application import (
+    CompileApplicationSettings,
+    create_compile_application,
+)
 from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.event_journal import SQLiteEventJournal
+from self_improving.harness.events import RunEvent
 from self_improving.harness.golden_run import (
     GoldenRunConflictError,
     GoldenRunCorruptionError,
@@ -30,17 +37,39 @@ from self_improving.harness.golden_run import (
 from self_improving.harness.golden_store import SQLiteGoldenRunStore
 from self_improving.harness.handlers.text2env_compile import text2env_compile_descriptor
 from self_improving.harness.qualification import ImplementationManifestV1
-from self_improving.harness.schemas.common import SkillDescriptor
+from self_improving.harness.run_store import ControlledRunIntent, SQLiteRunStore
+from self_improving.harness.schemas.common import (
+    Blocker,
+    Event,
+    RunState,
+    RunStatus,
+    SkillDescriptor,
+)
 from self_improving.harness.schemas.registry_snapshot import (
     QualifiedSkillSnapshot,
     RegistrySnapshot,
 )
+from self_improving.harness.schemas.text2env import (
+    CompileConfig,
+    Text2EnvCompileInput,
+)
 from self_improving.harness.schemas.workflow import (
+    OperationSnapshot,
+    RunCommandRequest,
     RunReadRequest,
     RunSnapshot,
     RunStartRequest,
     WorkflowStartReceipt,
 )
+from self_improving.harness.schemas.workflow_operation import (
+    QualifiedSkillExecutionV2,
+    StateDeltaV2,
+    ToolResultV2,
+    TrustedToolReceiptV2,
+    WorkflowOperationReceiptV2,
+)
+from self_improving.harness.system2.domain import TrustedWorldState
+from self_improving.harness.trusted_state import build_world_state
 
 NOW = datetime(2026, 9, 9, tzinfo=timezone.utc)
 WORKFLOW_ID = UUID("10000000-0000-4000-8000-000000000001")
@@ -54,6 +83,13 @@ OBJECTIVE_EVIDENCE = (
 ALTERNATE_OBJECTIVE_EVIDENCE = OBJECTIVE_EVIDENCE.replace(
     b"Place a can on a plate.",
     b"Place a bottle on a plate.",
+)
+GENERATED_OBJECTIVE = "Place a purple hexagonal pedestal on the table."
+GENERATED_OBJECTIVE_EVIDENCE = (
+    b'{"key":"request.objective","observed_at":"2026-09-09T00:00:00Z",'
+    b'"schema_version":"harness.world_fact_evidence.v1",'
+    b'"source_kind":"user_input","valid_until":null,'
+    b'"value":"Place a purple hexagonal pedestal on the table."}\n'
 )
 
 
@@ -100,6 +136,18 @@ def _canonical_bytes(model) -> bytes:
         )
         + "\n"
     ).encode()
+
+
+def _compact_sha256(value: object) -> str:
+    return sha256(
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode()
+    ).hexdigest()
 
 
 def _qualified_registry(store: LocalArtifactStore, root: Path):
@@ -159,10 +207,39 @@ def _qualified_registry(store: LocalArtifactStore, root: Path):
     )
 
 
-def _load_registry(store: LocalArtifactStore, registry_ref) -> RegistrySnapshot:
-    return RegistrySnapshot.model_validate_json(
-        store.resolve(registry_ref).path.read_bytes()
+def _compile_settings(tmp_path: Path) -> CompileApplicationSettings:
+    catalogs = tmp_path / "catalogs"
+    external_assets = tmp_path / "external-assets"
+    catalogs.mkdir(parents=True)
+    external_assets.mkdir(parents=True)
+    return CompileApplicationSettings(
+        state_root=tmp_path / "compile-state",
+        external_catalog_roots=(catalogs,),
+        allowed_asset_roots=(external_assets,),
+        admission_date=date(2026, 9, 10),
+        asset_library_root=tmp_path / "asset-library",
     )
+
+
+def _empty_catalog(path: Path, *, objects_root: Path) -> None:
+    catalog = AssetCatalog(
+        robotwin_root=str(objects_root.parent / "RoboTwin"),
+        objects_root=str(objects_root),
+        entries=(),
+    )
+    path.write_text(
+        json.dumps(
+            catalog.canonical_dict(),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
+
+
+def _load_registry(store: LocalArtifactStore, registry_ref) -> RegistrySnapshot:
+    return RegistrySnapshot.model_validate_json(store.resolve(registry_ref).path.read_bytes())
 
 
 def _publish_registry_entry(
@@ -185,6 +262,36 @@ def _publish_registry_entry(
     )
 
 
+def _frozen_compile_execution(
+    store: LocalArtifactStore,
+    root: Path,
+    registry_ref,
+):
+    registry = _load_registry(store, registry_ref)
+    entry = registry.qualified_skills[0]
+    descriptor = SkillDescriptor.model_validate_json(
+        store.resolve(entry.descriptor_ref).path.read_bytes()
+    )
+    execution = QualifiedSkillExecutionV2(
+        schema_version="harness.qualified_skill_execution.v2",
+        skill_ref=entry.skill_ref,
+        descriptor=entry.descriptor_ref,
+        input_schema=descriptor.input_schema,
+        output_schema=descriptor.output_schema,
+        implementation_sha256=descriptor.implementation_sha256,
+        qualification_artifact=entry.qualification_ref,
+        qualification_report=entry.qualification_report_ref,
+        max_attempts=descriptor.max_attempts,
+    )
+    return _put(
+        store,
+        root,
+        name="qualified-skill-execution.json",
+        payload=_canonical_bytes(execution),
+        schema_version="harness.qualified_skill_execution.v2",
+    )
+
+
 def _replace_persisted_snapshot(store: LocalArtifactStore, payload: bytes) -> None:
     database = store.root / "golden-workflows.sqlite3"
     with closing(sqlite3.connect(database)) as connection, connection:
@@ -194,6 +301,38 @@ def _replace_persisted_snapshot(store: LocalArtifactStore, payload: bytes) -> No
             SET snapshot_json = ?, snapshot_sha256 = ?
             """,
             (payload, sha256(payload).hexdigest()),
+        )
+
+
+def _read_cas_model(store: LocalArtifactStore, ref, model):
+    return model.model_validate_json(store.resolve(ref).path.read_bytes())
+
+
+def _replace_terminal_operation_and_head(
+    workflow_store: SQLiteGoldenRunStore,
+    operation: OperationSnapshot,
+    snapshot: RunSnapshot,
+) -> None:
+    operation_payload = _canonical_bytes(operation)
+    snapshot_payload = _canonical_bytes(snapshot)
+    with closing(sqlite3.connect(workflow_store.path)) as connection, connection:
+        connection.execute(
+            "UPDATE golden_workflow_operations "
+            "SET operation_json = ?, operation_sha256 = ? WHERE operation_id = ?",
+            (
+                operation_payload,
+                sha256(operation_payload).hexdigest(),
+                str(operation.operation_id),
+            ),
+        )
+        connection.execute(
+            "UPDATE golden_workflow_starts "
+            "SET snapshot_json = ?, snapshot_sha256 = ? WHERE workflow_run_id = ?",
+            (
+                snapshot_payload,
+                sha256(snapshot_payload).hexdigest(),
+                str(snapshot.workflow_run_id),
+            ),
         )
 
 
@@ -265,6 +404,31 @@ def _current_store_layout_ddl(
     )
 
 
+def _operation_layout_ddl(
+    *,
+    operation_id: str = "TEXT NOT NULL PRIMARY KEY",
+    workflow_unique: bool = True,
+    extra_definitions: tuple[str, ...] = (),
+    table_suffix: str = "",
+) -> str:
+    definitions = [
+        f"operation_id {operation_id}",
+        "workflow_run_id TEXT NOT NULL",
+        "principal_id TEXT NOT NULL",
+        "idempotency_key TEXT NOT NULL",
+        "command_sha256 TEXT NOT NULL",
+        "operation_json BLOB NOT NULL",
+        "operation_sha256 TEXT NOT NULL",
+        *extra_definitions,
+    ]
+    if workflow_unique:
+        definitions.append("UNIQUE (workflow_run_id, idempotency_key)")
+    return (
+        "CREATE TABLE golden_workflow_operations "
+        f"(\n                {', '.join(definitions)}\n            ){table_suffix}"
+    )
+
+
 class _ArtifactStoreLookalike:
     def __init__(self, root: Path) -> None:
         self.root = root
@@ -284,6 +448,148 @@ def _golden_harness(
         workflow_store=selected_store,
         **kwargs,  # type: ignore[arg-type]
     )
+
+
+def _committed_blocked_operation(
+    tmp_path: Path,
+) -> tuple[
+    SQLiteGoldenRunStore,
+    OperationSnapshot,
+    OperationSnapshot,
+    RunSnapshot,
+]:
+    """Build the smallest store-level terminal transition without invoking a Skill."""
+
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    workflow_store = SQLiteGoldenRunStore(tmp_path / "workflow.sqlite3")
+    started = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=workflow_store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(_request(objective, registry))
+    command = RunCommandRequest(
+        schema_version="harness.run_command_request.v1",
+        principal_id=started.principal_id,
+        workflow_run_id=started.workflow_run_id,
+        idempotency_key="blocked-001",
+        expected_revision=0,
+        expected_state_sha256=started.state_sha256,
+        expected_receipt_head=started.receipt_head,
+        skill_ref="text2env.compile@1.0.0",
+        parameters={},
+    )
+    command_ref = _put(
+        artifact_store,
+        tmp_path,
+        name="command.json",
+        payload=_canonical_bytes(command),
+        schema_version="harness.run_command_request.v1",
+    )
+    qualified_execution_ref = _frozen_compile_execution(
+        artifact_store,
+        tmp_path,
+        registry,
+    )
+    operation_id = UUID("20000000-0000-4000-8000-000000000002")
+    child_run_id = UUID("30000000-0000-4000-8000-000000000002")
+    reserved = workflow_store.reserve_operation(
+        principal_id=started.principal_id,
+        workflow_run_id=started.workflow_run_id,
+        idempotency_key=command.idempotency_key,
+        command_sha256=command_ref.sha256,
+        expected_revision=started.revision,
+        expected_state_sha256=started.state_sha256,
+        expected_receipt_sha256=started.receipt_head.sha256,
+        factory=lambda snapshot: OperationSnapshot(
+            schema_version="harness.operation_snapshot.v1",
+            operation_id=operation_id,
+            workflow_run_id=snapshot.workflow_run_id,
+            principal_id=snapshot.principal_id,
+            idempotency_key=command.idempotency_key,
+            command=command_ref,
+            qualified_execution=qualified_execution_ref,
+            skill_ref=command.skill_ref,
+            status="running",
+            base_revision=snapshot.revision,
+            committed_revision=None,
+            child_run_id=child_run_id,
+            tool_result=None,
+            trusted_receipt=None,
+            state_delta=None,
+            resulting_state=None,
+            resulting_state_sha256=None,
+            receipt=None,
+            started_at=NOW,
+            ended_at=None,
+        ),
+    )
+    assert reserved is not None
+    running = reserved.operation
+    tool_result = _put(
+        artifact_store,
+        tmp_path,
+        name="blocked-tool-result.json",
+        payload=b"{}\n",
+        schema_version="harness.tool_result.v2",
+    )
+    trusted_receipt = _put(
+        artifact_store,
+        tmp_path,
+        name="blocked-trusted-receipt.json",
+        payload=b"{}\n",
+        schema_version="harness.trusted_tool_receipt.v2",
+    )
+    receipt = _put(
+        artifact_store,
+        tmp_path,
+        name="blocked-workflow-receipt.json",
+        payload=b"{}\n",
+        schema_version="harness.workflow_operation_receipt.v2",
+    )
+    ended_at = NOW + timedelta(seconds=1)
+    terminal = OperationSnapshot.model_validate(
+        running.model_copy(
+            update={
+                "status": "blocked",
+                "committed_revision": 1,
+                "tool_result": tool_result,
+                "trusted_receipt": trusted_receipt,
+                "resulting_state": started.state_ref,
+                "resulting_state_sha256": started.state_sha256,
+                "receipt": receipt,
+                "ended_at": ended_at,
+            }
+        ).model_dump(mode="python")
+    )
+    committed_head = RunSnapshot.model_validate(
+        started.model_copy(
+            update={
+                "revision": 1,
+                "turn_seq": 1,
+                "receipt_head": receipt,
+                "active_operation": None,
+                "child_runs": (child_run_id,),
+                "updated_at": ended_at,
+            }
+        ).model_dump(mode="python")
+    )
+    committed = workflow_store.commit_operation(
+        principal_id=started.principal_id,
+        running=running,
+        terminal=terminal,
+        snapshot=committed_head,
+    )
+    assert committed is not None
+    return workflow_store, running, terminal, committed_head
 
 
 def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: Path) -> None:
@@ -358,6 +664,648 @@ def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: 
     assert snapshot.updated_at == NOW
 
 
+def _recover_offline_blocked_operation(
+    tmp_path: Path,
+):
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(store, tmp_path)
+    workflow_store = SQLiteGoldenRunStore(tmp_path / "workflow.sqlite3")
+    started = _golden_harness(
+        artifact_store=store,
+        workflow_store=workflow_store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(_request(objective, registry))
+    catalog_path = tmp_path / "catalog.json"
+    _empty_catalog(catalog_path, objects_root=tmp_path / "objects")
+    catalog = store.put_file(
+        catalog_path,
+        name="catalog.json",
+        media_type="application/json",
+        schema_version="robotwin.asset_catalog.v1",
+    )
+    command = RunCommandRequest(
+        schema_version="harness.run_command_request.v1",
+        principal_id=started.principal_id,
+        workflow_run_id=started.workflow_run_id,
+        idempotency_key="offline-terminal-001",
+        expected_revision=0,
+        expected_state_sha256=started.state_sha256,
+        expected_receipt_head=started.receipt_head,
+        skill_ref="text2env.compile@1.0.0",
+        parameters=Text2EnvCompileInput(
+            request="Place a can on a plate.",
+            seed=7,
+            asset_catalog=catalog,
+            config=CompileConfig(generate_missing_assets=False),
+        ).model_dump(mode="json"),
+    )
+    command_ref = _put(
+        store,
+        tmp_path,
+        name="offline-command.json",
+        payload=_canonical_bytes(command),
+        schema_version="harness.run_command_request.v1",
+    )
+    qualified_execution = _frozen_compile_execution(store, tmp_path, registry)
+    child_run_id = UUID("30000000-0000-4000-8000-000000000007")
+    operation_id = UUID("20000000-0000-4000-8000-000000000007")
+    reserved = workflow_store.reserve_operation(
+        principal_id=started.principal_id,
+        workflow_run_id=started.workflow_run_id,
+        idempotency_key=command.idempotency_key,
+        command_sha256=command_ref.sha256,
+        expected_revision=0,
+        expected_state_sha256=started.state_sha256,
+        expected_receipt_sha256=started.receipt_head.sha256,
+        factory=lambda snapshot: OperationSnapshot(
+            schema_version="harness.operation_snapshot.v1",
+            operation_id=operation_id,
+            workflow_run_id=snapshot.workflow_run_id,
+            principal_id=snapshot.principal_id,
+            idempotency_key=command.idempotency_key,
+            command=command_ref,
+            qualified_execution=qualified_execution,
+            skill_ref=command.skill_ref,
+            status="running",
+            base_revision=0,
+            committed_revision=None,
+            child_run_id=child_run_id,
+            tool_result=None,
+            trusted_receipt=None,
+            state_delta=None,
+            resulting_state=None,
+            resulting_state_sha256=None,
+            receipt=None,
+            started_at=NOW,
+            ended_at=None,
+        ),
+    )
+    assert reserved is not None
+
+    registry_model = _load_registry(store, registry)
+    descriptor = SkillDescriptor.model_validate_json(
+        store.resolve(registry_model.qualified_skills[0].descriptor_ref).path.read_bytes()
+    )
+    parameter_sha256 = _compact_sha256(command.parameters)
+    child_database = tmp_path / "child.sqlite3"
+    child_store = SQLiteRunStore(child_database)
+    assert child_store.reserve_controlled_intent(
+        ControlledRunIntent(
+            run_id=child_run_id,
+            skill_id=descriptor.skill_id,
+            skill_version=descriptor.version,
+            input_schema=descriptor.input_schema,
+            phase="validated_input",
+            raw_parameters_sha256=parameter_sha256,
+            effective_parameters_sha256=parameter_sha256,
+            dependencies=None,
+            descriptor_sha256=_compact_sha256(descriptor.model_dump(mode="json")),
+            implementation_sha256=descriptor.implementation_sha256,
+            qualification_sha256=descriptor.qualification_artifact.sha256,
+            max_attempts=descriptor.max_attempts,
+        )
+    )
+    ended_at = NOW + timedelta(seconds=1)
+    blocker = Blocker(
+        code="HARN_DEPENDENCY_UNAVAILABLE",
+        message="catalog dependency unavailable",
+        stage="preflight",
+        retryable=False,
+        details={},
+        unknowns=(),
+        artifact_refs=(),
+    )
+    events = (
+        Event(
+            seq=1,
+            timestamp=NOW,
+            stage="preflight",
+            attempt=0,
+            from_status=None,
+            to_status="running",
+            artifact_refs=(),
+        ),
+        Event(
+            seq=2,
+            timestamp=ended_at,
+            stage="preflight",
+            attempt=0,
+            from_status="running",
+            to_status="blocked",
+            artifact_refs=(),
+        ),
+    )
+    state = RunState(
+        run_id=child_run_id,
+        invocation_digest=None,
+        skill_id=descriptor.skill_id,
+        skill_version=descriptor.version,
+        status="blocked",
+        attempt=0,
+        max_attempts=0,
+        started_at=NOW,
+        ended_at=ended_at,
+        events=events,
+        artifacts=(),
+        output=None,
+        blocker=blocker,
+    )
+    journal = SQLiteEventJournal(child_database)
+    for event in events:
+        journal.publish(
+            RunEvent(
+                run_id=child_run_id,
+                skill_id=descriptor.skill_id,
+                skill_version=descriptor.version,
+                event=event,
+            )
+        )
+    child_store.put_run_state(state)
+
+    recovered = _golden_harness(
+        artifact_store=store,
+        workflow_store=workflow_store,
+        child_run_store=SQLiteRunStore(child_database),
+    ).submit(command)
+
+    durable = workflow_store.read_snapshot(
+        principal_id=started.principal_id,
+        workflow_run_id=started.workflow_run_id,
+    )
+    assert durable is not None
+    return store, workflow_store, command, started, recovered, durable.snapshot
+
+
+def test_submit_recovers_terminal_child_without_live_application_from_frozen_execution(
+    tmp_path: Path,
+) -> None:
+    """A crash after child terminalization can commit from durable frozen authority."""
+
+    _, _, _, started, recovered, durable = _recover_offline_blocked_operation(tmp_path)
+
+    assert recovered.status is RunStatus.BLOCKED
+    assert recovered.resulting_state == started.state_ref
+    assert recovered.resulting_state_sha256 == started.state_sha256
+    assert durable.receipt_head == recovered.receipt
+
+
+@pytest.mark.parametrize(
+    "attack",
+    [
+        "terminal_time",
+        "blocker",
+        "supporting_artifacts",
+        "registry_snapshot",
+        "result_time",
+        "workflow_predecessor",
+        "workflow_base_revision",
+        "operation_ended_at",
+        "resulting_state",
+    ],
+)
+def test_read_rejects_rehashed_but_uncorrelated_operation_evidence(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    store, workflow_store, _, started, operation, snapshot = _recover_offline_blocked_operation(
+        tmp_path
+    )
+    assert operation.trusted_receipt is not None
+    assert operation.tool_result is not None
+    assert operation.receipt is not None
+    tool_receipt = _read_cas_model(
+        store,
+        operation.trusted_receipt,
+        TrustedToolReceiptV2,
+    )
+    result = _read_cas_model(store, operation.tool_result, ToolResultV2)
+    workflow_receipt = _read_cas_model(
+        store,
+        operation.receipt,
+        WorkflowOperationReceiptV2,
+    )
+    tool_updates: dict[str, object] = {}
+    result_updates: dict[str, object] = {}
+    receipt_updates: dict[str, object] = {}
+    operation_updates: dict[str, object] = {}
+    snapshot_updates: dict[str, object] = {}
+    forged_time = NOW + timedelta(milliseconds=500)
+    if attack == "terminal_time":
+        tool_updates["ended_at"] = forged_time
+        result_updates["ended_at"] = forged_time
+        receipt_updates["committed_at"] = forged_time
+        operation_updates["ended_at"] = forged_time
+        snapshot_updates["updated_at"] = forged_time
+    elif attack == "blocker":
+        forged_blocker = tool_receipt.blocker.model_copy(
+            update={"message": "coherently rehashed forged blocker"}
+        )
+        tool_updates["blocker"] = forged_blocker
+        result_updates["blocker"] = forged_blocker
+    elif attack == "supporting_artifacts":
+        supporting = _put(
+            store,
+            tmp_path,
+            name="forged-supporting.json",
+            payload=b"{}\n",
+            schema_version="harness.diagnostic.v1",
+        )
+        tool_updates["supporting_artifacts"] = (supporting,)
+        result_updates["diagnostics"] = (supporting,)
+    elif attack == "registry_snapshot":
+        forged_registry = _put(
+            store,
+            tmp_path,
+            name="forged-valid-registry.json",
+            payload=_canonical_bytes(
+                RegistrySnapshot(
+                    schema_version="harness.registry_snapshot.v1",
+                    qualified_skills=(),
+                )
+            ),
+            schema_version="harness.registry_snapshot.v1",
+        )
+        tool_updates["registry_snapshot"] = forged_registry
+    elif attack == "result_time":
+        result_updates["started_at"] = forged_time
+    elif attack == "workflow_predecessor":
+        receipt_updates["predecessor_receipt"] = _put(
+            store,
+            tmp_path,
+            name="forged-predecessor.json",
+            payload=b"{}\n",
+            schema_version="harness.workflow_start_receipt.v1",
+        )
+    elif attack == "workflow_base_revision":
+        receipt_updates.update({"base_revision": 1, "committed_revision": 2})
+    elif attack == "operation_ended_at":
+        operation_updates["ended_at"] = forged_time
+        snapshot_updates["updated_at"] = forged_time
+    else:
+        base_state = _read_cas_model(store, started.state_ref, TrustedWorldState)
+        forged_state = build_world_state(
+            base_state.facts,
+            as_of=NOW + timedelta(seconds=2),
+        )
+        forged_state_ref = _put(
+            store,
+            tmp_path,
+            name="forged-resulting-state.json",
+            payload=_canonical_bytes(forged_state),
+            schema_version="harness.trusted_world_state.v1",
+        )
+        receipt_updates.update(
+            {
+                "resulting_state": forged_state_ref,
+                "resulting_state_sha256": forged_state.state_sha256,
+            }
+        )
+        operation_updates.update(
+            {
+                "resulting_state": forged_state_ref,
+                "resulting_state_sha256": forged_state.state_sha256,
+            }
+        )
+        snapshot_updates.update(
+            {
+                "state_ref": forged_state_ref,
+                "state_sha256": forged_state.state_sha256,
+            }
+        )
+
+    tool_receipt = TrustedToolReceiptV2.model_validate(
+        tool_receipt.model_copy(update=tool_updates).model_dump(mode="python")
+    )
+    tool_ref = _put(
+        store,
+        tmp_path,
+        name="forged-tool-receipt.json",
+        payload=_canonical_bytes(tool_receipt),
+        schema_version="harness.trusted_tool_receipt.v2",
+    )
+    result_updates["trusted_receipt"] = tool_ref
+    result = ToolResultV2.model_validate(
+        result.model_copy(update=result_updates).model_dump(mode="python")
+    )
+    result_ref = _put(
+        store,
+        tmp_path,
+        name="forged-tool-result.json",
+        payload=_canonical_bytes(result),
+        schema_version="harness.tool_result.v2",
+    )
+    receipt_updates.update({"tool_receipt": tool_ref, "tool_result": result_ref})
+    workflow_receipt = WorkflowOperationReceiptV2.model_validate(
+        workflow_receipt.model_copy(update=receipt_updates).model_dump(mode="python")
+    )
+    receipt_ref = _put(
+        store,
+        tmp_path,
+        name="forged-workflow-receipt.json",
+        payload=_canonical_bytes(workflow_receipt),
+        schema_version="harness.workflow_operation_receipt.v2",
+    )
+    operation_updates.update(
+        {
+            "trusted_receipt": tool_ref,
+            "tool_result": result_ref,
+            "receipt": receipt_ref,
+        }
+    )
+    forged_operation = OperationSnapshot.model_validate(
+        operation.model_copy(update=operation_updates).model_dump(mode="python")
+    )
+    snapshot_updates["receipt_head"] = receipt_ref
+    forged_snapshot = RunSnapshot.model_validate(
+        snapshot.model_copy(update=snapshot_updates).model_dump(mode="python")
+    )
+    _replace_terminal_operation_and_head(
+        workflow_store,
+        forged_operation,
+        forged_snapshot,
+    )
+
+    with pytest.raises(GoldenRunCorruptionError):
+        _golden_harness(
+            artifact_store=store,
+            workflow_store=workflow_store,
+        ).read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id=started.principal_id,
+                workflow_run_id=started.workflow_run_id,
+            )
+        )
+
+
+def test_submit_exact_qualified_compile_commits_one_operation_and_state_delta(
+    tmp_path: Path,
+) -> None:
+    """One real qualified compile advances the durable aggregate exactly once."""
+
+    assert set(RunCommandRequest.model_fields) == {
+        "schema_version",
+        "principal_id",
+        "workflow_run_id",
+        "idempotency_key",
+        "expected_revision",
+        "expected_state_sha256",
+        "expected_receipt_head",
+        "skill_ref",
+        "parameters",
+    }
+    assert set(OperationSnapshot.model_fields) == {
+        "schema_version",
+        "operation_id",
+        "workflow_run_id",
+        "principal_id",
+        "idempotency_key",
+        "command",
+        "qualified_execution",
+        "skill_ref",
+        "status",
+        "base_revision",
+        "committed_revision",
+        "child_run_id",
+        "tool_result",
+        "trusted_receipt",
+        "state_delta",
+        "resulting_state",
+        "resulting_state_sha256",
+        "receipt",
+        "started_at",
+        "ended_at",
+    }
+    assert "planner_call_id" not in TrustedToolReceiptV2.model_fields
+    assert StateDeltaV2.model_fields["receipt"].is_required()
+    assert ToolResultV2.model_fields["state_delta"].is_required()
+
+    settings = _compile_settings(tmp_path)
+    application = create_compile_application(settings)
+    store = LocalArtifactStore(application.artifact_root)
+    objective = _put(
+        store,
+        tmp_path,
+        name="generated-objective.json",
+        payload=GENERATED_OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(store, tmp_path)
+    catalog_path = settings.external_catalog_roots[0] / "empty.json"
+    _empty_catalog(catalog_path, objects_root=settings.allowed_asset_roots[0] / "objects")
+    catalog = application.snapshot_asset_catalog(catalog_path)
+    operation_id = UUID("20000000-0000-4000-8000-000000000001")
+    child_run_id = UUID("30000000-0000-4000-8000-000000000001")
+    workflow_store = SQLiteGoldenRunStore(tmp_path / "golden.sqlite3")
+    harness = GoldenRunHarness(
+        artifact_store=store,
+        workflow_store=workflow_store,
+        compile_application=application,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+        operation_id_factory=lambda: operation_id,
+        child_run_id_factory=lambda: child_run_id,
+    )
+    started = harness.start(_request(objective, registry))
+    command = RunCommandRequest(
+        schema_version="harness.run_command_request.v1",
+        principal_id=started.principal_id,
+        workflow_run_id=started.workflow_run_id,
+        idempotency_key="compile-001",
+        expected_revision=started.revision,
+        expected_state_sha256=started.state_sha256,
+        expected_receipt_head=started.receipt_head,
+        skill_ref="text2env.compile@1.0.0",
+        parameters=Text2EnvCompileInput(
+            request=GENERATED_OBJECTIVE,
+            seed=77,
+            asset_catalog=catalog,
+            config=CompileConfig(generate_missing_assets=True),
+        ).model_dump(mode="json"),
+    )
+
+    operation = harness.submit(command)
+
+    assert operation.operation_id == operation_id
+    assert operation.child_run_id == child_run_id
+    assert operation.status is RunStatus.SUCCEEDED
+    assert operation.base_revision == 0
+    assert operation.committed_revision == 1
+    assert operation.receipt is not None
+    assert operation.tool_result is not None
+    assert operation.trusted_receipt is not None
+    assert operation.state_delta is not None
+    receipt = WorkflowOperationReceiptV2.model_validate_json(
+        store.resolve(operation.receipt).path.read_bytes()
+    )
+    result = ToolResultV2.model_validate_json(
+        store.resolve(operation.tool_result).path.read_bytes()
+    )
+    tool_receipt = TrustedToolReceiptV2.model_validate_json(
+        store.resolve(operation.trusted_receipt).path.read_bytes()
+    )
+    delta = StateDeltaV2.model_validate_json(store.resolve(operation.state_delta).path.read_bytes())
+    assert receipt.command == operation.command
+    assert receipt.predecessor_receipt == started.receipt_head
+    assert receipt.tool_receipt == operation.trusted_receipt
+    assert receipt.resulting_state_sha256 != started.state_sha256
+    assert tool_receipt.registry_snapshot == registry
+    assert tool_receipt.skill.skill_ref == "text2env.compile@1.0.0"
+    assert tool_receipt.child_run_id == child_run_id
+    assert result.trusted_receipt == operation.trusted_receipt
+    assert result.state_delta == delta
+    assert delta.receipt == operation.trusted_receipt
+    assert tuple(mutation.key for mutation in delta.mutations) == (
+        "assets.catalog",
+        "environment.package",
+    )
+    current = harness.read(
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id=started.principal_id,
+            workflow_run_id=started.workflow_run_id,
+        )
+    )
+    assert current.revision == 1
+    assert current.active_operation is None
+    assert current.child_runs == (child_run_id,)
+    assert current.receipt_head == operation.receipt
+    assert (
+        TrustedWorldState.model_validate_json(
+            store.resolve(current.state_ref).path.read_bytes()
+        ).version
+        == 2
+    )
+    assert application.run_state(child_run_id) is not None
+
+    recovered_application = create_compile_application(settings)
+    recovered = GoldenRunHarness(
+        artifact_store=LocalArtifactStore(recovered_application.artifact_root),
+        workflow_store=SQLiteGoldenRunStore(tmp_path / "golden.sqlite3"),
+        compile_application=recovered_application,
+    ).submit(command)
+    assert recovered == operation
+
+
+def test_terminal_commit_retry_rechecks_the_exact_committed_workflow_head(
+    tmp_path: Path,
+) -> None:
+    workflow_store, running, terminal, committed_head = _committed_blocked_operation(tmp_path)
+    attacked_head = RunSnapshot.model_validate(
+        committed_head.model_copy(
+            update={"updated_at": committed_head.updated_at + timedelta(seconds=1)}
+        ).model_dump(mode="python")
+    )
+    attacked_payload = _canonical_bytes(attacked_head)
+    with closing(sqlite3.connect(workflow_store.path)) as connection, connection:
+        connection.execute(
+            """
+            UPDATE golden_workflow_starts
+            SET snapshot_json = ?, snapshot_sha256 = ?
+            WHERE workflow_run_id = ?
+            """,
+            (
+                attacked_payload,
+                sha256(attacked_payload).hexdigest(),
+                str(running.workflow_run_id),
+            ),
+        )
+
+    with pytest.raises(
+        GoldenRunCorruptionError,
+        match="terminal workflow head|exact operation transition",
+    ):
+        workflow_store.commit_operation(
+            principal_id=running.principal_id,
+            running=running,
+            terminal=terminal,
+            snapshot=committed_head,
+        )
+
+
+def test_submit_binds_a_compile_preflight_block_to_the_reserved_child(
+    tmp_path: Path,
+) -> None:
+    settings = _compile_settings(tmp_path)
+    application = create_compile_application(settings)
+    artifact_store = LocalArtifactStore(application.artifact_root)
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="blocked-objective.json",
+        payload=GENERATED_OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    invalid_catalog_path = settings.external_catalog_roots[0] / "invalid.json"
+    invalid_catalog_path.write_bytes(b"{}\n")
+    invalid_catalog = application.snapshot_asset_catalog(invalid_catalog_path)
+    child_run_id = UUID("30000000-0000-4000-8000-000000000003")
+    harness = GoldenRunHarness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(tmp_path / "blocked.sqlite3"),
+        compile_application=application,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+        operation_id_factory=lambda: UUID("20000000-0000-4000-8000-000000000003"),
+        child_run_id_factory=lambda: child_run_id,
+    )
+    started = harness.start(_request(objective, registry))
+    command = RunCommandRequest(
+        schema_version="harness.run_command_request.v1",
+        principal_id=started.principal_id,
+        workflow_run_id=started.workflow_run_id,
+        idempotency_key="compile-blocked-001",
+        expected_revision=started.revision,
+        expected_state_sha256=started.state_sha256,
+        expected_receipt_head=started.receipt_head,
+        skill_ref="text2env.compile@1.0.0",
+        parameters={
+            "request": GENERATED_OBJECTIVE,
+            "seed": 77,
+            "asset_catalog": invalid_catalog.model_dump(mode="json"),
+            "config": {},
+        },
+    )
+
+    operation = harness.submit(command)
+
+    assert operation.status is RunStatus.BLOCKED
+    assert operation.child_run_id == child_run_id
+    assert operation.state_delta is None
+    state = application.run_state(child_run_id)
+    assert state is not None
+    assert state.run_id == child_run_id
+    assert state.attempt == 0
+    assert state.blocker is not None
+    assert state.blocker.code == "HARN_DEPENDENCY_UNAVAILABLE"
+    assert application.invocation(child_run_id) is None
+    current = harness.read(
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id=started.principal_id,
+            workflow_run_id=started.workflow_run_id,
+        )
+    )
+    assert current.revision == 1
+    assert current.state_sha256 == started.state_sha256
+    assert current.state_ref == started.state_ref
+    offline = GoldenRunHarness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(tmp_path / "blocked.sqlite3"),
+    ).submit(command)
+    assert offline == operation
+
+
 def test_harness_requires_the_exact_local_cas_authority(tmp_path: Path) -> None:
     with pytest.raises(TypeError, match="artifact_store must be the exact LocalArtifactStore"):
         _golden_harness(artifact_store=_ArtifactStoreLookalike(tmp_path))  # type: ignore[arg-type]
@@ -388,11 +1336,18 @@ def test_golden_workflow_contracts_are_available_from_the_public_harness_facade(
     assert public_harness.GoldenRunCorruptionError is GoldenRunCorruptionError
     assert public_harness.GoldenRunRegistryError is GoldenRunRegistryError
     assert public_harness.RunReadRequest is RunReadRequest
+    assert public_harness.RunCommandRequest is RunCommandRequest
+    assert public_harness.OperationSnapshot is OperationSnapshot
+    assert public_harness.QualifiedSkillExecutionV2 is QualifiedSkillExecutionV2
     assert public_harness.RunStartRequest is RunStartRequest
     assert public_harness.RunSnapshot is RunSnapshot
     assert public_harness.RegistrySnapshot is RegistrySnapshot
     assert public_harness.SQLiteGoldenRunStore is SQLiteGoldenRunStore
     assert public_harness.WorkflowStartReceipt is WorkflowStartReceipt
+    assert public_harness.StateDeltaV2 is StateDeltaV2
+    assert public_harness.ToolResultV2 is ToolResultV2
+    assert public_harness.TrustedToolReceiptV2 is TrustedToolReceiptV2
+    assert public_harness.WorkflowOperationReceiptV2 is WorkflowOperationReceiptV2
 
 
 @pytest.mark.parametrize(
@@ -472,9 +1427,7 @@ def test_start_retry_rejects_tampered_idempotency_lookup_metadata(tmp_path: Path
         workflow_id_factory=lambda: WORKFLOW_ID,
     ).start(request)
     with closing(sqlite3.connect(database)) as connection, connection:
-        connection.execute(
-            "UPDATE golden_workflow_starts SET idempotency_key = 'tampered-key'"
-        )
+        connection.execute("UPDATE golden_workflow_starts SET idempotency_key = 'tampered-key'")
 
     with pytest.raises(
         GoldenRunCorruptionError,
@@ -544,13 +1497,16 @@ def test_legacy_private_start_store_is_migrated_for_retry_and_read(tmp_path: Pat
     )
 
     assert migrated.start(request) == snapshot
-    assert migrated.read(
-        RunReadRequest(
-            schema_version="harness.run_read_request.v1",
-            principal_id="tests/golden-e2e",
-            workflow_run_id=WORKFLOW_ID,
+    assert (
+        migrated.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id="tests/golden-e2e",
+                workflow_run_id=WORKFLOW_ID,
+            )
         )
-    ) == snapshot
+        == snapshot
+    )
 
 
 def test_legacy_migration_preserves_a_corrupt_logical_request_identity(
@@ -667,9 +1623,7 @@ print(json.dumps(snapshot.model_dump(mode="json"), sort_keys=True))
         cwd=PROJECT_ROOT,
         env={
             **os.environ,
-            "PYTHONPATH": str(PROJECT_ROOT)
-            + os.pathsep
-            + os.environ.get("PYTHONPATH", ""),
+            "PYTHONPATH": str(PROJECT_ROOT) + os.pathsep + os.environ.get("PYTHONPATH", ""),
         },
         capture_output=True,
         text=True,
@@ -826,9 +1780,7 @@ def test_read_rejects_corrupt_sqlite_snapshot_storage(
         "mismatched_checksum": "UPDATE golden_workflow_starts SET snapshot_sha256 = '"
         + "f" * 64
         + "'",
-        "invalid_authority_digest": (
-            "UPDATE golden_workflow_starts SET request_sha256 = 'broken'"
-        ),
+        "invalid_authority_digest": ("UPDATE golden_workflow_starts SET request_sha256 = 'broken'"),
     }
     with closing(sqlite3.connect(database)) as connection, connection:
         connection.execute(statements[attack])
@@ -870,6 +1822,67 @@ def test_sqlite_golden_run_store_rejects_an_unknown_table_layout(tmp_path: Path)
 @pytest.mark.parametrize(
     "ddl",
     [
+        _operation_layout_ddl(operation_id="TEXT"),
+        _operation_layout_ddl(workflow_unique=False),
+        _operation_layout_ddl(operation_id="TEXT NOT NULL PRIMARY KEY ON CONFLICT REPLACE"),
+        _operation_layout_ddl(table_suffix=" STRICT"),
+        _operation_layout_ddl(extra_definitions=("shadow TEXT",)),
+    ],
+    ids=("constraints", "unique", "conflict-policy", "strict", "extra-column"),
+)
+def test_sqlite_golden_run_store_rejects_forged_operation_layout(
+    tmp_path: Path,
+    ddl: str,
+) -> None:
+    database = tmp_path / "forged-operation.sqlite3"
+    SQLiteGoldenRunStore(database)
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute("DROP TABLE golden_workflow_operations")
+        connection.execute(ddl)
+
+    with pytest.raises(GoldenRunCorruptionError, match="operation database.*layout"):
+        SQLiteGoldenRunStore(database)
+
+
+def test_sqlite_golden_run_store_rejects_forged_operation_indexes(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "forged-operation-index.sqlite3"
+    SQLiteGoldenRunStore(database)
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(
+            "CREATE UNIQUE INDEX forged_operation_index "
+            "ON golden_workflow_operations (principal_id)"
+        )
+
+    with pytest.raises(GoldenRunCorruptionError, match="operation database.*layout"):
+        SQLiteGoldenRunStore(database)
+
+
+@pytest.mark.parametrize("event", ["INSERT", "UPDATE", "DELETE"])
+def test_operation_access_rejects_late_authority_triggers(
+    tmp_path: Path,
+    event: str,
+) -> None:
+    database = tmp_path / "late-operation-trigger.sqlite3"
+    store = SQLiteGoldenRunStore(database)
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(
+            f"CREATE TRIGGER late_operation_trigger AFTER {event} "
+            "ON golden_workflow_operations BEGIN SELECT 1; END"
+        )
+
+    with pytest.raises(GoldenRunCorruptionError, match="operation database.*layout"):
+        store.read_operation(
+            principal_id="tests/golden-e2e",
+            workflow_run_id=WORKFLOW_ID,
+            idempotency_key="late-trigger",
+        )
+
+
+@pytest.mark.parametrize(
+    "ddl",
+    [
         _current_store_layout_ddl(workflow_run_id="TEXT NOT NULL"),
         _current_store_layout_ddl(principal_lookup=False),
         _current_store_layout_ddl(start_request_lookup=False),
@@ -878,9 +1891,7 @@ def test_sqlite_golden_run_store_rejects_an_unknown_table_layout(tmp_path: Path)
         _current_store_layout_ddl(snapshot_json="TEXT NOT NULL"),
         _current_store_layout_ddl(snapshot_sha256="TEXT NOT NULL DEFAULT ''"),
         _current_store_layout_ddl(
-            extra_definitions=(
-                "hidden_copy TEXT GENERATED ALWAYS AS (principal_id) VIRTUAL",
-            )
+            extra_definitions=("hidden_copy TEXT GENERATED ALWAYS AS (principal_id) VIRTUAL",)
         ),
     ],
     ids=[
@@ -974,9 +1985,7 @@ def test_sqlite_golden_run_store_rejects_a_forged_legacy_layout(tmp_path: Path) 
         ),
         _current_store_layout_ddl(table_suffix=" STRICT"),
         _current_store_layout_ddl(table_suffix=" WITHOUT ROWID"),
-        _current_store_layout_ddl(
-            workflow_run_id="TEXT NOT NULL PRIMARY KEY ON CONFLICT REPLACE"
-        ),
+        _current_store_layout_ddl(workflow_run_id="TEXT NOT NULL PRIMARY KEY ON CONFLICT REPLACE"),
         _current_store_layout_ddl().replace(
             "UNIQUE (principal_id, idempotency_key)",
             "UNIQUE (principal_id, idempotency_key) ON/**/CONFLICT REPLACE",
@@ -1088,12 +2097,8 @@ def test_sqlite_golden_run_store_rejects_a_factory_outside_its_reservation(
     receipt = WorkflowStartReceipt.model_validate_json(
         artifact_store.resolve(snapshot.receipt_head).path.read_bytes()
     )
-    principal_id = (
-        "tests/another-principal" if attack == "principal" else snapshot.principal_id
-    )
-    start_request_sha256 = (
-        snapshot.start_request_ref.sha256 if attack == "principal" else "f" * 64
-    )
+    principal_id = "tests/another-principal" if attack == "principal" else snapshot.principal_id
+    start_request_sha256 = snapshot.start_request_ref.sha256 if attack == "principal" else "f" * 64
     target = SQLiteGoldenRunStore(tmp_path / f"factory-{attack}.sqlite3")
 
     with pytest.raises(GoldenRunCorruptionError, match="authority metadata"):
@@ -1214,9 +2219,7 @@ def test_concurrent_start_is_one_durable_idempotent_transition(tmp_path: Path) -
         UUID("20000000-0000-4000-8000-000000000002"),
     }
     with closing(sqlite3.connect(database)) as connection:
-        assert connection.execute(
-            "SELECT COUNT(*) FROM golden_workflow_starts"
-        ).fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM golden_workflow_starts").fetchone()[0] == 1
 
 
 def test_start_rejects_a_workflow_identity_collision_across_principals(
@@ -1313,9 +2316,9 @@ def test_start_retry_rejects_noncanonical_persisted_snapshot(tmp_path: Path) -> 
     harness.start(request)
     database = store.root / "golden-workflows.sqlite3"
     with closing(sqlite3.connect(database)) as connection:
-        payload = connection.execute(
-            "SELECT snapshot_json FROM golden_workflow_starts"
-        ).fetchone()[0]
+        payload = connection.execute("SELECT snapshot_json FROM golden_workflow_starts").fetchone()[
+            0
+        ]
     _replace_persisted_snapshot(store, payload.replace(b"{", b"{ ", 1))
 
     with pytest.raises(GoldenRunCorruptionError, match="canonical JSON bytes"):
@@ -1604,9 +2607,7 @@ def test_start_rejects_a_target_skill_claim_not_bound_by_qualified_descriptor(
         schema_version="harness.world_fact_evidence.v1",
     )
     registry_ref = _qualified_registry(store, tmp_path)
-    registry = RegistrySnapshot.model_validate_json(
-        store.resolve(registry_ref).path.read_bytes()
-    )
+    registry = RegistrySnapshot.model_validate_json(store.resolve(registry_ref).path.read_bytes())
     entry = registry.qualified_skills[0].model_copy(
         update={
             "skill_ref": "text2env.compile@2.0.0",
@@ -1775,9 +2776,7 @@ def test_start_requires_uuid4_identity_and_rolls_back_failed_reservation(
         _golden_harness(
             artifact_store=store,
             clock=lambda: NOW,
-            workflow_id_factory=lambda: UUID(
-                "10000000-0000-1000-8000-000000000001"
-            ),
+            workflow_id_factory=lambda: UUID("10000000-0000-1000-8000-000000000001"),
         ).start(request)
 
     snapshot = _golden_harness(

@@ -1,0 +1,172 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "RunStatus": {
+      "enum": [
+        "running",
+        "succeeded",
+        "blocked",
+        "failed"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    }
+  },
+  "$id": "harness.workflow_operation_receipt.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Commit receipt binding a terminal tool result to the resulting workflow head.",
+  "properties": {
+    "base_revision": {
+      "minimum": 0,
+      "title": "Base Revision",
+      "type": "integer"
+    },
+    "base_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Base State Sha256",
+      "type": "string"
+    },
+    "command": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "committed_at": {
+      "format": "date-time",
+      "title": "Committed At",
+      "type": "string"
+    },
+    "committed_revision": {
+      "minimum": 1,
+      "title": "Committed Revision",
+      "type": "integer"
+    },
+    "operation_id": {
+      "format": "uuid4",
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "predecessor_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "resulting_state": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "resulting_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Resulting State Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.workflow_operation_receipt.v2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state_delta": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus"
+    },
+    "tool_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "tool_result": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "workflow_run_id",
+    "operation_id",
+    "principal_id",
+    "command",
+    "predecessor_receipt",
+    "tool_receipt",
+    "tool_result",
+    "state_delta",
+    "base_revision",
+    "committed_revision",
+    "base_state_sha256",
+    "resulting_state_sha256",
+    "resulting_state",
+    "status",
+    "committed_at"
+  ],
+  "title": "WorkflowOperationReceiptV2",
+  "type": "object"
+}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -29,11 +30,22 @@ from self_improving.harness.schemas.text2env_validate_v2 import (
     Text2EnvValidateV2Output,
 )
 from self_improving.harness.schemas.workflow import (
+    OperationSnapshot,
+    RunCommandRequest,
     RunReadRequest,
     RunSnapshot,
     RunStartRequest,
     WorkflowStartReceipt,
 )
+from self_improving.harness.schemas.workflow_operation import (
+    QualifiedSkillExecutionV2,
+    StateDeltaV2,
+    ToolResultV2,
+    TrustedToolReceiptV2,
+    WorkflowOperationReceiptV2,
+    state_delta_v2_sha256,
+)
+from self_improving.harness.trusted_state import StateMutation, WorldFact
 
 EXPECTED_SCHEMA_IDS = {
     "harness.asset_debt_inventory.v1",
@@ -43,14 +55,18 @@ EXPECTED_SCHEMA_IDS = {
     "harness.blocker.v1",
     "harness.environment_package.v1",
     "harness.event.v1",
+    "harness.operation_snapshot.v1",
+    "harness.qualified_skill_execution.v2",
     "harness.replay_vlm_assessment_input.v1",
     "harness.replay_vlm_assessment_output.v1",
     "harness.replay_vlm_assessment_output.v2",
     "harness.registry_snapshot.v1",
+    "harness.run_command_request.v1",
     "harness.run_read_request.v1",
     "harness.run_state.v1",
     "harness.run_snapshot.v1",
     "harness.run_start_request.v1",
+    "harness.state_delta.v2",
     "harness.skill_descriptor.v1",
     "harness.skill_descriptor.v2",
     "harness.skill_invocation.v1",
@@ -64,8 +80,23 @@ EXPECTED_SCHEMA_IDS = {
     "harness.text2env_validate_input.v2",
     "harness.text2env_validate_output.v1",
     "harness.text2env_validate_output.v2",
+    "harness.tool_result.v2",
+    "harness.trusted_tool_receipt.v2",
+    "harness.workflow_operation_receipt.v2",
     "harness.workflow_start_receipt.v1",
 }
+
+
+def _cas_ref(schema_version: str, digit: str) -> ArtifactRef:
+    digest = digit * 64
+    return ArtifactRef(
+        name=f"{schema_version}.json",
+        uri=f"artifact://sha256/{digest}",
+        media_type="application/json",
+        sha256=digest,
+        bytes=2,
+        schema_version=schema_version,
+    )
 
 
 def test_schema_catalog_is_exact_and_immutable() -> None:
@@ -79,10 +110,14 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.workflow_start_receipt.v1") is WorkflowStartReceipt
     assert schema_model("harness.registry_snapshot.v1") is RegistrySnapshot
     assert schema_model("harness.run_read_request.v1") is RunReadRequest
-    assert (
-        schema_model("harness.skill_qualification_report.v1")
-        is PublicQualificationReportV1
-    )
+    assert schema_model("harness.run_command_request.v1") is RunCommandRequest
+    assert schema_model("harness.operation_snapshot.v1") is OperationSnapshot
+    assert schema_model("harness.qualified_skill_execution.v2") is QualifiedSkillExecutionV2
+    assert schema_model("harness.state_delta.v2") is StateDeltaV2
+    assert schema_model("harness.tool_result.v2") is ToolResultV2
+    assert schema_model("harness.trusted_tool_receipt.v2") is TrustedToolReceiptV2
+    assert schema_model("harness.workflow_operation_receipt.v2") is WorkflowOperationReceiptV2
+    assert schema_model("harness.skill_qualification_report.v1") is PublicQualificationReportV1
     assert schema_model("harness.asset_debt_inventory.v1") is AssetDebtInventory
     assert schema_model("harness.asset_repair_plan_request.v1") is AssetRepairPlanRequest
     assert schema_model("harness.asset_repair_plan.v1") is AssetRepairPlan
@@ -103,12 +138,19 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.asset_debt_inventory.v1",
             "harness.asset_repair_plan.v1",
             "harness.asset_repair_plan_request.v1",
+            "harness.operation_snapshot.v1",
+            "harness.qualified_skill_execution.v2",
+            "harness.run_command_request.v1",
             "harness.run_start_request.v1",
             "harness.run_snapshot.v1",
             "harness.registry_snapshot.v1",
             "harness.run_read_request.v1",
+            "harness.state_delta.v2",
             "harness.skill_qualification_report.v1",
             "harness.workflow_start_receipt.v1",
+            "harness.tool_result.v2",
+            "harness.trusted_tool_receipt.v2",
+            "harness.workflow_operation_receipt.v2",
         }:
             assert document["properties"]["schema_version"]["const"] == schema_id
             assert "schema_version" in document["required"]
@@ -124,25 +166,29 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         "schema_version",
     ]
     assert "from_status" in documents["harness.event.v1"]["required"]
-    assert documents["harness.asset_repair_plan.v1"]["properties"][
-        "writes_performed"
-    ]["const"] is False
-    assert documents["harness.asset_repair_plan.v1"]["properties"][
-        "runtime_qualification_executed"
-    ]["const"] is False
-    assert documents["harness.asset_repair_plan.v1"]["properties"][
-        "full_baseline_evaluated"
-    ]["type"] == "boolean"
-    assert documents["harness.asset_repair_plan.v1"]["properties"][
-        "probe_bytes_in_cas"
-    ]["const"] is False
+    assert (
+        documents["harness.asset_repair_plan.v1"]["properties"]["writes_performed"]["const"]
+        is False
+    )
+    assert (
+        documents["harness.asset_repair_plan.v1"]["properties"]["runtime_qualification_executed"][
+            "const"
+        ]
+        is False
+    )
+    assert (
+        documents["harness.asset_repair_plan.v1"]["properties"]["full_baseline_evaluated"]["type"]
+        == "boolean"
+    )
+    assert (
+        documents["harness.asset_repair_plan.v1"]["properties"]["probe_bytes_in_cas"]["const"]
+        is False
+    )
     for schema_id in {
         "harness.asset_repair_plan.v1",
         "harness.asset_repair_plan_request.v1",
     }:
-        constraints = documents[schema_id]["properties"]["inventory_ref"]["allOf"][1][
-            "properties"
-        ]
+        constraints = documents[schema_id]["properties"]["inventory_ref"]["allOf"][1]["properties"]
         assert constraints == {
             "uri": {
                 "maxLength": 82,
@@ -158,15 +204,20 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         r"(?:/(?!\.{1,2}(?:/|$))[^/\\\u0000-\u001f\u007f\u2028\u2029]+)*$"
     )
     inventory_defs = documents["harness.asset_debt_inventory.v1"]["$defs"]
-    assert inventory_defs["AssetDebtEntry"]["properties"]["ledger_path"][
-        "pattern"
-    ] == portable_path_pattern
-    assert inventory_defs["RepresentationRecoveryProbe"]["properties"][
-        "logical_path"
-    ]["pattern"] == portable_path_pattern
-    assert documents["harness.asset_repair_plan.v1"]["$defs"][
-        "RepresentationRepairPlan"
-    ]["properties"]["logical_path"]["pattern"] == portable_path_pattern
+    assert (
+        inventory_defs["AssetDebtEntry"]["properties"]["ledger_path"]["pattern"]
+        == portable_path_pattern
+    )
+    assert (
+        inventory_defs["RepresentationRecoveryProbe"]["properties"]["logical_path"]["pattern"]
+        == portable_path_pattern
+    )
+    assert (
+        documents["harness.asset_repair_plan.v1"]["$defs"]["RepresentationRepairPlan"][
+            "properties"
+        ]["logical_path"]["pattern"]
+        == portable_path_pattern
+    )
     run_required = documents["harness.run_state.v1"]["required"]
     assert {"invocation_digest", "ended_at", "output", "blocker"} <= set(run_required)
     assert documents["harness.run_read_request.v1"]["required"] == [
@@ -272,6 +323,65 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         "qualification_artifact",
     ]
     assert "deterministic" not in descriptor_v2["properties"]
+
+
+def test_tool_result_does_not_globally_forbid_observation_state_overlap() -> None:
+    """Observation admission belongs to an exact Skill policy, not the base envelope."""
+
+    started_at = datetime(2026, 9, 10, tzinfo=timezone.utc)
+    ended_at = started_at + timedelta(seconds=1)
+    trusted_receipt = _cas_ref("harness.trusted_tool_receipt.v2", "1")
+    source = _cas_ref("harness.observation_receipt.v1", "2")
+    fact = WorldFact(
+        key="runtime.contact",
+        value=True,
+        source_kind="fresh_observation",
+        source_artifact=source,
+        observed_at=ended_at,
+        valid_until=ended_at + timedelta(seconds=1),
+    )
+    unbound = StateDeltaV2.model_construct(
+        schema_version="harness.state_delta.v2",
+        base_state_sha256="3" * 64,
+        effective_at=ended_at,
+        receipt=trusted_receipt,
+        mutations=(
+            StateMutation(
+                operation="upsert",
+                key=fact.key,
+                expected_fact_sha256=None,
+                fact=fact,
+            ),
+        ),
+        delta_sha256="0" * 64,
+    )
+    delta = StateDeltaV2.model_validate(
+        {
+            **unbound.model_dump(mode="python"),
+            "delta_sha256": state_delta_v2_sha256(unbound),
+        }
+    )
+
+    result = ToolResultV2(
+        schema_version="harness.tool_result.v2",
+        workflow_run_id="10000000-0000-4000-8000-000000000001",
+        operation_id="20000000-0000-4000-8000-000000000001",
+        skill_ref="text2env.replay@1.0.0",
+        status="succeeded",
+        started_at=started_at,
+        ended_at=ended_at,
+        child_run_id="30000000-0000-4000-8000-000000000001",
+        invocation=_cas_ref("harness.skill_invocation.v1", "4"),
+        run_state=_cas_ref("harness.run_state.v1", "5"),
+        typed_output={},
+        state_delta=delta,
+        diagnostics=(),
+        trusted_receipt=trusted_receipt,
+        fresh_observations=(fact,),
+        blocker=None,
+    )
+
+    assert result.state_delta.mutations[0].key == result.fresh_observations[0].key
 
 
 def test_schema_rendering_and_snapshot_names_are_canonical() -> None:

@@ -9,21 +9,26 @@ from typing import Annotated, Literal
 
 from pydantic import UUID4, AwareDatetime, Field, StrictStr, model_validator
 
-from .base import HarnessModel, NonNegativeInt, Sha256, public_schema_config
-from .common import ArtifactRef
+from .base import (
+    CanonicalSkillRef,
+    HarnessModel,
+    JsonObject,
+    NonNegativeInt,
+    Sha256,
+    public_schema_config,
+)
+from .common import ArtifactRef, RunStatus
 
+OPERATION_SNAPSHOT_SCHEMA_ID = "harness.operation_snapshot.v1"
+RUN_COMMAND_REQUEST_SCHEMA_ID = "harness.run_command_request.v1"
 RUN_READ_REQUEST_SCHEMA_ID = "harness.run_read_request.v1"
 RUN_START_REQUEST_SCHEMA_ID = "harness.run_start_request.v1"
 RUN_SNAPSHOT_SCHEMA_ID = "harness.run_snapshot.v1"
 WORKFLOW_START_RECEIPT_SCHEMA_ID = "harness.workflow_start_receipt.v1"
 
-_CAPABILITY_PROFILE_PATTERN = (
-    r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+@(?:0|[1-9][0-9]*)$"
-)
+_CAPABILITY_PROFILE_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+@(?:0|[1-9][0-9]*)$"
 _CAS_URI = re.compile(r"^artifact://sha256/([0-9a-f]{64})$")
-_WORKFLOW_RECEIPT_SCHEMA = re.compile(
-    r"^harness\.workflow_[a-z][a-z0-9_]*_receipt\.v1$"
-)
+_WORKFLOW_RECEIPT_SCHEMA = re.compile(r"^harness\.workflow_[a-z][a-z0-9_]*_receipt\.v[1-9][0-9]*$")
 
 CapabilityProfileRef = Annotated[
     str,
@@ -51,6 +56,128 @@ class RunReadRequest(HarnessModel):
     schema_version: Literal["harness.run_read_request.v1"]
     principal_id: PrincipalId
     workflow_run_id: UUID4
+
+
+class RunCommandRequest(HarnessModel):
+    """Submit one exact Skill command against an observed workflow head."""
+
+    model_config = public_schema_config(RUN_COMMAND_REQUEST_SCHEMA_ID)
+
+    schema_version: Literal["harness.run_command_request.v1"]
+    principal_id: PrincipalId
+    workflow_run_id: UUID4
+    idempotency_key: IdempotencyKey
+    expected_revision: NonNegativeInt
+    expected_state_sha256: Sha256
+    expected_receipt_head: ArtifactRef
+    skill_ref: CanonicalSkillRef
+    parameters: JsonObject
+
+    @model_validator(mode="after")
+    def command_is_cas_bound(self) -> "RunCommandRequest":
+        _require_workflow_receipt_ref(self.expected_receipt_head)
+        return self
+
+
+class OperationSnapshot(HarnessModel):
+    """Durable state of one workflow command and its controlled child run."""
+
+    model_config = public_schema_config(OPERATION_SNAPSHOT_SCHEMA_ID)
+
+    schema_version: Literal["harness.operation_snapshot.v1"]
+    operation_id: UUID4
+    workflow_run_id: UUID4
+    principal_id: PrincipalId
+    idempotency_key: IdempotencyKey
+    command: ArtifactRef
+    qualified_execution: ArtifactRef
+    skill_ref: CanonicalSkillRef
+    status: RunStatus
+    base_revision: NonNegativeInt
+    committed_revision: NonNegativeInt | None
+    child_run_id: UUID4
+    tool_result: ArtifactRef | None
+    trusted_receipt: ArtifactRef | None
+    state_delta: ArtifactRef | None
+    resulting_state: ArtifactRef | None
+    resulting_state_sha256: Sha256 | None
+    receipt: ArtifactRef | None
+    started_at: AwareDatetime
+    ended_at: AwareDatetime | None
+
+    @model_validator(mode="after")
+    def operation_lifecycle_is_unambiguous(self) -> "OperationSnapshot":
+        _require_utc(self.started_at, label="started_at")
+        _require_cas_ref(
+            self.command,
+            label="command",
+            schema_version=RUN_COMMAND_REQUEST_SCHEMA_ID,
+        )
+        _require_cas_ref(
+            self.qualified_execution,
+            label="qualified_execution",
+            schema_version="harness.qualified_skill_execution.v2",
+        )
+        if self.status is RunStatus.RUNNING:
+            if any(
+                value is not None
+                for value in (
+                    self.committed_revision,
+                    self.tool_result,
+                    self.trusted_receipt,
+                    self.state_delta,
+                    self.resulting_state,
+                    self.resulting_state_sha256,
+                    self.receipt,
+                    self.ended_at,
+                )
+            ):
+                raise ValueError("running operation cannot expose terminal evidence")
+            return self
+        if (
+            self.committed_revision != self.base_revision + 1
+            or self.tool_result is None
+            or self.trusted_receipt is None
+            or self.resulting_state is None
+            or self.resulting_state_sha256 is None
+            or self.receipt is None
+            or self.ended_at is None
+        ):
+            raise ValueError("terminal operation evidence is incomplete")
+        _require_utc(self.ended_at, label="ended_at")
+        if self.ended_at < self.started_at:
+            raise ValueError("ended_at cannot precede started_at")
+        _require_cas_ref(
+            self.tool_result,
+            label="tool_result",
+            schema_version="harness.tool_result.v2",
+        )
+        _require_cas_ref(
+            self.trusted_receipt,
+            label="trusted_receipt",
+            schema_version="harness.trusted_tool_receipt.v2",
+        )
+        _require_cas_ref(
+            self.receipt,
+            label="receipt",
+            schema_version="harness.workflow_operation_receipt.v2",
+        )
+        _require_cas_ref(
+            self.resulting_state,
+            label="resulting_state",
+            schema_version="harness.trusted_world_state.v1",
+        )
+        if self.status is RunStatus.SUCCEEDED:
+            if self.state_delta is None:
+                raise ValueError("successful operation requires a state delta")
+            _require_cas_ref(
+                self.state_delta,
+                label="state_delta",
+                schema_version="harness.state_delta.v2",
+            )
+        elif self.state_delta is not None:
+            raise ValueError("blocked or failed operation cannot advance trusted state")
+        return self
 
 
 class RunStartRequest(HarnessModel):
@@ -208,11 +335,15 @@ def _require_workflow_receipt_ref(artifact: ArtifactRef) -> None:
 
 
 __all__ = [
+    "OPERATION_SNAPSHOT_SCHEMA_ID",
+    "RUN_COMMAND_REQUEST_SCHEMA_ID",
     "RUN_READ_REQUEST_SCHEMA_ID",
     "RUN_SNAPSHOT_SCHEMA_ID",
     "RUN_START_REQUEST_SCHEMA_ID",
     "WORKFLOW_START_RECEIPT_SCHEMA_ID",
     "CapabilityProfileRef",
+    "OperationSnapshot",
+    "RunCommandRequest",
     "RunReadRequest",
     "RunSnapshot",
     "RunStartRequest",

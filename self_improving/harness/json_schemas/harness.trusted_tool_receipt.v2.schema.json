@@ -1,0 +1,408 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Blocker": {
+      "$id": "harness.blocker.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Artifact Refs",
+          "type": "array"
+        },
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]{1,63}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "stage": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Stage",
+          "type": "string"
+        },
+        "unknowns": {
+          "items": {
+            "$ref": "#/$defs/UnknownField"
+          },
+          "title": "Unknowns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "stage",
+        "retryable",
+        "details",
+        "unknowns",
+        "artifact_refs"
+      ],
+      "title": "Blocker",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "QualifiedSkillExecutionV2": {
+      "$id": "harness.qualified_skill_execution.v2",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "The live qualified Skill identity intersected with the frozen registry.",
+      "properties": {
+        "descriptor": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "implementation_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Implementation Sha256",
+          "type": "string"
+        },
+        "input_schema": {
+          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+\\.v(?:0|[1-9][0-9]*)$",
+          "title": "Input Schema",
+          "type": "string"
+        },
+        "max_attempts": {
+          "minimum": 1,
+          "title": "Max Attempts",
+          "type": "integer"
+        },
+        "output_schema": {
+          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+\\.v(?:0|[1-9][0-9]*)$",
+          "title": "Output Schema",
+          "type": "string"
+        },
+        "qualification_artifact": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "qualification_report": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "schema_version": {
+          "const": "harness.qualified_skill_execution.v2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "skill_ref": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+          "title": "Skill Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "skill_ref",
+        "descriptor",
+        "input_schema",
+        "output_schema",
+        "implementation_sha256",
+        "qualification_artifact",
+        "qualification_report",
+        "max_attempts"
+      ],
+      "title": "QualifiedSkillExecutionV2",
+      "type": "object"
+    },
+    "ReceiptDerivedFactClaimV2": {
+      "additionalProperties": false,
+      "description": "One state claim derived from a qualified Skill output.",
+      "properties": {
+        "key": {
+          "maxLength": 255,
+          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$",
+          "title": "Key",
+          "type": "string"
+        },
+        "operation": {
+          "default": "upsert",
+          "enum": [
+            "upsert",
+            "retract"
+          ],
+          "title": "Operation",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "title": "ReceiptDerivedFactClaimV2",
+      "type": "object"
+    },
+    "RunStatus": {
+      "enum": [
+        "running",
+        "succeeded",
+        "blocked",
+        "failed"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    },
+    "UnknownField": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Field",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "source": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "reason",
+        "source"
+      ],
+      "title": "UnknownField",
+      "type": "object"
+    }
+  },
+  "$id": "harness.trusted_tool_receipt.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Terminal qualified execution evidence, independent of workflow commit.",
+  "properties": {
+    "base_revision": {
+      "minimum": 0,
+      "title": "Base Revision",
+      "type": "integer"
+    },
+    "base_state": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "base_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Base State Sha256",
+      "type": "string"
+    },
+    "blocker": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Blocker"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "child_run_id": {
+      "format": "uuid4",
+      "title": "Child Run Id",
+      "type": "string"
+    },
+    "command": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "derived_fact_claims": {
+      "items": {
+        "$ref": "#/$defs/ReceiptDerivedFactClaimV2"
+      },
+      "title": "Derived Fact Claims",
+      "type": "array"
+    },
+    "ended_at": {
+      "format": "date-time",
+      "title": "Ended At",
+      "type": "string"
+    },
+    "invocation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "invocation_digest": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Invocation Digest"
+    },
+    "operation_id": {
+      "format": "uuid4",
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "registry_snapshot": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "run_state": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.trusted_tool_receipt.v2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill": {
+      "$ref": "#/$defs/QualifiedSkillExecutionV2"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus"
+    },
+    "supporting_artifacts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Supporting Artifacts",
+      "type": "array"
+    },
+    "typed_output": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Typed Output"
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "workflow_run_id",
+    "operation_id",
+    "principal_id",
+    "command",
+    "base_revision",
+    "base_state_sha256",
+    "base_state",
+    "registry_snapshot",
+    "skill",
+    "status",
+    "started_at",
+    "ended_at",
+    "child_run_id",
+    "invocation",
+    "run_state",
+    "invocation_digest",
+    "typed_output",
+    "blocker",
+    "supporting_artifacts",
+    "derived_fact_claims"
+  ],
+  "title": "TrustedToolReceiptV2",
+  "type": "object"
+}
