@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="x2env Harness 研究生组会交互介绍：架构、一次执行、真实验证与后续计划。">
+  <title>x2env Harness · 从多模态输入到可审计环境</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="返回顶部">
+      <span class="brand-mark">X²</span>
+      <span><b>x2env</b><small>HARNESS / 组会导览</small></span>
+    </a>
+    <nav aria-label="页面导航">
+      <a href="#architecture">架构</a>
+      <a href="#workflow">流程</a>
+      <a href="#evidence">验证</a>
+      <a href="#roadmap">缺口</a>
+    </nav>
+    <span class="header-date">证据截至 2026.09.14</span>
+  </header>
+
+  <main id="top">
+    <section class="hero section-shell">
+      <div class="hero-copy reveal">
+        <div class="kicker"><span></span> ROBOT ENVIRONMENT PIPELINE</div>
+        <h1>把一句话、一张图或一段视频，变成<span>可检查的仿真环境</span></h1>
+        <p class="hero-lede">x2env Harness 是一位“严谨的项目经理”：它让模型理解需求，让资产系统找物体，让物理引擎真的跑起来，并把每一步的证据、失败和版本都保存下来。</p>
+        <div class="hero-actions">
+          <a class="primary-button" href="#architecture">从架构开始 <span>↓</span></a>
+          <button class="plain-button" data-scroll="#evidence">直接看结果</button>
+        </div>
+      </div>
+      <div class="hero-stage reveal" aria-label="从输入到证据包的示意图">
+        <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
+        <div class="hero-inputs">
+          <span>文</span><span>图</span><span>影</span>
+          <small>任意组合输入</small>
+        </div>
+        <div class="hero-core"><i></i><b>HARNESS</b><small>理解 · 编排 · 留证</small></div>
+        <div class="hero-output"><b>ENV</b><span>✓</span><small>场景 + 媒体 + 报告</small></div>
+        <svg viewBox="0 0 620 360" aria-hidden="true"><path d="M128 180 C210 180 205 180 266 180"/><path d="M360 180 C435 180 440 180 494 180"/></svg>
+      </div>
+      <div class="hero-facts reveal">
+        <article><strong>4 / 4</strong><span>简单多模态案例</span><small>canonical matrix v2 真实跑通</small></article>
+        <article><strong>2,398</strong><span>根测试通过</span><small>另 1 项跳过；固定源码测量</small></article>
+        <article><strong>26 / 26</strong><span>物理断言</span><small>隔离复制运行通过</small></article>
+        <article><strong>0</strong><span>正式 replay VLM</span><small>独立观察员仍未接入主链</small></article>
+      </div>
+      <aside class="truth-strip reveal"><b>先讲清楚：</b>工作流 <code>succeeded</code> 表示开发流程完成；当前导出的包仍是 <code>sim_ready=false</code>、<code>release_qualified=false</code>。它们不是同一个结论。</aside>
+    </section>
+
+    <section class="section section-shell" id="architecture">
+      <div class="section-heading reveal">
+        <div><span class="section-no">01</span><span class="kicker">INTERACTIVE ARCHITECTURE</span></div>
+        <h2>点一下每个部件，看看里面是什么</h2>
+        <p>实线是当前主链路，虚线是规划中的观察能力。点击或触碰节点会高亮它影响的上下游，并在右侧显示内部结构、取舍和当前状态。</p>
+      </div>
+      <div class="architecture-layout reveal">
+        <div class="architecture-map" id="architectureMap">
+          <div class="map-label">一次请求的可信边界</div>
+          <div class="arch-row arch-row-top">
+            <button class="arch-node" data-node="intake"><span>01</span><i>⌁</i><b>输入接收</b><small>Text / Image / Video</small></button>
+            <span class="connector">→</span>
+            <button class="arch-node active" data-node="controller"><span>02</span><i>◎</i><b>Harness 控制器</b><small>状态机与预算</small></button>
+            <span class="connector">→</span>
+            <button class="arch-node" data-node="agent"><span>03</span><i>✦</i><b>Codex 模型</b><small>理解与诊断</small></button>
+            <span class="connector">→</span>
+            <button class="arch-node" data-node="assets"><span>04</span><i>▦</i><b>资产解析</b><small>local → web → rebuild</small></button>
+          </div>
+          <div class="map-turn">↓</div>
+          <div class="arch-row arch-row-bottom">
+            <button class="arch-node" data-node="package"><span>08</span><i>⬡</i><b>证据与环境包</b><small>内容哈希绑定</small></button>
+            <span class="connector reverse">←</span>
+            <button class="arch-node skill-node" data-node="validate"><span>PUBLIC SKILL</span><i>✓</i><b>x2env.validate</b><small>视觉与物理分开</small></button>
+            <span class="connector reverse">←</span>
+            <button class="arch-node skill-node" data-node="replay"><span>PUBLIC SKILL</span><i>▶</i><b>x2env.replay</b><small>Genesis 双时间步</small></button>
+            <span class="connector reverse">←</span>
+            <button class="arch-node skill-node" data-node="compile"><span>PUBLIC SKILL</span><i>⌘</i><b>x2env.compile</b><small>SceneIR → Runtime</small></button>
+          </div>
+          <button class="arch-node planned-node" data-node="vlm"><span>计划</span><i>◉</i><b>轻量 VLM 观察员</b><small>只看语义，不判物理</small></button>
+          <svg class="planned-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M50 98 C50 65 35 35 50 2"/></svg>
+        </div>
+        <aside class="architecture-detail" id="architectureDetail" aria-live="polite">
+          <div class="detail-top"><span class="detail-index">02</span><span class="status-chip live">当前启用</span></div>
+          <h3>Harness 控制器</h3>
+          <p class="detail-metaphor">像项目经理：决定先做什么、什么时候停，以及哪些结果有资格进入下一步。</p>
+          <div class="detail-tabs" role="tablist">
+            <button class="selected" data-detail-tab="inside" role="tab">内部结构</button>
+            <button data-detail-tab="tradeoff" role="tab">为什么这样设计</button>
+            <button data-detail-tab="facts" role="tab">当前事实</button>
+          </div>
+          <div class="detail-body" id="detailBody"></div>
+        </aside>
+      </div>
+      <div class="model-note reveal">
+        <span class="note-mark">MODEL NOTE</span>
+        <p><b>当前不是“大模型 + 小 Codex VLM”的正式双模型架构。</b>固定实验入口的所有内部 Codex 角色统一使用 <code>openai/gpt-5.6-terra</code> 与 <code>reasoning=max</code>。低成本视觉观察员仍是后续项；历史候选为 Qwen2.5-VL 3B/7B，且不能推翻物理证据。</p>
+      </div>
+      <div class="skill-evidence-grid reveal" aria-label="三个公开 Skill 的代码与运行证据">
+        <article><span>PUBLIC SKILL · 1.0.0</span><h3>x2env.compile</h3><p>把已解析场景与带版本的资产编译为 Genesis 可加载的确定性场景；静态检查通过也不代表物理通过。</p><dl><div><dt>实现</dt><dd>skill_execution.py:49–62</dd></div><div><dt>Harness 调用</dt><dd>harness.py:824–875</dd></div><div><dt>真实证据</dt><dd>S01 · 0.008103s · succeeded</dd></div><div><dt>产出</dt><dd>CompiledScene + receipt</dd></div></dl></article>
+        <article><span>PUBLIC SKILL · 1.0.0</span><h3>x2env.replay</h3><p>真正启动 Genesis，用 baseline 与 half_dt 两套时间步采集轨迹、接触、帧和视频；失败媒体同样保留。</p><dl><div><dt>实现</dt><dd>skill_execution.py:64–74</dd></div><div><dt>Harness 调用</dt><dd>harness.py:877–946</dd></div><div><dt>真实证据</dt><dd>S01 · 120.397165s · succeeded</dd></div><div><dt>复算</dt><dd>copy-run 双 profile · 26/26</dd></div></dl></article>
+        <article><span>PUBLIC SKILL · 1.0.0</span><h3>x2env.validate</h3><p>读取当前场景、fresh observation 与诊断回执，分别判断物理和视觉；模型不能改动固定阈值。</p><dl><div><dt>实现</dt><dd>skill_execution.py:76–122</dd></div><div><dt>Harness 调用</dt><dd>harness.py:1037–1077</dd></div><div><dt>真实证据</dt><dd>S01 · 0.004727s · succeeded</dd></div><div><dt>结论</dt><dd>physical 26/26 · visual passed</dd></div></dl></article>
+      </div>
+      <div class="code-map reveal">
+        <div class="code-map-title"><span>CORE CODE MAP</span><h3>核心 Agent 怎样循环，提示词放在哪里？</h3></div>
+        <article><b>有界状态循环</b><p>它不是一个无限自问自答的 Agent。<code>Harness.resume()</code> 读取已保存状态，<code>_resume()</code> 按当前产物跳到 resolve、compile、replay、observe、diagnose 或 validate；修订次数受预算限制。</p><small>self_improving/harness/x2env/harness.py:65–188 · revise:1125–1297</small></article>
+        <article><b>主系统指令</b><p>SceneIntent 的角色约束直接在代码中组装；它要求模型只给 JSON 提案，不得声称资产、仿真或验证成功。没有单独的 SYSTEM_PROMPT.md。</p><small>self_improving/harness/x2env/codex.py:362–408</small></article>
+        <article><b>实际发送与留证</b><p>统一 transport 把 schema 附到提示词，保存 <code>prompt.txt</code>，再以只读、禁工具的 Codex 子进程通过 stdin 发送。其他诊断、检索、重建角色各有自己的短提示词构造器。</p><small>self_improving/harness/x2env/codex.py:559–646</small></article>
+      </div>
+    </section>
+
+    <section class="section workflow-section" id="workflow">
+      <div class="section-shell">
+        <div class="section-heading light reveal">
+          <div><span class="section-no">02</span><span class="kicker">ONE REQUEST, END TO END</span></div>
+          <h2>一次输入，究竟经历了什么？</h2>
+          <p>选择一个案例，然后播放。流程中的每一步都会显示它接收什么、产出什么，以及为什么可能停下来。</p>
+        </div>
+        <div class="workflow-console reveal">
+          <div class="workflow-header">
+            <div class="scenario-tabs" role="tablist">
+              <button class="selected" data-scenario="text">文字请求</button>
+              <button data-scenario="image">图片请求</button>
+              <button data-scenario="mixed">图文覆盖</button>
+            </div>
+            <div class="run-timer"><i></i><span id="workflowState">等待播放</span></div>
+          </div>
+          <div class="workflow-main">
+            <div class="request-preview" id="requestPreview"></div>
+            <div class="workflow-view">
+              <div class="workflow-progress" id="workflowProgress"></div>
+              <article class="workflow-detail" id="workflowDetail" aria-live="polite"></article>
+              <div class="workflow-controls">
+                <button class="play-button" id="workflowPlay"><span>▶</span> 播放一次执行</button>
+                <button class="reset-link" id="workflowReset">重新开始</button>
+                <span class="workflow-hint">也可以直接点击上方步骤</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-shell" id="evidence">
+      <div class="section-heading reveal">
+        <div><span class="section-no">03</span><span class="kicker">REAL RUNS, INCLUDING FAILURES</span></div>
+        <h2>用真实输入验证，结果照实展示</h2>
+        <p>这里区分两条证据线：2026-09-13 canonical harness 的四模态 matrix v2，以及 2026-09-06 稳定核心的 can-on-plate 验收。两者不能互相冒充。</p>
+      </div>
+      <div class="evidence-legend reveal">
+        <span><i class="dot pass"></i>真实通过</span><span><i class="dot fail"></i>真实失败 / 阻断</span><span><i class="dot scoped"></i>范围受限</span>
+        <div class="evidence-filters"><button class="selected" data-filter="all">全部</button><button data-filter="pass">通过</button><button data-filter="fail">失败</button></div>
+      </div>
+      <div class="case-grid" id="caseGrid">
+        <article class="case-card" data-status="pass">
+          <div class="case-media"><img src="assets/media/can-on-plate-output.png" alt="SAPIEN 中罐子放在盘子上的最终画面"><button class="media-play" data-video="assets/media/can-on-plate-runtime.mp4" data-title="Can on plate · 900 步物理回放">▶ 看回放</button><span class="case-number">T</span></div>
+          <div class="case-content"><div class="case-meta"><span class="status-chip pass">稳定核心通过</span><span>TEXT · seed 7</span></div><h3>“Place a can on a plate”</h3><p>实际执行提示词为 “Place a can on top of a plate.”。已有 RoboTwin 资产被编译成场景，真实 SAPIEN 跑满 900 步并录制 120 帧；独立验证为 pass。</p><dl><div><dt>物体</dt><dd>071_can + 003_plate</dd></div><div><dt>验证</dt><dd>fail 0 · not_run 0</dd></div><div><dt>边界</dt><dd>稳定核心案例，不是 canonical matrix v2</dd></div></dl></div>
+        </article>
+
+        <article class="case-card thermos-card" data-status="fail" id="thermosCase">
+          <div class="case-media split-media portrait"><img src="assets/media/thermos-input.png" alt="用户上传的黑色 Thermos 保温杯照片"><img src="assets/media/thermos-segmented.png" alt="Harness 生成的保温杯分割结果"><span class="case-number">I</span></div>
+          <div class="case-content"><div class="case-meta"><span class="status-chip fail" id="thermosStatus">真实阻断</span><span>IMAGE · seed 53</span></div><h3>用户附图：黑色保温杯</h3><p id="thermosSummary">模型识别为 insulated bottle，分割与 7.5 MB 新几何均已真实生成；但派生授权不覆盖这张图，系统拒绝注册资产，未进入编译与物理回放。</p><dl id="thermosFacts"><div><dt>终态 / 耗时</dt><dd>blocked_license · 112.46 秒</dd></div><div><dt>停止阶段</dt><dd>asset.resolve · revision 3</dd></div><div><dt>保留证据</dt><dd>失败包 + 2 图 + 15 日志</dd></div></dl></div>
+        </article>
+
+        <article class="case-card" data-status="pass">
+          <div class="case-media split-media"><img src="assets/media/red-cube-input.png" alt="输入图片：桌面中央的红色方块"><video src="assets/media/image-output.mp4" muted loop playsinline aria-label="图片输入生成的 Genesis 回放"></video><button class="media-play" data-video="assets/media/image-output.mp4" data-title="Image → environment · canonical S02">▶ 看输出</button><span class="case-number">I</span></div>
+          <div class="case-content"><div class="case-meta"><span class="status-chip pass">真实通过</span><span>IMAGE · S02</span></div><h3>只给红方块图片</h3><p>没有隐藏文字提示。Harness 从图片识别红方块和桌面，完成资产解析、回放、视觉与物理验证。</p><dl><div><dt>耗时</dt><dd>290.76 秒</dd></div><div><dt>物理 / 视觉</dt><dd>passed / passed</dd></div><div><dt>历史失败</dt><dd>此前 4 次，均保留</dd></div></dl></div>
+        </article>
+
+        <article class="case-card" data-status="pass">
+          <div class="case-media split-media"><img src="assets/media/red-cube-input.png" alt="图文案例的红方块参考图片"><video src="assets/media/multimodal-output.mp4" muted loop playsinline aria-label="按文字覆盖为蓝色方块的输出视频"></video><button class="media-play" data-video="assets/media/multimodal-output.mp4" data-title="Image + text override · canonical S04">▶ 看蓝色输出</button><span class="case-number">I+T</span></div>
+          <div class="case-content"><div class="case-meta"><span class="status-chip pass">真实通过</span><span>IMAGE + TEXT · S04</span></div><h3>红色参考图 + “改成蓝色”</h3><p>图片决定物体类别，文字拥有颜色优先级。系统生成不可变的蓝色资产子版本，并保留父版本。</p><dl><div><dt>耗时</dt><dd>383.39 秒</dd></div><div><dt>物理断言</dt><dd>26 / 26</dd></div><div><dt>历史失败</dt><dd>视觉、键序、坏 JSON 共 3 次</dd></div></dl></div>
+        </article>
+
+        <article class="case-card" data-status="pass">
+          <div class="case-media video-source"><video src="assets/media/red-cube-input.mp4" muted loop autoplay playsinline aria-label="输入视频：桌面中央的红色方块"></video><button class="media-play" data-video="assets/media/video-output.mp4" data-title="Video → static environment · canonical S03">▶ 看新回放</button><span class="case-number">V</span></div>
+          <div class="case-content"><div class="case-meta"><span class="status-chip pass">真实通过</span><span>VIDEO · S03</span></div><h3>只给 41 帧视频</h3><p>输入有 33 个独特帧。当前能力从视频恢复静态环境；它还不能理解并复演视频中的机器人动作。</p><dl><div><dt>耗时</dt><dd>312.48 秒</dd></div><div><dt>物理 / 视觉</dt><dd>passed / passed</dd></div><div><dt>能力边界</dt><dd>静态环境，不含动作轨迹</dd></div></dl></div>
+        </article>
+      </div>
+
+      <div class="source-proof reveal">
+        <div class="source-proof-heading"><span>ASSET SOURCE TRACE</span><h3>资产复用、Web 搜索、三维重建：接线与执行证据</h3><p>“执行过”只说明相关组件真的运行；只有走完 compile、replay、validate 和 package，才算完整工作流通过。</p></div>
+        <div class="source-proof-grid">
+          <article class="source-proof-card pass-card"><div class="source-proof-top"><span>YUXIN · LOCAL</span><b>完整链路通过</b></div><h4>本地资产复用</h4><p>Registry 投影交给原 Yuxin <code>RoboTwinLocalProvider.search_phrases</code>，再经过尺寸、Genesis 预览和视觉门；不是直接查表后冒充 provider 已执行。</p><dl><div><dt>接入位置</dt><dd>adapters/yuxin.py:242–265</dd></div><div><dt>编排入口</dt><dd>deployment.py:308–311</dd></div><div><dt>执行证据</dt><dd>S01 workflow 07321d67… · 13 operations</dd></div><div><dt>最终结果</dt><dd>workflow succeeded · physical 26/26 · visual passed</dd></div></dl></article>
+          <article class="source-proof-card fail-card"><div class="source-proof-top"><span>YUXIN · WEB</span><b>已执行，未闭环</b></div><h4>联网搜索与下载</h4><p>Web resolver 复用 Yuxin 的 <code>load_providers</code> 与 <code>tiered_search</code>；Harness 在外层补许可、格式、规范化和来源版本检查。</p><dl><div><dt>接入位置</dt><dd>deployment.py:314–353 · yuxin.py:267–331</dd></div><div><dt>组件实跑</dt><dd>Khronos Box · search 2.296611s · fetch 0.511125s</dd></div><div><dt>workflow</dt><dd>916be468… · red cube → red block 真修订</dd></div><div><dt>最终结果</dt><dd>blocked_license · 78.564775s；无完整 Web E2E pass</dd></div></dl></article>
+          <article class="source-proof-card fail-card"><div class="source-proof-top"><span>GUJIE · REBUILD</span><b>已执行，未闭环</b></div><h4>图片三维重建</h4><p>Codex 只提出分割点、框和物理参数；固定 Gujie seam 实际运行 SAM2 分割与 TRELLIS 重建，再由 Harness 规范化、登记、预览和审查。</p><dl><div><dt>接入位置</dt><dd>deployment.py:357–402 · reconstruction.py:65–310</dd></div><div><dt>最好推进</dt><dd>15dc259c… · asset.resolve + ground 成功，compile 才失败</dd></div><div><dt>最新附图</dt><dd>82779899… · 7,507,928-byte GLB 已生成</dd></div><div><dt>最终结果</dt><dd>blocked_license · 112.463029s；无完整重建 E2E pass</dd></div></dl></article>
+        </div>
+      </div>
+
+      <details class="failure-ledger reveal">
+        <summary><span>失败没有被删掉</span><b>展开来源与矩阵中的真实失败</b><i>+</i></summary>
+        <div class="failure-table" role="table" aria-label="真实失败记录">
+          <div class="failure-row head" role="row"><span>案例</span><span>停止位置</span><span>耗时</span><span>系统学到了什么</span></div>
+          <div class="failure-row" role="row"><b>S02 ×4</b><span>部署 / 澄清 / 视觉 / 打包</span><span>50–317s</span><span>修正路径边界、字段定位、上下文哈希和打包</span></div>
+          <div class="failure-row" role="row"><b>S03 ×2</b><span>视觉 / 打包</span><span>261–311s</span><span>失败 workflow 保持失败，不回填为成功</span></div>
+          <div class="failure-row" role="row"><b>S04 ×3</b><span>视觉 / 完成门 / 模型 JSON</span><span>51–408s</span><span>增加键序无关核验与一次有界语法重生成</span></div>
+          <div class="failure-row" role="row"><b>保温杯 ×1</b><span>资产许可 / 派生授权</span><span>112.46s</span><span>分割和新几何已产生，但未获准注册，安全停止</span></div>
+          <div class="failure-row" role="row"><b>Web ×1</b><span>二次检索后的许可门</span><span>78.56s</span><span>Yuxin 搜索和 Codex 词项修订都执行，unknown license 不放行</span></div>
+          <div class="failure-row" role="row"><b>重建 ×2</b><span>编译 / 视觉资产门</span><span>259–267s</span><span>新几何、规范化和预览完成；失败仍不计完整来源通过</span></div>
+        </div>
+      </details>
+
+      <div class="evidence-boundary reveal">
+        <div><span>✓</span><p><b>已经证明</b>四种简单输入可走完理解、资产、编译、双 profile 回放、观察、验证和出包。</p></div>
+        <div><span>!</span><p><b>尚未证明</b>复杂容器、关节、多点支撑、机器人策略、数据采集和通用新资产重建。</p></div>
+      </div>
+    </section>
+
+    <section class="section roadmap-section" id="roadmap">
+      <div class="section-shell">
+        <div class="section-heading light reveal">
+          <div><span class="section-no">04</span><span class="kicker">GAPS & NEXT STEPS</span></div>
+          <h2>现在缺什么，下一步怎么补</h2>
+          <p>优先级按“能否让研究结论更可信、让新案例更容易成功”排序。每项都有可验收的终点。</p>
+        </div>
+        <div class="roadmap-grid reveal">
+          <article class="roadmap-card now"><span class="roadmap-phase">NOW · P1</span><h3>补齐真实新资产来源</h3><p>让网络检索与图像重建在许可证、来源版本、模型身份都可追踪的条件下稳定工作。</p><ul><li>至少 1 个 web 完整案例</li><li>至少 1 个授权重建案例</li><li>复制后仍可预览与运行</li></ul><div class="roadmap-meter"><i style="--progress:42%"></i><span>进行中</span></div></article>
+          <article class="roadmap-card"><span class="roadmap-phase">NEXT · P2</span><h3>从方块走向真实空间关系</h3><p>验证凹形容器、多个接触点和可开合关节；这些问题不能靠一张“看起来正确”的图解决。</p><ul><li>动态单支撑真实闭环</li><li>containment 与孔洞几何</li><li>关节状态与碰撞验证</li></ul><div class="roadmap-meter"><i style="--progress:20%"></i><span>合同 / 组件阶段</span></div></article>
+          <article class="roadmap-card"><span class="roadmap-phase">THEN · P3–P4</span><h3>更可靠的恢复与交付</h3><p>完善暂停后续跑、失败指纹、另外两个隔离复制运行，并把固定门接入持续集成。</p><ul><li>三份成功包独立 copy-run</li><li>中等 / 困难矩阵</li><li>跨机器可诊断部署</li></ul><div class="roadmap-meter"><i style="--progress:12%"></i><span>部分基础已在</span></div></article>
+          <article class="roadmap-card future"><span class="roadmap-phase">LATER · P5</span><h3>VLM、机器人与数据闭环</h3><p>轻量视觉模型只负责发现“少了什么、外观是否明显不对”；物理结论继续由仿真证据控制。</p><ul><li>hash-bound VLM 观察回执</li><li>机器人 policy 实际执行</li><li>数据采集、评估与晋升</li></ul><div class="roadmap-meter"><i style="--progress:4%"></i><span>尚未接入主链</span></div></article>
+        </div>
+        <div class="plain-language reveal"><span>术语翻译</span><div><b>Harness</b><small>把多步工具可靠串起来的控制层</small></div><div><b>Grounding</b><small>把“杯子”对应到某个真实资产与尺寸</small></div><div><b>Replay</b><small>让场景在物理引擎中随时间运行</small></div><div><b>CAS / Hash</b><small>用内容指纹保证证据没被偷换</small></div><div><b>VLM</b><small>能读图的视觉语言模型</small></div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div><span class="brand-mark">X²</span><p><b>x2env Harness</b><small>研究生组会交互介绍 · 当前工作树证据</small></p></div>
+    <p class="footer-note">数据来源：canonical matrix v2 push audit、P0/P1 接入记录、P1 continuation、保温杯阻断证据与 can-on-plate E2E evidence。页面不把组件执行扩大为完整 E2E，也不把开发成功扩大为发布资格。</p>
+    <a href="#top">回到顶部 ↑</a>
+  </footer>
+
+  <dialog class="video-dialog" id="videoDialog">
+    <button class="dialog-close" aria-label="关闭视频">×</button>
+    <div><span>REAL RUNTIME EVIDENCE</span><h3 id="dialogTitle">回放证据</h3></div>
+    <video id="dialogVideo" controls autoplay playsinline></video>
+    <p>画面用于帮助人理解；物理通过仍由连续轨迹、接触、漂移和哈希绑定报告决定。</p>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -175,7 +175,7 @@ class CodexBackend:
                     "status": status,
                     "error_code": error,
                     "model": self.model,
-                    "requested_reasoning_effort": "max",
+                    "requested_reasoning_effort": "high",
                     "server_effective_effort_verified": False,
                     "executable_sha256": self.executable_sha,
                     "verifier": "asset_reuse.lib.a6_verify.verify_candidate",
@@ -536,7 +536,7 @@ class CodexBackend:
                     "status": status,
                     "error_code": failure,
                     "model": self.model,
-                    "requested_reasoning_effort": "max",
+                    "requested_reasoning_effort": "high",
                     "server_effective_effort_verified": False,
                     "executable_sha256": self.executable_sha,
                     "input_sha256": bundle.request_sha256,
@@ -584,7 +584,7 @@ class CodexBackend:
             "--model",
             self.model,
             "-c",
-            'model_reasoning_effort="max"',
+            'model_reasoning_effort="high"',
             "--output-schema",
             str(root / "proposal.schema.json"),
             "-c",
@@ -597,7 +597,7 @@ class CodexBackend:
             str(root / "proposal.json"),
         ]
         if self.router is not None:
-            if self.model != "openai/gpt-5.6-terra":
+            if self.model != "openai/gpt-5.6-codex-sol":
                 raise ValueError("invalid_model_route")
             argv.extend(self.router.arguments())
         child_environment = self.router.child_environment() if self.router else None
@@ -610,7 +610,7 @@ class CodexBackend:
                 {
                     "argv": argv,
                     "media": images,
-                    "requested_reasoning_effort": "max",
+                    "requested_reasoning_effort": "high",
                     "server_effective_effort_verified": False,
                 }
             ).encode(),

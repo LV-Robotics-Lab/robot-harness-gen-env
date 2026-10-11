@@ -793,7 +793,7 @@ def _audit_child_model_calls(
             raise ValueError("color_execution_child_model_context_mismatch")
         response = VisualAnswer.model_validate_json(json.dumps(responses[0])).model_dump_json()
         suffix = ""
-        if model == "openai/gpt-5.6-terra":
+        if model == "openai/gpt-5.6-codex-sol":
             from .deployment import PrivateModelRouter
 
             expected_route = PrivateModelRouter(api_key_file="/unused-secret").arguments()

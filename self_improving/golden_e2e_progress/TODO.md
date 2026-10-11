@@ -1,6 +1,16 @@
 # 当前 TODO
 
-更新时间：2026-09-13
+更新时间：2026-09-14
+
+## 2026-09-14 组会展示与新纯图证据
+
+- [x] 新建独立 `x2env-harness-showcase/` 静态网站；所有网页代码与媒体资产在同一目录。
+- [x] 复用 canonical matrix v2、can-on-plate 和 copy-run 冻结证据，明确 development 与 release 边界。
+- [x] 用户保温杯 image-only 真实运行：112.463029秒、`blocked_license`、停止于 `asset.resolve`；
+  分割与7.5 MB几何已产生，派生授权不覆盖本图，未注册资产或启动Genesis。
+- [x] JavaScript、JSON、素材引用、HTTP 200及Git空白检查通过；浏览器实例不可用，截图式验收未运行。
+- [x] 交互架构图标出 `x2env.compile/replay/validate@1.0.0`，并加入 Harness 调用点、S01 实跑证据、
+  核心状态循环与提示词位置；资产证据区区分 Yuxin local 完整闭环和 web/Gujie 真实执行但未闭环。
 
 ## 当前：canonical P0/P1 实际接通
 

@@ -68,14 +68,14 @@ class PrivateModelRouter(Model):
 class CodexConfig(Model):
     executable: str
     sha256: Sha256
-    model: Literal["gpt-6-astra", "openai/gpt-5.6-terra"] = "gpt-6-astra"
+    model: Literal["gpt-6-astra", "openai/gpt-5.6-codex-sol"] = "openai/gpt-5.6-codex-sol"
     router: PrivateModelRouter | None = None
 
     @model_validator(mode="after")
     def absolute_executable(self):
         if not Path(self.executable).is_absolute():
             raise ValueError("absolute Codex executable required")
-        if (self.router is not None) != (self.model == "openai/gpt-5.6-terra"):
+        if (self.router is not None) != (self.model == "openai/gpt-5.6-codex-sol"):
             raise ValueError("Terra requires the explicitly authorized private router")
         return self
 

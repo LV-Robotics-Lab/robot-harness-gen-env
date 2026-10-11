@@ -1522,9 +1522,9 @@ def _audit_generated_content(
         "--sandbox",
         "read-only",
         "--model",
-        "gpt-6-astra",
+        "openai/gpt-5.6-codex-sol",
         "-c",
-        'model_reasoning_effort="max"',
+        'model_reasoning_effort="high"',
         "--output-schema",
         str(attempt / "proposal.schema.json"),
         "-c",
@@ -1539,10 +1539,10 @@ def _audit_generated_content(
     expected_images = (
         [{"path": str(attempt / "input.png")}] if receipt.get("media_selection") else []
     )
-    if len(argv) > 10 and argv[10] == "openai/gpt-5.6-terra":
+    if len(argv) > 10 and argv[10] == "openai/gpt-5.6-codex-sol":
         from .deployment import PrivateModelRouter
 
-        expected_argv[10] = "openai/gpt-5.6-terra"
+        expected_argv[10] = "openai/gpt-5.6-codex-sol"
         # Only the operator-authorized fixed endpoint/model, never arbitrary CLI overrides.
         expected_argv.extend(PrivateModelRouter(api_key_file="/unused-secret").arguments())
     for image in expected_images:
@@ -1551,7 +1551,7 @@ def _audit_generated_content(
     if (
         argv != expected_argv
         or invocation.get("media") != expected_images
-        or invocation.get("requested_reasoning_effort") != "max"
+        or invocation.get("requested_reasoning_effort") != "high"
         or invocation.get("server_effective_effort_verified") is not False
         or not _execution_shas([process, terminal])
         or read(transport_refs["proposal.schema.json"]) != structured_output_schema(values_model)

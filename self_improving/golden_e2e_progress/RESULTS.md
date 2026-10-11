@@ -1,5 +1,23 @@
 # 进度与结果
 
+## 2026-09-14 组会网站与保温杯纯图真实阻断
+
+- 新建独立静态网站 `x2env-harness-showcase/`，代码、样式、交互和全部展示媒体均在该目录；页面解释
+  当前架构、单请求执行、四模态真实案例、历史失败、资格边界和 P1–P5 路线图。
+- 架构图已把 `x2env.compile/replay/validate@1.0.0` 标成三个可触碰公开 Skill；每项同时列出
+  handler、Harness 调用点和 S01 真实耗时/结论。新增核心状态机与 Codex 提示词源码索引，以及
+  Yuxin local、Yuxin web、Gujie reconstruction 三条来源的接线与 workflow 证据；明确 local 已有完整
+  闭环，而 web/reconstruction 仅证明真实执行，尚无完整来源 E2E pass。
+- 用户保温杯 PNG 以 image-only/seed53/default source 提交当前固定入口；workflow
+  `82779899-74db-4ff0-bbf7-7d775b066ed5` 在112.463029秒后以 `blocked_license` 停于
+  `asset.resolve`。ingest/interpret成功，识别 `insulated bottle on table`；web无候选，SAM2/TRELLIS
+  实际生成7,507,928-byte GLB，但本次输入不在固定派生授权内，`registration_allowed=false`。
+  未产生SceneIR/compile/Genesis/validation/environment，原失败包、2图、15日志保留。
+- 精确输入、模型max、workflow、几何与manifest哈希见
+  [保温杯许可阻断证据](../../docs/evidence/canonical-thermos-image-blocked-license-20260914.md)。
+  页面静态检查通过：JavaScript语法、JSON和11个本地素材引用有效；本机会话无可用浏览器实例，
+  未伪报截图式验收。
+
 ## 2026-09-13 接续最终检查点（P1未完成）
 
 - 固定6310f22 clean源码根测试2433 passed/1 skipped，286.27秒；root-surface.log/xml位于`/var/tmp/x2env-p1-20260913/`。

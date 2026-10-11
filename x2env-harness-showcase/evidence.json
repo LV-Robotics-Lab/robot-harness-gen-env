@@ -1,0 +1,58 @@
+{
+  "schema_version": "x2env.harness_showcase.evidence.v1",
+  "as_of": "2026-09-14",
+  "canonical_matrix_v2": {
+    "status": "4/4 simple workflows succeeded",
+    "release_qualified": false,
+    "sim_ready": false,
+    "root_tests": {"passed": 2398, "skipped": 1},
+    "source": "../self_improving/golden_e2e_progress/qualification-matrix-v2-results.json"
+  },
+  "public_skills": {
+    "registry": "../self_improving/harness/x2env/capabilities.py",
+    "implementation": "../self_improving/harness/x2env/skill_execution.py",
+    "evidence_workflow_id": "07321d67-37be-45c4-89c7-f37527729797",
+    "compile": {"version": "1.0.0", "wall_seconds": 0.008103, "status": "succeeded"},
+    "replay": {"version": "1.0.0", "wall_seconds": 120.397165, "status": "succeeded"},
+    "validate": {"version": "1.0.0", "wall_seconds": 0.004727, "status": "succeeded", "physical_assertions": "26/26", "visual": "passed"}
+  },
+  "asset_sources": {
+    "yuxin_local": {"executed": true, "full_workflow_passed": true, "evidence_workflow_id": "07321d67-37be-45c4-89c7-f37527729797"},
+    "yuxin_web": {"executed": true, "full_workflow_passed": false, "evidence_workflow_id": "916be468-cccf-4f16-bdcb-6bc97c09afa5", "status": "blocked_license", "wall_seconds": 78.564775},
+    "gujie_reconstruction": {"executed": true, "full_workflow_passed": false, "furthest_workflow_id": "15dc259c-b085-4ff8-8596-8553b88b1c36", "thermos_workflow_id": "82779899-74db-4ff0-bbf7-7d775b066ed5"}
+  },
+  "agent_code": {
+    "bounded_state_machine": "../self_improving/harness/x2env/harness.py:65-188",
+    "bounded_revision": "../self_improving/harness/x2env/harness.py:1125-1297",
+    "scene_intent_prompt": "../self_improving/harness/x2env/codex.py:362-408",
+    "transport_and_prompt_receipt": "../self_improving/harness/x2env/codex.py:559-646"
+  },
+  "can_on_plate": {
+    "pipeline": "stable scene_gen core",
+    "status": "passed",
+    "prompt": "Place a can on top of a plate.",
+    "seed": 7,
+    "replay_steps": 900,
+    "frames": 120,
+    "source": "../docs/evidence/text2env-can-on-plate-e2e-20260906.md"
+  },
+  "thermos_image": {
+    "pipeline": "canonical x2env fixed local entry",
+    "status": "blocked",
+    "error_code": "blocked_license",
+    "stage": "asset.resolve",
+    "seed": 53,
+    "idempotency_key": "group-showcase-thermos-image-20260914",
+    "workflow_id": "82779899-74db-4ff0-bbf7-7d775b066ed5",
+    "wall_seconds": 112.46302860893775,
+    "interpret_status": "succeeded",
+    "reconstruction": {
+      "segmentation_produced": true,
+      "geometry_size_bytes": 7507928,
+      "registration_allowed": false
+    },
+    "environment_package": null,
+    "failure_bundle_manifest_sha256": "083070eaf5a29f52508cfaed335ae5d9c599273a769e8163235b5f1415cbf3b5",
+    "result_note": "The requested media was outside the configured derivation authorization. The harness retained partial artifacts and granted no usable environment."
+  }
+}

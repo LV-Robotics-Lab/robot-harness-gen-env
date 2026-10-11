@@ -1,5 +1,15 @@
 # Golden E2E 任务分解
 
+## 2026-09-14 组会展示切片
+
+- [x] 交互架构图：部件高亮、内部结构、tradeoff、模型与VLM现状。
+- [x] 单请求流程：多场景选择、逐步查看与自动播放。
+- [x] 真实验证：can-on-plate、canonical image/video/image+text 与用户保温杯失败终态。
+- [x] 当前缺口、P1–P5计划、专有名词通俗解释与证据边界。
+- [x] 网站自包含与静态验收；真实保温杯运行另存日期证据页。
+- [x] 架构图补齐三个公开 Skill 的说明、调用点与 S01 证据；补齐核心状态循环、提示词以及
+  Yuxin local/web、Gujie reconstruction 的接线和分层执行结论。
+
 ## 2026-09-13 当前 P0/P1
 
 - [x] surface_rgba兼容契约与真实模型输出；固定6310f22根测试2433 passed/1 skipped。
