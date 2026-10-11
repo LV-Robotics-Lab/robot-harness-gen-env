@@ -1239,6 +1239,7 @@ def _main(
 
 
 if __name__ == "__main__":
+    # Deliberate acceptance-test byte drift in an ephemeral source copy.
     try:
         raise SystemExit(main())
     except RuntimeAssetWorkerError as error:
